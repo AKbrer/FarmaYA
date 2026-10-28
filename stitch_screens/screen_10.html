@@ -1,0 +1,601 @@
+﻿<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"primary":"#004e46","on-primary-container":"#93e4d7","on-surface-variant":"#3e4947","error-container":"#ffdad6","surface-container-high":"#e2e7ff","inverse-surface":"#283044","surface-container":"#eaedff","on-tertiary-container":"#a5e1d3","tertiary-fixed-dim":"#96d2c5","on-secondary-fixed":"#0e2000","secondary-fixed-dim":"#96d956","outline":"#6e7977","primary-fixed-dim":"#85d5c8","primary-container":"#00685e","on-error-container":"#93000a","tertiary-container":"#2a665b","outline-variant":"#bec9c6","surface-variant":"#dae2fd","background":"#faf8ff","on-primary-fixed-variant":"#005048","on-error":"#ffffff","tertiary-fixed":"#b2efe1","secondary-container":"#b1f66f","on-secondary-fixed-variant":"#2a5000","secondary-fixed":"#b1f66f","surface-tint":"#066a60","surface-container-low":"#f2f3ff","surface-container-highest":"#dae2fd","surface-bright":"#faf8ff","on-tertiary-fixed-variant":"#0d5046","on-tertiary":"#ffffff","on-tertiary-fixed":"#00201b","surface":"#faf8ff","surface-container-lowest":"#ffffff","on-primary":"#ffffff","secondary":"#3a6a00","on-secondary":"#ffffff","inverse-primary":"#85d5c8","on-primary-fixed":"#00201c","primary-fixed":"#a1f1e4","error":"#ba1a1a","on-background":"#131b2e","surface-dim":"#d2d9f4","on-secondary-container":"#3e7100","inverse-on-surface":"#eef0ff","tertiary":"#094e44","on-surface":"#131b2e"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-lg":"1.5rem","margin-mobile":"1rem","space-xl":"2.5rem","gutter-mobile":"0.75rem","space-sm":"0.5rem","space-md":"1rem","gutter":"1.25rem","space-xs":"0.25rem","margin":"2rem"},"fontFamily":{"label-sm":["Inter"],"label-lg":["Inter"],"headline-xl-mobile":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"title-md":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-sm":["Inter"],"headline-sm":["Plus Jakarta Sans"],"label-md":["Inter"],"body-md":["Inter"],"headline-xl":["Plus Jakarta Sans"],"price-display":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Inter"]},"fontSize":{"label-sm":["11px",{"lineHeight":"14px","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"700"}],"title-md":["18px",{"lineHeight":"26px","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"headline-sm":["20px",{"lineHeight":"28px","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-xl":["40px",{"lineHeight":"48px","fontWeight":"700"}],"price-display":["22px",{"lineHeight":"28px","fontWeight":"700"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-primary z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between bg-primary-container"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center p-1.5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><span class="material-symbols-outlined text-primary">local_pharmacy</span></div><div><span class="font-headline-sm text-headline-sm text-on-primary font-bold tracking-tight block">FarmaYA</span><span class="font-label-sm text-label-sm text-on-primary-container block uppercase tracking-wider">Backoffice Clínico</span></div></div><span class="material-symbols-outlined text-on-primary-container cursor-pointer hover:text-on-primary transition-colors">menu_open</span></div><div class="px-space-md pt-space-md"><div class="bg-primary-container/60 rounded-lg p-space-sm mb-space-md flex items-center justify-between"><div class="flex items-center gap-space-xs"><span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span><span class="font-label-sm text-label-sm text-on-primary">Bodega Central</span></div><span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded-full">En línea</span></div><nav class="space-y-1" data-active-classes="bg-primary-container text-on-primary font-label-lg font-bold rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="dashboard" href="#"><span class="material-symbols-outlined text-xl">dashboard</span><span>Panel Principal</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="productos-e-inventario" href="#"><span class="material-symbols-outlined text-xl">inventory_2</span><span>Productos e Inventario</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="pedidos-y-despacho" href="#"><span class="material-symbols-outlined text-xl">local_shipping</span><span>Pedidos y Despacho</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="validacion-de-formulas" href="#"><span class="material-symbols-outlined text-xl">prescriptions</span><span>Validación de Fórmulas</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="farmacias-y-aliados" href="#"><span class="material-symbols-outlined text-xl">storefront</span><span>Farmacias y Aliados</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="movimientos-y-auditoria" href="#"><span class="material-symbols-outlined text-xl">verified_user</span><span>Movimientos y Auditoría</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="configuracion" href="#"><span class="material-symbols-outlined text-xl">settings</span><span>Configuración</span></a></nav></div></div><div class="p-space-md"><div class="bg-primary-container/40 p-space-sm rounded-lg"><div class="flex items-center gap-space-xs text-on-primary-container mb-1"><span class="material-symbols-outlined text-sm text-secondary-container">shield</span><span class="font-label-sm text-label-sm font-semibold text-on-primary">Certificación INVIMA</span></div><p class="font-body-sm text-body-sm text-on-primary-container leading-tight">Regulación Sanitaria de Dispensación Activa</p></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40"><div class="h-16 w-full px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><nav class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm"><span class="hover:text-on-surface cursor-pointer">Administración</span><span class="material-symbols-outlined text-sm">chevron_right</span><span class="text-primary font-semibold">FarmaYA Backoffice</span></nav></div><div class="flex items-center gap-space-lg"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-outline text-lg">search</span><input class="bg-surface-container-low pl-9 pr-4 py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none w-72 shadow-[0_1px_8px_rgba(0,0,0,0.04)]" placeholder="Buscar medicamento, orden o lote..." type="text"/></div><div class="flex items-center gap-space-sm"><div class="relative cursor-pointer p-1.5 rounded-lg hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-on-surface-variant">notifications</span><span class="absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-surface"></span></div><div class="relative cursor-pointer p-1.5 rounded-lg hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-on-surface-variant">receipt_long</span></div></div><div class="flex items-center gap-space-sm pl-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shadow-[0_1px_8px_rgba(0,0,0,0.04)]" src="https://lh3.googleusercontent.com/aida/AEtjO1ViJHtTrHkxQj0SD6rHAmfxq6nRVzyEWnn_8FmN62aXeHTqCpnkA_v_d_yv6tQT0ZD0RiVjkDTlMNo4POX-PTagGSIuxK_IOKdhKxmBNrWjTbAgLFyTAHXTFW1Y0DeEx116Wjv1ro5MABllP-MHgJdSBfvUpTGRoeQzwjh2kRIuufWdDOKvjKF2NWi5SEk48lakkj3v_1bzXuQrGBV9ofMTcRdrbaOQUQj2OVTAML-SxelCn_S5NSRWzuc"/><div class="flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface font-semibold leading-tight">Dr. Alejandro Morales</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Regente Principal / Admin</span></div></div></div></div></header><main class="w-full pt-16 bg-surface min-h-[calc(100vh-3.5rem)] px-space-lg"><div class="flex flex-col w-full">
+<div class="space-y-space-lg pb-space-xl">
+<!-- Top Action Header -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-space-md pt-space-xs">
+<div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm mb-1">
+<span class="inline-flex items-center gap-1 text-primary font-semibold">
+<span class="material-symbols-outlined text-sm">verified_user</span>
+            Módulo Regulatorio DIAN • INVIMA Res. 1403/2007
+          </span>
+<span class="text-outline">•</span>
+<span class="text-on-surface-variant">Kárdex Sanitario FEFO</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Kárdex Sanitario y Auditoría de Movimientos</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl mt-1">
+          Trazabilidad por lote y vencimiento (First Expired, First Out), actas de recepción técnica, registro de mermas y conciliación oficial para Secretaría Distrital y DIAN.
+        </p>
+</div>
+<!-- Action CTAs -->
+<div class="flex flex-wrap items-center gap-space-xs sm:gap-space-sm">
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-lg text-label-lg transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+<span>Acta Oficial (.PDF)</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-lg text-label-lg transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-lg">table_chart</span>
+<span>Kárdex DIAN (.XLSX)</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+<span>Registrar Movimiento Manual</span>
+</button>
+</div>
+</div>
+<!-- KPI Metric Cards Grid (4 Cards) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Movimientos del Mes</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">3.420</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">transacciones</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">sync_alt</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center gap-2 pt-space-xs bg-surface-container-low/60 -mx-space-md -mb-space-md p-space-sm rounded-b-xl">
+<span class="inline-flex items-center font-label-sm text-label-sm text-secondary font-bold">
+<span class="material-symbols-outlined text-sm">trending_up</span> +8.2%
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">vs mes anterior (Entradas + Despachos)</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Valoración Inventario (Costo)</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold">$184.250.000</span>
+<span class="font-label-sm text-label-sm text-outline">COP</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center gap-2 pt-space-xs bg-secondary-container/20 -mx-space-md -mb-space-md p-space-sm rounded-b-xl">
+<span class="inline-flex items-center text-on-secondary-container font-label-sm text-label-sm font-semibold gap-1">
+<span class="material-symbols-outlined text-sm">check_circle</span> 100% Conciliado DIAN
+          </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Cierre Contable 31 Oct</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Cuarentena / Muestreo</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-error font-bold">2</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">lotes retenidos</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-error-container/60 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">science</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between pt-space-xs bg-error-container/20 -mx-space-md -mb-space-md p-space-sm rounded-b-xl">
+<span class="font-body-sm text-body-sm text-on-error-container font-medium truncate">Biológicos bajo prueba de estabilidad</span>
+<span class="font-label-sm text-label-sm text-error font-bold">INVIMA Lab</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-semibold">Cumplimiento FEFO</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-primary font-bold">99.8%</span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold">Óptimo</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">rule</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center gap-2 pt-space-xs bg-surface-container-low/60 -mx-space-md -mb-space-md p-space-sm rounded-b-xl">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant truncate">0 despachos con fecha invertida</span>
+</div>
+</div>
+</div>
+<!-- Search and Control Filters Bar -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-space-md">
+<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-space-sm flex-1">
+<!-- Search Input -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-lg">search</span>
+<input class="w-full bg-surface-container-low pl-9 pr-3 py-2 rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container transition-colors" placeholder="Filtrar por SKU, Medicamento o Lote..." type="text"/>
+</div>
+<!-- Date Range Select -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-lg pointer-events-none">calendar_month</span>
+<select class="w-full bg-surface-container-low pl-9 pr-8 py-2 rounded-lg font-body-sm text-body-sm text-on-surface focus:outline-none appearance-none cursor-pointer">
+<option>Últimos 30 días (Oct - Nov)</option>
+<option>Mes actual (Noviembre 2024)</option>
+<option>Tercer Trimestre Q3 2024</option>
+<option>Rango personalizado...</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 text-outline text-lg pointer-events-none">expand_more</span>
+</div>
+<!-- Bodega Select -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-lg pointer-events-none">warehouse</span>
+<select class="w-full bg-surface-container-low pl-9 pr-8 py-2 rounded-lg font-body-sm text-body-sm text-on-surface focus:outline-none appearance-none cursor-pointer">
+<option>Todas las Bodegas (2)</option>
+<option selected="">Bodega Central Chicó (Reg. #01)</option>
+<option>Bodega Satélite Salitre (Reg. #04)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 text-outline text-lg pointer-events-none">expand_more</span>
+</div>
+<!-- Operation Type Select -->
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-lg pointer-events-none">filter_list</span>
+<select class="w-full bg-surface-container-low pl-9 pr-8 py-2 rounded-lg font-body-sm text-body-sm text-on-surface focus:outline-none appearance-none cursor-pointer">
+<option>Todos los Movimientos</option>
+<option>Entrada Proveedor (Factura)</option>
+<option>Dispensación / Venta Paciente</option>
+<option>Merma / Avería / Vencido</option>
+<option>Cuarentena Regulatoria INVIMA</option>
+<option>Transferencia Inter-bodega</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 text-outline text-lg pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Quick Quick Action Tags -->
+<div class="flex items-center gap-space-xs shrink-0 self-end lg:self-center">
+<span class="font-label-sm text-label-sm text-outline hidden xl:inline">Filtro rápido:</span>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold hover:bg-surface-variant transition-colors" type="button">
+          Cadena de Frío
+        </button>
+<button class="px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container transition-colors" type="button">
+          Control Especial FNE
+        </button>
+</div>
+</div>
+<!-- Kárdex Movement Table Container (High Density) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="px-space-md py-3 bg-surface-container-low/70 flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="font-title-md text-title-md text-on-surface font-bold">Libro de Kárdex y Trazabilidad Sanitaria</span>
+<span class="bg-surface-container px-2 py-0.5 rounded-full font-label-sm text-label-sm text-primary font-bold">1.240 Registros</span>
+</div>
+<div class="flex items-center gap-space-md font-label-sm text-label-sm text-on-surface-variant">
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span> FEFO Activo
+          </span>
+<span class="flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary-container"></span> Sincronizado DIAN DIAN-Sync
+          </span>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-3 px-space-md">Fecha • Hora</th>
+<th class="py-3 px-space-md">Medicamento / SKU</th>
+<th class="py-3 px-space-md">Lote • Expira</th>
+<th class="py-3 px-space-md">Operación Sanitaria</th>
+<th class="py-3 px-space-md text-right">Cantidad</th>
+<th class="py-3 px-space-md text-right">Saldo Bodega</th>
+<th class="py-3 px-space-md text-right">Costo Unit. (COP)</th>
+<th class="py-3 px-space-md">Responsable Sanitario</th>
+<th class="py-3 px-space-md">Soporte Legal / Fiscal</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low font-body-sm text-body-sm text-on-surface">
+<!-- Row 1: Cold Chain Entry -->
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium">04 Nov 2024</div>
+<div class="font-label-sm text-label-sm text-outline">10:45 AM</div>
+</td>
+<td class="py-3 px-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-base" title="Cadena de Frío 2°C - 8°C">ac_unit</span>
+<div>
+<div class="font-bold text-on-surface">Insulina Glargina 100 UI/ml Sol. Iny.</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">SKU: BIO-88912 • Sanofi Aventis</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-mono font-semibold text-primary">INS-902</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span>Vence: 12/2026</span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-container"></span>
+</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary-fixed/40 text-on-primary-fixed-variant font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-xs">arrow_downward</span> Entrada Compra
+                </span>
+</td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-primary">
+                +150 amp
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-on-surface">
+                210 amp
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-mono">
+                $68.400
+              </td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium text-on-surface">Q.F. Carlos Méndez</div>
+<div class="font-label-sm text-label-sm text-outline">TP: QF-9921 Bogotá</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-mono text-primary font-semibold">FAC-DIAN #994821</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Acta Rec. AR-204 (4.2°C)</span>
+</div>
+</td>
+</tr>
+<!-- Row 2: Standard Dispensation -->
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium">04 Nov 2024</div>
+<div class="font-label-sm text-label-sm text-outline">09:30 AM</div>
+</td>
+<td class="py-3 px-space-md">
+<div>
+<div class="font-bold text-on-surface">Ibuprofeno 800mg Tabletas x 30</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">SKU: GEN-10294 • Laboratorios MK</div>
+</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-mono font-semibold text-on-surface">2025-X89</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Vence: 06/2025 (FEFO #1)</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-xs">local_shipping</span> Dispensación Paciente
+                </span>
+</td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-error">
+                -2 cajas
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-on-surface">
+                348 cajas
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-mono">
+                $12.350
+              </td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium text-on-surface">Reg. Andrea Torres</div>
+<div class="font-label-sm text-label-sm text-outline">Dispensador Turno A</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">Orden #FYA-0894</span>
+<span class="font-label-sm text-label-sm text-outline">Fórmula Validada Minsalud</span>
+</div>
+</td>
+</tr>
+<!-- Row 3: Special Control Dispensation (FNE) -->
+<tr class="hover:bg-surface-container-low/40 transition-colors bg-secondary-fixed/5">
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium">04 Nov 2024</div>
+<div class="font-label-sm text-label-sm text-outline">08:15 AM</div>
+</td>
+<td class="py-3 px-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">FNE</span>
+<div>
+<div class="font-bold text-on-surface">Clonazepam 2.5 mg/ml Gotas 20ml</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">SKU: CTL-00918 • Tecnoquímicas</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-mono font-semibold text-primary">CNZ-2024B</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Vence: 08/2026</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error-container/40 text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-xs">lock</span> Control Especial Recetario
+                </span>
+</td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-error">
+                -1 fco
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-on-surface">
+                18 fcos
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-mono">
+                $21.900
+              </td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium text-on-surface">Dr. Alejandro Morales</div>
+<div class="font-label-sm text-label-sm text-outline">Regente Principal</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-semibold text-error">Recetario Retenido #9021</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Libro FNE Folio 114</span>
+</div>
+</td>
+</tr>
+<!-- Row 4: Waste / Merma / Packaging Damage -->
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium">03 Nov 2024</div>
+<div class="font-label-sm text-label-sm text-outline">05:20 PM</div>
+</td>
+<td class="py-3 px-space-md">
+<div>
+<div class="font-bold text-on-surface">Amoxicilina 500mg Cápsulas x 50</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">SKU: ANT-50491 • Genfar</div>
+</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-mono font-semibold text-on-surface">AMX-4411</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">Vence: 11/2025</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-xs">delete</span> Merma / Rotura Blíster
+                </span>
+</td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-error">
+                -3 cajas
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-on-surface">
+                142 cajas
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-mono">
+                $18.100
+              </td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium text-on-surface">Reg. Andrea Torres</div>
+<div class="font-label-sm text-label-sm text-outline">Recepción Técnica</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">Acta Baja AB-089</span>
+<span class="font-label-sm text-label-sm text-outline">Destrucción Farmacéutica</span>
+</div>
+</td>
+</tr>
+<!-- Row 5: Biological / Cold Chain Quarantine -->
+<tr class="hover:bg-surface-container-low/40 transition-colors">
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium">03 Nov 2024</div>
+<div class="font-label-sm text-label-sm text-outline">02:10 PM</div>
+</td>
+<td class="py-3 px-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-base">ac_unit</span>
+<div>
+<div class="font-bold text-on-surface">Enoxaparina Sódica 40mg/0.4ml Jeringa</div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">SKU: BIO-33419 • Sanofi Clexane</div>
+</div>
+</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-mono font-semibold text-error">ENX-7712</div>
+<div class="font-label-sm text-label-sm text-error font-medium">Bajo Cuarentena INVIMA</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-xs">shield_with_heart</span> Muestreo Regulatorio
+                </span>
+</td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-outline">
+                0 (Bloqueo)
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-bold text-on-surface">
+                80 jeringas
+              </td>
+<td class="py-3 px-space-md text-right whitespace-nowrap font-mono">
+                $44.700
+              </td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="font-medium text-on-surface">Q.F. Carlos Méndez</div>
+<div class="font-label-sm text-label-sm text-outline">Auditor de Calidad</div>
+</td>
+<td class="py-3 px-space-md whitespace-nowrap">
+<div class="flex flex-col">
+<span class="font-mono text-error font-semibold">OF-INVIMA 2024-819</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Lote en contención física</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="px-space-md py-3 bg-surface-container-low flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant">
+<div>Mostrando <span class="font-semibold text-on-surface">1 - 5</span> de 1.240 transacciones kárdex</div>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container text-outline hover:text-on-surface transition-colors" disabled="" type="button">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-on-primary font-bold" type="button">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container text-on-surface transition-colors" type="button">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container text-on-surface transition-colors" type="button">3</button>
+<span class="px-1 text-outline">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-surface-container text-on-surface transition-colors" type="button">248</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Bottom Section: 2 Regulatory Audit Modules Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Box A: Acta de Recepción Técnica de Medicamentos (7 Cols) -->
+<div class="lg:col-span-7 bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<!-- Header -->
+<div class="flex items-center justify-between pb-space-sm mb-space-md bg-surface-container-low/40 -mx-space-lg -mt-space-lg p-space-md rounded-t-xl">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">fact_check</span>
+</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Acta de Recepción Técnica Sanitaria</h2>
+<span class="font-label-sm text-label-sm text-outline">Inspección Física Obligatoria Res. 1403/2007 INVIMA</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-sm">check_circle</span> Aprobada Conforme
+            </span>
+</div>
+<!-- Content Details -->
+<div class="space-y-space-md">
+<!-- Supplier info banner -->
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Proveedor Farmacéutico</span>
+<div class="font-title-md text-title-md font-bold text-on-surface">Laboratorios MK • Tecnoquímicas S.A.</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Factura Electrónica: FE-99214 • Guía Servientrega #772918</div>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Fecha de Arribo</span>
+<div class="font-bold text-on-surface">04 Nov 2024 • 08:30</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold">Muelle Frío #1 Chicó</span>
+</div>
+</div>
+<!-- Verification checklist grid -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+<div class="bg-surface-container-low/50 p-space-sm rounded-lg text-center">
+<span class="font-label-sm text-label-sm text-outline block">Embalaje y Sellos</span>
+<span class="font-label-lg text-label-lg font-bold text-primary flex items-center justify-center gap-1 mt-1">
+<span class="material-symbols-outlined text-sm">inventory</span> Íntegros 100%
+                </span>
+</div>
+<div class="bg-surface-container-low/50 p-space-sm rounded-lg text-center">
+<span class="font-label-sm text-label-sm text-outline block">Rotulación INVIMA</span>
+<span class="font-label-lg text-label-lg font-bold text-primary flex items-center justify-center gap-1 mt-1">
+<span class="material-symbols-outlined text-sm">qr_code</span> Vigente / Legible
+                </span>
+</div>
+<div class="bg-surface-container-low/50 p-space-sm rounded-lg text-center">
+<span class="font-label-sm text-label-sm text-outline block">Termorregistro Frío</span>
+<span class="font-label-lg text-label-lg font-bold text-secondary flex items-center justify-center gap-1 mt-1">
+<span class="material-symbols-outlined text-sm">thermostat</span> 4.5°C (2-8°C OK)
+                </span>
+</div>
+<div class="bg-surface-container-low/50 p-space-sm rounded-lg text-center">
+<span class="font-label-sm text-label-sm text-outline block">Vigencia Vida Útil</span>
+<span class="font-label-lg text-label-lg font-bold text-primary flex items-center justify-center gap-1 mt-1">
+<span class="material-symbols-outlined text-sm">event_available</span> &gt; 24 Meses
+                </span>
+</div>
+</div>
+<!-- Signature verification note -->
+<div class="flex items-center justify-between p-space-sm bg-surface-container rounded-lg">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-xl">history_edu</span>
+<div>
+<span class="font-label-sm text-label-sm font-bold text-on-surface block">Firma Electrónica de Regente de Farmacia</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dr. Alejandro Morales - Acta Cédula Sanitaria #79.821.402</span>
+</div>
+</div>
+<span class="font-mono text-outline font-label-sm text-label-sm">HASH: 4bfa...992c</span>
+</div>
+</div>
+</div>
+<div class="pt-space-md flex items-center justify-end gap-space-sm">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold hover:bg-surface-container-high transition-colors" type="button">
+            Ver Acta Completa AR-104
+          </button>
+<button class="px-space-md py-1.5 rounded-lg bg-primary text-on-primary font-label-sm text-label-sm font-semibold hover:bg-primary-container transition-colors" type="button">
+            Imprimir Rótulos de Lote FEFO
+          </button>
+</div>
+</div>
+<!-- Box B: Fondo Nacional de Estupefacientes (FNE) Module (5 Cols) -->
+<div class="lg:col-span-5 bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<!-- Header -->
+<div class="flex items-center justify-between pb-space-sm mb-space-md bg-surface-container-low/40 -mx-space-lg -mt-space-lg p-space-md rounded-t-xl">
+<div class="flex items-center gap-space-xs">
+<span class="w-8 h-8 rounded-lg bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-lg">lock_clock</span>
+</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Informe Trimestral FNE</h2>
+<span class="font-label-sm text-label-sm text-outline">Sustancias Sometidas a Fiscalización Médica</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm font-bold px-2 py-0.5 rounded bg-error-container text-on-error-container">
+              Alerta Q4
+            </span>
+</div>
+<!-- Description -->
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+            Balance contable obligatorio para presentación legal ante la Secretaría Distrital de Salud y el Fondo Nacional de Estupefacientes.
+          </p>
+<!-- Substance Quick Balance Matrix -->
+<div class="space-y-space-sm">
+<!-- Item 1: Clonazepam -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between">
+<div>
+<div class="font-bold text-on-surface font-body-sm">Clonazepam 2.5 mg/ml (Gotas)</div>
+<div class="font-label-sm text-label-sm text-outline">
+                  Saldo Ant: 25 • Entradas: +10 • Egresos: -17 (Retenidos)
+                </div>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-outline">Stock Físico</span>
+<div class="font-bold text-primary font-title-md">18 fcos</div>
+</div>
+</div>
+<!-- Item 2: Morfina Solución -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between">
+<div>
+<div class="font-bold text-on-surface font-body-sm">Morfina Clorhidrato 10mg/ml Amp.</div>
+<div class="font-label-sm text-label-sm text-outline">
+                  Saldo Ant: 12 • Entradas: +30 • Egresos: -8 (Recetas Cupon)
+                </div>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-outline">Stock Físico</span>
+<div class="font-bold text-primary font-title-md">34 amp</div>
+</div>
+</div>
+<!-- Compliance Status Indicator -->
+<div class="p-space-sm bg-secondary-container/15 rounded-lg flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-lg">check_box</span>
+<div class="text-left font-body-sm text-body-sm text-on-surface">
+<span class="font-semibold text-secondary">Recetarios Físicos Archivados:</span>
+<span>25 folios foliados en gaveta de seguridad #3.</span>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-space-md flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline">Vence reporte: 15 Dic 2024</span>
+<button class="px-space-md py-1.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-sm">ios_share</span>
+<span>Generar Reporte FNE (.PDF Oficial)</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-surface-container-low py-space-sm px-space-lg"><div class="w-full flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm"><span>© 2024 FarmaYA Salud a Domicilio S.A.S. Dispensación Farmacéutica Certificada.</span><div class="flex items-center gap-space-md"><span class="bg-surface-container px-2 py-0.5 rounded text-on-surface font-semibold">INVIMA 2024R-0019284</span><span class="text-outline">v2.4.0 Spring Boot Core</span></div></div></footer></div></body></html>

@@ -1,0 +1,10 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: farmaya-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - farmaya-data:/data/db
+volumes:
+  farmaya-data:

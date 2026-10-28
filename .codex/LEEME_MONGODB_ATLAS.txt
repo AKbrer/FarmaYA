@@ -1,0 +1,17 @@
+FarmaYa - conexión a MongoDB Atlas
+
+IMPORTANTE: usa la variable de entorno MONGODB_URI y no guardes credenciales en el proyecto. Si la contraseña de Atlas se compartió anteriormente, cámbiala en MongoDB Atlas (Database Access).
+
+Configuración:
+- Base de datos: FarmaYA
+- URI: se lee desde la variable de entorno MONGODB_URI
+- Cuentas nuevas y existentes se consultan en las colecciones clientes, farmacias, domiciliarios y administradores. La aplicación ya no utiliza ni escribe en la colección histórica users.
+
+En PowerShell, desde la carpeta del proyecto, define la variable usando la URI actualizada de Atlas:
+
+$env:MONGODB_URI = "mongodb+srv://USUARIO:NUEVA_CLAVE@cluster0.e2kxrlo.mongodb.net/FarmaYA?retryWrites=true&w=majority&appName=Cluster0"
+mvn clean spring-boot:run
+
+Sustituye USUARIO y NUEVA_CLAVE por tus credenciales reales; no uses los marcadores literalmente. Si la contraseña contiene caracteres especiales, codifícalos para URI. Verifica en Atlas que el usuario tenga permisos sobre FarmaYA y que Network Access permita tu IP.
+
+Antes de borrar users, confirma en Atlas que los documentos existentes están en sus colecciones de destino y prueba el inicio de sesión de cada rol. Después puedes eliminar users desde MongoDB Atlas.

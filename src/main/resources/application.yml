@@ -1,0 +1,32 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: farmaya
+  data:
+    mongodb:
+      # Conexión a MongoDB Atlas: define la variable de entorno MONGODB_URI antes de iniciar.
+      # La URI debe incluir el nombre de la base de datos FarmaYA.
+      uri: mongodb+srv://wilcabrera466_db_user:c4Ke99RB9CVCzrX1@cluster0.e2kxrlo.mongodb.net/?appName=Cluster0
+      database: FarmaYA
+      auto-index-creation: true
+  web:
+    resources:
+      cache:
+        cachecontrol:
+          no-cache: true   # el navegador siempre revisa si hay archivos nuevos (evita ver versiones viejas)
+
+farmaya:
+  # Tiempos del flujo (segundos)
+  search-timeout-seconds: 120          # espera de una farmacia antes de ampliar la zona
+  pharmacy-confirm-timeout-seconds: 300 # tiempo de la farmacia para confirmar precios
+  price-accept-timeout-seconds: 600     # tiempo del cliente para aceptar el precio
+  max-search-rounds: 3                  # rondas de búsqueda antes de vencer el pedido
+  session-hours: 12
+  max-active-deliveries: 2              # entregas simultáneas por repartidor
+  zones: Zona Norte,Zona Centro,Zona Sur,Zona Oriente,Zona Occidente
+  timezone: ${FARMAYA_TZ:}              # vacío = zona horaria del servidor (ej. America/Bogota)
+  admin-email: ${FARMAYA_ADMIN_EMAIL:admin@farmaya.local}
+  admin-password: ${FARMAYA_ADMIN_PASSWORD:Admin123!}
+  seed-demo: ${FARMAYA_SEED_DEMO:true}  # crea cuentas de prueba al iniciar

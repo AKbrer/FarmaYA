@@ -1,0 +1,4528 @@
+/* ==========================================================================
+   FARMAYA MODERNISTA · Design Layer 2026
+   Loaded AFTER styles.css — overrides the base visual layer completely.
+
+   Design direction: Deep indigo + warm amber. Sharp geometry. Editorial type.
+   Drastically different from the green-teal palette.
+
+   DO NOT TOUCH: .auth-promo, .login-*, .ls-*, .fy-cross, .brand-image,
+                  .auth-icon, .pharmacy-avatar, login 3D animation keyframes.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. DESIGN TOKENS — Light Theme
+   ========================================================================== */
+:root {
+  --font-display: 'Plus Jakarta Sans', 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --stitch-primary: #16865d;
+  --stitch-primary-container: #0f6b4a;
+  --stitch-on-primary-container: #e0f5e9;
+  --stitch-secondary: #0a5ca8;
+  --stitch-secondary-container: #e8f2fc;
+  --stitch-on-secondary-container: #084074;
+  --stitch-surface: #fbfdfc;
+  --stitch-surface-low: #f4f8f5;
+  --stitch-surface-container: #eaf3ed;
+  --stitch-on-surface: #10241b;
+  --stitch-on-surface-variant: #3e5046;
+  --stitch-outline: #6e8276;
+
+  --bg:           #F5F8F6;
+  --surface:      #FFFFFF;
+  --surface-soft: #F0F6F2;
+  --line:         #DDE7E1;
+  --line-strong:  #C2D5C9;
+  --text:         #13281E;
+  --muted:        #50675B;
+
+  --primary:      #16865d;
+  --primary-dark: #0f6b4a;
+  --primary-soft: #e0f5e9;
+  --on-primary:   #ffffff;
+
+  --brand-blue:   #0a5ca8;
+  --brand-blue-soft: #e8f2fc;
+  --brand-blue-dark: #084074;
+
+  --accent:       #0a5ca8;
+  --accent-ink:   #083e72;
+
+  --danger:       #DC2626;
+  --danger-soft:  #FEF2F2;
+  --warning:      #D97706;
+  --warning-soft: #FFFBEB;
+  --success:      #10B981;
+
+  --hero-bg:      #0b2e23;
+  --hero-ink:     #F4F9F6;
+
+  --shadow:       0 4px 24px rgba(18, 53, 38, .06);
+  --shadow-lg:    0 12px 40px rgba(18, 53, 38, .10);
+  --ring:         rgba(22, 134, 93, .25);
+
+  --radius:       14px;
+  --radius-sm:    10px;
+  --radius-xs:    8px;
+
+  --ease-out:     cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out:  cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer:  cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ==========================================================================
+   2. DESIGN TOKENS — Dark Theme
+   ========================================================================== */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:           #0B1410;
+  --surface:      #12201A;
+  --surface-soft: #182C24;
+  --line:         #233B31;
+  --line-strong:  #2F4D40;
+  --text:         #E5F2EB;
+  --muted:        #8FA89C;
+
+  --primary:      #2ecc71;
+  --primary-dark: #27ae60;
+  --primary-soft: rgba(46, 204, 113, .14);
+  --on-primary:   #0B1410;
+
+  --brand-blue:   #3b8fdb;
+  --brand-blue-soft: rgba(59, 143, 219, .14);
+  --brand-blue-dark: #1e6cb8;
+
+  --accent:       #3b8fdb;
+  --accent-ink:   #e1f0fc;
+
+  --danger:       #FCA5A5;
+  --danger-soft:  rgba(252, 165, 165, .1);
+  --warning:      #FCD34D;
+  --warning-soft: rgba(252, 211, 77, .1);
+  --success:      #34D399;
+
+  --hero-bg:      #081A14;
+  --hero-ink:     #E5F2EB;
+
+  --shadow:       0 6px 30px rgba(0, 0, 0, .45);
+  --shadow-lg:    0 16px 50px rgba(0, 0, 0, .55);
+  --ring:         rgba(46, 204, 113, .3);
+
+  --stitch-primary: #85d5c8;
+  --stitch-primary-container: #004e46;
+  --stitch-on-primary-container: #a1f1e4;
+  --stitch-secondary: #3b8fdb;
+  --stitch-secondary-container: #0d2f5c;
+  --stitch-on-secondary-container: #b8dcff;
+  --stitch-surface: #0a1712;
+  --stitch-surface-low: #10211a;
+  --stitch-surface-container: #162a22;
+  --stitch-on-surface: #eef7f2;
+  --stitch-on-surface-variant: #9ab3a6;
+  --stitch-outline: #476155;
+}
+
+/* ==========================================================================
+   3. GLOBAL FOUNDATIONS — Tipografía Aumentada, Legibilidad y Espacio
+   ========================================================================== */
+html {
+  font-size: 16.5px;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+  font-size: 15.5px;
+}
+
+.small {
+  font-size: 14px;
+}
+
+.muted.small {
+  font-size: 14px;
+}
+
+/* Contenedor principal amplio y espacioso que aprovecha la pantalla */
+.app-container {
+  width: min(1560px, calc(100% - 48px));
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: 34px clamp(16px, 3.5vw, 48px) 80px;
+  min-height: calc(100vh - 80px);
+}
+
+body:has(.side-nav-layout) .app-container {
+  width: calc(100% - 250px);
+  max-width: 1600px;
+  margin: 0 0 0 250px;
+}
+
+.page-title, h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+
+.page-title {
+  font-size: clamp(34px, 4.2vw, 54px);
+  margin: 0 0 8px;
+}
+
+a {
+  color: var(--primary);
+}
+
+.eyebrow {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 8px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   4. HEADER — Altura y presencia generosa, logo nítido y acciones amplias
+   ========================================================================== */
+.site-header {
+  padding: 16px clamp(20px, 4vw, 64px);
+  min-height: 82px;
+  background: rgba(255, 255, 255, .94);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid var(--line);
+  transition: border-color .25s, box-shadow .25s;
+  box-shadow: 0 2px 14px rgba(15, 23, 42, .03);
+}
+
+.site-header.is-scrolled {
+  box-shadow: 0 6px 24px rgba(15, 23, 42, .08);
+}
+
+[data-theme="dark"] .site-header {
+  background: rgba(19, 24, 39, .95);
+  border-bottom-color: var(--line);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+}
+
+.brand {
+  color: var(--text);
+  font-size: 26px;
+  gap: 14px;
+}
+
+.brand-image {
+  width: 210px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+}
+.brand-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.brand-accent {
+  color: var(--primary);
+}
+
+.brand-mark {
+  background: var(--primary);
+  color: var(--on-primary);
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius);
+  box-shadow: 0 4px 14px rgba(22, 134, 93, .25);
+  font-size: 34px;
+}
+
+[data-theme="dark"] .brand-mark {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 4px 14px rgba(46, 204, 113, .2);
+}
+
+.header-tag {
+  color: var(--primary);
+  background: var(--primary-soft);
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-pill,
+.user-pill-btn {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--text);
+  padding: 6px 18px 6px 8px;
+  min-height: 48px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+}
+
+.user-pill-btn strong {
+  font-size: 14.5px;
+  font-weight: 700;
+  max-width: 160px;
+}
+.user-pill-btn small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+[data-theme="dark"] .user-pill,
+[data-theme="dark"] .user-pill-btn {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.user-avatar {
+  background: var(--primary-soft);
+  color: var(--primary);
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+  font-weight: 800;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+.hamburger-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+.hamburger-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* ==========================================================================
+   5. BUTTONS — Escala táctil cómoda, estilo pro
+   ========================================================================== */
+.btn {
+  min-height: 46px;
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-family: var(--font-body);
+  transition: transform 160ms var(--ease-out),
+              background 160ms var(--ease-out),
+              border-color 160ms var(--ease-out),
+              color 160ms var(--ease-out),
+              box-shadow 200ms var(--ease-out);
+}
+
+.btn.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .15), var(--shadow);
+}
+
+.btn.primary:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 6px 24px rgba(245, 158, 11, .25),
+              inset 0 1px 0 rgba(255, 255, 255, .15);
+  transform: translateY(-2px);
+}
+
+.btn.secondary,
+.btn.ghost {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.btn.secondary:hover,
+.btn.ghost:hover {
+  background: var(--surface-soft);
+  border-color: var(--line-strong);
+}
+
+.btn.danger,
+.btn.danger-ghost {
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-color: rgba(220, 38, 38, .2);
+}
+
+.btn.link {
+  color: var(--primary);
+}
+
+.btn.small {
+  border-radius: var(--radius-xs);
+}
+
+[data-theme="dark"] .btn {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+[data-theme="dark"] .btn.primary {
+  background: var(--primary);
+  color: var(--on-primary);
+  box-shadow: 0 5px 20px rgba(46, 204, 113, .25),
+              inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+
+[data-theme="dark"] .btn.primary:hover {
+  background: #27ae60;
+}
+
+[data-theme="dark"] .btn.secondary,
+[data-theme="dark"] .btn.ghost {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+[data-theme="dark"] .btn.secondary:hover,
+[data-theme="dark"] .btn.ghost:hover {
+  background: #182C24;
+  border-color: var(--line-strong);
+}
+
+.icon-button {
+  border-radius: var(--radius-sm);
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+[data-theme="dark"] .icon-button,
+[data-theme="dark"] .hamburger-btn,
+[data-theme="dark"] .account-menu-button {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+.account-menu-button {
+  color: var(--primary);
+  border-color: var(--line);
+}
+
+.account-menu-button:hover {
+  background: var(--primary-soft);
+  border-color: rgba(22, 134, 93, .3);
+}
+
+/* Hover lift for buttons */
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ==========================================================================
+   6. BLOCKS & CARDS — Dimensiones amplias y presencia estructurada
+   ========================================================================== */
+.block {
+  border-radius: 22px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, .04);
+  padding: 30px 34px;
+  transition: box-shadow .22s var(--ease-out), border-color .22s var(--ease-out);
+}
+
+.block:hover {
+  box-shadow: 0 8px 30px rgba(18, 53, 38, .08);
+  border-color: rgba(22, 134, 93, .25);
+}
+
+[data-theme="dark"] .block {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, .4);
+}
+
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.section-heading h2, .block h2 {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+
+/* ==========================================================================
+   7. WELCOME BANNER — Verde y Azul Oficiales de FarmaYA
+   ========================================================================== */
+.welcome-banner {
+  background: linear-gradient(135deg, #eaf7f0 0%, #f6fbf8 52%, #e6f1fb 100%);
+  border: 1px solid #bfe3d1;
+  border-radius: 24px;
+  color: #13281E;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 36px;
+  padding: clamp(38px, 4.5vw, 56px) clamp(36px, 4.5vw, 64px);
+  box-shadow: 0 10px 30px rgba(22, 134, 93, 0.08);
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 65% 55% at 12% 85%, rgba(22, 134, 93, .12), transparent),
+    radial-gradient(ellipse 45% 45% at 85% 15%, rgba(10, 92, 168, .08), transparent),
+    radial-gradient(ellipse 35% 35% at 75% 75%, rgba(22, 134, 93, .05), transparent);
+  pointer-events: none;
+}
+
+.welcome-banner .eyebrow {
+  color: var(--primary);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.welcome-banner h1 {
+  font-family: var(--font-display);
+  font-size: clamp(38px, 4.2vw, 56px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  color: #13281E;
+  position: relative;
+  z-index: 1;
+  margin: 0 0 16px;
+  max-width: 18ch;
+}
+
+.welcome-banner h1 span {
+  color: var(--primary);
+}
+
+.welcome-banner p {
+  color: #40574b;
+  font-size: 17px;
+  line-height: 1.6;
+  max-width: 580px;
+  position: relative;
+  z-index: 1;
+  margin: 0 0 24px;
+}
+
+.welcome-pills {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-pills span {
+  background: #FFFFFF;
+  border: 1px solid #C2D5C9;
+  color: #13281E;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 9px 20px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(18, 53, 38, .04);
+}
+
+.welcome-pills span:first-child {
+  border-color: rgba(22, 134, 93, .4);
+  background: #e0f5e9;
+  color: #0f6b4a;
+}
+
+.welcome-pills span:nth-child(2) {
+  border-color: rgba(10, 92, 168, .35);
+  background: #e8f2fc;
+  color: #084074;
+}
+
+.welcome-art {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 160px;
+  width: 160px;
+  height: 160px;
+  display: grid;
+  place-items: center;
+}
+
+.welcome-art .fy-cross {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 6px 16px rgba(18, 53, 38, 0.12));
+}
+
+/* Modo Oscuro: Recuadro clínico profundo */
+[data-theme="dark"] .welcome-banner {
+  background: var(--hero-bg);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--hero-ink);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme="dark"] .welcome-banner::before {
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 80%, rgba(46, 204, 113, .22), transparent),
+    radial-gradient(ellipse 40% 40% at 85% 20%, rgba(59, 143, 219, .15), transparent),
+    radial-gradient(ellipse 30% 30% at 70% 70%, rgba(46, 204, 113, .08), transparent);
+}
+
+[data-theme="dark"] .welcome-banner .eyebrow {
+  color: #2ecc71;
+}
+
+[data-theme="dark"] .welcome-banner h1 {
+  color: #E5F2EB;
+}
+
+[data-theme="dark"] .welcome-banner h1 span {
+  color: var(--accent);
+}
+
+[data-theme="dark"] .welcome-banner p {
+  color: rgba(226, 232, 240, .85);
+}
+
+[data-theme="dark"] .welcome-pills span {
+  background: rgba(251, 191, 36, .14);
+  border: 1px solid rgba(251, 191, 36, .35);
+  color: var(--accent);
+  box-shadow: none;
+}
+
+[data-theme="dark"] .welcome-art {
+  background: transparent;
+}
+
+[data-theme="dark"] .welcome-art .fy-cross {
+  filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.4));
+}
+
+/* ==========================================================================
+   8. SEARCH — Barra de búsqueda prominente y botón de perfil amplio
+   ========================================================================== */
+.client-search-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-height: 60px;
+  padding: 0 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, .04);
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.search-ico svg {
+  width: 22px;
+  height: 22px;
+  color: var(--muted);
+}
+
+.search-wrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring), 0 4px 18px rgba(22, 134, 93, .12);
+}
+
+.search-input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 16.5px;
+  font-weight: 500;
+  padding: 18px 0;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.client-search-row > .btn {
+  min-height: 60px;
+  padding: 14px 28px;
+  font-size: 15.5px;
+  font-weight: 700;
+  border-radius: 16px;
+  white-space: nowrap;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.client-search-row > .btn:hover {
+  background: var(--surface-soft);
+  border-color: var(--line-strong);
+}
+
+[data-theme="dark"] .search-wrap {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .25);
+}
+
+[data-theme="dark"] .search-input {
+  color: var(--text);
+}
+
+[data-theme="dark"] .search-input::placeholder {
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   9. CATEGORY CHIPS — Pastillas amplias con estado activo ámbar
+   ========================================================================== */
+.category-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  min-height: 48px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14.5px;
+  font-weight: 700;
+  transition: all 180ms var(--ease-out);
+  cursor: pointer;
+}
+
+.category-chip span {
+  display: flex;
+  color: var(--primary);
+}
+
+.category-chip.active,
+.category-chip:hover {
+  background: rgba(245, 158, 11, .12);
+  border-color: rgba(245, 158, 11, .4);
+  color: var(--accent-ink);
+}
+
+.category-chip.active span,
+.category-chip:hover span {
+  color: var(--accent);
+}
+
+[data-theme="dark"] .category-chip {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+[data-theme="dark"] .category-chip.active,
+[data-theme="dark"] .category-chip:hover {
+  background: rgba(251, 191, 36, .14);
+  border-color: rgba(251, 191, 36, .35);
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   10. PRODUCT CARDS — Tarjetas de producto generosas con alta legibilidad
+   ========================================================================== */
+.app-container:has(.client-home) {
+  padding-bottom: 0 !important;
+}
+
+.client-main-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 350px !important;
+  gap: 28px !important;
+  align-items: start !important;
+  position: relative !important;
+  padding-bottom: 80px !important;
+}
+
+.client-products-column {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 20px !important;
+  min-width: 0 !important;
+  position: relative !important;
+}
+
+.client-side-column {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 86px !important;
+  align-self: start !important;
+  z-index: 30 !important;
+}
+
+.cart-panel {
+  position: relative !important;
+  top: auto !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  max-height: calc(100vh - 100px) !important;
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  overscroll-behavior: contain !important;
+  padding: 22px 24px !important;
+  border-radius: 18px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, .06) !important;
+}
+
+@media (max-width: 1060px) and (min-width: 821px) {
+  .client-main-grid {
+    grid-template-columns: minmax(0, 1fr) 310px !important;
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 820px) {
+  .client-main-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+  }
+  .client-side-column {
+    position: static !important;
+    max-height: none !important;
+    order: 2 !important;
+  }
+}
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 22px;
+}
+
+.product-card {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  transition: transform .25s var(--ease-out),
+              box-shadow .25s var(--ease-out),
+              border-color .25s var(--ease-out);
+}
+
+.product-card:hover {
+  border-color: rgba(22, 134, 93, .4);
+  box-shadow: 0 10px 32px rgba(22, 134, 93, .12);
+  transform: translateY(-3px);
+}
+
+.product-art-wrap {
+  min-height: 165px;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  background: linear-gradient(145deg, #f0f7f3, #eaf2fb);
+  display: grid;
+  place-items: center;
+}
+
+.p-art {
+  display: flex;
+  width: 120px;
+  height: 100px;
+}
+.p-art svg {
+  width: 100%;
+  height: 100%;
+}
+
+.product-tag {
+  background: rgba(245, 158, 11, .14);
+  color: var(--accent-ink);
+  border-radius: var(--radius-xs);
+  font-weight: 800;
+  font-size: 11px;
+  padding: 5px 9px;
+}
+
+.product-pharmacy {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.product-title {
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.4;
+  min-height: 48px;
+  margin: 4px 0 12px;
+  color: var(--text);
+}
+
+.product-price {
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.prescription-note {
+  font-size: 12px;
+  color: var(--warning);
+  margin: 0 0 8px;
+}
+
+.product-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.product-bottom .btn {
+  min-height: 44px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 11px;
+}
+
+[data-theme="dark"] .product-card {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .product-card:hover {
+  border-color: rgba(46, 204, 113, .4);
+  box-shadow: 0 10px 32px rgba(46, 204, 113, .12);
+}
+
+[data-theme="dark"] .product-art-wrap {
+  background: linear-gradient(145deg, #12201A, #182C24);
+}
+
+/* ==========================================================================
+   11. CART PANEL — Panel de carrito amplio y claro como en la captura
+   ========================================================================== */
+.cart-panel {
+  position: relative !important;
+  top: auto !important;
+  padding: 24px 26px !important;
+  border-radius: 20px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 4px 24px rgba(15, 23, 42, .06) !important;
+}
+
+.cart-panel h2 {
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.count-pill {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 800;
+  padding: 6px 14px;
+  border-radius: 999px;
+}
+
+.cart-items {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.cart-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.cart-item strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.cart-item small {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.quantity-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 3px 8px;
+}
+
+.qty-btn {
+  color: var(--primary);
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 18px 0 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+
+.cart-total strong {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.cart-panel .btn.block {
+  min-height: 52px;
+  padding: 14px 22px;
+  font-size: 16px;
+  font-weight: 800;
+  border-radius: 14px;
+  margin-top: 16px;
+}
+
+.cart-item {
+  border-bottom-color: var(--line);
+}
+
+.cart-total {
+  border-top-color: var(--line);
+}
+
+.cart-total strong {
+  font-family: var(--font-display);
+}
+
+.quantity-control {
+  border-color: var(--line);
+  border-radius: var(--radius-xs);
+}
+
+.qty-btn {
+  color: var(--primary);
+}
+
+[data-theme="dark"] .cart-panel {
+  background: rgba(19, 24, 39, .85);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  border-color: var(--line);
+}
+
+/* ==========================================================================
+   12. SIDE NAVIGATION — Amber dot active indicator
+   ========================================================================== */
+.side-nav {
+  background: var(--surface);
+  border-color: var(--line);
+  border-radius: 0;
+}
+
+.side-nav-item {
+  color: var(--muted);
+  border-radius: var(--radius-sm);
+  transition: background .16s, color .16s;
+}
+
+.side-nav-item:hover {
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.side-nav-item.active {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+/* Amber dot indicator instead of green bar */
+.side-nav-item.active:before {
+  background: var(--accent);
+  width: 5px;
+  border-radius: 0 5px 5px 0;
+}
+
+.side-nav-toggle {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+[data-theme="dark"] .side-nav {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .side-nav-toggle {
+  background: var(--surface-soft);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .side-nav-item.active {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
+/* ==========================================================================
+   13. TRUST CARDS — Indigo icons on soft indigo background
+   ========================================================================== */
+.trust-card {
+  background: var(--primary-soft);
+  border-color: rgba(22, 134, 93, .15);
+  border-radius: var(--radius);
+}
+
+.trust-card > span {
+  background: var(--surface);
+  color: var(--primary);
+  border-radius: var(--radius-sm);
+}
+
+[data-theme="dark"] .trust-card {
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .trust-card > span {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   14. ORDER ROWS — Filas de pedidos amplias, sin barra izquierda, hover verde FarmaYA
+   ========================================================================== */
+.order-row {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 22px 26px;
+  gap: 16px;
+  transition: border-color .2s, box-shadow .2s, transform .15s;
+}
+
+.order-row > .bar {
+  display: none;
+}
+
+.order-row:hover {
+  border-color: rgba(22, 134, 93, .4);
+  box-shadow: 0 6px 24px rgba(22, 134, 93, .1);
+  transform: translateY(-2px);
+}
+
+.row-top strong {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.row-items {
+  font-size: 15px;
+  margin: 8px 0;
+  line-height: 1.5;
+}
+
+.row-total {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.cell-caption, .timer {
+  font-size: 13.5px;
+}
+
+.offer {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 24px 28px;
+  gap: 16px;
+}
+
+.offer.fresh {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+[data-theme="dark"] .order-row,
+[data-theme="dark"] .offer {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .order-row:hover {
+  border-color: rgba(46, 204, 113, .4);
+  background: var(--surface-soft);
+}
+
+/* ==========================================================================
+   15. BADGES & TAGS — More squared, new color system
+   ========================================================================== */
+.badge, .tag {
+  border-radius: var(--radius-xs);
+}
+
+.tone-done .badge, .badge.tone-done {
+  background: rgba(16, 185, 129, .1);
+  color: var(--success);
+}
+
+.badge.tone-wait {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+.badge.tone-go {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.badge.tone-bad {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.tag {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+/* ==========================================================================
+   16. TABS — Smooth transitions, indigo active
+   ========================================================================== */
+.tabs {
+  background: var(--surface-soft);
+  border-radius: 12px;
+}
+
+.tab {
+  border-radius: var(--radius-xs);
+  color: var(--muted);
+  transition: background .2s var(--ease-out), color .2s var(--ease-out);
+}
+
+.tab.on {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .06);
+}
+
+[data-theme="dark"] .tabs {
+  background: var(--surface-soft);
+}
+
+[data-theme="dark"] .tab {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .tab.on {
+  background: var(--surface);
+  color: var(--primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .3);
+}
+
+/* ==========================================================================
+   17. FORMS & INPUTS — Indigo focus ring
+   ========================================================================== */
+.field-label {
+  color: var(--muted);
+  font-family: var(--font-body);
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus,
+.form-stack input:focus,
+.form-stack select:focus,
+.sheet-body input:focus,
+.sheet-body textarea:focus,
+.sheet-body select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+[data-theme="dark"] .field input,
+[data-theme="dark"] .field textarea,
+[data-theme="dark"] .field select,
+[data-theme="dark"] .form-stack input,
+[data-theme="dark"] .form-stack select,
+[data-theme="dark"] .form-stack textarea,
+[data-theme="dark"] .sheet-body input,
+[data-theme="dark"] .sheet-body textarea,
+[data-theme="dark"] .sheet-body select,
+[data-theme="dark"] .toolbar input,
+[data-theme="dark"] .toolbar select {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+[data-theme="dark"] .field-label {
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   18. TABLES — Alternating rows, indigo hover
+   ========================================================================== */
+.table-wrap {
+  border-color: var(--line);
+  border-radius: 12px;
+}
+
+.users th, .prices th {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border-bottom-color: var(--line);
+}
+
+.users td, .prices td {
+  border-bottom-color: var(--line);
+}
+
+.users tbody tr:nth-child(even),
+.prices tbody tr:nth-child(even) {
+  background: rgba(241, 245, 249, .5);
+}
+
+.users tbody tr:hover,
+.prices tbody tr:hover,
+.movement-table tbody tr:hover {
+  background: var(--primary-soft);
+}
+
+[data-theme="dark"] .table-wrap {
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .users th,
+[data-theme="dark"] .prices th {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] .users td,
+[data-theme="dark"] .prices td {
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] .users tbody tr:nth-child(even),
+[data-theme="dark"] .prices tbody tr:nth-child(even) {
+  background: rgba(28, 35, 51, .5);
+}
+
+[data-theme="dark"] .movement-table tbody tr:hover {
+  background: var(--surface-soft);
+}
+
+/* ==========================================================================
+   19. TOASTS — Darker, sharper
+   ========================================================================== */
+.toast {
+  background: #0F172A;
+  color: #F8FAFC;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, .08);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, .3);
+}
+
+.toast.error {
+  background: #991B1B;
+  color: #FEF2F2;
+  border-color: rgba(255, 255, 255, .12);
+}
+
+.toast .toast-ico {
+  background: rgba(255, 255, 255, .12);
+}
+
+[data-theme="dark"] .toast {
+  background: #1C2333;
+  color: var(--text);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .toast.error {
+  background: #5C1B1B;
+  color: #FCA5A5;
+  border-color: #7F1D1D;
+}
+
+/* ==========================================================================
+   20. DIALOGS / SHEETS — Sharper radius, stronger backdrop
+   ========================================================================== */
+.sheet {
+  border-radius: 18px;
+  box-shadow: var(--shadow-lg);
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+.sheet::backdrop {
+  background: rgba(15, 23, 42, .5);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.sheet.drawer {
+  border-radius: 18px 0 0 18px;
+}
+
+.sheet.drawer::backdrop {
+  background: rgba(15, 23, 42, .35);
+}
+
+.close {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border-radius: var(--radius-xs);
+}
+
+.close:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+[data-theme="dark"] .sheet {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .sheet-body {
+  background: var(--surface);
+  color: var(--text);
+}
+
+[data-theme="dark"] .close {
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+[data-theme="dark"] .close:hover {
+  background: rgba(46, 204, 113, .12);
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   21. AUTH CARD (form side only) — Sharper, stronger shadow
+   ========================================================================== */
+.auth-card {
+  border-radius: 20px;
+  box-shadow: 0 16px 50px rgba(15, 23, 42, .1);
+  border-color: var(--line);
+  background: var(--surface);
+}
+
+.auth-card-heading h2 {
+  font-size: 30px;
+  font-family: var(--font-display);
+  letter-spacing: -0.04em;
+}
+
+[data-theme="dark"] .auth-card {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ==========================================================================
+   22. PROFILE & SETTINGS
+   ========================================================================== */
+.profile-head {
+  border-bottom-color: var(--line);
+}
+
+.avatar {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-radius: 14px;
+}
+
+.settings-option {
+  border-color: var(--line);
+  background: var(--surface-soft);
+  border-radius: var(--radius);
+}
+
+[data-theme="dark"] .settings-option {
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+
+/* Menu items */
+.menu-item {
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  transition: background .16s, border-color .16s, transform .12s;
+}
+
+.menu-item:hover {
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+
+.menu-item.on {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.menu-item .mi-ico {
+  color: var(--primary);
+}
+
+.menu-item.danger {
+  color: var(--danger);
+  border: 1px dashed rgba(220, 38, 38, .25);
+  background: var(--danger-soft);
+}
+
+.menu-item.danger:hover {
+  background: rgba(220, 38, 38, .08);
+  border-color: var(--danger);
+}
+
+[data-theme="dark"] .menu-item {
+  color: var(--text);
+}
+
+[data-theme="dark"] .menu-item:hover {
+  background: var(--surface-soft);
+}
+
+[data-theme="dark"] .menu-item.danger {
+  color: var(--danger);
+}
+
+[data-theme="dark"] .menu-item.danger:hover {
+  background: var(--danger-soft);
+}
+
+[data-theme="dark"] .menu-group h3 {
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   23. PHARMACY DASHBOARD — KPIs, métricas amplias y billetera de repartidor
+   ========================================================================== */
+
+.pbi-kpis {
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+/* KPI strip: gap-based dividers, no colored left borders */
+.pbi-kpi {
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, .04);
+  padding: 24px 28px;
+  overflow: visible;
+}
+
+.pbi-kpi:before {
+  display: none;
+}
+
+.pbi-kpi-label {
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pbi-kpi-value {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.2vw, 42px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  margin-top: 6px;
+  color: var(--text);
+}
+
+.pbi-card {
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, .04);
+  padding: 26px 30px;
+}
+
+.pbi-card-head h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.pbi-card-head small {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.pbi-rank-fill {
+  background: linear-gradient(90deg, var(--primary), var(--brand-blue));
+}
+
+.pbi-rank-track {
+  height: 10px;
+  border-radius: 99px;
+  background: var(--surface-soft);
+}
+
+/* Courier wallet: FarmaYA green/blue gradient */
+.courier-wallet {
+  background: linear-gradient(120deg, var(--hero-bg), #0a5ca8);
+  color: var(--hero-ink);
+  border-radius: 24px;
+  padding: 34px 40px;
+  box-shadow: 0 10px 36px rgba(11, 46, 35, .25);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.courier-wallet-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.courier-wallet-icon {
+  background: rgba(255, 255, 255, .14);
+  border-radius: 20px;
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 72px;
+}
+
+.courier-wallet-amount {
+  font-family: var(--font-display);
+  font-size: clamp(42px, 6.5vw, 68px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin: 6px 0;
+  color: #ffffff;
+}
+
+.courier-wallet-main small {
+  font-size: 14px;
+  opacity: 0.88;
+}
+
+.courier-ledger {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+}
+
+.courier-ledger-row {
+  padding: 16px 20px;
+  font-size: 15px;
+}
+
+[data-theme="dark"] .pbi-kpi,
+[data-theme="dark"] .pbi-card {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+}
+
+[data-theme="dark"] .courier-wallet {
+  background: linear-gradient(120deg, #081A14, #084074);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .35);
+}
+
+.courier-plus {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+[data-theme="dark"] .courier-plus {
+  color: var(--accent);
+}
+
+/* Metric cards */
+.metric-card {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  padding: 22px 24px;
+  gap: 16px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, .03);
+}
+
+.metric-value {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 800;
+}
+
+.metric-icon {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-radius: var(--radius-sm);
+}
+
+.metric-value {
+  font-family: var(--font-display);
+}
+
+[data-theme="dark"] .metric-card,
+[data-theme="dark"] .activity-row {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+/* Chart elements */
+.fy-bar {
+  fill: var(--primary);
+}
+
+.fy-bar-group:hover .fy-bar {
+  fill: var(--primary-dark);
+}
+
+.fy-bar-group:hover .fy-hit {
+  fill: var(--primary-soft);
+}
+
+.fy-line {
+  stroke: var(--primary);
+}
+
+.fy-area {
+  fill: var(--primary-soft);
+}
+
+.fy-pt {
+  stroke: var(--primary);
+  fill: var(--surface);
+}
+
+.fy-c-ok  { --fy: #10B981; }
+.fy-c-open { --fy: #0a5ca8; }
+.fy-c-lost { --fy: #DC2626; }
+.fy-c-issue { --fy: #F59E0B; }
+
+/* ==========================================================================
+   24. NOTICES
+   ========================================================================== */
+.notice {
+  border-radius: 12px;
+  border-color: var(--line);
+  background: var(--surface-soft);
+}
+
+.notice.bad, .notice.error {
+  background: var(--danger-soft);
+  border-color: rgba(220, 38, 38, .2);
+  color: var(--danger);
+}
+
+.notice.warn {
+  background: var(--warning-soft);
+  border-color: rgba(217, 119, 6, .2);
+  color: var(--warning);
+}
+
+.notice.info {
+  background: var(--primary-soft);
+  border-color: rgba(22, 134, 93, .15);
+  color: var(--primary-dark);
+}
+
+.notice.ok {
+  background: rgba(16, 185, 129, .08);
+  border-color: rgba(16, 185, 129, .2);
+  color: var(--success);
+}
+
+/* ==========================================================================
+   25. EMPTY STATES — Larger padding, display font
+   ========================================================================== */
+.empty {
+  padding: 48px 24px;
+}
+
+.empty h3 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: -0.03em;
+  color: var(--text);
+}
+
+.empty p {
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   26. SKELETON SHIMMER — FarmaYA soft green tint
+   ========================================================================== */
+.skeleton {
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--surface-soft), #e0f5e9, var(--surface-soft));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, var(--surface-soft), rgba(46, 204, 113, .06), var(--surface-soft));
+  background-size: 200% 100%;
+}
+
+/* ==========================================================================
+   27. LIVE DOT — Success green
+   ========================================================================== */
+.live-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .2);
+}
+
+/* ==========================================================================
+   28. BLISTER / TIMELINE CELLS
+   ========================================================================== */
+.dimple {
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+
+.pill {
+  background: var(--line-strong);
+}
+
+.cell.done {
+  color: var(--primary);
+}
+
+.cell.done .dimple,
+.cell.current .dimple {
+  background: var(--primary-soft);
+  border-color: rgba(22, 134, 93, .3);
+}
+
+.cell.done .pill,
+.cell.current .pill {
+  background: var(--primary);
+}
+
+.cell.current .dimple {
+  box-shadow: 0 0 0 4px rgba(22, 134, 93, .1);
+}
+
+.tone-bad > .bar {
+  background: var(--danger);
+}
+
+.tone-wait > .bar {
+  background: var(--accent);
+}
+
+.tone-go > .bar {
+  background: var(--primary);
+}
+
+/* ==========================================================================
+   29. SPINNER & LOADING
+   ========================================================================== */
+.spinner {
+  border-color: var(--line);
+  border-top-color: var(--primary);
+}
+
+/* ==========================================================================
+   30. THEME SWITCHER
+   ========================================================================== */
+.theme-switcher-box {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  border-radius: var(--radius);
+}
+
+.theme-pill-btn.active {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--primary);
+}
+
+[data-theme="dark"] .theme-pill-btn:hover {
+  background: rgba(255, 255, 255, .05);
+}
+
+/* ==========================================================================
+   31. CATEGORIES BAR — STICKY CON EL SCROLL
+   ========================================================================== */
+.client-sticky-categories {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 86px !important;
+  z-index: 25 !important;
+  margin: 0 0 18px 0 !important;
+  padding: 14px 20px !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, .06) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+[data-theme="dark"] .client-sticky-categories {
+  background: rgba(18, 26, 22, 0.96) !important;
+  border-color: rgba(46, 204, 113, 0.22) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
+}
+
+.client-sticky-inner {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr) minmax(220px, 1fr);
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
+}
+
+.client-sticky-inner > strong {
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.client-sticky-inner .catalog-control {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.client-sticky-inner .catalog-control > span {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0;
+}
+
+.catalog-select {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.catalog-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+[data-theme="dark"] .client-sticky-categories {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, .4);
+}
+
+[data-theme="dark"] .client-sticky-inner > strong {
+  color: var(--primary);
+}
+
+[data-theme="dark"] .client-sticky-inner .catalog-control > span {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .catalog-select {
+  background-color: var(--surface-soft);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .catalog-select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* ==========================================================================
+   32. PHARMACY FILTER PANEL
+   ========================================================================== */
+.pharmacy-filter-panel {
+  background: var(--surface-soft);
+  border-color: var(--line);
+  border-radius: var(--radius);
+}
+
+.report-date-range {
+  color: var(--primary);
+}
+
+.date-filter-field input {
+  border-color: var(--line);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+[data-theme="dark"] .pharmacy-filter-panel {
+  background: var(--surface-soft);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .date-filter-field input {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--line);
+}
+
+/* ==========================================================================
+   33. PERMISSION BOXES
+   ========================================================================== */
+.perm-box.required {
+  background: var(--warning-soft);
+  border-color: rgba(217, 119, 6, .25);
+  color: var(--warning);
+}
+
+.perm-box.granted {
+  background: rgba(16, 185, 129, .08);
+  border-color: rgba(16, 185, 129, .2);
+  color: var(--success);
+}
+
+[data-theme="dark"] .perm-box.required {
+  background: rgba(252, 211, 77, .08);
+  border-color: rgba(252, 211, 77, .2);
+  color: var(--warning);
+}
+
+[data-theme="dark"] .perm-box.granted {
+  background: rgba(52, 211, 153, .08);
+  border-color: rgba(52, 211, 153, .2);
+  color: var(--success);
+}
+
+/* ==========================================================================
+   34. BAR CHARTS (ranking/stats bars)
+   ========================================================================== */
+.bar-track {
+  background: var(--surface-soft);
+}
+
+.bar-fill {
+  background: var(--primary);
+}
+
+/* ==========================================================================
+   35. FRESH GLOW animation — FarmaYA emerald green
+   ========================================================================== */
+@keyframes freshGlow {
+  50% { box-shadow: 0 0 0 4px rgba(22, 134, 93, .2); }
+}
+
+/* ==========================================================================
+   36. ENTRANCE ANIMATION — More dramatic fyd-rise
+   ========================================================================== */
+@keyframes fyd-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fyd-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Apply entrance to main content blocks */
+.block,
+.welcome-banner,
+.metric-card,
+.pbi-kpi,
+.pbi-card,
+.trust-card {
+  animation: fyd-rise .55s var(--ease-out) both;
+}
+
+/* ==========================================================================
+   37. DRAWER ANIMATION — Enhanced
+   ========================================================================== */
+dialog.sheet.drawer {
+  animation: slideDrawerIn 280ms var(--ease-drawer) forwards;
+  box-shadow: -8px 0 40px rgba(15, 23, 42, .2);
+}
+
+dialog.sheet.drawer::backdrop {
+  background: rgba(15, 23, 42, .35);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ==========================================================================
+   38. BRAND IMAGE — Sin fondo en modo oscuro, tamaño idéntico y sin recuadro
+   ========================================================================== */
+.brand-image,
+[data-theme="dark"] .brand-image {
+  width: 210px !important;
+  height: 60px !important;
+  display: flex !important;
+  align-items: center !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+.brand-image img,
+[data-theme="dark"] .brand-image img {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  object-fit: contain !important;
+  object-position: left center !important;
+  filter: none !important;
+}
+
+/* ==========================================================================
+   39. HAMBURGER BUTTON
+   ========================================================================== */
+.hamburger-btn {
+  border-color: var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+}
+
+.hamburger-btn:hover {
+  background: var(--primary-soft);
+  border-color: rgba(22, 134, 93, .3);
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   40. USER PILL BUTTON
+   ========================================================================== */
+.user-pill-btn:hover {
+  border-color: rgba(22, 134, 93, .3);
+  background: var(--primary-soft);
+}
+
+.drawer-back-btn {
+  border-color: var(--line);
+  background: var(--surface-soft);
+  border-radius: var(--radius-xs);
+}
+
+.drawer-back-btn:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   41. SWITCH / TOGGLE
+   ========================================================================== */
+.switch-track {
+  background: var(--line-strong);
+}
+
+.switch-input:checked + .switch-track {
+  background: var(--primary);
+}
+
+/* ==========================================================================
+   42. AVAILABILITY BANNER
+   ========================================================================== */
+.availability {
+  background: var(--primary-soft);
+  border-color: rgba(22, 134, 93, .15);
+}
+
+/* ==========================================================================
+   43. CODE / MONOSPACE
+   ========================================================================== */
+.code {
+  font-family: Manrope, var(--font-display), sans-serif;
+}
+
+.movement-code {
+  color: var(--primary);
+}
+
+/* ==========================================================================
+   44. AUTH PROMO OVERRIDES (Color only, NOT animation)
+   ========================================================================== */
+.ls-msg em {
+  color: var(--primary);
+}
+
+.ls-msg-pill {
+  background: var(--primary-soft);
+  border-color: rgba(22, 134, 93, .3);
+  color: var(--primary);
+}
+
+.ls-steps i:after {
+  background: var(--primary);
+}
+
+/* ==========================================================================
+   45. RESPONSIVE — Mobile-first refinements
+   ========================================================================== */
+@media (max-width: 720px) {
+  .welcome-banner {
+    border-radius: 16px;
+  }
+
+  .block {
+    border-radius: 12px;
+  }
+
+  .product-card {
+    border-radius: 12px;
+  }
+
+  .order-row, .offer {
+    border-radius: 12px;
+  }
+
+  .sheet {
+    border-radius: 16px;
+  }
+
+  .sheet.drawer {
+    border-radius: 16px 0 0 16px;
+  }
+
+  /* Larger touch targets */
+  .btn {
+    min-height: 48px;
+  }
+
+  .icon-button,
+  .hamburger-btn {
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  .tab {
+    min-height: 44px;
+  }
+
+  .category-chip {
+    min-height: 48px;
+  }
+
+  .menu-item {
+    min-height: 48px;
+  }
+
+  .qty-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  /* Brand image on mobile — sin fondo y tamaño constante */
+  .brand-image,
+  [data-theme="dark"] .brand-image {
+    width: 175px !important;
+    height: 52px !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .welcome-banner {
+    border-radius: 14px;
+  }
+}
+
+/* ==========================================================================
+   46. REDUCED MOTION — Respect user preference
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .block,
+  .welcome-banner,
+  .metric-card,
+  .pbi-kpi,
+  .pbi-card,
+  .trust-card {
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   47. FOCUS VISIBLE — Accessible indigo focus ring
+   ========================================================================== */
+.btn:focus-visible,
+.icon-button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   48. STITCH CLINICAL VITALITY DESIGN SYSTEM (PANTALLAS STITCH 1, 3, 4, 5, 7, 8, 11, 14)
+   Conserva 100% de la funcionalidad, logo FarmaYA intacto y login 3D.
+   ========================================================================== */
+
+/* --- 48.1 Barra de Garantía Institucional y Cobertura Destacada --- */
+.stitch-assurance-bar {
+  background: var(--stitch-primary);
+  color: #ffffff;
+  padding: 8px 18px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.stitch-assurance-bar.elevated-top-banner {
+  background: linear-gradient(90deg, #16865d 0%, #0d6c49 45%, #0a5ca8 100%);
+  color: #ffffff;
+  padding: 11px 24px;
+  border-radius: 14px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 18px rgba(22, 134, 93, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.banner-centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.assurance-headline {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stitch-assurance-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.assurance-coverage {
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.assurance-badges {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  opacity: 0.95;
+}
+
+[data-theme="dark"] .stitch-assurance-bar {
+  background: #003630;
+  color: #e0f2f1;
+}
+
+[data-theme="dark"] .stitch-assurance-bar.elevated-top-banner {
+  background: linear-gradient(90deg, #0e4431 0%, #0a2d21 50%, #083058 100%);
+  color: #e0f2f1;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+}
+
+/* --- 48.2 Hero Clínico & Mega Buscador (Stitch Screen 8) --- */
+.stitch-hero {
+  padding: 28px clamp(20px, 4vw, 40px) !important;
+}
+
+.stitch-hero-left {
+  flex: 1;
+  max-width: 820px;
+}
+
+.stitch-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: rgba(0, 78, 70, 0.08);
+  color: var(--stitch-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 12px;
+}
+
+[data-theme="dark"] .stitch-hero-kicker {
+  background: rgba(133, 213, 200, 0.14);
+  color: var(--stitch-primary);
+}
+
+.stitch-hero-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0 12px;
+}
+
+.stitch-hero-tab {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stitch-hero-tab:hover {
+  border-color: var(--stitch-primary);
+  background: var(--surface-soft);
+}
+
+.stitch-hero-tab.active {
+  background: var(--stitch-primary);
+  color: #ffffff;
+  border-color: var(--stitch-primary);
+  box-shadow: 0 2px 8px rgba(0, 78, 70, 0.25);
+}
+
+[data-theme="dark"] .stitch-hero-tab.active {
+  background: var(--stitch-primary);
+  color: #0c1322;
+  border-color: var(--stitch-primary);
+}
+
+.stitch-search-box {
+  display: flex;
+  align-items: center;
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 12px;
+  padding: 4px 6px 4px 14px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  margin-bottom: 10px;
+}
+
+.stitch-search-box:focus-within {
+  border-color: var(--stitch-primary);
+  box-shadow: 0 0 0 3px rgba(0, 78, 70, 0.15);
+}
+
+.stitch-search-icon {
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+.stitch-search-input {
+  flex: 1;
+  border: none !important;
+  background: transparent !important;
+  padding: 8px 4px !important;
+  font-size: 15px !important;
+  color: var(--text) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.stitch-search-action {
+  padding: 8px 18px !important;
+  font-size: 14px !important;
+  border-radius: 8px !important;
+  background: var(--stitch-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.stitch-quick-searches {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.stitch-quick-searches .quick-label {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.stitch-quick-search-pill {
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stitch-quick-search-pill:hover {
+  background: var(--surface);
+  border-color: var(--stitch-primary);
+  color: var(--stitch-primary);
+}
+
+/* --- 48.3 3 Sellos Institucionales de Confianza (Stitch Screen 8) --- */
+.stitch-trust-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin: 6px 0 16px;
+}
+
+.stitch-trust-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.stitch-trust-card strong {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.stitch-trust-card p {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.trust-card-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.trust-card-icon.tone-teal {
+  background: rgba(0, 78, 70, 0.1);
+  color: var(--stitch-primary);
+}
+
+.trust-card-icon.tone-lime {
+  background: rgba(177, 246, 111, 0.25);
+  color: var(--stitch-secondary);
+}
+
+.trust-card-icon.tone-blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+[data-theme="dark"] .stitch-trust-card {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+/* --- 48.4 Filtros de Catálogo Stitch (Screen 4) --- */
+.stitch-filter-bar {
+  margin-bottom: 18px;
+}
+
+/* --- 48.5 Tarjetas de Producto Estilo Stitch (Screen 4) --- */
+.stitch-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.stitch-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.stitch-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  border-color: rgba(0, 78, 70, 0.3);
+}
+
+[data-theme="dark"] .stitch-card:hover {
+  border-color: rgba(133, 213, 200, 0.4);
+}
+
+.product-top-badges {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.badge-rx {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid #fecaca;
+}
+
+.badge-otc {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 78, 70, 0.08);
+  color: var(--stitch-primary);
+  font-size: 11px;
+  font-weight: 700;
+  border: 1px solid rgba(0, 78, 70, 0.16);
+}
+
+[data-theme="dark"] .badge-rx {
+  background: rgba(185, 28, 28, 0.2);
+  color: #fca5a5;
+  border-color: rgba(185, 28, 28, 0.4);
+}
+
+[data-theme="dark"] .badge-otc {
+  background: rgba(133, 213, 200, 0.15);
+  color: #a1f1e4;
+  border-color: rgba(133, 213, 200, 0.3);
+}
+
+.badge-flash {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(177, 246, 111, 0.3);
+  color: var(--stitch-secondary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.stitch-art {
+  width: 100%;
+  height: 120px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  overflow: hidden;
+  transition: background 0.2s;
+}
+
+.stitch-art:hover {
+  background: var(--line);
+}
+
+.invima-pill {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+[data-theme="dark"] .invima-pill {
+  background: rgba(15, 23, 42, 0.85);
+  color: #94a3b8;
+}
+
+.product-meta-block {
+  margin: 10px 0 8px;
+}
+
+.product-lab {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--stitch-primary);
+  margin-bottom: 2px;
+}
+
+.stitch-card .product-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 2px;
+  cursor: pointer;
+  line-height: 1.3;
+}
+
+.stitch-card .product-title:hover {
+  color: var(--stitch-primary);
+}
+
+.product-presentation {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.product-pricing-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin: 10px 0 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.price-stack .price-label {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.stitch-card .product-price {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.stock-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+[data-theme="dark"] .stock-badge {
+  background: rgba(21, 128, 61, 0.25);
+  color: #86efac;
+}
+
+.product-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stitch-stepper {
+  display: flex;
+  align-items: center;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.stitch-stepper .qty-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.stitch-stepper .qty-btn:hover {
+  background: var(--surface);
+}
+
+.stitch-stepper .qty-value {
+  width: 22px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stitch-add-btn {
+  flex: 1;
+  background: var(--stitch-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 700 !important;
+  padding: 8px 12px !important;
+}
+
+.stitch-add-btn.added {
+  background: var(--stitch-secondary) !important;
+}
+
+.stitch-info-btn {
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  border-radius: 8px !important;
+}
+
+/* --- 48.6 Modal de Ficha Farmacéutica Stitch (Screen 5) --- */
+.stitch-product-detail-modal {
+  padding: 8px;
+}
+
+.stitch-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+
+.stitch-modal-head div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-invima {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--stitch-primary);
+  background: rgba(0, 78, 70, 0.08);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.stitch-modal-body-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .stitch-modal-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stitch-modal-art-frame {
+  height: 220px;
+  background: var(--surface-soft);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.stitch-modal-storage-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(0, 78, 70, 0.06);
+  border: 1px solid rgba(0, 78, 70, 0.12);
+}
+
+.stitch-modal-storage-card strong {
+  display: block;
+  font-size: 12.5px;
+  color: var(--stitch-primary);
+}
+
+.stitch-modal-storage-card p {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 2px 0 0;
+}
+
+.stitch-modal-lab {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--stitch-primary);
+  letter-spacing: 0.06em;
+}
+
+.stitch-modal-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 2px 0 4px;
+}
+
+.stitch-modal-pres {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.stitch-modal-pill-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  margin-bottom: 16px;
+}
+
+.stitch-modal-pill-info strong {
+  font-size: 12px;
+  color: var(--text);
+  display: block;
+}
+
+.stitch-modal-pill-info p {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 1px 0 0;
+}
+
+.stitch-modal-buy-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  margin-bottom: 16px;
+}
+
+.stitch-modal-price {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--stitch-primary);
+}
+
+.stitch-modal-stepper {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.stitch-modal-qty {
+  width: 32px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* --- 48.7 Barra de Telemetría IoT (Repartidor / Farmacia Stitch Screen 1 & 14) --- */
+.stitch-telemetry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--stitch-primary);
+  color: #ffffff;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+}
+
+.telemetry-pulse {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.telemetry-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--stitch-secondary-container);
+  box-shadow: 0 0 0 3px rgba(177, 246, 111, 0.35);
+  animation: pulse-dot 1.8s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.telemetry-metrics {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.telemetry-metric {
+  opacity: 0.95;
+}
+
+.telemetry-metric.temp-highlight {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--stitch-secondary-container);
+  font-weight: 700;
+}
+
+/* --- 48.8 Billetera Digital del Domiciliario (Stitch Screen 1) --- */
+.stitch-courier-wallet-box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.wallet-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.wallet-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-badge-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--stitch-primary);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.wallet-title-group strong {
+  font-size: 16px;
+  color: var(--text);
+  display: block;
+}
+
+.wallet-title-group p {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 1px 0 0;
+}
+
+.wallet-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-linked-acc {
+  font-size: 12.5px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.wallet-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.wallet-card {
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.wallet-card.highlight {
+  background: rgba(0, 78, 70, 0.07);
+  border-color: rgba(0, 78, 70, 0.2);
+}
+
+.wallet-card .card-lbl {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.wallet-card .card-amt {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  display: block;
+  letter-spacing: -0.02em;
+}
+
+.wallet-card .card-amt.tone-lime {
+  color: var(--stitch-secondary);
+}
+
+.wallet-card .card-amt.tone-teal {
+  color: var(--stitch-primary);
+}
+
+.wallet-card small {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* --- 48.9 Tarjetas de Entrega y PIN Modal (Stitch Screen 1) --- */
+.stitch-courier-card {
+  border-left: 4px solid var(--stitch-primary) !important;
+}
+
+.badge-cold-chain {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--stitch-primary);
+  background: rgba(0, 78, 70, 0.09);
+  padding: 2px 7px;
+  border-radius: 6px;
+  margin-left: 8px;
+}
+
+.stitch-pin-btn {
+  background: var(--stitch-primary) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.stitch-deliver-form {
+  padding: 8px;
+}
+
+.stitch-deliver-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stitch-deliver-icon {
+  font-size: 28px;
+}
+
+.stitch-pin-section {
+  background: var(--surface-soft);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.stitch-pin-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.stitch-otp-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.stitch-otp-box {
+  width: 52px;
+  height: 58px;
+  border-radius: 10px;
+  border: 2px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--stitch-primary);
+  font-size: 26px;
+  font-weight: 800;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.stitch-otp-box:focus {
+  border-color: var(--stitch-primary);
+  box-shadow: 0 0 0 3px rgba(0, 78, 70, 0.15);
+}
+
+.stitch-id-section {
+  margin-bottom: 14px;
+}
+
+.stitch-id-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.stitch-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+}
+
+.stitch-input:focus {
+  border-color: var(--stitch-primary);
+}
+
+.stitch-custody-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(177, 246, 111, 0.2);
+  border: 1px solid rgba(177, 246, 111, 0.4);
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+
+.stitch-custody-card strong {
+  display: block;
+  color: var(--stitch-secondary);
+}
+
+.stitch-custody-card p {
+  color: var(--muted);
+  margin: 1px 0 0;
+}
+
+/* --- 48.10 Módulo de Auditoría de Fórmulas Médicas (Stitch Screen 14) --- */
+.stitch-prescriptions-root {
+  margin-top: 10px;
+}
+
+.stitch-prescriptions-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 900px) {
+  .stitch-prescriptions-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.queue-heading {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.queue-heading strong {
+  font-size: 14px;
+  display: block;
+}
+
+.rx-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.stitch-rx-card {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.stitch-rx-card:hover {
+  border-color: var(--stitch-primary);
+}
+
+.stitch-rx-card.active {
+  background: rgba(0, 78, 70, 0.06);
+  border-color: var(--stitch-primary);
+  box-shadow: 0 2px 8px rgba(0, 78, 70, 0.12);
+}
+
+.rx-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.rx-code-pill {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--stitch-primary);
+  background: rgba(0, 78, 70, 0.1);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.rx-status-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #d97706;
+  background: #fef3c7;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.rx-status-tag.approved {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.rx-patient-name {
+  display: block;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.rx-eps-sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.rx-med-pill {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--stitch-primary);
+}
+
+.stitch-rx-inspector {
+  padding: 20px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+}
+
+.inspector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+
+.badge-rethus {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #15803d;
+  background: #dcfce7;
+  padding: 4px 10px;
+  border-radius: 9999px;
+}
+
+.inspector-sections-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .inspector-sections-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inspector-card {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+}
+
+.inspector-card strong {
+  font-size: 12.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.inspector-card p {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.inspector-rx-box {
+  padding: 14px;
+  border-radius: 10px;
+  background: rgba(0, 78, 70, 0.06);
+  border: 1px solid rgba(0, 78, 70, 0.15);
+  margin-bottom: 14px;
+}
+
+.rx-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.rx-controlled-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--stitch-primary);
+  background: rgba(0, 78, 70, 0.12);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.rx-posology {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.inspector-interaction-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  margin-bottom: 18px;
+}
+
+.inspector-interaction-check strong {
+  display: block;
+  font-size: 12px;
+}
+
+.inspector-interaction-check p {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 1px 0 0;
+}
+
+.inspector-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* --- 48.11 KPIs Administrativos Centrales (Stitch Screen 11) --- */
+.stitch-admin-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.stitch-admin-kpi-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.kpi-lbl {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.kpi-sub-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.kpi-sub-tag.tone-teal {
+  background: rgba(0, 78, 70, 0.1);
+  color: var(--stitch-primary);
+}
+
+.kpi-sub-tag.tone-lime {
+  background: rgba(177, 246, 111, 0.3);
+  color: var(--stitch-secondary);
+}
+
+.kpi-amt-row {
+  margin: 4px 0 8px;
+}
+
+.kpi-amt {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  display: block;
+}
+
+.kpi-amt.tone-teal {
+  color: var(--stitch-primary);
+}
+
+.kpi-amt-row small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.kpi-footer-note {
+  font-size: 11.5px;
+  color: var(--muted);
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+/* --- 48.12 Carrito y Checkout Desglosado (Stitch Screen 3) --- */
+.stitch-cart-panel {
+  border-radius: 16px;
+}
+
+.stitch-cart-items {
+  margin-bottom: 14px;
+}
+
+.cart-rx-notice {
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+
+.cart-rx-notice strong {
+  display: block;
+  color: #b45309;
+}
+
+.cart-rx-notice p {
+  color: #78350f;
+  margin: 2px 0 0;
+}
+
+[data-theme="dark"] .cart-rx-notice {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="dark"] .cart-rx-notice strong {
+  color: #fde68a;
+}
+
+[data-theme="dark"] .cart-rx-notice p {
+  color: #fef3c7;
+}
+
+.stitch-cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.stitch-cart-item:last-child {
+  border-bottom: none;
+}
+
+.cart-item-name {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.cart-item-subtotal {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cart-breakdown {
+  background: var(--surface-soft);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 12px 0 16px;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--muted);
+}
+
+.breakdown-row strong {
+  color: var(--text);
+}
+
+.delivery-fee-badge {
+  font-weight: 700;
+  color: var(--stitch-primary);
+}
+
+.breakdown-row.total-row {
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.cart-total-amount {
+  font-size: 20px;
+  color: var(--stitch-primary);
+}
+
+.stitch-checkout-btn {
+  background: var(--stitch-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  padding: 12px !important;
+}
+
+.stitch-sidebar-trust {
+  margin-top: 14px;
+}
+
+/* ==========================================================================
+   Wizard multi-paso del registro FarmaYA
+   ========================================================================== */
+.reg-wizard-steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 6px;
+  padding: 4px;
+  background: var(--surface-soft, rgba(0,0,0,0.03));
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+
+.reg-step-pill {
+  flex: 1;
+  text-align: center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.reg-step-pill.active {
+  background: var(--stitch-primary, #00897b);
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 137, 123, 0.28);
+}
+
+.reg-step-pill.completed {
+  color: var(--stitch-primary, #00897b);
+  background: rgba(0, 137, 123, 0.12);
+}
+
+.reg-step-subheading {
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.reg-step-subheading h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0 0 4px 0;
+  color: var(--text);
+}
+
+.reg-step-subheading p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.reg-wizard-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  align-items: center;
+}
+
+.reg-wizard-actions .btn {
+  margin-top: 0 !important;
+}
+
+/* ==========================================================================
+   Blindaje de Visibilidad Garantizada para la Animación del Domiciliario
+   ========================================================================== */
+#authPromo,
+.auth-promo {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  min-height: 520px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.login-sequence,
+.login-courier-only {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 480px !important;
+  position: relative !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.login-stage-courier {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 440px !important;
+  position: relative !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.login-stage-courier img {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: min(94%, 560px) !important;
+  height: auto !important;
+  min-height: 320px !important;
+  max-height: 480px !important;
+  margin: 0 auto !important;
+  object-fit: contain !important;
+  filter: drop-shadow(0 18px 24px rgba(18, 67, 54, 0.22)) !important;
+}
+
+/* ==========================================================================
+   49. GESTIÓN DE FOTOS DE MEDICAMENTOS & TIPOGRAFÍA ELEVADA (FarmaYA 2026)
+   ========================================================================== */
+
+/* Fotos reales de medicamentos en catálogo y modal */
+.p-art-has-photo {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+.product-custom-photo {
+  max-width: 90% !important;
+  max-height: 110px !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  border-radius: 8px !important;
+  transition: transform 0.25s ease !important;
+}
+
+.product-card:hover .product-custom-photo {
+  transform: scale(1.05) !important;
+}
+
+/* Vista previa de imagen en modal de detalle */
+.stitch-modal-art-frame .product-custom-photo {
+  max-width: 100% !important;
+  max-height: 220px !important;
+  object-fit: contain !important;
+}
+
+/* Panel de administración de catálogo */
+.stitch-admin-catalog-wrap {
+  margin-top: 14px;
+  background: var(--surface);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.admin-catalog-table td {
+  vertical-align: middle !important;
+  font-size: 15px !important;
+  padding: 14px 16px !important;
+}
+
+.admin-product-thumb {
+  width: 72px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  overflow: hidden;
+  padding: 3px;
+}
+
+.admin-product-thumb .p-art {
+  width: 64px !important;
+  height: 50px !important;
+}
+
+.admin-product-thumb img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
+
+.admin-med-title {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+}
+
+/* Modal de edición de fotos de medicamento */
+.image-edit-sheet {
+  max-width: 680px !important;
+}
+
+.image-modal-grid {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 24px;
+  margin: 18px 0;
+  align-items: start;
+}
+
+.image-modal-preview-box {
+  background: var(--surface-soft);
+  border: 2px dashed var(--line-strong);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+}
+
+.image-modal-preview {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.admin-preview-img {
+  max-width: 100%;
+  max-height: 130px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.preset-pills-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.preset-pill-btn {
+  font-size: 13px !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--line) !important;
+  background: var(--surface) !important;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.preset-pill-btn:hover {
+  border-color: var(--primary) !important;
+  background: var(--primary-soft) !important;
+  color: var(--primary) !important;
+}
+
+/* Modal de edición completa de producto en Catálogo */
+.product-edit-sheet {
+  max-width: 780px !important;
+  width: min(780px, 96vw) !important;
+}
+
+.product-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 18px 0;
+}
+
+@media (max-width: 660px) {
+  .product-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.product-form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.product-form-switches {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.product-form-switches label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.product-form-switches input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.product-counter-pill {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--surface-soft);
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+/* Logotipo minimalista FarmaYA en banner de inicio */
+.minimalist-brand-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.minimalist-logo-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 28px rgba(22, 134, 93, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(22, 134, 93, 0.2);
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.minimalist-logo-badge:hover {
+  transform: rotate(6deg) scale(1.06);
+}
+
+[data-theme="dark"] .minimalist-logo-badge {
+  background: rgba(18, 32, 26, 0.85);
+  border-color: rgba(46, 204, 113, 0.25);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+}
+
+/* Refuerzo de tipografía aumentada general */
+.stitch-modal-title {
+  font-size: 26px !important;
+}
+
+.stitch-modal-price {
+  font-size: 28px !important;
+  color: var(--primary) !important;
+}
+
+.product-price {
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  color: var(--primary) !important;
+}
+
+.product-title {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+}
+
+.cart-item-name {
+  font-size: 15px !important;
+}
+
+.cart-item-subtotal {
+  font-size: 16px !important;
+}
+
+.cart-total strong {
+  font-size: 24px !important;
+}
+
+.btn {
+  font-size: 15px !important;
+}
+
+.btn.small {
+  font-size: 13.5px !important;
+}
+
+@media (max-width: 720px) {
+  .image-modal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Barra flotante de carrito móvil para que nunca se pierda de vista */
+.mobile-cart-float-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-cart-float-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 99999;
+    background: #16865d;
+    color: #ffffff;
+    padding: 12px 18px;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.22);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    animation: slideUpFloatBar 0.25s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @keyframes slideUpFloatBar {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .mobile-cart-float-bar .m-cart-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .mobile-cart-float-bar .m-cart-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .mobile-cart-float-bar .m-cart-total {
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #ffffff;
+  }
+
+  .mobile-cart-float-bar .m-cart-btn {
+    background: #ffffff;
+    color: #16865d;
+    font-weight: 800;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    transition: transform 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+
+  .mobile-cart-float-bar .m-cart-btn:active {
+    transform: scale(0.97);
+  }
+}
+
+/* ==========================================================================
+   49. HEADER CART PILL & GLOW ANIMATIONS (Canasta Persistente)
+   ========================================================================== */
+.header-cart-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(22, 134, 93, 0.08);
+  border: 1px solid rgba(22, 134, 93, 0.25);
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.header-cart-pill:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(22, 134, 93, 0.25);
+}
+
+.header-cart-pill:hover .header-cart-badge {
+  background: #ffffff;
+  color: var(--primary);
+}
+
+.header-cart-pill:hover .header-cart-total {
+  color: #ffffff;
+}
+
+.header-cart-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-cart-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  transition: transform 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.header-cart-total {
+  font-weight: 800;
+  color: var(--text);
+  font-size: 13px;
+  letter-spacing: -0.01em;
+}
+
+.header-cart-pill.has-items {
+  background: rgba(22, 134, 93, 0.12);
+  border-color: rgba(22, 134, 93, 0.4);
+}
+
+.header-cart-pill.has-items .header-cart-badge {
+  transform: scale(1.08);
+}
+
+[data-theme="dark"] .header-cart-pill {
+  background: rgba(22, 134, 93, 0.2);
+  border-color: rgba(74, 222, 128, 0.3);
+  color: #4ade80;
+}
+
+[data-theme="dark"] .header-cart-total {
+  color: #eaf3ee;
+}
+
+@keyframes cartGlowPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(22, 134, 93, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 14px rgba(22, 134, 93, 0.2);
+  }
+  100% {
+    box-shadow: 0 4px 24px rgba(15, 23, 42, .06);
+  }
+}
+
+.cart-highlight-glow {
+  animation: cartGlowPulse 1.2s cubic-bezier(0.23, 1, 0.32, 1);
+  border-color: var(--primary) !important;
+}
+
+/* ==========================================================================
+   50. INICIAR SESIÓN CON GOOGLE (DISEÑO OFICIAL GOOGLE IDENTITY)
+   ========================================================================== */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 16px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--line);
+}
+
+.auth-divider span {
+  padding: 0 14px;
+  text-transform: lowercase;
+}
+
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.btn-google:hover {
+  background: var(--surface-soft);
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+}
+
+.btn-google:active {
+  transform: scale(0.98);
+}
+
+[data-theme="dark"] .btn-google {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .btn-google:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.google-icon-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.google-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 16px;
+}
+
+.google-modal-header h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.google-account-quick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.google-account-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--line);
+  background: var(--surface-soft);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.google-account-card:hover {
+  border-color: var(--primary);
+  background: rgba(22, 134, 93, 0.06);
+}
+
+.google-account-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #4285F4;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.google-account-meta {
+  display: flex;
+  flex-direction: column;
+}
+
+.google-account-meta strong {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.google-account-meta small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.google-custom-account-box {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+}

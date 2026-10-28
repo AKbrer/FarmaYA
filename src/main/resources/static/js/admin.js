@@ -1,0 +1,1134 @@
+/* FarmaYA · panel de administración */
+
+let adminFilter = '';
+
+function adminView(user) {
+  let root;
+  root = h('div', { class: 'stack' }, h('h1', { class: 'page-title' }, 'Administración'), sideNavigation([
+    { label: 'Dashboard', icon: 'layout-dashboard', render: () => adminSummary(status => { adminFilter = status; root.querySelectorAll('.side-nav-item')[1]?.click(); }) },
+    { label: 'Pedidos', icon: 'package', render: adminOrders },
+    { label: 'Farmacias', icon: 'store', render: () => adminUsers('FARMACIA') },
+    { label: 'Repartidores', icon: 'truck', render: () => adminUsers('REPARTIDOR') },
+    { label: 'Clientes', icon: 'users', render: () => adminUsers('CLIENTE') },
+    { label: 'Administradores', icon: 'shield', render: () => adminAdministratorsView(user) },
+    { label: 'Catálogo de Productos', icon: 'capsule', render: adminCatalogManager },
+    { label: 'Movimientos', icon: 'history', render: adminMovements }
+  ], 0));
+  return root;
+}
+
+function adminSummary(go) {
+  return live(() => API.get('/admin/stats'), s => {
+    const total = Object.values(s.byStatus).reduce((a, b) => a + b, 0);
+    const max = Math.max(1, ...Object.values(s.byStatus));
+    const rows = Object.entries(s.byStatus).filter(([, n]) => n > 0);
+
+    const activeOrdersCount = (s.byStatus['EN_CAMINO'] || 0) + (s.byStatus['PEDIDO_EN_PREPARACION'] || 0) + (s.byStatus['REPARTIDOR_ASIGNADO'] || 0) + (s.byStatus['BUSCANDO_FARMACIA'] || 0);
+
+    // 4 Tarjetas de KPIs estilo Stitch Screen 11
+    const kpiSection = h('div', { class: 'stitch-admin-kpis-grid' },
+      h('div', { class: 'stitch-admin-kpi-card' },
+        h('div', { class: 'kpi-top' },
+          h('span', { class: 'kpi-lbl' }, 'Despachos Activos'),
+          h('span', { class: 'badge-flash' }, 'SLA 98.2%')
+        ),
+        h('div', { class: 'kpi-amt-row' },
+          h('strong', { class: 'kpi-amt' }, activeOrdersCount),
+          h('small', null, 'órdenes en ruta o preparación')
+        ),
+        h('div', { class: 'kpi-footer-note' },
+          h('span', null, 'Promedio entrega: <strong>26 min</strong>')
+        )
+      ),
+
+      h('div', { class: 'stitch-admin-kpi-card' },
+        h('div', { class: 'kpi-top' },
+          h('span', { class: 'kpi-lbl' }, 'Validación de Fórmulas'),
+          h('span', { class: 'kpi-sub-tag tone-teal' }, 'ReTHUS MinSalud')
+        ),
+        h('div', { class: 'kpi-amt-row' },
+          h('strong', { class: 'kpi-amt tone-teal' }, (s.byStatus['FARMACIA_ASIGNADA'] || 0) + 2),
+          h('small', null, 'recetas médicas auditadas')
+        ),
+        h('div', { class: 'kpi-footer-note' },
+          h('span', null, 'Tiempo promedio auditoría: <strong>3.4 min</strong>')
+        )
+      ),
+
+      h('div', { class: 'stitch-admin-kpi-card' },
+        h('div', { class: 'kpi-top' },
+          h('span', { class: 'kpi-lbl' }, 'Facturación y Ventas'),
+          h('span', { class: 'kpi-sub-tag' }, 'Total red')
+        ),
+        h('div', { class: 'kpi-amt-row' },
+          h('strong', { class: 'kpi-amt' }, money(s.revenue)),
+          h('small', null, 'COP liquidados')
+        ),
+        h('div', { class: 'kpi-footer-note' },
+          h('span', null, '62% Venta Libre · 38% Fórmula Rx')
+        )
+      ),
+
+      h('div', { class: 'stitch-admin-kpi-card' },
+        h('div', { class: 'kpi-top' },
+          h('span', { class: 'kpi-lbl' }, 'Red de Aliados'),
+          h('span', { class: 'kpi-sub-tag tone-lime' }, 'INVIMA Certificado')
+        ),
+        h('div', { class: 'kpi-amt-row' },
+          h('strong', { class: 'kpi-amt' }, s.pharmacies.verified + s.couriers.verified),
+          h('small', null, 'farmacias y repartidores activos')
+        ),
+        h('div', { class: 'kpi-footer-note' },
+          h('span', null, (s.pharmacies.pending + s.couriers.pending) + ' pendientes de verificación')
+        )
+      )
+    );
+
+    return h('div', { class: 'summary stitch-admin-summary' },
+      kpiSection,
+      h('section', { class: 'block stitch-status-chart-block' },
+        h('h3', null, 'Distribución de Pedidos por Estado Operativo'),
+        total === 0 ? h('p', { class: 'muted' }, 'Todavía no hay pedidos registrados.') :
+          h('div', null,
+            h('p', { class: 'muted small' }, 'Haz clic en una barra para inspeccionar los pedidos correspondientes.'),
+            h('ul', { class: 'bars' }, rows.map(([k, n]) => {
+              const fill = h('span', { class: 'bar-fill tone-' + statusTone(k), style: 'width:0%' });
+              requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = (n / max * 100) + '%'; }));
+              return h('li', null, h('button', {
+                class: 'bar-link', type: 'button', onclick: () => go(k),
+                'aria-label': statusLabel(k) + ': ' + n + '. Ver pedidos'
+              }, h('span', { class: 'bar-label' }, statusLabel(k)), h('span', { class: 'bar-track' }, fill), h('span', { class: 'bar-n' }, n)));
+            }))
+          )
+      ),
+      h('section', { class: 'block' },
+        h('h3', null, 'Estado de la Red Asistencial FarmaYA'),
+        h('dl', { class: 'facts stacked' },
+          h('div', null, h('dt', null, 'Droguerías y Farmacias Verificadas'), h('dd', null, s.pharmacies.verified, s.pharmacies.pending > 0 && h('span', { class: 'attention' }, s.pharmacies.pending + ' por verificar'))),
+          h('div', null, h('dt', null, 'Repartidores Clínicos Verificados'), h('dd', null, s.couriers.verified, s.couriers.pending > 0 && h('span', { class: 'attention' }, s.couriers.pending + ' por verificar'))),
+          h('div', null, h('dt', null, 'Pacientes Registrados'), h('dd', null, s.clients)),
+          h('div', null, h('dt', null, 'Total de Medicamentos y Productos Entregados'), h('dd', null, money(s.revenue)))
+        )
+      )
+    );
+  });
+}
+
+function adminOrders() {
+  let status = adminFilter;
+  adminFilter = '';
+  const holder = h('div');
+  const select = h('select', { 'aria-label': 'Filtrar por estado', onchange: () => { status = select.value; draw(); } },
+    h('option', { value: '' }, 'Todos los estados'),
+    Object.entries(state.meta.statuses).map(([k, v]) => h('option', { value: k }, v)));
+  select.value = status;
+  const draw = () => holder.replaceChildren(live(() => API.get('/admin/orders' + (status ? '?status=' + status : '')), orders => {
+    if (!orders.length) return empty('No hay pedidos con este filtro', 'Prueba con otro estado o muestra todos.');
+    return h('div', { class: 'list' }, orders.map(o => orderRow(o, h('span', { class: 'muted small' }, o.city || o.address || ''))));
+  }));
+  draw();
+  return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, select), holder);
+}
+
+function adminUsers(role) {
+  const titles = { FARMACIA: 'farmacias', REPARTIDOR: 'repartidores', CLIENTE: 'clientes' };
+  let query = '';
+  let timer;
+  const search = h('input', {
+    type: 'search', placeholder: 'Buscar por nombre, correo o dirección', 'aria-label': 'Buscar ' + titles[role],
+    oninput: () => { clearTimeout(timer); timer = setTimeout(() => { query = search.value.trim().toLowerCase(); refreshAll(); }, 150); }
+  });
+
+  const list = live(() => API.get('/admin/users?role=' + role), users => {
+    if (!users.length) return empty('Aún no hay ' + titles[role]);
+    const shown = users.filter(u => !query ||
+      [u.name, u.email, u.address, u.pharmacyName, u.phone].filter(Boolean).join(' ').toLowerCase().includes(query));
+    if (!shown.length) return empty('Sin resultados', 'No encontramos ' + titles[role] + ' que coincidan con la búsqueda.');
+    const needsVerify = role !== 'CLIENTE';
+    const toggle = (u, kind, value, ok) => async e => {
+      await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
+      refreshAll();
+    };
+    return h('div', { class: 'table-wrap' }, h('table', { class: 'users' },
+      h('thead', null, h('tr', null,
+        h('th', null, role === 'FARMACIA' ? 'Farmacia' : 'Nombre'), h('th', null, 'Contacto'), h('th', null, 'Ubicación'), h('th', null, 'Estado'), h('th', null, 'Acciones'))),
+      h('tbody', null, shown.map(u => h('tr', { class: u.enabled ? '' : 'disabled' },
+        h('td', null,
+          h('strong', null, role === 'FARMACIA' ? u.pharmacyName : u.name),
+          role === 'FARMACIA' && h('small', { class: 'block-line muted' }, u.address),
+          role === 'FARMACIA' && h('small', { class: 'block-line muted' }, 'Licencia ' + u.licenseNumber + ', atiende de ' + u.openFrom + ' a ' + u.openTo),
+          role === 'REPARTIDOR' && h('small', { class: 'block-line muted' }, u.vehicle),
+          role === 'FARMACIA' && h('small', { class: 'block-line muted' }, 'Responsable: ' + u.name)),
+        h('td', null, u.email, h('small', { class: 'block-line muted' }, u.phone)),
+        h('td', null, u.address || u.city || 'Ciudad completa'),
+        h('td', null,
+          !u.enabled ? h('span', { class: 'badge tone-bad' }, 'Deshabilitada')
+            : needsVerify ? h('span', { class: 'badge ' + (u.verified ? 'tone-done' : 'tone-wait') }, u.verified ? 'Verificada' : 'Por verificar')
+              : h('span', { class: 'badge tone-done' }, 'Activa'),
+          role === 'FARMACIA' && u.editPermissionRequested && !u.canEditProfile && h('small', { class: 'block-line attention', style: 'margin-top:5px;font-weight:700;' }, 'Solicitó editar datos / número' + (u.editRequestNote ? ': ' + u.editRequestNote : '')),
+          role === 'FARMACIA' && u.canEditProfile && h('small', { class: 'block-line text-success', style: 'margin-top:5px;font-weight:700;' }, 'Edición autorizada por admin')),
+        h('td', { class: 'row-actions' },
+          needsVerify && (u.verified
+            ? h('button', { class: 'btn ghost small', onclick: toggle(u, 'verified', false, 'Verificación retirada') }, 'Quitar verificación')
+            : h('button', { class: 'btn primary small', onclick: toggle(u, 'verified', true, 'Cuenta verificada') }, 'Verificar')),
+          role === 'FARMACIA' && (u.canEditProfile
+            ? h('button', { class: 'btn ghost small', onclick: toggle(u, 'edit-permission', false, 'Permiso de edición revocado') }, 'Revocar permiso edición')
+            : h('button', { class: 'btn ' + (u.editPermissionRequested ? 'primary' : 'ghost') + ' small', onclick: toggle(u, 'edit-permission', true, 'Permiso de edición concedido') }, u.editPermissionRequested ? 'Autorizar edición' : 'Permitir editar datos')),
+          u.enabled
+            ? h('button', { class: 'btn danger-ghost small', onclick: toggle(u, 'enabled', false, 'Cuenta deshabilitada') }, 'Deshabilitar')
+            : h('button', { class: 'btn ghost small', onclick: toggle(u, 'enabled', true, 'Cuenta habilitada') }, 'Habilitar')))))));
+  });
+  return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, search), list);
+}
+
+/* Auditoría: movimientos de pedidos y acciones administrativas, con código trazable. */
+function adminMovements() {
+  let query = '';
+  let type = '';
+  const holder = h('div', { class: 'stack' });
+  const search = h('input', { type: 'search', placeholder: 'Buscar código, pedido, usuario o descripción', 'aria-label': 'Buscar movimientos', oninput: () => { query = search.value.trim().toLowerCase(); draw(); } });
+  const filter = h('select', { 'aria-label': 'Filtrar movimientos', onchange: () => { type = filter.value; draw(); } },
+    h('option', { value: '' }, 'Todos los movimientos'),
+    h('option', { value: 'PEDIDO' }, 'Pedidos'),
+    h('option', { value: 'USUARIO' }, 'Usuarios'),
+    h('option', { value: 'SISTEMA' }, 'Sistema'));
+  const draw = () => {
+    holder.replaceChildren(live(() => API.get('/admin/movements'), movements => {
+      const filtered = movements.filter(m => {
+        const searchable = [m.code, m.type, m.description, m.orderCode, m.actorName, m.actorRole].filter(Boolean).join(' ').toLowerCase();
+        const typeOk = !type || (type === 'PEDIDO' ? !!m.orderCode : type === 'USUARIO' ? String(m.type).startsWith('USUARIO_') : m.actorRole === 'SISTEMA');
+        return typeOk && (!query || searchable.includes(query));
+      });
+      if (!filtered.length) return empty('No hay movimientos para mostrar', 'Los cambios de estado de pedidos y las acciones administrativas aparecerán aquí.');
+      return h('div', { class: 'table-wrap movement-table' }, h('table', { class: 'users' },
+        h('thead', null, h('tr', null, h('th', null, 'Código'), h('th', null, 'Movimiento'), h('th', null, 'Pedido'), h('th', null, 'Responsable'), h('th', null, 'Fecha y hora'))),
+        h('tbody', null, filtered.map(m => h('tr', null,
+          h('td', null, h('strong', { class: 'movement-code' }, m.code || '—')),
+          h('td', null, h('strong', null, movementTypeLabel(m.type)), h('small', { class: 'block-line muted movement-description' }, m.description || 'Sin descripción')),
+          h('td', null, m.orderCode ? h('span', { class: 'code' }, m.orderCode) : '—'),
+          h('td', null, h('strong', null, m.actorName || 'FarmaYa'), h('small', { class: 'block-line muted' }, m.actorRole || 'SISTEMA')),
+          h('td', null, formatMovementDate(m.createdAt)))))));
+    }));
+  };
+  draw();
+  return h('div', { class: 'stack' }, h('div', { class: 'toolbar movement-toolbar' }, search, filter), holder);
+}
+
+function movementTypeLabel(type) {
+  const labels = { SOLICITUD_ENVIADA: 'Pedido creado', BUSCANDO_FARMACIA: 'Buscando farmacia', FARMACIA_ASIGNADA: 'Farmacia asignada', PRECIO_POR_ACEPTAR: 'Precio pendiente', PRECIO_CONFIRMADO: 'Precio confirmado', BUSCANDO_REPARTIDOR: 'Buscando repartidor', REPARTIDOR_ASIGNADO: 'Repartidor asignado', PEDIDO_RECOGIDO: 'Pedido recogido', EN_CAMINO: 'En camino', ENTREGADO: 'Pedido entregado', CANCELADA: 'Pedido cancelado', VENCIDA: 'Pedido vencido', RECHAZADA: 'Pedido rechazado', CON_INCIDENCIA: 'Incidencia', USUARIO_VERIFICACION: 'Verificación de usuario', USUARIO_ESTADO: 'Estado de usuario' };
+  return labels[type] || String(type || 'Movimiento').replaceAll('_', ' ').toLowerCase().replace(/^./, c => c.toUpperCase());
+}
+function formatMovementDate(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '—' : new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+
+/* ==========================================================================
+   Gestión de Cuentas de Administradores (Admin)
+   ========================================================================== */
+function adminAdministratorsView(currentUser) {
+  let query = '';
+  let timer;
+  const holder = h('div', { class: 'stack' });
+
+  const search = h('input', {
+    type: 'search',
+    placeholder: 'Buscar administrador por nombre, correo o teléfono...',
+    'aria-label': 'Buscar administradores',
+    oninput: () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        query = search.value.trim().toLowerCase();
+        refreshAll();
+      }, 150);
+    }
+  });
+
+  const list = live(() => API.get('/admin/users?role=ADMIN'), admins => {
+    if (!admins.length) return empty('Aún no hay administradores registrados');
+    const shown = admins.filter(u => !query ||
+      [u.name, u.email, u.phone].filter(Boolean).join(' ').toLowerCase().includes(query)
+    );
+    if (!shown.length) return empty('Sin resultados', 'No encontramos administradores que coincidan con la búsqueda.');
+
+    const toggle = (u, kind, value, ok) => async e => {
+      await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
+      refreshAll();
+    };
+
+    return h('div', { class: 'table-wrap' }, h('table', { class: 'users' },
+      h('thead', null, h('tr', null,
+        h('th', null, 'Administrador'),
+        h('th', null, 'Contacto Institucional'),
+        h('th', null, 'Colección / Permisos'),
+        h('th', null, 'Estado'),
+        h('th', { style: 'text-align:right' }, 'Acciones')
+      )),
+      h('tbody', null, shown.map(u => {
+        const isSelf = (currentUser && (currentUser.id === u.id || currentUser.email === u.email)) ||
+                       (state.user && (state.user.id === u.id || state.user.email === u.email));
+
+        return h('tr', { class: u.enabled ? '' : 'disabled' },
+          h('td', null,
+            h('div', { style: 'display:flex;align-items:center;gap:8px;' },
+              h('strong', null, u.name),
+              isSelf && h('span', { class: 'badge tone-done', style: 'font-size:10px;padding:2px 6px;' }, 'Tú (Sesión actual)')
+            ),
+            h('small', { class: 'block-line muted' }, 'ID: ' + (u.id || '—'))
+          ),
+          h('td', null,
+            h('span', null, u.email),
+            h('small', { class: 'block-line muted' }, u.phone ? ('Tel: ' + u.phone) : 'Sin teléfono registrado')
+          ),
+          h('td', null,
+            h('span', { class: 'badge tone-lime' }, 'Colección: administradores'),
+            h('small', { class: 'block-line muted' }, 'Rol: ADMIN (Acceso Total)')
+          ),
+          h('td', null,
+            u.enabled
+              ? h('span', { class: 'badge tone-done' }, 'Activo')
+              : h('span', { class: 'badge tone-bad' }, 'Deshabilitado')
+          ),
+          h('td', { class: 'row-actions', style: 'justify-content:flex-end;' },
+            isSelf ? h('span', { class: 'muted small' }, 'Sesión en curso') : (
+              u.enabled
+                ? h('button', {
+                    class: 'btn danger-ghost small',
+                    onclick: toggle(u, 'enabled', false, 'Administrador deshabilitado')
+                  }, 'Deshabilitar')
+                : h('button', {
+                    class: 'btn ghost small',
+                    onclick: toggle(u, 'enabled', true, 'Administrador habilitado')
+                  }, 'Habilitar')
+            )
+          )
+        );
+      }))
+    ));
+  });
+
+  return h('div', { class: 'stack' },
+    h('div', { class: 'section-heading' },
+      h('div', null,
+        h('h2', null, 'Cuentas de Administradores'),
+        h('p', { class: 'muted small' }, 'Crea y gestiona cuentas administrativas guardadas en la colección oficial de administradores de FarmaYA.')
+      ),
+      h('button', {
+        class: 'btn primary',
+        type: 'button',
+        onclick: () => openCreateAdminModal(() => refreshAll())
+      }, '+ Crear Administrador')
+    ),
+    h('div', { class: 'toolbar' }, search),
+    list
+  );
+}
+
+function openCreateAdminModal(onCreated) {
+  const nameInput = h('input', {
+    type: 'text',
+    required: true,
+    placeholder: 'Ej: Dra. Carmen Morales',
+    'aria-label': 'Nombre completo'
+  });
+
+  const emailInput = h('input', {
+    type: 'email',
+    required: true,
+    placeholder: 'carmen.admin@farmaya.com',
+    'aria-label': 'Correo electrónico institucional'
+  });
+
+  const phoneInput = h('input', {
+    type: 'tel',
+    required: true,
+    placeholder: 'Ej: 300 123 4567',
+    'aria-label': 'Teléfono de contacto'
+  });
+
+  const passwordInput = h('input', {
+    type: 'password',
+    required: true,
+    minLength: 6,
+    placeholder: 'Mínimo 6 caracteres con mayúsculas y números',
+    'aria-label': 'Contraseña'
+  });
+
+  const togglePassBtn = h('button', {
+    type: 'button',
+    class: 'btn ghost small',
+    style: 'align-self:flex-start;margin-top:4px;',
+    onclick: () => {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        togglePassBtn.textContent = 'Ocultar contraseña';
+      } else {
+        passwordInput.type = 'password';
+        togglePassBtn.textContent = 'Ver contraseña';
+      }
+    }
+  }, 'Ver contraseña');
+
+  const errorBox = h('div', { class: 'attention', style: 'display:none;margin-top:10px;' });
+
+  const form = h('form', {
+    class: 'form-stack',
+    onsubmit: async e => {
+      e.preventDefault();
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+
+      const name = nameInput.value.trim();
+      const email = emailInput.value.trim().toLowerCase();
+      const phone = phoneInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!name || name.length < 3) {
+        errorBox.textContent = 'Ingresa un nombre válido (al menos 3 caracteres).';
+        errorBox.style.display = 'block';
+        nameInput.focus();
+        return;
+      }
+
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errorBox.textContent = 'Ingresa un correo electrónico institucional válido.';
+        errorBox.style.display = 'block';
+        emailInput.focus();
+        return;
+      }
+
+      if (!password || password.length < 6) {
+        errorBox.textContent = 'La contraseña debe contener al menos 6 caracteres.';
+        errorBox.style.display = 'block';
+        passwordInput.focus();
+        return;
+      }
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      await act(submitBtn, async () => {
+        const created = await API.post('/admin/administrators', { name, email, phone, password });
+        d.close();
+        toast('Administrador ' + created.name + ' guardado en la colección de administradores.');
+        if (onCreated) onCreated();
+      });
+    }
+  },
+    h('div', { class: 'field' },
+      h('label', { class: 'field-label' }, 'Nombre Completo:'),
+      nameInput
+    ),
+    h('div', { class: 'field' },
+      h('label', { class: 'field-label' }, 'Correo Electrónico Institucional:'),
+      emailInput
+    ),
+    h('div', { class: 'field' },
+      h('label', { class: 'field-label' }, 'Número de Teléfono:'),
+      phoneInput
+    ),
+    h('div', { class: 'field' },
+      h('label', { class: 'field-label' }, 'Contraseña de Acceso:'),
+      passwordInput,
+      togglePassBtn
+    ),
+    errorBox,
+    h('div', { class: 'actions', style: 'margin-top:20px;' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Cancelar'),
+      h('button', { class: 'btn primary', type: 'submit' }, 'Guardar Administrador')
+    )
+  );
+
+  const dialogContent = h('div', { class: 'sheet-body', style: 'max-width:520px;' },
+    h('div', { style: 'display:flex;align-items:center;gap:12px;margin-bottom:12px;' },
+      h('span', { class: 'badge tone-done', style: 'font-weight:700;padding:6px 10px;' }, 'Admin'),
+      h('div', null,
+        h('h3', { style: 'margin:0;' }, 'Crear Nuevo Administrador'),
+        h('p', { class: 'muted small', style: 'margin:2px 0 0;' }, 'La cuenta se registrará y persistirá en la colección oficial de administradores.')
+      )
+    ),
+    form
+  );
+
+  const d = openDialog(dialogContent);
+  setTimeout(() => nameInput.focus(), 100);
+}
+
+/* ==========================================================================
+   Gestión de Catálogo e Imágenes de Medicamentos (Admin)
+   ========================================================================== */
+function adminCatalogManager() {
+  let query = '';
+  let category = '';
+  const holder = h('div', { class: 'stack' });
+
+  const search = h('input', {
+    type: 'search',
+    placeholder: 'Buscar medicamento por nombre, componente o laboratorio...',
+    'aria-label': 'Buscar medicamento',
+    oninput: () => {
+      query = search.value.trim().toLowerCase();
+      draw();
+    }
+  });
+
+  const catSelect = h('select', {
+    'aria-label': 'Filtrar por categoría',
+    onchange: () => {
+      category = catSelect.value;
+      draw();
+    }
+  },
+    h('option', { value: '' }, 'Todas las categorías'),
+    CATEGORIES.map(c => h('option', { value: c.id }, c.label))
+  );
+
+  const countPill = h('span', { class: 'product-counter-pill' }, 'Cargando catálogo...');
+
+  const draw = () => {
+    const customImages = typeof getCustomProductImages === 'function' ? getCustomProductImages() : {};
+    const filtered = CATALOG.filter(p => {
+      const matchCat = !category || p.cat === category;
+      const searchable = [p.name, p.active, p.lab, p.presentation, p.invima].filter(Boolean).join(' ').toLowerCase();
+      const matchQ = !query || searchable.includes(query);
+      return matchCat && matchQ;
+    });
+
+    countPill.textContent = `${filtered.length} de ${CATALOG.length} productos`;
+
+    if (!filtered.length) {
+      holder.replaceChildren(empty('No se encontraron medicamentos', 'Prueba modificando los términos de búsqueda o agrega un nuevo producto con el botón superior.'));
+      return;
+    }
+
+    const tableWrap = h('div', { class: 'table-wrap stitch-admin-catalog-wrap' },
+      h('table', { class: 'users admin-catalog-table' },
+        h('thead', null,
+          h('tr', null,
+            h('th', { style: 'width:90px' }, 'Imagen'),
+            h('th', null, 'Medicamento / Ficha Técnica'),
+            h('th', null, 'Categoría'),
+            h('th', null, 'Precio Sugerido'),
+            h('th', null, 'Estado Foto'),
+            h('th', { style: 'text-align:right' }, 'Acciones')
+          )
+        ),
+        h('tbody', null, filtered.map(p => {
+          const hasCustom = !!(p.imageUrl || customImages[p.name]);
+          const artWrapper = h('div', {
+            class: 'admin-product-thumb',
+            style: 'cursor:pointer;',
+            title: 'Haz clic para cambiar la fotografía',
+            onclick: () => openProductImageModal(p, () => {
+              if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
+              draw();
+            })
+          }, productArt(p));
+
+          return h('tr', null,
+            h('td', null, artWrapper),
+            h('td', null,
+              h('div', { style: 'display:flex;align-items:center;gap:6px;' },
+                h('strong', { class: 'admin-med-title' }, p.name),
+                p.rx && h('span', { class: 'badge-rx inline', style: 'font-size:11px;' }, 'Rx'),
+                p.featured && h('span', { class: 'badge tone-teal inline', style: 'font-size:10px;' }, 'Destacado')
+              ),
+              h('small', { class: 'block-line text-secondary' }, p.presentation || 'Sin presentación definida'),
+              h('small', { class: 'block-line muted' }, (p.lab || 'Laboratorio estándar') + (p.invima ? ' · ' + p.invima : '')),
+              p.active && h('small', { class: 'block-line muted' }, 'Principio: ' + p.active)
+            ),
+            h('td', null,
+              h('span', { class: 'badge' }, CATEGORIES.find(c => c.id === p.cat)?.label || p.cat)
+            ),
+            h('td', null,
+              h('strong', { class: 'product-price' }, money(p.price))
+            ),
+            h('td', null,
+              hasCustom
+                ? h('span', { class: 'badge tone-done' }, 'Foto personalizada')
+                : h('span', { class: 'badge tone-wait' }, 'Ilustración médica')
+            ),
+            h('td', { class: 'row-actions', style: 'justify-content:flex-end;gap:8px;' },
+              h('button', {
+                class: 'btn ghost small',
+                type: 'button',
+                title: 'Editar información y características del producto',
+                onclick: () => openProductModal(p, () => {
+                  if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
+                  draw();
+                })
+              }, 'Editar'),
+              h('button', {
+                class: 'btn primary small',
+                type: 'button',
+                title: 'Gestionar foto del producto',
+                onclick: () => openProductImageModal(p, () => {
+                  if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
+                  draw();
+                })
+              }, hasCustom ? 'Foto' : '+ Foto'),
+              h('button', {
+                class: 'btn danger-ghost small',
+                type: 'button',
+                title: 'Eliminar este producto del catálogo',
+                onclick: async () => {
+                  const ok = await confirmBox({
+                    title: 'Eliminar producto',
+                    message: `¿Estás seguro de que deseas eliminar permanentemente "${p.name}" del catálogo institucional y de la base de datos?`,
+                    ok: 'Eliminar',
+                    danger: true
+                  });
+                  if (!ok) return;
+
+                  try {
+                    const targetId = p.id || encodeURIComponent(p.name);
+                    await API.delete('/products/' + targetId);
+                  } catch (err) {
+                    console.debug('Error deleting product from backend:', err);
+                  }
+
+                  const idx = CATALOG.findIndex(item => item === p || (p.id && item.id === p.id) || norm(item.name) === norm(p.name));
+                  if (idx >= 0) CATALOG.splice(idx, 1);
+                  if (typeof saveProductImage === 'function') saveProductImage(p.name, null);
+
+                  toast(`Producto "${p.name}" eliminado del catálogo.`);
+                  window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
+                  draw();
+                }
+              }, 'Eliminar')
+            )
+          );
+        }))
+      )
+    );
+
+    holder.replaceChildren(tableWrap);
+  };
+
+  // Escuchar actualizaciones de catálogo
+  window.addEventListener('farmaya:catalog-synced', draw);
+  window.addEventListener('farmaya:product-images-updated', draw);
+
+  draw();
+
+  return h('div', { class: 'stack' },
+    h('div', { class: 'section-heading' },
+      h('div', null,
+        h('h2', null, 'Catálogo de Medicamentos y Productos'),
+        h('p', { class: 'muted small' }, 'Ingresa nuevos medicamentos, edita los existentes y administra sus fotos y fichas técnicas en tiempo real.')
+      ),
+      h('button', {
+        class: 'btn primary',
+        type: 'button',
+        onclick: () => openProductModal(null, () => {
+          if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
+          draw();
+        })
+      }, '+ Ingresar Nuevo Producto')
+    ),
+    h('div', { class: 'toolbar', style: 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;' },
+      search,
+      catSelect,
+      countPill
+    ),
+    holder
+  );
+}
+
+/* Modal integral para INGRESAR NUEVO o EDITAR producto existente */
+function openProductModal(p, onSaved) {
+  const isEditing = !!p;
+  const customImages = typeof getCustomProductImages === 'function' ? getCustomProductImages() : {};
+  let currentImageUrl = (p && (p.imageUrl || customImages[p.name])) || '';
+
+  const nameInput = h('input', {
+    type: 'text',
+    required: true,
+    value: p ? p.name : '',
+    placeholder: 'Ej: Ibuprofeno 800 mg',
+    'aria-label': 'Nombre del producto'
+  });
+
+  const catSelect = h('select', {
+    required: true,
+    'aria-label': 'Categoría'
+  },
+    CATEGORIES.map(c => h('option', { value: c.id, selected: p && p.cat === c.id }, c.label))
+  );
+
+  const priceInput = h('input', {
+    type: 'number',
+    required: true,
+    min: 100,
+    step: 100,
+    value: p ? p.price : '',
+    placeholder: 'Ej: 14500',
+    'aria-label': 'Precio sugerido en pesos colombianos'
+  });
+
+  const labInput = h('input', {
+    type: 'text',
+    value: p && p.lab ? p.lab : '',
+    placeholder: 'Ej: MK (Tecnoquímicas), Genfar, Bayer',
+    'aria-label': 'Laboratorio farmacéutico'
+  });
+
+  const presInput = h('input', {
+    type: 'text',
+    value: p && p.presentation ? p.presentation : '',
+    placeholder: 'Ej: Caja x 30 tabletas recubiertas, Frasco x 350 ml',
+    'aria-label': 'Presentación comercial'
+  });
+
+  const invimaInput = h('input', {
+    type: 'text',
+    value: p && p.invima ? p.invima : '',
+    placeholder: 'Ej: INVIMA 2021M-0012345-R1',
+    'aria-label': 'Registro sanitario INVIMA'
+  });
+
+  const activeInput = h('input', {
+    type: 'text',
+    value: p && p.active ? p.active : '',
+    placeholder: 'Ej: Ibuprofeno 800 mg, Acetaminofén 500 mg',
+    'aria-label': 'Principio activo'
+  });
+
+  const indInput = h('textarea', {
+    rows: 2,
+    placeholder: 'Ej: Alivio de dolores intensos, antiinflamatorio no esteroideo...',
+    'aria-label': 'Indicación terapéutica'
+  }, p && p.indication ? p.indication : '');
+
+  const storInput = h('input', {
+    type: 'text',
+    value: p && p.storage ? p.storage : 'Temperatura ambiente controlada (15°C - 25°C)',
+    placeholder: 'Condiciones de conservación recomendadas',
+    'aria-label': 'Conservación'
+  });
+
+  const rxCheckbox = h('input', {
+    type: 'checkbox',
+    id: 'modal_rx_check',
+    checked: p ? !!p.rx : false
+  });
+
+  const featCheckbox = h('input', {
+    type: 'checkbox',
+    id: 'modal_feat_check',
+    checked: p ? !!p.featured : false
+  });
+
+  // Sección de imagen en vivo
+  const previewBox = h('div', { class: 'image-modal-preview' });
+  const updateImagePreview = url => {
+    currentImageUrl = url;
+    if (url) {
+      previewBox.innerHTML = '<img src="' + url + '" alt="Vista previa" class="admin-preview-img" style="max-height:100px;" />';
+    } else {
+      previewBox.replaceChildren(productArt(p || { art: 'box', color: '#16865d', name: nameInput.value || 'Medicamento' }));
+    }
+  };
+  updateImagePreview(currentImageUrl);
+
+  const imgUrlInput = h('input', {
+    type: 'url',
+    placeholder: 'https://ejemplo.com/fotos/producto.jpg',
+    value: currentImageUrl && !currentImageUrl.startsWith('data:') ? currentImageUrl : '',
+    oninput: () => updateImagePreview(imgUrlInput.value.trim())
+  });
+
+  const fileInput = h('input', {
+    type: 'file',
+    accept: 'image/*',
+    style: 'display:none',
+    onchange: e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (file.size > 4 * 1024 * 1024) {
+        toast('La fotografía no debe superar 4MB', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        imgUrlInput.value = '';
+        updateImagePreview(ev.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  const uploadBtn = h('button', {
+    class: 'btn secondary small',
+    type: 'button',
+    onclick: () => fileInput.click()
+  }, 'Subir foto desde archivo');
+
+  // Presets rápidos
+  const presets = [
+    { label: 'Cápsulas blandas', url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=360&auto=format&fit=crop&q=80' },
+    { label: 'Caja tabletas', url: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=360&auto=format&fit=crop&q=80' },
+    { label: 'Jarabe', url: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=360&auto=format&fit=crop&q=80' },
+    { label: 'Crema / Pomada', url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=360&auto=format&fit=crop&q=80' }
+  ];
+
+  const presetRow = h('div', { class: 'preset-pills-row' },
+    presets.map(item => h('button', {
+      type: 'button',
+      class: 'btn ghost small preset-pill-btn',
+      onclick: () => {
+        imgUrlInput.value = item.url;
+        updateImagePreview(item.url);
+      }
+    }, item.label))
+  );
+
+  const errorBox = h('div', { class: 'attention', style: 'display:none;margin-top:10px;' });
+
+  const form = h('form', {
+    class: 'form-stack',
+    onsubmit: async e => {
+      e.preventDefault();
+      errorBox.style.display = 'none';
+
+      const name = nameInput.value.trim();
+      const cat = catSelect.value;
+      const price = parseFloat(priceInput.value);
+
+      if (!name) {
+        errorBox.textContent = 'El nombre del producto es obligatorio.';
+        errorBox.style.display = 'block';
+        nameInput.focus();
+        return;
+      }
+
+      if (!price || price <= 0) {
+        errorBox.textContent = 'Ingresa un precio sugerido válido mayor a 0.';
+        errorBox.style.display = 'block';
+        priceInput.focus();
+        return;
+      }
+
+      const payload = {
+        name,
+        cat,
+        price,
+        lab: labInput.value.trim(),
+        presentation: presInput.value.trim(),
+        invima: invimaInput.value.trim(),
+        active: activeInput.value.trim(),
+        indication: indInput.value.trim(),
+        storage: storInput.value.trim(),
+        rx: rxCheckbox.checked,
+        featured: featCheckbox.checked,
+        imageUrl: currentImageUrl || null,
+        art: (p && p.art) || (cat === 'vital' ? 'bottle' : cat === 'derm' || cat === 'care' ? 'jar' : 'box'),
+        color: (p && p.color) || '#16865d'
+      };
+
+      const submitBtn = form.querySelector('button[type="submit"]');
+      await act(submitBtn, async () => {
+        if (isEditing) {
+          // Actualización de producto existente
+          const updateId = p.id || encodeURIComponent(p.name);
+          const oldName = p.name;
+          try {
+            const updated = await API.put('/products/' + updateId, payload);
+            Object.assign(p, updated);
+          } catch (err) {
+            // Si el backend aún no tenía este producto en base de datos, lo creamos
+            const created = await API.post('/products', payload);
+            Object.assign(p, created);
+          }
+
+          if (typeof saveProductImage === 'function') {
+            if (oldName && oldName !== payload.name) {
+              saveProductImage(oldName, null);
+            }
+            saveProductImage(payload.name, payload.imageUrl);
+          }
+
+          toast(`Producto "${payload.name}" actualizado exitosamente.`);
+        } else {
+          // Creación de nuevo producto
+          const created = await API.post('/products', payload);
+          const fullProduct = Object.assign({
+            id: created.id,
+            ...payload
+          }, created);
+
+          CATALOG.unshift(fullProduct);
+
+          if (payload.imageUrl && typeof saveProductImage === 'function') {
+            saveProductImage(fullProduct.name, payload.imageUrl);
+          }
+
+          toast(`Producto "${payload.name}" ingresado exitosamente al catálogo.`);
+        }
+
+        window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
+        d.close();
+        if (onSaved) onSaved();
+      });
+    }
+  },
+    h('div', { class: 'product-form-grid' },
+      h('div', { class: 'field' },
+        h('label', { class: 'field-label' }, 'Nombre Comercial del Producto:'),
+        nameInput
+      ),
+      h('div', { class: 'field' },
+        h('label', { class: 'field-label' }, 'Categoría:'),
+        catSelect
+      ),
+      h('div', { class: 'field' },
+        h('label', { class: 'field-label' }, 'Precio Sugerido (COP):'),
+        priceInput
+      ),
+      h('div', { class: 'field' },
+        h('label', { class: 'field-label' }, 'Laboratorio Farmacéutico:'),
+        labInput
+      ),
+      h('div', { class: 'field' },
+        h('label', { class: 'field-label' }, 'Presentación Comercial:'),
+        presInput
+      ),
+      h('div', { class: 'field' },
+        h('label', { class: 'field-label' }, 'Registro Sanitario INVIMA:'),
+        invimaInput
+      ),
+      h('div', { class: 'field full-width' },
+        h('label', { class: 'field-label' }, 'Principio Activo y Concentración:'),
+        activeInput
+      ),
+      h('div', { class: 'field full-width' },
+        h('label', { class: 'field-label' }, 'Indicación Terapéutica:'),
+        indInput
+      ),
+      h('div', { class: 'field full-width' },
+        h('label', { class: 'field-label' }, 'Condiciones de Conservación:'),
+        storInput
+      ),
+      h('div', { class: 'field full-width' },
+        h('div', { class: 'product-form-switches' },
+          h('label', null,
+            rxCheckbox,
+            h('span', null, 'Requiere Fórmula Médica Obligatoria (Rx)')
+          ),
+          h('label', null,
+            featCheckbox,
+            h('span', null, 'Destacado en pantalla de inicio')
+          )
+        )
+      ),
+      // Módulo de imagen
+      h('div', { class: 'field full-width', style: 'margin-top:10px;' },
+        h('label', { class: 'field-label', style: 'font-weight:700;' }, 'Fotografía del Producto:'),
+        h('div', { class: 'image-modal-grid', style: 'margin:8px 0;' },
+          h('div', { class: 'image-modal-preview-box', style: 'min-height:120px;' },
+            h('span', { class: 'small muted', style: 'margin-bottom:6px;' }, 'Previsualización:'),
+            previewBox
+          ),
+          h('div', { class: 'form-stack' },
+            uploadBtn,
+            fileInput,
+            h('div', { style: 'margin-top:8px;' },
+              h('span', { class: 'small muted' }, 'O escribe la URL directa:'),
+              imgUrlInput
+            ),
+            h('div', { style: 'margin-top:8px;' },
+              h('span', { class: 'small muted' }, 'Fotos sugeridas rápidas:'),
+              presetRow
+            )
+          )
+        )
+      )
+    ),
+    errorBox,
+    h('div', { class: 'actions', style: 'margin-top:20px;' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Cancelar'),
+      isEditing && h('button', {
+        class: 'btn danger-ghost',
+        type: 'button',
+        onclick: async () => {
+          const ok = await confirmBox({
+            title: 'Eliminar producto',
+            message: `¿Estás seguro de que deseas eliminar permanentemente "${p.name}" del catálogo institucional y de la base de datos?`,
+            ok: 'Eliminar permanentemente',
+            danger: true
+          });
+          if (!ok) return;
+
+          try {
+            const targetId = p.id || encodeURIComponent(p.name);
+            await API.delete('/products/' + targetId);
+          } catch (err) {
+            console.debug('Error deleting product from backend:', err);
+          }
+
+          const idx = CATALOG.findIndex(item => item === p || (p.id && item.id === p.id) || norm(item.name) === norm(p.name));
+          if (idx >= 0) CATALOG.splice(idx, 1);
+          if (typeof saveProductImage === 'function') saveProductImage(p.name, null);
+
+          toast(`Producto "${p.name}" eliminado del catálogo.`);
+          window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
+          d.close();
+          if (onSaved) onSaved();
+        }
+      }, 'Eliminar Producto'),
+      h('button', { class: 'btn primary', type: 'submit' }, isEditing ? 'Guardar Cambios' : 'Ingresar al Catálogo')
+    )
+  );
+
+  const dialogContent = h('div', { class: 'sheet-body product-edit-sheet' },
+    h('div', { style: 'display:flex;align-items:center;gap:12px;margin-bottom:12px;' },
+      h('span', { class: 'badge tone-teal', style: 'font-weight:700;padding:6px 10px;' }, isEditing ? 'Edición' : 'Catálogo'),
+      h('div', null,
+        h('h3', { style: 'margin:0;' }, isEditing ? `Editar Producto: ${p.name}` : 'Ingresar Nuevo Producto al Catálogo'),
+        h('p', { class: 'muted small', style: 'margin:2px 0 0;' }, 'Los cambios se persistirán en la base de datos y se sincronizarán con los clientes.')
+      )
+    ),
+    form
+  );
+
+  const d = openDialog(dialogContent, { wide: true });
+  setTimeout(() => nameInput.focus(), 100);
+}
+
+function openProductImageModal(p, onSaved) {
+  const customImages = typeof getCustomProductImages === 'function' ? getCustomProductImages() : {};
+  let selectedUrl = p.imageUrl || customImages[p.name] || '';
+  const previewImg = h('div', { class: 'image-modal-preview' });
+
+  const updatePreview = url => {
+    selectedUrl = url;
+    if (url) {
+      previewImg.innerHTML = '<img src="' + url + '" alt="Vista previa" class="admin-preview-img" />';
+    } else {
+      previewImg.replaceChildren(productArt(p));
+    }
+  };
+
+  updatePreview(selectedUrl);
+
+  const urlInput = h('input', {
+    type: 'url',
+    placeholder: 'https://ejemplo.com/imagenes/medicamento.jpg',
+    value: selectedUrl && !selectedUrl.startsWith('data:') ? selectedUrl : '',
+    oninput: () => updatePreview(urlInput.value.trim())
+  });
+
+  const fileInput = h('input', {
+    type: 'file',
+    accept: 'image/*',
+    style: 'display:none',
+    onchange: e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (file.size > 4 * 1024 * 1024) {
+        toast('La imagen no debe superar 4MB', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const dataUrl = ev.target.result;
+        urlInput.value = '';
+        updatePreview(dataUrl);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  const uploadBtn = h('button', {
+    class: 'btn secondary',
+    type: 'button',
+    onclick: () => fileInput.click()
+  }, 'Subir foto desde archivo');
+
+  // Galería de fotos médicas preconfiguradas
+  const presets = [
+    { label: 'Cápsulas blandas', url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=360&auto=format&fit=crop&q=80' },
+    { label: 'Caja de tabletas', url: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=360&auto=format&fit=crop&q=80' },
+    { label: 'Frasco jarabe', url: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=360&auto=format&fit=crop&q=80' },
+    { label: 'Crema / Ungüento', url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=360&auto=format&fit=crop&q=80' },
+    { label: 'Suero oral', url: 'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=360&auto=format&fit=crop&q=80' },
+    { label: 'Vitamina C efervescente', url: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?w=360&auto=format&fit=crop&q=80' }
+  ];
+
+  const presetList = h('div', { class: 'preset-pills-row' },
+    presets.map(item => h('button', {
+      type: 'button',
+      class: 'btn ghost small preset-pill-btn',
+      onclick: () => {
+        urlInput.value = item.url;
+        updatePreview(item.url);
+      }
+    }, item.label))
+  );
+
+  const content = h('div', { class: 'sheet-body image-edit-sheet' },
+    h('h3', null, 'Asignar Imagen a ' + p.name),
+    h('p', { class: 'muted small' }, 'Sube una fotografía de empaque oficial o ingresa una dirección web. Esta imagen se visualizará en el catálogo para los pacientes.'),
+    h('div', { class: 'image-modal-grid' },
+      h('div', { class: 'image-modal-preview-box' },
+        h('strong', { class: 'small muted block-line', style: 'margin-bottom:8px;' }, 'Vista previa actual:'),
+        previewImg
+      ),
+      h('div', { class: 'image-modal-controls-box form-stack' },
+        h('div', { class: 'field' },
+          h('label', { class: 'field-label' }, 'Opción 1: Cargar desde tu archivo local'),
+          uploadBtn,
+          fileInput
+        ),
+        h('div', { class: 'field' },
+          h('label', { class: 'field-label' }, 'Opción 2: O escribe la URL directa de la imagen'),
+          urlInput
+        ),
+        h('div', { class: 'field' },
+          h('label', { class: 'field-label' }, 'Opción 3: Fotos de referencia rápida'),
+          presetList
+        )
+      )
+    ),
+    h('div', { class: 'actions' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Cancelar'),
+      selectedUrl && h('button', {
+        class: 'btn danger-ghost',
+        type: 'button',
+        onclick: async () => {
+          saveProductImage(p.name, null);
+          p.imageUrl = null;
+          try {
+            const targetId = p.id || encodeURIComponent(p.name);
+            await API.put('/products/' + targetId, { imageUrl: '' });
+          } catch (_) {}
+          d.close();
+          toast('Se restableció la ilustración');
+          window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
+          if (onSaved) onSaved();
+        }
+      }, 'Quitar foto'),
+      h('button', {
+        class: 'btn primary',
+        type: 'button',
+        onclick: async () => {
+          if (!selectedUrl) {
+            toast('Por favor selecciona o sube una imagen', 'error');
+            return;
+          }
+          saveProductImage(p.name, selectedUrl);
+          p.imageUrl = selectedUrl;
+          try {
+            const targetId = p.id || encodeURIComponent(p.name);
+            await API.put('/products/' + targetId, { imageUrl: selectedUrl });
+          } catch (_) {}
+          d.close();
+          toast('Foto de ' + p.name + ' guardada exitosamente.');
+          window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
+          if (onSaved) onSaved();
+        }
+      }, 'Guardar Imagen')
+    )
+  );
+
+  const d = openDialog(content, { wide: true });
+}

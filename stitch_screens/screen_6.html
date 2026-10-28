@@ -1,0 +1,607 @@
+﻿<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"primary":"#004e46","on-primary-container":"#93e4d7","on-surface-variant":"#3e4947","error-container":"#ffdad6","surface-container-high":"#e2e7ff","inverse-surface":"#283044","surface-container":"#eaedff","on-tertiary-container":"#a5e1d3","tertiary-fixed-dim":"#96d2c5","on-secondary-fixed":"#0e2000","secondary-fixed-dim":"#96d956","outline":"#6e7977","primary-fixed-dim":"#85d5c8","primary-container":"#00685e","on-error-container":"#93000a","tertiary-container":"#2a665b","outline-variant":"#bec9c6","surface-variant":"#dae2fd","background":"#faf8ff","on-primary-fixed-variant":"#005048","on-error":"#ffffff","tertiary-fixed":"#b2efe1","secondary-container":"#b1f66f","on-secondary-fixed-variant":"#2a5000","secondary-fixed":"#b1f66f","surface-tint":"#066a60","surface-container-low":"#f2f3ff","surface-container-highest":"#dae2fd","surface-bright":"#faf8ff","on-tertiary-fixed-variant":"#0d5046","on-tertiary":"#ffffff","on-tertiary-fixed":"#00201b","surface":"#faf8ff","surface-container-lowest":"#ffffff","on-primary":"#ffffff","secondary":"#3a6a00","on-secondary":"#ffffff","inverse-primary":"#85d5c8","on-primary-fixed":"#00201c","primary-fixed":"#a1f1e4","error":"#ba1a1a","on-background":"#131b2e","surface-dim":"#d2d9f4","on-secondary-container":"#3e7100","inverse-on-surface":"#eef0ff","tertiary":"#094e44","on-surface":"#131b2e"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-lg":"1.5rem","margin-mobile":"1rem","space-xl":"2.5rem","gutter-mobile":"0.75rem","space-sm":"0.5rem","space-md":"1rem","gutter":"1.25rem","space-xs":"0.25rem","margin":"2rem"},"fontFamily":{"label-sm":["Inter"],"label-lg":["Inter"],"headline-xl-mobile":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"title-md":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-sm":["Inter"],"headline-sm":["Plus Jakarta Sans"],"label-md":["Inter"],"body-md":["Inter"],"headline-xl":["Plus Jakarta Sans"],"price-display":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Inter"]},"fontSize":{"label-sm":["11px",{"lineHeight":"14px","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"700"}],"title-md":["18px",{"lineHeight":"26px","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"headline-sm":["20px",{"lineHeight":"28px","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-xl":["40px",{"lineHeight":"48px","fontWeight":"700"}],"price-display":["22px",{"lineHeight":"28px","fontWeight":"700"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-primary z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between bg-primary-container"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center p-1.5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><span class="material-symbols-outlined text-primary">local_pharmacy</span></div><div><span class="font-headline-sm text-headline-sm text-on-primary font-bold tracking-tight block">FarmaYA</span><span class="font-label-sm text-label-sm text-on-primary-container block uppercase tracking-wider">Backoffice Clínico</span></div></div><span class="material-symbols-outlined text-on-primary-container cursor-pointer hover:text-on-primary transition-colors">menu_open</span></div><div class="px-space-md pt-space-md"><div class="bg-primary-container/60 rounded-lg p-space-sm mb-space-md flex items-center justify-between"><div class="flex items-center gap-space-xs"><span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span><span class="font-label-sm text-label-sm text-on-primary">Bodega Central</span></div><span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded-full">En línea</span></div><nav class="space-y-1" data-active-classes="bg-primary-container text-on-primary font-label-lg font-bold rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="dashboard" href="#"><span class="material-symbols-outlined text-xl">dashboard</span><span>Panel Principal</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="productos-e-inventario" href="#"><span class="material-symbols-outlined text-xl">inventory_2</span><span>Productos e Inventario</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="pedidos-y-despacho" href="#"><span class="material-symbols-outlined text-xl">local_shipping</span><span>Pedidos y Despacho</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="validacion-de-formulas" href="#"><span class="material-symbols-outlined text-xl">prescriptions</span><span>Validación de Fórmulas</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="farmacias-y-aliados" href="#"><span class="material-symbols-outlined text-xl">storefront</span><span>Farmacias y Aliados</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="movimientos-y-auditoria" href="#"><span class="material-symbols-outlined text-xl">verified_user</span><span>Movimientos y Auditoría</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="configuracion" href="#"><span class="material-symbols-outlined text-xl">settings</span><span>Configuración</span></a></nav></div></div><div class="p-space-md"><div class="bg-primary-container/40 p-space-sm rounded-lg"><div class="flex items-center gap-space-xs text-on-primary-container mb-1"><span class="material-symbols-outlined text-sm text-secondary-container">shield</span><span class="font-label-sm text-label-sm font-semibold text-on-primary">Certificación INVIMA</span></div><p class="font-body-sm text-body-sm text-on-primary-container leading-tight">Regulación Sanitaria de Dispensación Activa</p></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40"><div class="h-16 w-full px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><nav class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm"><span class="hover:text-on-surface cursor-pointer">Administración</span><span class="material-symbols-outlined text-sm">chevron_right</span><span class="text-primary font-semibold">FarmaYA Backoffice</span></nav></div><div class="flex items-center gap-space-lg"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-outline text-lg">search</span><input class="bg-surface-container-low pl-9 pr-4 py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none w-72 shadow-[0_1px_8px_rgba(0,0,0,0.04)]" placeholder="Buscar medicamento, orden o lote..." type="text"/></div><div class="flex items-center gap-space-sm"><div class="relative cursor-pointer p-1.5 rounded-lg hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-on-surface-variant">notifications</span><span class="absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-surface"></span></div><div class="relative cursor-pointer p-1.5 rounded-lg hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-on-surface-variant">receipt_long</span></div></div><div class="flex items-center gap-space-sm pl-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shadow-[0_1px_8px_rgba(0,0,0,0.04)]" src="https://lh3.googleusercontent.com/aida/AEtjO1ViJHtTrHkxQj0SD6rHAmfxq6nRVzyEWnn_8FmN62aXeHTqCpnkA_v_d_yv6tQT0ZD0RiVjkDTlMNo4POX-PTagGSIuxK_IOKdhKxmBNrWjTbAgLFyTAHXTFW1Y0DeEx116Wjv1ro5MABllP-MHgJdSBfvUpTGRoeQzwjh2kRIuufWdDOKvjKF2NWi5SEk48lakkj3v_1bzXuQrGBV9ofMTcRdrbaOQUQj2OVTAML-SxelCn_S5NSRWzuc"/><div class="flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface font-semibold leading-tight">Dr. Alejandro Morales</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Regente Principal / Admin</span></div></div></div></div></header><main class="w-full pt-16 bg-surface min-h-[calc(100vh-3.5rem)] px-space-lg"><div class="flex flex-col w-full pb-28">
+<!-- Header Panel -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+<div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm mb-1">
+<span class="hover:text-primary cursor-pointer transition-colors">Administración</span>
+<span class="material-symbols-outlined text-xs text-outline">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Inventario &amp; Catálogo</span>
+<span class="material-symbols-outlined text-xs text-outline">chevron_right</span>
+<span class="text-primary font-semibold">Nuevo Medicamento</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<h1 class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">Registrar Medicamento en Catálogo</h1>
+<span class="bg-secondary-container/50 text-on-secondary-container px-2 py-0.5 rounded-full font-label-sm text-label-sm font-semibold">Borrador Inicial #SKU-TEMP-049</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Diligencie la información técnica, regulatoria y arancelaria requerida bajo la normativa farmacéutica INVIMA.</p>
+</div>
+<div class="flex items-center gap-space-sm self-start md:self-auto">
+<button class="px-space-md py-2 rounded-lg bg-surface-container-high text-on-surface font-label-lg text-label-lg hover:bg-surface-container transition-all flex items-center gap-space-xs shadow-sm" type="button">
+<span class="material-symbols-outlined text-lg">save</span>
+<span>Guardar Borrador</span>
+</button>
+<button class="px-space-lg py-2 rounded-lg bg-primary text-on-primary font-label-lg text-label-lg hover:bg-primary-container transition-all flex items-center gap-space-xs shadow-md" onclick="document.getElementById('publishDialog').classList.remove('hidden')" type="button">
+<span class="material-symbols-outlined text-lg">verified</span>
+<span>Publicar en Catálogo</span>
+</button>
+</div>
+</div>
+<!-- Operational Flow Indicator -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-space-sm mb-space-lg bg-surface-container-lowest p-space-sm rounded-xl shadow-sm">
+<div class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-base">medication</span>
+<span>1. Ficha Técnica</span>
+</div>
+<div class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base">policy</span>
+<span>2. INVIMA &amp; Venta</span>
+</div>
+<div class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base">payments</span>
+<span>3. Precios &amp; IVA</span>
+</div>
+<div class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base">warehouse</span>
+<span>4. Lotes &amp; Ubicación</span>
+</div>
+<div class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-lg bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base">clinical_notes</span>
+<span>5. Posología &amp; Arte</span>
+</div>
+</div>
+<form class="flex flex-col gap-space-xl" id="medicineForm">
+<!-- SECCIÓN 1: Información Farmacéutica y Comercial -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">pill</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">1. Información Farmacéutica &amp; Comercial</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Detalle molecular y presentación para rotulación y búsqueda clínica.</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2.5 py-1 bg-surface-container text-primary font-semibold rounded-full uppercase tracking-wider">Módulo Esencial</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="md:col-span-2">
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Nombre Comercial de Marca *</label>
+<input class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" id="tradeName" placeholder="Ej. Dolex Gripa, Advil Max, Amoxicilina MK..." type="text" value="Ibuprofeno MK 800 mg"/>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Tal como aparece en la caja comercial aprobada por INVIMA.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Principio Activo (DCI) *</label>
+<input class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" id="activeSubstance" placeholder="Ej. Ibuprofeno, Paracetamol, Loratadina..." type="text" value="Ibuprofeno"/>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Denominación Común Internacional.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Concentración / Potencia *</label>
+<div class="flex gap-space-xs">
+<input class="w-2/3 bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" id="concentration" placeholder="800" type="text" value="800"/>
+<select class="w-1/3 bg-surface-container-low px-2 py-2.5 rounded-lg font-label-md text-label-md text-on-surface focus:outline-none shadow-sm">
+<option selected="" value="mg">mg</option>
+<option value="g">g</option>
+<option value="mcg">mcg</option>
+<option value="ml">mg/5ml</option>
+<option value="ui">UI</option>
+<option value="pct">%</option>
+</select>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Forma Farmacéutica *</label>
+<select class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none shadow-sm">
+<option selected="" value="tab_rec">Tabletas Recubiertas</option>
+<option value="caps_blandas">Cápsulas Blandas de Gelatina</option>
+<option value="jarabe">Jarabe / Solución Oral</option>
+<option value="suspension">Suspensión Pediátrica</option>
+<option value="ampolla">Solución Inyectable / Ampolla</option>
+<option value="gel">Gel / Ungüento Dérmico</option>
+<option value="gotas">Gotas Oftálmicas / Óticas</option>
+<option value="inhalador">Aerosol Inhalador Dosificado</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Laboratorio Fabricante *</label>
+<select class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none shadow-sm">
+<option selected="" value="mk">MK (Tecnoquímicas S.A.)</option>
+<option value="genfar">Genfar (Sanofi Group)</option>
+<option value="procaps">Procaps Laboratorios</option>
+<option value="lafrancol">Lafrancol / Abbott</option>
+<option value="bayer">Bayer Healthcare Colombia</option>
+<option value="roche">F. Hoffmann-La Roche</option>
+<option value="bussi">Bussié S.A.</option>
+<option value="humax">Humax Pharmaceutical</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Categoría Terapéutica ATC *</label>
+<select class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none shadow-sm">
+<option selected="" value="analgesico">M01AE01 - Analgésicos y Antiinflamatorios AINEs</option>
+<option value="antibiotico">J01CA - Antibacterianos Sistémicos</option>
+<option value="gastro">A02BC - Antisecretores Gastrointestinales</option>
+<option value="cardio">C09AA - Cardiovasculares / Antihipertensivos</option>
+<option value="respiratorio">R03AC - Broncodilatadores y Respiratorio</option>
+<option value="metabolico">A10BA - Antidiabéticos Orales</option>
+<option value="dermatologico">D07AB - Corticosteroides Tópicos</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Vía de Administración *</label>
+<select class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none shadow-sm">
+<option selected="" value="oral">Vía Oral</option>
+<option value="topica">Vía Tópica / Cutánea</option>
+<option value="intravenosa">Vía Intravenosa / Parenteral</option>
+<option value="intramuscular">Vía Intramuscular</option>
+<option value="inhalatoria">Vía Inhalatoria</option>
+<option value="oftalmica">Vía Oftálmica</option>
+<option value="sublingual">Vía Sublingual</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Presentación Comercial del Empaque</label>
+<input class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" type="text" value="Caja x 30 tabletas en blíster de aluminio"/>
+</div>
+</div>
+</div>
+<!-- SECCIÓN 2: Control Regulatorio INVIMA y Condición de Venta -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">verified_user</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">2. Control Regulatorio INVIMA &amp; Condición de Venta</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Trazabilidad sanitaria, validación de recetas obligatorias y cadena de frío.</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2.5 py-1 bg-surface-container text-on-surface-variant font-semibold rounded-full uppercase tracking-wider">Regulación Colombiana</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md mb-space-lg">
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Registro Sanitario INVIMA *</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low pl-9 pr-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" id="invimaCode" placeholder="20XXM-XXXXXXX" type="text" value="INVIMA 2018M-0008432-R2"/>
+<span class="material-symbols-outlined absolute left-2.5 top-2.5 text-primary text-base">check_circle</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary font-semibold mt-1">✓ Registro validado en base de datos abierta</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Fecha de Vigencia del Registro *</label>
+<input class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" type="date" value="2028-09-15"/>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Alerta automática a regente 90 días antes.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Código CUM (Expediente DIAN/MinSalud) *</label>
+<input class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm font-mono" placeholder="Ej. 19934251-01" type="text" value="CUM-20180008432-01"/>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Para facturación electrónica sector salud.</p>
+</div>
+</div>
+<!-- Condición de Venta Selection (Badges) -->
+<div class="mb-space-lg">
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-space-sm">Condición de Dispensación Sanitaria *</label>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-sm">
+<label class="relative flex flex-col p-space-md rounded-xl bg-surface-container cursor-pointer transition-all hover:bg-surface-container-high group">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-lg text-label-lg font-bold text-on-surface">Venta Libre (OTC)</span>
+<input class="accent-primary w-4 h-4" name="saleCondition" type="radio" value="otc"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sin requerimiento de receta médica. Entrega directa en moto o casillero.</p>
+<div class="mt-space-sm flex items-center gap-1 text-secondary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-sm">shopping_bag</span>
+<span>Dispensación express FarmaYA</span>
+</div>
+</label>
+<label class="relative flex flex-col p-space-md rounded-xl bg-surface-container-high cursor-pointer transition-all hover:bg-surface-container-highest group">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-lg text-label-lg font-bold text-primary">Fórmula Médica (Rx)</span>
+<input checked="" class="accent-primary w-4 h-4" name="saleCondition" type="radio" value="rx"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Obliga al usuario a cargar imagen o prescripción electrónica de médico.</p>
+<div class="mt-space-sm flex items-center gap-1 text-primary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-sm">prescriptions</span>
+<span>Validación de regente farmacéutico</span>
+</div>
+</label>
+<label class="relative flex flex-col p-space-md rounded-xl bg-error-container/30 cursor-pointer transition-all hover:bg-error-container/50 group">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-lg text-label-lg font-bold text-error">Monopolio / Control Especial</span>
+<input class="accent-error w-4 h-4" name="saleCondition" type="radio" value="franja"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Franja Violeta. Psicotrópicos y estupefacientes regulados por el FNE.</p>
+<div class="mt-space-sm flex items-center gap-1 text-error font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-sm">lock</span>
+<span>Libro oficial de control Foliado</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Cadena de Frío Toggle -->
+<div class="bg-surface-container p-space-md rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+<span class="material-symbols-outlined text-xl">ac_unit</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-semibold">Requiere Cadena de Frío Termolábil (2°C - 8°C)</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Si se activa, el sistema asignará automáticamente nevera rígida con datalogger térmico al despachador.</p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" id="coldChainToggle" onchange="toggleColdAlert(this.checked)" type="checkbox"/>
+<div class="w-12 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-surface peer-checked:bg-primary after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+</label>
+<span class="font-label-md text-label-md text-on-surface-variant" id="coldChainLabel">Desactivada (T. Ambiente &lt;30°C)</span>
+</div>
+</div>
+<div class="hidden mt-space-sm p-space-sm rounded-lg bg-secondary-container/40 flex items-center gap-space-sm text-on-secondary-container" id="coldChainWarning">
+<span class="material-symbols-outlined text-base">info</span>
+<span class="font-body-sm text-body-sm">Advertencia: Este producto no será elegible para envío en moto estándar sin conservadora homologada de gel frío.</span>
+</div>
+</div>
+<!-- SECCIÓN 3: Precios, Costos e Impuestos en COP -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">account_balance_wallet</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">3. Precios, Costos &amp; Estructura Tributaria en COP</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Cálculo de márgenes brutos, régimen de exención de IVA y descuentos institucionales.</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2.5 py-1 bg-surface-container text-on-surface-variant font-semibold rounded-full">Moneda: Peso Colombiano (COP)</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-space-md mb-space-lg">
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Costo Laboratorio (Compra) *</label>
+<div class="relative">
+<span class="absolute left-3 top-2.5 font-label-lg text-label-lg text-outline font-semibold">$</span>
+<input class="w-full bg-surface-container-low pl-8 pr-space-md py-2.5 rounded-lg font-price-display text-headline-sm text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" id="costPrice" oninput="calculateMargin()" type="number" value="8900"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Costo unitario pactado con MK.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Precio Venta al Público (PVP) *</label>
+<div class="relative">
+<span class="absolute left-3 top-2.5 font-label-lg text-label-lg text-outline font-semibold">$</span>
+<input class="w-full bg-surface-container-low pl-8 pr-space-md py-2.5 rounded-lg font-price-display text-headline-sm text-primary focus:outline-none focus:bg-surface-container-lowest shadow-sm font-bold" id="salePrice" oninput="calculateMargin()" type="number" value="14200"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Precio final mostrado en el catálogo web.</p>
+</div>
+<div class="bg-surface-container p-space-sm rounded-xl flex flex-col justify-center">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-semibold uppercase">Margen Bruto Calculado</span>
+<div class="flex items-baseline gap-space-xs mt-1">
+<span class="font-headline-md text-headline-md font-bold text-secondary" id="marginBadge">37.32%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-medium">(+$5.300 COP)</span>
+</div>
+<p class="font-body-sm text-body-sm text-secondary font-semibold mt-1">Saludable (+12% sobre objetivo)</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Tratamiento Tributario IVA *</label>
+<select class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none shadow-sm">
+<option selected="" value="excluido">Excluido de IVA (Estatuto Tributario Art. 424 - Medicamentos)</option>
+<option value="19">Gravado 19% (Cosméticos / Higiene personal)</option>
+<option value="5">Gravado 5% (Dispositivos médicos especiales)</option>
+<option value="exento">Exento 0% con derecho a compensación</option>
+</select>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Codificación automática DIAN 1102928.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md pt-space-sm bg-surface-container-low p-space-md rounded-xl">
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Descuento Convenio EPS / Póliza Privada (%)</label>
+<div class="relative">
+<input class="w-full bg-surface-container-lowest px-space-md py-2 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none shadow-sm" type="number" value="12"/>
+<span class="absolute right-3 top-2 font-label-md text-label-md text-outline font-semibold">%</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Aplica para SURA, Sanitas, Compensar.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Precio Copago Paciente Afiliado</label>
+<input class="w-full bg-surface-container px-space-md py-2 rounded-lg font-body-md text-body-md text-on-surface-variant shadow-sm font-semibold" disabled="" type="text" value="$12.496 COP"/>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Calculado automáticamente con descuento EPS.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Toque Máximo Institucional (SISMED)</label>
+<input class="w-full bg-surface-container-lowest px-space-md py-2 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none shadow-sm" type="text" value="$18.500 COP"/>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Límite regulado por Circular de la CNPMDM.</p>
+</div>
+</div>
+</div>
+<!-- SECCIÓN 4: Inventario Inicial, Lotes y Ubicación -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">inventory_2</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">4. Inventario Inicial, Lotes &amp; Ubicación en Almacén</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Identificador maestro SKU, primer lote recibido y posición física en bodega.</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2.5 py-1 bg-surface-container text-on-surface font-semibold rounded-full">Bodega Chicó - Central Bogotá</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-space-md mb-space-lg">
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Código SKU Autogenerado *</label>
+<div class="flex items-center gap-space-xs">
+<input class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none shadow-sm font-mono font-semibold" id="skuField" type="text" value="SKU-IBU-800-MK"/>
+<button class="p-2.5 bg-surface-container hover:bg-surface-container-high rounded-lg text-primary transition-colors" onclick="generateSku()" title="Regenerar SKU" type="button">
+<span class="material-symbols-outlined text-base">autorenew</span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Estructura: [MOL]-[DOSIS]-[LAB]</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Lote Inicial de Fábrica *</label>
+<input class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm font-mono uppercase" placeholder="LOT-XXXX-XXX" type="text" value="LOT-2025-X89"/>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Grabado en el empaque secundario.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Fecha de Vencimiento de Lote *</label>
+<input class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" type="date" value="2027-11-30"/>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Control FIFO / FEFO automático.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Ubicación Física en Estantería *</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2.5 top-2.5 text-outline text-lg">shelves</span>
+<input class="w-full bg-surface-container-low pl-9 pr-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" type="text" value="Estantería A-2 / Nivel 3 / Slot B"/>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Para operarios de picking rápido.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md bg-surface-container p-space-md rounded-xl">
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Stock Físico Inicial (Unidades) *</label>
+<div class="flex items-center gap-space-xs">
+<button class="w-9 h-9 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-bold flex items-center justify-center shadow-sm" onclick="adjustVal('initialStock', -5)" type="button">-</button>
+<input class="w-full text-center bg-surface-container-lowest py-2 rounded-lg font-headline-sm text-headline-sm text-on-surface font-bold focus:outline-none shadow-sm" id="initialStock" type="number" value="120"/>
+<button class="w-9 h-9 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-bold flex items-center justify-center shadow-sm" onclick="adjustVal('initialStock', 5)" type="button">+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 text-center">Unidades ingresadas en recepción técnica.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Stock Mínimo de Seguridad (Reorden) *</label>
+<div class="flex items-center gap-space-xs">
+<button class="w-9 h-9 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-bold flex items-center justify-center shadow-sm" onclick="adjustVal('minStock', -1)" type="button">-</button>
+<input class="w-full text-center bg-surface-container-lowest py-2 rounded-lg font-headline-sm text-headline-sm text-on-surface font-bold focus:outline-none shadow-sm" id="minStock" type="number" value="15"/>
+<button class="w-9 h-9 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-bold flex items-center justify-center shadow-sm" onclick="adjustVal('minStock', 1)" type="button">+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 text-center">Dispara orden de compra automática a MK.</p>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Stock Máximo Autorizado</label>
+<div class="flex items-center gap-space-xs">
+<button class="w-9 h-9 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-bold flex items-center justify-center shadow-sm" onclick="adjustVal('maxStock', -10)" type="button">-</button>
+<input class="w-full text-center bg-surface-container-lowest py-2 rounded-lg font-headline-sm text-headline-sm text-on-surface font-bold focus:outline-none shadow-sm" id="maxStock" type="number" value="300"/>
+<button class="w-9 h-9 rounded-lg bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-bold flex items-center justify-center shadow-sm" onclick="adjustVal('maxStock', 10)" type="button">+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1 text-center">Capacidad volumétrica en estantería.</p>
+</div>
+</div>
+</div>
+<!-- SECCIÓN 5: Ficha Técnica, Posología y Material Visual -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">description</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">5. Ficha Técnica, Posología &amp; Registro Visual</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Información para educación del paciente, advertencias para el regente y fotos del producto.</p>
+</div>
+</div>
+<span class="text-label-sm font-label-sm px-2.5 py-1 bg-surface-container text-on-surface-variant font-semibold rounded-full">Revisión Farmacológica</span>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg mb-space-lg">
+<!-- Text fields -->
+<div class="space-y-space-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Indicación Terapéutica Resumida *</label>
+<textarea class="w-full bg-surface-container-low px-space-md py-2 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" placeholder="Describa el uso primario..." rows="3">Alivio sintomático del dolor moderado a severo en cuadros inflamatorios, artritis reumatoide, dolor muscular postraumático, dismenorrea primaria y cefalea tensional.</textarea>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Contraindicaciones y Precauciones *</label>
+<textarea class="w-full bg-surface-container-low px-space-md py-2 rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:bg-surface-container-lowest shadow-sm" placeholder="Hipersensibilidad, patologías concurrentes..." rows="3">Hipersensibilidad al principio activo o a otros AINEs. Úlcera péptica activa o hemorragia gastrointestinal reciente. Insuficiencia renal o hepática severa. Tercer trimestre de gestación.</textarea>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface font-semibold mb-1">Advertencia de Seguridad para el Paciente (Pop-up en App Móvil)</label>
+<div class="flex items-start gap-space-xs bg-error-container/20 p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-error text-lg mt-0.5">warning</span>
+<input class="w-full bg-transparent font-body-sm text-body-sm text-error font-medium focus:outline-none" type="text" value="Consumir preferiblemente con alimentos. No exceder 2400 mg diarios sin control médico."/>
+</div>
+</div>
+</div>
+<!-- Image Upload Dropzone & Visual Cards -->
+<div class="flex flex-col gap-space-md">
+<label class="block font-label-md text-label-md text-on-surface font-semibold">Fotografía de Empaque Frontal &amp; Blíster (INVIMA 300 DPI) *</label>
+<div class="border-2 border-dashed border-outline-variant hover:border-primary bg-surface-container-low rounded-xl p-space-lg flex flex-col items-center justify-center text-center transition-colors cursor-pointer group">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest flex items-center justify-center text-primary mb-space-sm group-hover:scale-110 transition-transform shadow-sm">
+<span class="material-symbols-outlined text-2xl">cloud_upload</span>
+</div>
+<p class="font-label-lg text-label-lg font-bold text-on-surface mb-0.5">Arrastre aquí la foto oficial o haga clic para explorar</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-sm">Formatos admitidos: WEBP, PNG o JPG de alta fidelidad (máx. 8MB por archivo)</p>
+<span class="px-space-md py-1.5 rounded-lg bg-surface-container text-primary font-label-sm text-label-sm font-semibold hover:bg-surface-container-high transition-colors">Seleccionar Archivos Locales</span>
+</div>
+<!-- Existing Loaded Previews -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="relative bg-surface-container p-2 rounded-xl flex items-center gap-space-sm">
+<img class="w-14 h-14 object-cover rounded-lg" data-alt="Pharmaceutical box packaging of Ibuprofen 800mg by MK lab with clean emerald green and white clinical tones on light sterile surface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbRBaNIDL37_Y9fGKw72rnHo4P3O1TatMK7zIk-m0m_KuEUadalrbi6hjIuO4Be5mfh-WUAElwSVcaM0qYcNAuKTaNYikTvAHvHGr-piiov5NTmz5jSyF90oDq8Ey85U3sRg3rfH7SSgXaWyJcaY6qh64E66BtEWEiMttkoHvzKV21fbjqTnmgwayk51c25mMiQDAPcxKTxI93sRDxk69juquZ1jdl2NiBN-uc4HEX"/>
+<div class="flex-1 min-w-0">
+<span class="font-label-sm text-label-sm font-bold text-on-surface truncate block">caja_ibuprofeno_800_frontal.webp</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">1.2 MB • Verificada</span>
+<span class="inline-block mt-0.5 px-1.5 py-0.2 bg-secondary-container text-on-secondary-container rounded font-label-sm text-[10px] font-semibold">Portada Web</span>
+</div>
+<button class="text-on-surface-variant hover:text-error p-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-base">delete</span>
+</button>
+</div>
+<div class="relative bg-surface-container p-2 rounded-xl flex items-center gap-space-sm">
+<img class="w-14 h-14 object-cover rounded-lg" data-alt="Aluminum pharmaceutical blister pack showing ten round coated pills on medical clean tray with studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8wUCoFTsFZ_ODUL_xJl_9VqE-avNilicThkMRAO1kF1bpP8iaW9DWC5tbzvT5lpK4tNTNkw3_5-oqxWsab-ag1EyivKtkE90iZ8sGbw3jSJ8Z2utmwCTvDabwiObaUG9vc2oYnennq4tB3QTjIiJ0GDEnxCb-T5yg0KReal3HRpfOjBLKdPtwwf0qC-YVl9sR-CKt4_THN2PK6M073iJu6pPZzfJl7XmqsMdn2d5Y"/>
+<div class="flex-1 min-w-0">
+<span class="font-label-sm text-label-sm font-bold text-on-surface truncate block">blister_reverso_lote.webp</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">940 KB • Verificada</span>
+<span class="inline-block mt-0.5 px-1.5 py-0.2 bg-surface-container-highest text-on-surface rounded font-label-sm text-[10px] font-semibold">Blíster Detalle</span>
+</div>
+<button class="text-on-surface-variant hover:text-error p-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-base">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</form>
+<!-- Floating Sticky Action Bar -->
+<div class="fixed bottom-0 left-72 right-0 bg-surface/90 backdrop-blur-xl py-space-sm px-space-lg shadow-xl z-30 flex items-center justify-between">
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs text-on-surface-variant">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm font-semibold">Autoguardado local activo (hace 42s)</span>
+</div>
+<span class="hidden md:inline text-outline text-xs">|</span>
+<span class="hidden md:inline font-body-sm text-body-sm text-on-surface-variant">Respaldado en Postgres DB FarmaYA Cloud</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-2 rounded-lg bg-surface-container-low text-on-surface-variant font-label-lg text-label-lg hover:bg-surface-container transition-colors" type="button">
+        Cancelar y Salir
+      </button>
+<button class="px-space-md py-2 rounded-lg bg-surface-container-high text-on-surface font-label-lg text-label-lg hover:bg-surface-container transition-colors flex items-center gap-space-xs" onclick="notifyDraft()" type="button">
+<span class="material-symbols-outlined text-base">save</span>
+<span>Guardar Borrador</span>
+</button>
+<button class="px-space-lg py-2 rounded-lg bg-primary text-on-primary font-label-lg text-label-lg hover:bg-primary-container transition-all flex items-center gap-space-xs shadow-md" onclick="document.getElementById('publishDialog').classList.remove('hidden')" type="button">
+<span class="material-symbols-outlined text-base">verified</span>
+<span>Guardar y Publicar en Tienda</span>
+</button>
+</div>
+</div>
+<!-- Modal Confirmación de Publicación -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/60 backdrop-blur-sm p-4" id="publishDialog">
+<div class="bg-surface-container-lowest max-w-lg w-full rounded-2xl p-space-lg shadow-2xl flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm text-primary">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-2xl">published_with_changes</span>
+</div>
+<div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface">Confirmar Publicación en Catálogo</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Dispensación inmediata a través de la red FarmaYA</p>
+</div>
+</div>
+<div class="bg-surface-container p-space-md rounded-xl space-y-2">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Producto:</span>
+<span class="font-semibold text-on-surface">Ibuprofeno MK 800 mg (Caja x 30)</span>
+</div>
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">INVIMA:</span>
+<span class="font-mono text-on-surface">2018M-0008432-R2 (Vigente)</span>
+</div>
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">PVP Sugerido:</span>
+<span class="font-bold text-primary font-price-display text-base">$14.200 COP</span>
+</div>
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Stock Inicial Bodega:</span>
+<span class="font-bold text-on-surface">120 Unidades (Chicó Central)</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+        Al confirmar, el producto será sincronizado con la API de búsqueda móvil y el sistema de ruteo de mensajería hospitalaria.
+      </p>
+<div class="flex items-center justify-end gap-space-sm pt-space-xs">
+<button class="px-space-md py-2 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors" onclick="document.getElementById('publishDialog').classList.add('hidden')" type="button">
+          Revisar Datos
+        </button>
+<button class="px-space-lg py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md hover:bg-primary-container transition-colors shadow-md" onclick="confirmPublish()" type="button">
+          Aprobar y Transmitir
+        </button>
+</div>
+</div>
+</div>
+<!-- Notification Toast Toast -->
+<div class="hidden fixed top-20 right-6 z-50 bg-inverse-surface text-inverse-on-surface px-space-md py- space-sm py-3 rounded-xl shadow-xl flex items-center gap-space-sm transition-all duration-300" id="toast">
+<span class="material-symbols-outlined text-secondary-container">check_circle</span>
+<span class="font-label-md text-label-md" id="toastMessage">Borrador guardado exitosamente en base local.</span>
+</div>
+</div>
+<script>
+  function calculateMargin() {
+    const cost = parseFloat(document.getElementById('costPrice').value) || 0;
+    const sale = parseFloat(document.getElementById('salePrice').value) || 0;
+    const badge = document.getElementById('marginBadge');
+    
+    if (sale > 0 && cost > 0) {
+      const margin = ((sale - cost) / sale) * 100;
+      const profit = sale - cost;
+      badge.textContent = margin.toFixed(2) + '%';
+      badge.nextElementSibling.textContent = '(+$' + profit.toLocaleString('es-CO') + ' COP)';
+      
+      if (margin < 15) {
+        badge.className = 'font-headline-md text-headline-md font-bold text-error';
+      } else {
+        badge.className = 'font-headline-md text-headline-md font-bold text-secondary';
+      }
+    }
+  }
+
+  function adjustVal(elementId, delta) {
+    const el = document.getElementById(elementId);
+    let val = parseInt(el.value, 10) || 0;
+    val = Math.max(0, val + delta);
+    el.value = val;
+  }
+
+  function toggleColdAlert(isChecked) {
+    const label = document.getElementById('coldChainLabel');
+    const warning = document.getElementById('coldChainWarning');
+    if (isChecked) {
+      label.textContent = 'ACTIVA (2°C a 8°C - Nevera Obligatoria)';
+      label.className = 'font-label-md text-label-md text-primary font-bold';
+      warning.classList.remove('hidden');
+    } else {
+      label.textContent = 'Desactivada (T. Ambiente <30°C)';
+      label.className = 'font-label-md text-label-md text-on-surface-variant';
+      warning.classList.add('hidden');
+    }
+  }
+
+  function generateSku() {
+    const active = document.getElementById('activeSubstance').value.substring(0, 3).toUpperCase() || 'MED';
+    const conc = document.getElementById('concentration').value || '000';
+    const rand = Math.floor(10 + Math.random() * 90);
+    document.getElementById('skuField').value = `SKU-${active}-${conc}-MK${rand}`;
+    showToast('Nuevo código SKU generado automáticamente');
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMessage');
+    toastMsg.textContent = msg;
+    toast.classList.remove('hidden');
+    setTimeout(() => {
+      toast.classList.add('hidden');
+    }, 3200);
+  }
+
+  function notifyDraft() {
+    showToast('Borrador clínico actualizado en Spring Boot Backoffice');
+  }
+
+  function confirmPublish() {
+    document.getElementById('publishDialog').classList.add('hidden');
+    showToast('¡Medicamento publicado exitosamente en el catálogo en vivo!');
+  }
+</script></main><footer class="w-full bg-surface-container-low py-space-sm px-space-lg"><div class="w-full flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm"><span>© 2024 FarmaYA Salud a Domicilio S.A.S. Dispensación Farmacéutica Certificada.</span><div class="flex items-center gap-space-md"><span class="bg-surface-container px-2 py-0.5 rounded text-on-surface font-semibold">INVIMA 2024R-0019284</span><span class="text-outline">v2.4.0 Spring Boot Core</span></div></div></footer></div></body></html>

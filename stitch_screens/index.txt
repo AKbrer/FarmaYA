@@ -1,0 +1,14 @@
+screen_1.html : FarmaYA - Panel del Domiciliario_ Billetera, Rutas y Confirmacion PIN.html
+screen_2.html : FarmaYA — Administración de Productos e Inventario.html
+screen_3.html : FarmaYA — Carrito de Compras y Checkout.html
+screen_4.html : FarmaYA — Catálogo y Búsqueda de Productos.html
+screen_5.html : FarmaYA — Detalle del Producto (Ibuprofeno 800 mg).html
+screen_6.html : FarmaYA — Formulario de Producto e Inventario.html
+screen_7.html : FarmaYA — Gestión de Pedidos y Despacho.html
+screen_8.html : FarmaYA — Inicio (Salud a Domicilio).html
+screen_9.html : FarmaYA — Inicio de Sesión.html
+screen_10.html : FarmaYA — Kárdex y Movimientos de Auditoría Sanitaria.html
+screen_11.html : FarmaYA — Panel Administrativo Central.html
+screen_12.html : FarmaYA — Perfil del Paciente e Historial de Pedidos.html
+screen_13.html : FarmaYA — Registro de Usuario.html
+screen_14.html : FarmaYA — Validación Colegiada de Fórmulas Médicas.html

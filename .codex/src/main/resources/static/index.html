@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5fbf8">
+  <meta name="description" content="FarmaYa conecta clientes, farmacias y repartidores para pedir productos de salud a domicilio.">
+  <link rel="icon" type="image/png" href="/images/farmaya-cross.png?v=1">
+  <title>FarmaYa · Salud a domicilio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('farmaya_theme') || 'auto';
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var effective = saved === 'auto' ? (prefersDark ? 'dark' : 'light') : saved;
+        document.documentElement.setAttribute('data-theme', effective);
+      } catch(e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="/css/styles.css?v=20261026visual1">
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand brand-image" href="#" aria-label="FarmaYa, salud a domicilio"><img src="/images/farmaya-logo.png?v=1" alt="FarmaYa — Salud a Domicilio"></a>
+    <div id="navHeaderActions" class="nav-right"></div>
+  </header>
+  <main id="app-container" class="app-container" aria-live="polite">
+    <div class="initial-loading"><span class="spinner"></span><p>Preparando tu experiencia FarmaYa…</p></div>
+  </main>
+  <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>
+  <script>const ICONS = {};</script>
+  <script src="/js/google-maps.js?v=20261026visual1"></script>
+  <script src="/js/core.js?v=20261026visual1"></script>
+  <script src="/js/auth.js?v=20261026visual1"></script>
+  <script src="/js/catalog.js?v=20261026visual1"></script>
+  <script src="/js/orders.js?v=20261026visual1"></script>
+  <script src="/js/charts.js?v=20261026visual1"></script>
+  <script src="/js/pharmacy.js?v=20261026visual1"></script>
+  <script src="/js/courier.js?v=20261026visual1"></script>
+  <script src="/js/admin.js?v=20261026visual1"></script>
+  <script src="/js/profile.js?v=20261026visual1"></script>
+  <script src="/js/client.js?v=20261026visual1"></script>
+  <script src="/js/app.js?v=20261026visual1"></script>
+</body>
+</html>

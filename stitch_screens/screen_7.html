@@ -1,0 +1,834 @@
+﻿<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"primary":"#004e46","on-primary-container":"#93e4d7","on-surface-variant":"#3e4947","error-container":"#ffdad6","surface-container-high":"#e2e7ff","inverse-surface":"#283044","surface-container":"#eaedff","on-tertiary-container":"#a5e1d3","tertiary-fixed-dim":"#96d2c5","on-secondary-fixed":"#0e2000","secondary-fixed-dim":"#96d956","outline":"#6e7977","primary-fixed-dim":"#85d5c8","primary-container":"#00685e","on-error-container":"#93000a","tertiary-container":"#2a665b","outline-variant":"#bec9c6","surface-variant":"#dae2fd","background":"#faf8ff","on-primary-fixed-variant":"#005048","on-error":"#ffffff","tertiary-fixed":"#b2efe1","secondary-container":"#b1f66f","on-secondary-fixed-variant":"#2a5000","secondary-fixed":"#b1f66f","surface-tint":"#066a60","surface-container-low":"#f2f3ff","surface-container-highest":"#dae2fd","surface-bright":"#faf8ff","on-tertiary-fixed-variant":"#0d5046","on-tertiary":"#ffffff","on-tertiary-fixed":"#00201b","surface":"#faf8ff","surface-container-lowest":"#ffffff","on-primary":"#ffffff","secondary":"#3a6a00","on-secondary":"#ffffff","inverse-primary":"#85d5c8","on-primary-fixed":"#00201c","primary-fixed":"#a1f1e4","error":"#ba1a1a","on-background":"#131b2e","surface-dim":"#d2d9f4","on-secondary-container":"#3e7100","inverse-on-surface":"#eef0ff","tertiary":"#094e44","on-surface":"#131b2e"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-lg":"1.5rem","margin-mobile":"1rem","space-xl":"2.5rem","gutter-mobile":"0.75rem","space-sm":"0.5rem","space-md":"1rem","gutter":"1.25rem","space-xs":"0.25rem","margin":"2rem"},"fontFamily":{"label-sm":["Inter"],"label-lg":["Inter"],"headline-xl-mobile":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"title-md":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-sm":["Inter"],"headline-sm":["Plus Jakarta Sans"],"label-md":["Inter"],"body-md":["Inter"],"headline-xl":["Plus Jakarta Sans"],"price-display":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Inter"]},"fontSize":{"label-sm":["11px",{"lineHeight":"14px","fontWeight":"500"}],"label-lg":["14px",{"lineHeight":"20px","fontWeight":"600"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"700"}],"title-md":["18px",{"lineHeight":"26px","fontWeight":"600"}],"headline-lg":["32px",{"lineHeight":"40px","fontWeight":"700"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"headline-sm":["20px",{"lineHeight":"28px","fontWeight":"600"}],"label-md":["12px",{"lineHeight":"16px","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-xl":["40px",{"lineHeight":"48px","fontWeight":"700"}],"price-display":["22px",{"lineHeight":"28px","fontWeight":"700"}],"headline-md":["24px",{"lineHeight":"32px","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-primary z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between bg-primary-container"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-surface-container-lowest flex items-center justify-center p-1.5 shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><span class="material-symbols-outlined text-primary">local_pharmacy</span></div><div><span class="font-headline-sm text-headline-sm text-on-primary font-bold tracking-tight block">FarmaYA</span><span class="font-label-sm text-label-sm text-on-primary-container block uppercase tracking-wider">Backoffice Clínico</span></div></div><span class="material-symbols-outlined text-on-primary-container cursor-pointer hover:text-on-primary transition-colors">menu_open</span></div><div class="px-space-md pt-space-md"><div class="bg-primary-container/60 rounded-lg p-space-sm mb-space-md flex items-center justify-between"><div class="flex items-center gap-space-xs"><span class="w-2.5 h-2.5 rounded-full bg-secondary-container"></span><span class="font-label-sm text-label-sm text-on-primary">Bodega Central</span></div><span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded-full">En línea</span></div><nav class="space-y-1" data-active-classes="bg-primary-container text-on-primary font-label-lg font-bold rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="dashboard" href="#"><span class="material-symbols-outlined text-xl">dashboard</span><span>Panel Principal</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="productos-e-inventario" href="#"><span class="material-symbols-outlined text-xl">inventory_2</span><span>Productos e Inventario</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="pedidos-y-despacho" href="#"><span class="material-symbols-outlined text-xl">local_shipping</span><span>Pedidos y Despacho</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="validacion-de-formulas" href="#"><span class="material-symbols-outlined text-xl">prescriptions</span><span>Validación de Fórmulas</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="farmacias-y-aliados" href="#"><span class="material-symbols-outlined text-xl">storefront</span><span>Farmacias y Aliados</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="movimientos-y-auditoria" href="#"><span class="material-symbols-outlined text-xl">verified_user</span><span>Movimientos y Auditoría</span></a><a class="flex items-center gap-space-sm px-space-md py-space-sm rounded-lg text-on-primary-container font-label-lg text-label-lg hover:bg-primary-container hover:text-on-primary transition-colors" data-path="configuracion" href="#"><span class="material-symbols-outlined text-xl">settings</span><span>Configuración</span></a></nav></div></div><div class="p-space-md"><div class="bg-primary-container/40 p-space-sm rounded-lg"><div class="flex items-center gap-space-xs text-on-primary-container mb-1"><span class="material-symbols-outlined text-sm text-secondary-container">shield</span><span class="font-label-sm text-label-sm font-semibold text-on-primary">Certificación INVIMA</span></div><p class="font-body-sm text-body-sm text-on-primary-container leading-tight">Regulación Sanitaria de Dispensación Activa</p></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40"><div class="h-16 w-full px-space-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><nav class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm"><span class="hover:text-on-surface cursor-pointer">Administración</span><span class="material-symbols-outlined text-sm">chevron_right</span><span class="text-primary font-semibold">FarmaYA Backoffice</span></nav></div><div class="flex items-center gap-space-lg"><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-outline text-lg">search</span><input class="bg-surface-container-low pl-9 pr-4 py-1.5 rounded-lg font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none w-72 shadow-[0_1px_8px_rgba(0,0,0,0.04)]" placeholder="Buscar medicamento, orden o lote..." type="text"/></div><div class="flex items-center gap-space-sm"><div class="relative cursor-pointer p-1.5 rounded-lg hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-on-surface-variant">notifications</span><span class="absolute top-1 right-1 w-2.5 h-2.5 bg-error rounded-full ring-2 ring-surface"></span></div><div class="relative cursor-pointer p-1.5 rounded-lg hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-on-surface-variant">receipt_long</span></div></div><div class="flex items-center gap-space-sm pl-space-sm"><img alt="Profile" class="w-8 h-8 rounded-full object-cover shadow-[0_1px_8px_rgba(0,0,0,0.04)]" src="https://lh3.googleusercontent.com/aida/AEtjO1ViJHtTrHkxQj0SD6rHAmfxq6nRVzyEWnn_8FmN62aXeHTqCpnkA_v_d_yv6tQT0ZD0RiVjkDTlMNo4POX-PTagGSIuxK_IOKdhKxmBNrWjTbAgLFyTAHXTFW1Y0DeEx116Wjv1ro5MABllP-MHgJdSBfvUpTGRoeQzwjh2kRIuufWdDOKvjKF2NWi5SEk48lakkj3v_1bzXuQrGBV9ofMTcRdrbaOQUQj2OVTAML-SxelCn_S5NSRWzuc"/><div class="flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface font-semibold leading-tight">Dr. Alejandro Morales</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-tight">Regente Principal / Admin</span></div></div></div></div></header><main class="w-full pt-16 bg-surface min-h-[calc(100vh-3.5rem)] px-space-lg"><div class="flex flex-col w-full pb-space-xl">
+<!-- Sub-header & Action Ribbon -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md mb-space-lg pt-space-xs">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-semibold uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+          Dispensación en Vivo
+        </span>
+<span class="font-label-sm text-label-sm text-outline">Terminal BOG-01 Central</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight mt-1">Control de Pedidos y Despacho Logístico</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl">
+        Monitoreo de preparación de fórmulas, embalaje térmico y asignación de motorizados en tiempo real en Bogotá, Medellín y Cali.
+      </p>
+</div>
+<!-- Quick action buttons -->
+<div class="flex items-center flex-wrap gap-space-sm">
+<button class="flex items-center gap-space-xs px-3.5 py-2 rounded-lg bg-surface-container-lowest text-primary font-label-lg text-label-lg shadow-sm hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-lg">electric_moped</span>
+<span>Filtrar por Ruta Express</span>
+</button>
+<button class="flex items-center gap-space-xs px-3.5 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-lg text-label-lg shadow-sm hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-lg">policy</span>
+<span>Reporte DIAN de Envíos</span>
+</button>
+<button class="flex items-center gap-space-xs px-4 py-2 rounded-lg bg-primary text-on-primary font-label-lg text-label-lg shadow-md hover:bg-primary-container transition-all" id="refreshRadarBtn">
+<span class="material-symbols-outlined text-lg" id="radarIcon">sync</span>
+<span>Actualizar Radar</span>
+</button>
+</div>
+</div>
+<!-- Operational KPI Metrics Ribbon (5 Cards) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-space-md mb-space-lg">
+<!-- Total Shifts -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Total Turno</span>
+<span class="material-symbols-outlined text-primary bg-surface-container-low p-1.5 rounded-lg text-lg">receipt_long</span>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-md text-headline-md text-on-surface font-bold">148 órdenes</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="font-label-sm text-label-sm text-secondary font-semibold bg-secondary-container/50 px-1.5 py-0.5 rounded">18 Express en curso</span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 w-16 h-16 bg-primary/5 rounded-full pointer-events-none"></div>
+</div>
+<!-- Pending Formula (Q.F.) -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Validación Q.F.</span>
+<span class="material-symbols-outlined text-error bg-error-container p-1.5 rounded-lg text-lg">prescriptions</span>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-md text-headline-md text-on-surface font-bold">9 pendientes</div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-on-error-container bg-error-container px-1.5 py-0.5 rounded font-semibold">
+<span class="material-symbols-outlined text-xs">priority_high</span> Requiere Dictamen
+          </span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 w-16 h-16 bg-error/5 rounded-full pointer-events-none"></div>
+</div>
+<!-- Preparation in Warehouse -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">En Bodega</span>
+<span class="material-symbols-outlined text-tertiary bg-surface-container-low p-1.5 rounded-lg text-lg">inventory_2</span>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-md text-headline-md text-on-surface font-bold">12 en empaque</div>
+<div class="flex items-center gap-1 mt-1 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm text-primary">ac_unit</span>
+<span>4 con nevera térmica</span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 w-16 h-16 bg-tertiary/5 rounded-full pointer-events-none"></div>
+</div>
+<!-- Couriers on Route -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Entregas Activas</span>
+<span class="material-symbols-outlined text-primary bg-secondary-container/40 p-1.5 rounded-lg text-lg">two_wheeler</span>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-md text-headline-md text-on-surface font-bold">24 motorizados</div>
+<div class="flex items-center gap-1 mt-1 text-secondary font-label-sm text-label-sm font-semibold">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span>96% flota en geovalla</span>
+</div>
+</div>
+<div class="absolute -right-4 -bottom-4 w-16 h-16 bg-secondary-container/20 rounded-full pointer-events-none"></div>
+</div>
+<!-- SLA Delivery Time -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">SLA de Entrega</span>
+<span class="material-symbols-outlined text-primary bg-surface-container-low p-1.5 rounded-lg text-lg">timer</span>
+</div>
+<div class="mt-space-sm">
+<div class="font-headline-md text-headline-md text-on-surface font-bold">38 min <span class="font-label-sm text-label-sm text-on-surface-variant font-normal">promedio</span></div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm mt-1">
+<span>Meta: &lt; 45 min</span>
+<span class="text-secondary font-semibold">-7 min</span>
+</div>
+</div>
+<!-- Mini SLA Sparkline / Bar indicator -->
+<div class="w-full bg-surface-container-high rounded-full h-1 mt-2 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 78%;"></div>
+</div>
+</div>
+</div>
+<!-- Main Workstation Layout: 12 Columns -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg">
+<!-- Dispatch Table Section (8 Cols on xl) -->
+<div class="xl:col-span-8 flex flex-col space-y-space-md">
+<!-- Filter Segmented Tabs Bar -->
+<div class="bg-surface-container-lowest rounded-xl p-1.5 shadow-sm flex items-center justify-between overflow-x-auto">
+<div class="flex items-center gap-1 min-w-max" id="stateFiltersContainer">
+<button class="filter-tab active px-3.5 py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md flex items-center gap-2 shadow-sm transition-all" data-filter="all">
+<span>Todos</span>
+<span class="px-1.5 py-0.2 bg-primary-container text-on-primary text-[10px] rounded-full">148</span>
+</button>
+<button class="filter-tab px-3.5 py-1.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface flex items-center gap-2 transition-all" data-filter="pending-qf">
+<span>Por Validar Fórmula</span>
+<span class="px-1.5 py-0.2 bg-error-container text-on-error-container text-[10px] rounded-full font-bold">9</span>
+</button>
+<button class="filter-tab px-3.5 py-1.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface flex items-center gap-2 transition-all" data-filter="prep">
+<span>En Preparación</span>
+<span class="px-1.5 py-0.2 bg-surface-container-high text-on-surface text-[10px] rounded-full">12</span>
+</button>
+<button class="filter-tab px-3.5 py-1.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface flex items-center gap-2 transition-all" data-filter="express-route">
+<span>En Ruta Express</span>
+<span class="px-1.5 py-0.2 bg-secondary-container text-on-secondary-container text-[10px] rounded-full font-bold">18</span>
+</button>
+<button class="filter-tab px-3.5 py-1.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface flex items-center gap-2 transition-all" data-filter="delivered">
+<span>Entregados Hoy</span>
+<span class="px-1.5 py-0.2 bg-surface-container-high text-on-surface text-[10px] rounded-full">105</span>
+</button>
+<button class="filter-tab px-3.5 py-1.5 rounded-lg text-on-surface-variant font-label-md text-label-md hover:bg-surface-container hover:text-on-surface flex items-center gap-2 transition-all" data-filter="incident">
+<span>Novedades / Cancelados</span>
+<span class="px-1.5 py-0.2 bg-surface-dim text-on-surface-variant text-[10px] rounded-full">4</span>
+</button>
+</div>
+</div>
+<!-- High-Density Operations Table Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Table Toolbar info -->
+<div class="px-space-md py-3 bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm text-on-surface-variant font-label-sm text-label-sm">
+<span class="font-semibold text-on-surface">Expedientes de Despacho Inmediato</span>
+<span>•</span>
+<span>Ordenamiento: Por Prioridad de Despacho &amp; Caducidad de SLA</span>
+</div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-primary">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+<span class="font-semibold">6 órdenes activas visualizadas</span>
+</div>
+</div>
+<!-- Density Table -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-3 px-space-md">N° Pedido / Hora</th>
+<th class="py-3 px-space-md">Paciente &amp; Convenio EPS</th>
+<th class="py-3 px-space-md">Modalidad</th>
+<th class="py-3 px-space-md">Medicamentos &amp; Alertas</th>
+<th class="py-3 px-space-md">Zona / Destino</th>
+<th class="py-3 px-space-md">Total COP</th>
+<th class="py-3 px-space-md">Domiciliario Asignado</th>
+<th class="py-3 px-space-md">Estado</th>
+<th class="py-3 px-space-md text-center">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-low font-body-sm text-body-sm text-on-surface">
+<!-- Row 1: Cold Chain & Express in Transit -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-primary">#FYA-2025-0894</span>
+<span class="text-outline font-label-sm text-label-sm">Hoy, 14:22 (hace 18m)</span>
+<span class="text-[10px] text-tertiary font-semibold uppercase">Bodega Chicó 02</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Dra. Marcela Ospina</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">C.C. 52.894.102</span>
+<span class="inline-block mt-0.5 font-label-sm text-label-sm text-primary font-medium bg-primary-fixed/40 px-1.5 py-0.5 rounded w-max">EPS Sura Plan Élite</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs">bolt</span> Express 45m
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col gap-1 max-w-[200px]">
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<span class="truncate font-medium">Insulina Glargina 100 UI/ml</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-label-sm text-[10px] font-semibold">
+<span class="material-symbols-outlined text-xs text-primary">ac_unit</span> Frío 4.2°C
+                      </span>
+<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container-low text-secondary font-label-sm text-[10px] font-semibold">
+<span class="material-symbols-outlined text-xs">verified</span> Q.F. Aprobada
+                      </span>
+</div>
+<span class="text-[11px] text-outline">+ 1 Aguja BD Ultra-Fine</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">Chicó Norte III</span>
+<span class="text-outline font-label-sm text-label-sm">Cra. 14 # 93B - 45</span>
+<span class="text-[10px] text-on-surface-variant">Usaquén, BOG</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-price-display text-[15px] font-bold text-on-surface">$142.500</span>
+<span class="text-[10px] text-secondary font-semibold">Copago Pagado</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="material-symbols-outlined text-sm text-secondary">sports_motorsports</span>
+<span>Carlos M. (Moto 12)</span>
+</div>
+<span class="text-secondary font-label-sm text-[11px]">En Ruta (ETA: 11 min)</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container/60 text-on-secondary-container font-label-sm text-label-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> En Tránsito
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="p-1.5 rounded hover:bg-surface-container text-primary transition-colors" title="Ver Detalle Clínico">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant transition-colors" title="Imprimir Rótulo Térmico">
+<span class="material-symbols-outlined text-lg">print</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant transition-colors" title="Reasignar Domiciliario">
+<span class="material-symbols-outlined text-lg">swap_horiz</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Pending Q.F. Validation (Amber/Red Alert) -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-error-container/10">
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-error">#FYA-2025-0895</span>
+<span class="text-outline font-label-sm text-label-sm">Hoy, 14:31 (hace 9m)</span>
+<span class="text-[10px] text-outline uppercase">Bodega Salitre</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Julián Restrepo Vega</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">C.C. 1.018.442.900</span>
+<span class="inline-block mt-0.5 font-label-sm text-label-sm text-on-surface-variant font-medium bg-surface-container px-1.5 py-0.5 rounded w-max">Sanitas EPS</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-xs">schedule</span> Programado 2h
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col gap-1 max-w-[200px]">
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<span class="truncate font-medium">Clonazepam 2.5mg Gotas</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-[10px] font-bold">
+<span class="material-symbols-outlined text-xs">warning</span> Recetario Control FNE
+                      </span>
+</div>
+<span class="text-[11px] text-error font-medium">Requiere firma digital Regente</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">Modelia Occidental</span>
+<span class="text-outline font-label-sm text-label-sm">Calle 24 # 75 - 19</span>
+<span class="text-[10px] text-on-surface-variant">Fontibón, BOG</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-price-display text-[15px] font-bold text-on-surface">$24.900</span>
+<span class="text-[10px] text-outline">Contraentrega</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="text-outline font-label-sm text-label-sm italic">Sin asignar</span>
+<span class="text-[11px] text-error">Bloqueado por Q.F.</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs">policy</span> En Auditoría
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="px-2 py-1 rounded bg-primary text-on-primary font-label-sm text-xs font-semibold shadow hover:bg-primary-container transition-colors" title="Validar Fórmula Médica">
+                      Validar
+                    </button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant transition-colors" title="Ver Detalle">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Packaging / Bodega Prep -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-primary">#FYA-2025-0896</span>
+<span class="text-outline font-label-sm text-label-sm">Hoy, 14:15 (hace 25m)</span>
+<span class="text-[10px] text-tertiary font-semibold uppercase">Bodega Calle 100</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Carmen Albarracín</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">C.C. 39.712.553</span>
+<span class="inline-block mt-0.5 font-label-sm text-label-sm text-primary font-medium bg-primary-fixed/40 px-1.5 py-0.5 rounded w-max">Compensar EPS</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs">bolt</span> Express 45m
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col gap-1 max-w-[200px]">
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<span class="truncate font-medium">Amoxicilina 500mg + Ác. Clavulánico</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container-low text-secondary font-label-sm text-[10px] font-semibold">
+<span class="material-symbols-outlined text-xs">check_circle</span> Fórmula OK
+                      </span>
+</div>
+<span class="text-[11px] text-outline">Caja x 14 tabletas (Lote #MX-889)</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">Santa Bárbara Central</span>
+<span class="text-outline font-label-sm text-label-sm">Cra. 11 # 118 - 22 Torre B</span>
+<span class="text-[10px] text-on-surface-variant">Usaquén, BOG</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-price-display text-[15px] font-bold text-on-surface">$54.200</span>
+<span class="text-[10px] text-secondary font-semibold">Pagado PSE</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="material-symbols-outlined text-sm text-primary">person_pin</span>
+<span>Andrés P. (Moto 04)</span>
+</div>
+<span class="text-outline font-label-sm text-[11px]">En Espera en Bahía 2</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs text-primary animate-spin">autorenew</span> Embalando
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="p-1.5 rounded hover:bg-surface-container text-primary transition-colors" title="Ver Detalle">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant transition-colors" title="Imprimir Rótulo">
+<span class="material-symbols-outlined text-lg">print</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Route Express In Transit -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-primary">#FYA-2025-0892</span>
+<span class="text-outline font-label-sm text-label-sm">Hoy, 14:02 (hace 38m)</span>
+<span class="text-[10px] text-tertiary font-semibold uppercase">Bodega Chapinero</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Rodrigo Salazar C.</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">C.C. 79.340.119</span>
+<span class="inline-block mt-0.5 font-label-sm text-label-sm text-outline font-medium bg-surface-container-low px-1.5 py-0.5 rounded w-max">Particular / Prepago</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-xs">bolt</span> Express 45m
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col gap-1 max-w-[200px]">
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<span class="truncate font-medium">Losartán 50mg + Atorvastatina 20mg</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container-low text-on-surface font-label-sm text-[10px]">
+                        Cronico Cardiovascular
+                      </span>
+</div>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">Rosales</span>
+<span class="text-outline font-label-sm text-label-sm">Transversal 4 # 71 - 40</span>
+<span class="text-[10px] text-on-surface-variant">Chapinero, BOG</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-price-display text-[15px] font-bold text-on-surface">$72.800</span>
+<span class="text-[10px] text-secondary font-semibold">T. Crédito</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="material-symbols-outlined text-sm text-secondary">sports_motorsports</span>
+<span>Mauricio T. (Moto 09)</span>
+</div>
+<span class="text-secondary font-label-sm text-[11px] font-bold">Arribando (ETA: 2 min)</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-container/60 text-on-secondary-container font-label-sm text-label-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-ping"></span> Destino Cerca
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="p-1.5 rounded hover:bg-surface-container text-primary transition-colors" title="Ver Detalle">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant transition-colors" title="Kárdex">
+<span class="material-symbols-outlined text-lg">receipt</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: Cold Chain Biological -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-primary">#FYA-2025-0891</span>
+<span class="text-outline font-label-sm text-label-sm">Hoy, 13:50 (hace 50m)</span>
+<span class="text-[10px] text-tertiary font-semibold uppercase">Bodega Cedritos</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Elena Gómez de Soto</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">C.C. 24.110.983</span>
+<span class="inline-block mt-0.5 font-label-sm text-label-sm text-primary font-medium bg-primary-fixed/40 px-1.5 py-0.5 rounded w-max">Famisanar PBS</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-xs">schedule</span> Programado Fijo
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col gap-1 max-w-[200px]">
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<span class="truncate font-medium">Etanercept 50mg Jeringa Prellenada</span>
+</div>
+<div class="flex flex-wrap gap-1">
+<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-surface-container-highest text-primary font-label-sm text-[10px] font-semibold">
+<span class="material-symbols-outlined text-xs text-primary">ac_unit</span> Termómetro 5.1°C
+                      </span>
+</div>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">Cedritos</span>
+<span class="text-outline font-label-sm text-label-sm">Calle 142 # 15 - 34</span>
+<span class="text-[10px] text-on-surface-variant">Usaquén, BOG</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-price-display text-[15px] font-bold text-on-surface">$1.490.000</span>
+<span class="text-[10px] text-secondary font-semibold">Autorización POS</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="material-symbols-outlined text-sm text-primary">local_shipping</span>
+<span>Furgón Térmico 02</span>
+</div>
+<span class="text-secondary font-label-sm text-[11px]">En Ruta (ETA: 19 min)</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-highest text-primary font-label-sm text-label-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span> Cadena Frío Activa
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="p-1.5 rounded hover:bg-surface-container text-primary transition-colors" title="Ver Detalle">
+<span class="material-symbols-outlined text-lg">visibility</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant transition-colors" title="Kárdex Térmico">
+<span class="material-symbols-outlined text-lg">print</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 6: Incident Delivery -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-error">#FYA-2025-0888</span>
+<span class="text-outline font-label-sm text-label-sm">Hoy, 13:10 (hace 1h 30m)</span>
+<span class="text-[10px] text-outline uppercase">Bodega Unicentro</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Felipe Cárdenas</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">C.C. 19.455.002</span>
+<span class="inline-block mt-0.5 font-label-sm text-label-sm text-on-surface-variant font-medium bg-surface-container-low px-1.5 py-0.5 rounded w-max">Colsanitas</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container text-on-surface font-label-sm text-label-sm font-semibold">
+                    Express 45m
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col gap-1 max-w-[200px]">
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<span class="truncate font-medium">Inhalador Salbutamol + Montelukast</span>
+</div>
+<span class="text-[11px] text-error font-medium">Receptor no responde citófono</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-medium text-on-surface">Santa Bárbara Alta</span>
+<span class="text-outline font-label-sm text-label-sm">Calle 122 # 7 - 50 Apto 402</span>
+<span class="text-[10px] text-on-surface-variant">Usaquén, BOG</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<span class="font-price-display text-[15px] font-bold text-on-surface">$41.300</span>
+<span class="text-[10px] text-outline">Pendiente Cobro</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 font-label-sm text-label-sm font-semibold text-on-surface">
+<span class="material-symbols-outlined text-sm text-error">warning</span>
+<span>David R. (Moto 07)</span>
+</div>
+<span class="text-error font-label-sm text-[11px]">En Puerta (Espera 12m)</span>
+</div>
+</td>
+<td class="py-3 px-space-md align-top">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> Novedad en Destino
+                  </span>
+</td>
+<td class="py-3 px-space-md align-top text-center">
+<div class="flex items-center justify-center gap-1">
+<button class="p-1.5 rounded bg-surface-container-high text-primary hover:bg-surface-container transition-colors" title="Llamar Paciente / Operador">
+<span class="material-symbols-outlined text-lg">call</span>
+</button>
+<button class="p-1.5 rounded hover:bg-surface-container text-on-surface-variant transition-colors" title="Reasignar o Retornar">
+<span class="material-symbols-outlined text-lg">sync_problem</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination & Footer Status -->
+<div class="px-space-md py-3 bg-surface-container-low flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mostrando 1 - 6 de 148 despachos registrados en turno</span>
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm disabled:opacity-50">Anterior</button>
+<button class="px-2.5 py-1 rounded bg-primary text-on-primary font-label-sm text-label-sm">1</button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">2</button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">3</button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm">Siguiente</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Complementary Sidebars: Live Telemetry & Cold Chain (4 Cols on xl) -->
+<div class="xl:col-span-4 flex flex-col space-y-space-md">
+<!-- Card: Live Courier Coverage Radar with Map placeholder -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-space-md bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">my_location</span>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold leading-tight">Radar de Motorizados</h3>
+<span class="font-label-sm text-label-sm text-outline">Geocerca Bogotá (Norte - Centro)</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-bold">24 Conectados</span>
+</div>
+<!-- Map Container Triggered by data-location -->
+<div class="relative w-full h-52 bg-surface-container overflow-hidden">
+<div class="w-full h-full bg-cover bg-center" data-location="Bogota, Colombia" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA5VW0OALwd31ZrT5nuB_WH5b_0D1z8Pppgb5h7LptQP7Ny8IbwXAb6CUKjPwvC6SkL-G5vrz3JnciGLQGme9ZqeS21Ri8GP-5tqFci_17m281OkvIK-rSK23XQ0c6XlRCY9WPXj5rJyRZMb_thup4T0FmJlL3NQYMalWbgS3gDd2j94o3geuXZ94bskFViwklBWkbvfYc-Pk0LPiG_g9DIbjkEcg5vntgy-0Ro0dOw')"></div>
+<!-- Floating interactive badge over radar -->
+<div class="absolute bottom-3 left-3 bg-surface/90 backdrop-blur-md px-3 py-1.5 rounded-lg shadow-md flex items-center gap-2 text-on-surface">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
+<span class="font-label-sm text-label-sm font-semibold">18 rutas en tiempo real</span>
+</div>
+<div class="absolute top-3 right-3 bg-primary text-on-primary px-2.5 py-1 rounded-md text-[11px] font-semibold shadow">
+            GPS Activo 4G
+          </div>
+</div>
+<!-- Couriers Quick List -->
+<div class="p-space-md flex flex-col space-y-2">
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pb-1">
+<span>Motorizado &amp; Unidad</span>
+<span>Ruta / Destino</span>
+<span>Batería &amp; Señal</span>
+</div>
+<!-- Courier item 1 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs">
+                12
+              </div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">Carlos M.</span>
+<span class="text-[10px] text-outline">Yamaha FZ • Chicó</span>
+</div>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-secondary font-label-sm text-label-sm font-bold">ETA: 11m</span>
+<span class="text-[10px] text-on-surface-variant">#FYA-0894</span>
+</div>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm">battery_5_bar</span>
+<span class="text-[10px] font-semibold">92%</span>
+</div>
+</div>
+<!-- Courier item 2 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold text-xs">
+                09
+              </div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">Mauricio T.</span>
+<span class="text-[10px] text-outline">Suzuki Gixxer • Rosales</span>
+</div>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-secondary font-label-sm text-label-sm font-bold">ETA: 2m</span>
+<span class="text-[10px] text-on-surface-variant">#FYA-0892</span>
+</div>
+<div class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-sm">battery_full</span>
+<span class="text-[10px] font-semibold">98%</span>
+</div>
+</div>
+<!-- Courier item 3 -->
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-error text-on-error flex items-center justify-center font-bold text-xs">
+                07
+              </div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface leading-tight">David R.</span>
+<span class="text-[10px] text-error font-medium">En Espera • Sta. Bárbara</span>
+</div>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-error font-label-sm text-label-sm font-bold">+12m detenido</span>
+<span class="text-[10px] text-on-surface-variant">#FYA-0888</span>
+</div>
+<div class="flex items-center gap-1 text-outline">
+<span class="material-symbols-outlined text-sm">battery_3_bar</span>
+<span class="text-[10px] font-semibold">54%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card: Cold Chain Biological Telemetry Monitor (Cadena de Frío < 8°C) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col">
+<div class="flex items-center justify-between mb-space-sm">
+<div class="flex items-center gap-2">
+<div class="p-1.5 rounded-lg bg-primary-container text-on-primary">
+<span class="material-symbols-outlined text-lg">ac_unit</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface font-bold leading-tight">Cadena de Frío en Tránsito</h3>
+<span class="font-label-sm text-label-sm text-outline">Sensores Bluetooth BLE INVIMA</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container-highest text-primary font-bold px-2 py-0.5 rounded">Rango Óptimo 2°C - 8°C</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+          Monitoreo térmico automatizado de neveras portátiles y furgones para biológicos, insulinas y heparinas.
+        </p>
+<!-- Temperature Gauges & Packets List -->
+<div class="space-y-space-sm">
+<!-- Cold Pack 1 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Caja Térmica #NEV-042</span>
+<span class="text-[10px] text-outline">(#FYA-0894)</span>
+</div>
+<span class="font-price-display text-[16px] text-primary font-bold">4.2°C</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 45%;"></div>
+</div>
+<div class="flex items-center justify-between text-[11px] text-on-surface-variant">
+<span>Insulina Glargina • Sellado 14:05</span>
+<span class="text-secondary font-semibold">Térmicamente Estable</span>
+</div>
+</div>
+<!-- Cold Pack 2 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Furgón Térmico #FUR-02</span>
+<span class="text-[10px] text-outline">(#FYA-0891)</span>
+</div>
+<span class="font-price-display text-[16px] text-primary font-bold">5.1°C</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 58%;"></div>
+</div>
+<div class="flex items-center justify-between text-[11px] text-on-surface-variant">
+<span>Etanercept 50mg • Compresor On</span>
+<span class="text-secondary font-semibold">Estable (Autonomía 5.5h)</span>
+</div>
+</div>
+<!-- Cold Pack 3 -->
+<div class="p-space-sm rounded-lg bg-surface-container-low flex flex-col space-y-1.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Caja Térmica #NEV-019</span>
+<span class="text-[10px] text-outline">(#FYA-0870)</span>
+</div>
+<span class="font-price-display text-[16px] text-on-surface font-bold">3.8°C</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 38%;"></div>
+</div>
+<div class="flex items-center justify-between text-[11px] text-on-surface-variant">
+<span>Vacunas Antigripales • En Bodega 02</span>
+<span class="text-on-surface-variant">Listo para salida</span>
+</div>
+</div>
+</div>
+<!-- Thermal audit stamp button -->
+<button class="mt-space-md w-full py-2 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold flex items-center justify-center gap-1.5 transition-colors">
+<span class="material-symbols-outlined text-base">thermostat</span>
+<span>Descargar Registro Termohigrométrico INVIMA (.PDF)</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Simple client-side micro-interactions
+  document.addEventListener('DOMContentLoaded', function() {
+    // 1. Radar update micro-interaction
+    const refreshBtn = document.getElementById('refreshRadarBtn');
+    const radarIcon = document.getElementById('radarIcon');
+    if (refreshBtn && radarIcon) {
+      refreshBtn.addEventListener('click', function() {
+        radarIcon.classList.add('animate-spin');
+        refreshBtn.disabled = true;
+        setTimeout(function() {
+          radarIcon.classList.remove('animate-spin');
+          refreshBtn.disabled = false;
+        }, 800);
+      });
+    }
+
+    // 2. Filter tabs active class switching
+    const tabs = document.querySelectorAll('.filter-tab');
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        tabs.forEach(t => {
+          t.classList.remove('active', 'bg-primary', 'text-on-primary', 'shadow-sm');
+          t.classList.add('text-on-surface-variant');
+        });
+        this.classList.remove('text-on-surface-variant');
+        this.classList.add('active', 'bg-primary', 'text-on-primary', 'shadow-sm');
+      });
+    });
+  });
+</script></main><footer class="w-full bg-surface-container-low py-space-sm px-space-lg"><div class="w-full flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm"><span>© 2024 FarmaYA Salud a Domicilio S.A.S. Dispensación Farmacéutica Certificada.</span><div class="flex items-center gap-space-md"><span class="bg-surface-container px-2 py-0.5 rounded text-on-surface font-semibold">INVIMA 2024R-0019284</span><span class="text-outline">v2.4.0 Spring Boot Core</span></div></div></footer></div></body></html>
