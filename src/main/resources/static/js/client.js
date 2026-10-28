@@ -107,8 +107,8 @@ function renderClientDashboard() {
           h('span', { class: 'stock-badge' }, '● En bodega')
         ),
         // Fila de acciones (Stepper + Botón de Agregar + Ficha)
-        h('div', { class: 'product-actions-row' },
-          h('div', { class: 'quantity-control stitch-stepper' },
+        h('div', { class: 'product-actions-row' + (count ? ' has-qty' : ' no-qty') },
+          h('div', { class: 'quantity-control stitch-stepper' + (count === 0 ? ' zero-count' : '') },
             h('button', {
               type: 'button',
               class: 'qty-btn',
@@ -506,6 +506,79 @@ function renderClientDashboard() {
   );
 
   // --- SECCIÓN 2: Hero Banner Clínico con buscador FarmaYA (Stitch Screen 8) ---
+  function openCatalogFiltersDrawer() {
+    const drawerBody = h('div', { class: 'drawer-body client-filters-drawer-content' },
+      h('div', { class: 'drawer-head', style: 'margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;' },
+        h('div', null,
+          h('span', { class: 'eyebrow' }, 'CATÁLOGO FARMAYA'),
+          h('h3', { style: 'margin: 2px 0 0;' }, 'Filtros de Catálogo')
+        ),
+        h('button', { class: 'close', type: 'button', 'aria-label': 'Cerrar', onclick: () => d.close() }, '×')
+      ),
+      h('div', { class: 'filter-drawer-group' },
+        h('label', { class: 'small bold', style: 'display: block; margin-bottom: 6px; color: var(--text);' }, 'Categoría terapéutica'),
+        (() => {
+          const catSelect = h('select', {
+            class: 'catalog-select',
+            onchange: () => {
+              clientCategory = catSelect.value;
+              if (window.clientCategorySelect) window.clientCategorySelect.value = catSelect.value;
+              drawProducts();
+            }
+          },
+            h('option', { value: '' }, 'Todas las categorías'),
+            clientCategories.map(c => h('option', { value: c.id, selected: c.id === clientCategory }, c.label))
+          );
+          return catSelect;
+        })()
+      ),
+      h('div', { class: 'filter-drawer-group', style: 'margin-top: 16px;' },
+        h('label', { class: 'small bold', style: 'display: block; margin-bottom: 6px; color: var(--text);' }, 'Ordenar por'),
+        (() => {
+          const sortSelect = h('select', {
+            class: 'catalog-select',
+            onchange: () => {
+              clientSort = sortSelect.value;
+              if (window.clientSortSelect) window.clientSortSelect.value = sortSelect.value;
+              drawProducts();
+            }
+          },
+            h('option', { value: 'featured', selected: clientSort === 'featured' }, 'Destacados clínicos'),
+            h('option', { value: 'priceAsc', selected: clientSort === 'priceAsc' }, 'Precio: menor a mayor'),
+            h('option', { value: 'priceDesc', selected: clientSort === 'priceDesc' }, 'Precio: mayor a menor'),
+            h('option', { value: 'nameAsc', selected: clientSort === 'nameAsc' }, 'Nombre: A–Z'),
+            h('option', { value: 'nameDesc', selected: clientSort === 'nameDesc' }, 'Nombre: Z–A')
+          );
+          return sortSelect;
+        })()
+      ),
+      h('div', { style: 'margin-top: 24px; display: flex; flex-direction: column; gap: 10px;' },
+        h('button', {
+          class: 'btn primary block',
+          type: 'button',
+          onclick: () => d.close()
+        }, 'Ver medicamentos'),
+        h('button', {
+          class: 'btn ghost block',
+          type: 'button',
+          onclick: () => {
+            clientCategory = '';
+            clientSort = 'featured';
+            clientSearch = '';
+            searchInput.value = '';
+            if (window.clientCategorySelect) window.clientCategorySelect.value = '';
+            if (window.clientSortSelect) window.clientSortSelect.value = 'featured';
+            drawProducts();
+            d.close();
+            toast('Filtros restablecidos');
+          }
+        }, 'Limpiar filtros')
+      )
+    );
+    const d = openDialog(h('div', { class: 'sheet-body' }, drawerBody), { drawer: true });
+  }
+  window.openCatalogFiltersDrawer = openCatalogFiltersDrawer;
+
   const heroSection = h('section', { class: 'welcome-banner stitch-hero' },
     h('div', { class: 'stitch-hero-left' },
       h('div', { class: 'stitch-hero-kicker' },
@@ -513,15 +586,26 @@ function renderClientDashboard() {
       ),
       h('h1', null, 'Hola, ' + (user.name || 'bienvenido').split(' ')[0]),
       h('p', null, 'Tu farmacia de confianza directo a tu hogar. Consulta farmacéutica y despacho asistencial en tiempo real.'),
-      // Mega buscador
+      // Buscador con botón de filtros lateral y símbolo de búsqueda a un lado
       h('div', { class: 'stitch-search-box' },
-        h('span', { class: 'stitch-search-icon', 'aria-hidden': 'true' }, icon('search')),
-        searchInput,
+        h('button', {
+          class: 'btn ghost small mobile-search-filter-btn mobile-only',
+          type: 'button',
+          title: 'Abrir filtros de catálogo',
+          'aria-label': 'Filtros de catálogo',
+          onclick: () => openCatalogFiltersDrawer()
+        }, icon('filter'), h('span', null, 'Filtros')),
+        h('div', { class: 'stitch-search-input-wrap' },
+          h('span', { class: 'stitch-search-icon', 'aria-hidden': 'true' }, icon('search')),
+          searchInput
+        ),
         h('button', {
           class: 'btn primary stitch-search-action',
           type: 'button',
+          title: 'Buscar medicamentos',
+          'aria-label': 'Buscar',
           onclick: () => drawProducts()
-        }, 'Buscar')
+        }, icon('search'), h('span', { class: 'search-btn-label' }, 'Buscar'))
       )
     ),
     h('div', { class: 'welcome-art', 'aria-hidden': 'true' },
