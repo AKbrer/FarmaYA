@@ -251,14 +251,15 @@ function renderClientDashboard() {
     }
 
     // Barra flotante de carrito para móviles / pantallas reducidas
-    let mobileBar = document.getElementById('fy_mobile_cart_bar');
+    const mobileBar = document.getElementById('fy_mobile_cart_bar');
     if (clientCart.length > 0) {
-      if (!mobileBar) {
-        mobileBar = h('div', { id: 'fy_mobile_cart_bar', class: 'mobile-cart-float-bar' });
-        document.body.appendChild(mobileBar);
+      let bar = mobileBar;
+      if (!bar) {
+        bar = h('div', { id: 'fy_mobile_cart_bar', class: 'mobile-cart-float-bar' });
+        document.body.appendChild(bar);
       }
-      mobileBar.style.display = 'flex';
-      mobileBar.replaceChildren(
+      bar.style.display = 'flex';
+      bar.replaceChildren(
         h('div', { class: 'm-cart-info' },
           h('span', { class: 'm-cart-title' }, qty + (qty === 1 ? ' artículo en canasta' : ' artículos en canasta')),
           h('span', { class: 'm-cart-total' }, money(total))
@@ -277,8 +278,12 @@ function renderClientDashboard() {
           }
         }, 'Ver Canasta')
       );
-    } else if (mobileBar) {
-      mobileBar.style.display = 'none';
+    } else {
+      // Cuando no hay productos en el carrito, eliminar por completo la barra flotante de compras
+      if (mobileBar) {
+        mobileBar.remove();
+      }
+      document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
       if (window.activeMobileCartDialog) {
         try { window.activeMobileCartDialog.close(); } catch(e) {}
       }
@@ -287,6 +292,7 @@ function renderClientDashboard() {
 
   function openMobileCartSheet() {
     if (!clientCart.length) {
+      document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
       toast('Tu canasta está vacía');
       return;
     }
@@ -306,7 +312,8 @@ function renderClientDashboard() {
       const container = sheetBody.querySelector('#mobileSheetCartItemsContainer');
       if (!container) return;
       if (!clientCart.length) {
-        cartDialog.close();
+        document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
+        try { cartDialog.close(); } catch(e) {}
         drawCart();
         drawProducts();
         return;
@@ -387,7 +394,16 @@ function renderClientDashboard() {
       );
     }
 
-    const cartDialog = openDialog(sheetBody);
+    const cartDialog = openDialog(sheetBody, {
+      onClose: () => {
+        window.activeMobileCartDialog = null;
+        if (!clientCart.length) {
+          document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
+        }
+        drawCart();
+        drawProducts();
+      }
+    });
     cartDialog.classList.add('mobile-cart-bottom-dialog');
     window.activeMobileCartDialog = cartDialog;
     refreshSheet();

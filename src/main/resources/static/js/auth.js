@@ -454,18 +454,18 @@ function buildRegisterCard() {
     let steps = [];
     if (role === 'FARMACIA') {
       steps = [
-        { num: 1, label: '1. Tu cuenta' },
-        { num: 2, label: '2. Establecimiento' },
-        { num: 3, label: '3. Licencia y Horarios' }
+        { num: 1, label: '1. Tu cuenta', short: '1. Cuenta' },
+        { num: 2, label: '2. Establecimiento', short: '2. Sede' },
+        { num: 3, label: '3. Licencia y Horarios', short: '3. Licencia' }
       ];
     } else if (role === 'REPARTIDOR') {
       steps = [
-        { num: 1, label: '1. Tu cuenta' },
-        { num: 2, label: '2. Vehículo' }
+        { num: 1, label: '1. Tu cuenta', short: '1. Cuenta' },
+        { num: 2, label: '2. Vehículo', short: '2. Vehículo' }
       ];
     } else {
       steps = [
-        { num: 1, label: 'Datos de la cuenta' }
+        { num: 1, label: 'Datos de la cuenta', short: 'Cuenta' }
       ];
     }
 
@@ -477,8 +477,12 @@ function buildRegisterCard() {
 
     steps.forEach(s => {
       const pill = h('span', {
-        class: 'reg-step-pill' + (s.num === currentRegStep ? ' active' : s.num < currentRegStep ? ' completed' : '')
-      }, s.label);
+        class: 'reg-step-pill' + (s.num === currentRegStep ? ' active' : s.num < currentRegStep ? ' completed' : ''),
+        title: s.label
+      },
+        h('span', { class: 'step-text-full' }, s.label),
+        h('span', { class: 'step-text-short' }, s.short || s.label)
+      );
       stepperContainer.appendChild(pill);
     });
   }

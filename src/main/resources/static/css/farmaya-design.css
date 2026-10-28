@@ -3804,24 +3804,56 @@ dialog.sheet.drawer::backdrop {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 18px;
-  gap: 6px;
+  gap: 4px;
   padding: 4px;
   background: var(--surface-soft, rgba(0,0,0,0.03));
   border-radius: 999px;
   border: 1px solid var(--line);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .reg-step-pill {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   text-align: center;
-  padding: 6px 10px;
+  padding: 6px 4px;
   border-radius: 999px;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--muted);
   transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
   user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reg-step-pill .step-text-short {
+  display: none;
+}
+
+.reg-step-pill .step-text-full {
+  display: inline;
+}
+
+@media (max-width: 768px) {
+  .reg-wizard-steps {
+    gap: 3px;
+    padding: 3px;
+    margin-bottom: 14px;
+  }
+  .reg-step-pill {
+    padding: 5px 3px !important;
+    font-size: 11px !important;
+  }
+  .reg-step-pill .step-text-full {
+    display: none !important;
+  }
+  .reg-step-pill .step-text-short {
+    display: inline !important;
+  }
 }
 
 .reg-step-pill.active {
@@ -4199,80 +4231,6 @@ dialog.sheet.drawer::backdrop {
 @media (max-width: 720px) {
   .image-modal-grid {
     grid-template-columns: 1fr;
-  }
-}
-
-/* Barra flotante de carrito móvil para que nunca se pierda de vista */
-.mobile-cart-float-bar {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-cart-float-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 99999;
-    background: #16865d;
-    color: #ffffff;
-    padding: 12px 18px;
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.22);
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    border-top: 1px solid rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    animation: slideUpFloatBar 0.25s cubic-bezier(0.23, 1, 0.32, 1);
-  }
-
-  @keyframes slideUpFloatBar {
-    from {
-      transform: translateY(100%);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-
-  .mobile-cart-float-bar .m-cart-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .mobile-cart-float-bar .m-cart-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.9);
-  }
-
-  .mobile-cart-float-bar .m-cart-total {
-    font-size: 19px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: #ffffff;
-  }
-
-  .mobile-cart-float-bar .m-cart-btn {
-    background: #ffffff;
-    color: #16865d;
-    font-weight: 800;
-    font-size: 14px;
-    padding: 10px 18px;
-    border-radius: 12px;
-    border: none;
-    cursor: pointer;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-    transition: transform 0.15s, background 0.15s;
-    white-space: nowrap;
-  }
-
-  .mobile-cart-float-bar .m-cart-btn:active {
-    transform: scale(0.97);
   }
 }
 
@@ -4996,12 +4954,22 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
   color: #ffffff !important;
   border-radius: 18px !important;
   padding: 12px 18px !important;
-  display: flex !important;
+  display: flex;
   align-items: center !important;
   justify-content: space-between !important;
   box-shadow: 0 10px 30px rgba(22, 134, 93, 0.45) !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
   animation: mobilePillEnter 220ms var(--ease-out) forwards !important;
+}
+
+.mobile-cart-float-bar.hidden,
+.mobile-cart-float-bar[hidden],
+.mobile-cart-float-bar:empty {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  animation: none !important;
 }
 
 @keyframes mobilePillEnter {
