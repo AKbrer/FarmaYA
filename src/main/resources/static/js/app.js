@@ -10,7 +10,6 @@ function renderNavbar() {
   if (!user) {
     const isRegister = location.hash === '#register';
     nav.append(
-      h('span', { class: 'header-tag desktop-only' }, 'Tu farmacia y salud a un clic'),
       h('a', { class: isRegister ? 'btn ghost small' : 'btn primary small', href: '#login' }, 'Iniciar sesión'),
       h('a', { class: isRegister ? 'btn primary small' : 'btn ghost small', href: '#register' }, 'Crear cuenta'),
       h('button', {
@@ -70,16 +69,35 @@ function renderNavbar() {
     );
   }
 
+  if (user.role === 'CLIENTE') {
+    // Para CLIENTE: en celular NO se muestra en la barra superior (solo en desktop con desktop-only)
+    // El usuario aparece exclusivamente en el panel derecho desplegable (menú de 3 líneas)
+    navItems.push(
+      h('button', {
+        class: 'user-pill-btn desktop-only',
+        type: 'button',
+        title: 'Ver perfil (' + user.name + ')',
+        onclick: () => openProfile('profile')
+      },
+        h('span', { class: 'user-avatar' }, (user.name || 'U').slice(0, 1).toUpperCase()),
+        h('span', null, h('strong', null, user.name), h('small', null, roleName))
+      )
+    );
+  } else {
+    navItems.push(
+      h('button', {
+        class: 'user-pill-btn',
+        type: 'button',
+        title: 'Ver perfil (' + user.name + ')',
+        onclick: () => openProfile('profile')
+      },
+        h('span', { class: 'user-avatar' }, (user.name || 'U').slice(0, 1).toUpperCase()),
+        h('span', null, h('strong', null, user.name), h('small', null, roleName))
+      )
+    );
+  }
+
   navItems.push(
-    h('button', {
-      class: 'user-pill-btn',
-      type: 'button',
-      title: 'Ver perfil (' + user.name + ')',
-      onclick: () => openProfile('profile')
-    },
-      h('span', { class: 'user-avatar' }, (user.name || 'U').slice(0, 1).toUpperCase()),
-      h('span', null, h('strong', null, user.name), h('small', null, roleName))
-    ),
     h('button', {
       class: 'icon-button hamburger-btn',
       type: 'button',
