@@ -37,6 +37,10 @@ function renderNavbar() {
         title: 'Ver canasta de compras FarmaYA',
         'aria-label': 'Canasta de compras',
         onclick: () => {
+          if (window.innerWidth <= 820 && window.openMobileCartSheet) {
+            window.openMobileCartSheet();
+            return;
+          }
           const cart = document.querySelector('.cart-panel');
           if (cart) {
             cart.scrollIntoView({ behavior: 'smooth', block: 'center' });

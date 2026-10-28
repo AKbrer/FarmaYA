@@ -267,16 +267,132 @@ function renderClientDashboard() {
           type: 'button',
           class: 'm-cart-btn',
           onclick: () => {
-            cartBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            cartBox.classList.add('cart-highlight-glow');
-            setTimeout(() => cartBox.classList.remove('cart-highlight-glow'), 1400);
+            if (window.innerWidth <= 820) {
+              openMobileCartSheet();
+            } else {
+              cartBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              cartBox.classList.add('cart-highlight-glow');
+              setTimeout(() => cartBox.classList.remove('cart-highlight-glow'), 1400);
+            }
           }
         }, 'Ver Canasta')
       );
     } else if (mobileBar) {
       mobileBar.style.display = 'none';
+      if (window.activeMobileCartDialog) {
+        try { window.activeMobileCartDialog.close(); } catch(e) {}
+      }
     }
   }
+
+  function openMobileCartSheet() {
+    if (!clientCart.length) {
+      toast('Tu canasta está vacía');
+      return;
+    }
+    const sheetBody = h('div', { class: 'sheet-body mobile-cart-modal-body' },
+      h('div', { class: 'mobile-sheet-drag-handle' }),
+      h('div', { class: 'mobile-cart-header-row' },
+        h('div', null,
+          h('span', { class: 'eyebrow' }, 'CANASTA DE ENTREGA'),
+          h('h3', { style: 'margin: 2px 0 0;' }, 'Tus medicamentos')
+        ),
+        h('button', { class: 'btn ghost small', type: 'button', onclick: () => cartDialog.close() }, 'Cerrar')
+      ),
+      h('div', { id: 'mobileSheetCartItemsContainer' })
+    );
+
+    function refreshSheet() {
+      const container = sheetBody.querySelector('#mobileSheetCartItemsContainer');
+      if (!container) return;
+      if (!clientCart.length) {
+        cartDialog.close();
+        drawCart();
+        drawProducts();
+        return;
+      }
+      const qty = clientCart.reduce((n, i) => n + i.quantity, 0);
+      const subtotal = clientCart.reduce((n, i) => n + i.quantity * i.price, 0);
+      const deliveryFee = 4500;
+      const total = subtotal + deliveryFee;
+      const hasRx = clientCart.some(i => i.rx);
+
+      container.replaceChildren(
+        hasRx ? h('div', { class: 'cart-rx-notice' },
+          h('strong', null, 'Requiere prescripción médica'),
+          h('p', null, 'Un químico farmacéutico validará tu fórmula médica antes de proceder.')
+        ) : '',
+        h('div', { class: 'cart-items stitch-cart-items' },
+          clientCart.map(item =>
+            h('div', { class: 'cart-item stitch-cart-item' },
+              h('div', { class: 'cart-item-info' },
+                h('strong', { class: 'cart-item-name' }, item.name),
+                item.rx && h('span', { class: 'badge-rx inline' }, 'Rx Fórmula médica'),
+                h('small', { class: 'muted block-line' }, money(item.price) + ' c/u · sugerido'),
+                h('div', { class: 'quantity-control' },
+                  h('button', {
+                    type: 'button',
+                    class: 'qty-btn',
+                    'aria-label': 'Quitar uno',
+                    onclick: () => {
+                      item.quantity--;
+                      if (item.quantity <= 0) clientCart = clientCart.filter(x => x !== item);
+                      refreshSheet();
+                      drawCart();
+                      drawProducts();
+                    }
+                  }, '−'),
+                  h('span', null, item.quantity),
+                  h('button', {
+                    type: 'button',
+                    class: 'qty-btn',
+                    'aria-label': 'Agregar uno',
+                    onclick: () => {
+                      item.quantity = Math.min(99, item.quantity + 1);
+                      refreshSheet();
+                      drawCart();
+                      drawProducts();
+                    }
+                  }, '+')
+                )
+              ),
+              h('strong', { class: 'cart-item-subtotal' }, money(item.price * item.quantity))
+            )
+          )
+        ),
+        h('div', { class: 'cart-breakdown', style: 'margin-top: 16px;' },
+          h('div', { class: 'breakdown-row' },
+            h('span', null, 'Subtotal:'),
+            h('strong', null, money(subtotal))
+          ),
+          h('div', { class: 'breakdown-row' },
+            h('span', null, 'Envío seguro (<45 min):'),
+            h('span', { class: 'delivery-fee-badge' }, money(deliveryFee))
+          ),
+          h('div', { class: 'breakdown-row total-row' },
+            h('span', null, 'Total aproximado:'),
+            h('strong', { class: 'cart-total-amount' }, money(total))
+          ),
+          h('p', { class: 'muted small text-center mt-2' }, 'La farmacia asignada confirmará el inventario real y emitirá la factura.')
+        ),
+        h('button', {
+          class: 'btn primary block stitch-checkout-btn',
+          type: 'button',
+          style: 'margin-top: 16px; min-height: 48px; border-radius: 14px; font-weight: 700;',
+          onclick: () => {
+            cartDialog.close();
+            checkout();
+          }
+        }, 'Solicitar despacho a farmacias')
+      );
+    }
+
+    const cartDialog = openDialog(sheetBody);
+    cartDialog.classList.add('mobile-cart-bottom-dialog');
+    window.activeMobileCartDialog = cartDialog;
+    refreshSheet();
+  }
+  window.openMobileCartSheet = openMobileCartSheet;
 
   async function checkout() {
     const address = h('input', { required: true, minlength: 5, maxlength: 200, placeholder: 'Barrio, calle, número, apto o casa...', value: user.address || '' });

@@ -4526,3 +4526,386 @@ dialog.sheet.drawer::backdrop {
   padding: 16px;
   margin-bottom: 16px;
 }
+
+/* ==========================================================================
+   MOBILE-FIRST NATIVE APP STYLING (FARMAYA MOBILE)
+   ========================================================================== */
+
+/* 1. Touch ergonomics & Tap highlights */
+html {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+button, a, select, [role="button"], .qty-btn, .stitch-add-btn, .m-cart-btn {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
+  transform: scale(0.96) !important;
+  transition: transform 90ms var(--ease-out) !important;
+}
+
+/* 2. Prevent iOS auto-zoom on input focus */
+@media (pointer: coarse) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* 3. Header adjustments on mobile */
+@media (max-width: 768px) {
+  .site-header {
+    min-height: 60px !important;
+    padding: 8px 14px !important;
+    padding-top: calc(8px + env(safe-area-inset-top, 0px)) !important;
+  }
+  .brand-image img {
+    max-height: 32px !important;
+    width: auto !important;
+  }
+  .header-cart-text {
+    display: none !important;
+  }
+  .header-cart-total {
+    display: none !important;
+  }
+  .header-cart-pill {
+    padding: 6px 10px !important;
+  }
+}
+
+/* 4. Banner institucional y Hero en móvil */
+@media (max-width: 768px) {
+  .stitch-assurance-bar {
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+  }
+  .stitch-hero {
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+    margin-bottom: 14px !important;
+  }
+  .stitch-hero-kicker span {
+    font-size: 11px !important;
+  }
+  .stitch-hero h1 {
+    font-size: 24px !important;
+    line-height: 1.2 !important;
+    margin: 4px 0 8px !important;
+  }
+  .stitch-hero p {
+    font-size: 13.5px !important;
+    line-height: 1.4 !important;
+    margin-bottom: 14px !important;
+  }
+  .stitch-search-box {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 8px !important;
+    gap: 8px !important;
+    border-radius: 14px !important;
+  }
+  .stitch-search-input {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: 15px !important;
+    padding: 10px 14px !important;
+  }
+  .stitch-search-action {
+    width: 100% !important;
+    min-height: 44px !important;
+    border-radius: 10px !important;
+    justify-content: center !important;
+  }
+  .welcome-art {
+    display: none !important;
+  }
+}
+
+/* 5. Tarjetas de confianza con desplazamiento horizontal fluido en móvil */
+@media (max-width: 768px) {
+  .stitch-trust-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 12px !important;
+    padding-bottom: 8px !important;
+    scrollbar-width: none !important;
+    margin-bottom: 14px !important;
+  }
+  .stitch-trust-grid::-webkit-scrollbar {
+    display: none !important;
+  }
+  .stitch-trust-card {
+    flex: 0 0 250px !important;
+    scroll-snap-align: start !important;
+    padding: 12px 14px !important;
+    border-radius: 14px !important;
+  }
+  .stitch-trust-card strong {
+    font-size: 13px !important;
+  }
+  .stitch-trust-card p {
+    font-size: 11.5px !important;
+  }
+}
+
+/* 6. Barra fija de filtros en móvil */
+@media (max-width: 768px) {
+  .client-sticky-categories {
+    top: 60px !important;
+    padding: 10px 12px !important;
+    border-radius: 14px !important;
+    margin-bottom: 12px !important;
+  }
+  .client-sticky-inner {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .client-sticky-inner > strong {
+    font-size: 13.5px !important;
+  }
+  .client-sticky-inner .catalog-control {
+    width: 100% !important;
+  }
+  .client-sticky-inner .catalog-control > span {
+    font-size: 12px !important;
+  }
+  .catalog-select {
+    min-height: 44px !important;
+    padding: 8px 12px !important;
+    font-size: 15px !important;
+    border-radius: 10px !important;
+  }
+}
+
+/* 7. Cuadrícula de productos de alta densidad móvil (2 columnas estilo Farmatodo / Rappi) */
+@media (max-width: 680px) {
+  .client-main-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    padding-bottom: 90px !important; /* Espacio para barra flotante inferior */
+  }
+  .client-side-column {
+    display: none !important; /* En móvil el carrito vive en la barra flotante y el Bottom Sheet nativo */
+  }
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+  .product-card {
+    padding: 12px 10px !important;
+    border-radius: 16px !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .product-top-badges {
+    gap: 4px !important;
+    margin-bottom: 6px !important;
+    flex-wrap: wrap !important;
+  }
+  .badge-rx, .badge-otc, .badge-flash {
+    font-size: 9.5px !important;
+    padding: 3px 6px !important;
+    border-radius: 6px !important;
+  }
+  .product-art-wrap {
+    min-height: 105px !important;
+    max-height: 105px !important;
+    border-radius: 10px !important;
+    margin-bottom: 8px !important;
+  }
+  .p-art {
+    width: 75px !important;
+    height: 65px !important;
+  }
+  .product-meta-block {
+    margin-bottom: 6px !important;
+  }
+  .product-lab {
+    font-size: 10px !important;
+    display: block !important;
+    margin-bottom: 2px !important;
+  }
+  .product-title {
+    font-size: 13px !important;
+    min-height: 34px !important;
+    line-height: 1.3 !important;
+    margin: 0 0 6px !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+  }
+  .product-presentation {
+    display: none !important;
+  }
+  .product-pricing-row {
+    margin: 4px 0 8px !important;
+    display: flex !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+  }
+  .price-label {
+    display: none !important;
+  }
+  .product-price {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+  }
+  .stock-badge {
+    display: none !important;
+  }
+  .product-actions-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    margin-top: auto !important;
+  }
+  .quantity-control.stitch-stepper {
+    width: 100% !important;
+    justify-content: space-between !important;
+    padding: 3px 6px !important;
+    border-radius: 8px !important;
+  }
+  .quantity-control.stitch-stepper .qty-btn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 14px !important;
+  }
+  .stitch-add-btn {
+    width: 100% !important;
+    min-height: 38px !important;
+    font-size: 12.5px !important;
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    justify-content: center !important;
+    font-weight: 700 !important;
+  }
+  .stitch-info-btn {
+    display: none !important;
+  }
+}
+
+/* 8. Barra flotante de carrito inferior móvil (Floating Action Pill) */
+.mobile-cart-float-bar {
+  position: fixed !important;
+  bottom: calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+  left: 14px !important;
+  right: 14px !important;
+  z-index: 99 !important;
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  border-radius: 18px !important;
+  padding: 12px 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  box-shadow: 0 10px 30px rgba(22, 134, 93, 0.45) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  animation: mobilePillEnter 220ms var(--ease-out) forwards !important;
+}
+
+@keyframes mobilePillEnter {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.mobile-cart-float-bar .m-cart-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-cart-float-bar .m-cart-title {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.92;
+}
+
+.mobile-cart-float-bar .m-cart-total {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.mobile-cart-float-bar .m-cart-btn {
+  background: #ffffff !important;
+  color: var(--primary) !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  padding: 10px 18px !important;
+  border-radius: 12px !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12) !important;
+  transition: transform 90ms var(--ease-out) !important;
+}
+
+/* 9. Diálogo Bottom Sheet móvil para la Canasta (Estilo iOS / Android Nativo) */
+dialog.sheet.mobile-cart-bottom-dialog {
+  margin: auto auto 0 auto !important;
+  width: 100% !important;
+  max-width: 540px !important;
+  border-radius: 24px 24px 0 0 !important;
+  border: 1px solid var(--line) !important;
+  border-bottom: none !important;
+  background: var(--surface) !important;
+  padding: 0 !important;
+  animation: mobileSheetSlideUp 260ms cubic-bezier(0.32, 0.72, 0, 1) forwards !important;
+  max-height: 85vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+dialog.sheet.mobile-cart-bottom-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.5) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+}
+
+@keyframes mobileSheetSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.mobile-cart-modal-body {
+  padding: 12px 18px calc(24px + env(safe-area-inset-bottom, 0px)) 18px !important;
+  max-height: 80vh !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+.mobile-sheet-drag-handle {
+  width: 44px;
+  height: 5px;
+  background: var(--line);
+  border-radius: 10px;
+  margin: 4px auto 12px auto;
+}
+
+.mobile-cart-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
