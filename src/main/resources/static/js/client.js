@@ -586,15 +586,8 @@ function renderClientDashboard() {
       ),
       h('h1', null, 'Hola, ' + (user.name || 'bienvenido').split(' ')[0]),
       h('p', null, 'Tu farmacia de confianza directo a tu hogar. Consulta farmacéutica y despacho asistencial en tiempo real.'),
-      // Buscador con botón de filtros lateral y símbolo de búsqueda a un lado
+      // Buscador clínico con símbolo de búsqueda a un lado
       h('div', { class: 'stitch-search-box' },
-        h('button', {
-          class: 'btn ghost small mobile-search-filter-btn mobile-only',
-          type: 'button',
-          title: 'Abrir filtros de catálogo',
-          'aria-label': 'Filtros de catálogo',
-          onclick: () => openCatalogFiltersDrawer()
-        }, icon('filter'), h('span', null, 'Filtros')),
         h('div', { class: 'stitch-search-input-wrap' },
           h('span', { class: 'stitch-search-icon', 'aria-hidden': 'true' }, icon('search')),
           searchInput

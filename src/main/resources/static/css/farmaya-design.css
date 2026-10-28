@@ -4570,17 +4570,30 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
     width: 100% !important;
     box-sizing: border-box !important;
   }
+  .brand,
+  .brand.brand-image,
   .brand-image {
+    display: flex !important;
+    align-items: center !important;
     width: auto !important;
-    max-width: 100px !important;
-    height: 28px !important;
-    flex-shrink: 1 !important;
+    min-width: 95px !important;
+    max-width: 115px !important;
+    height: 30px !important;
+    flex-shrink: 0 !important; /* El logo FarmaYA nunca se oculta ni se reduce a 0 */
+    visibility: visible !important;
+    opacity: 1 !important;
     margin: 0 !important;
   }
   .brand-image img {
-    max-height: 28px !important;
+    height: 30px !important;
+    max-height: 30px !important;
     width: auto !important;
+    max-width: 115px !important;
     object-fit: contain !important;
+    object-position: left center !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   .nav-right {
     display: flex !important;
@@ -4651,6 +4664,43 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
   }
 }
 
+/* Ocultar la animación del domiciliario en móvil, dejando solo el login */
+@media (max-width: 768px) {
+  #authPromo,
+  .auth-promo {
+    display: none !important;
+    min-height: 0 !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .auth-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px 12px 48px !important;
+    min-height: calc(100vh - 70px) !important;
+    max-width: 440px !important;
+    margin: 0 auto !important;
+    gap: 0 !important;
+  }
+  .auth-forms-pane {
+    width: 100% !important;
+    max-width: 420px !important;
+    margin: 0 auto !important;
+  }
+  .auth-card {
+    width: 100% !important;
+    padding: 22px 18px !important;
+    border-radius: 20px !important;
+    box-sizing: border-box !important;
+  }
+}
+
 /* 4. Bienvenida sin recuadros pesados ni flechas en móvil: mensaje tipográfico normal */
 @media (max-width: 768px) {
   .stitch-assurance-bar, .elevated-top-banner {
@@ -4692,28 +4742,13 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
     flex-direction: row !important;
     align-items: center !important;
     gap: 6px !important;
-    padding: 4px 6px !important;
+    padding: 4px 8px !important;
     background: var(--surface) !important;
     border: 1.5px solid var(--line) !important;
     border-radius: 14px !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
     width: 100% !important;
     box-sizing: border-box !important;
-  }
-  .mobile-search-filter-btn {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    padding: 6px 10px !important;
-    min-height: 36px !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    border-radius: 10px !important;
-    color: var(--primary) !important;
-    background: var(--surface-soft) !important;
-    border: 1px solid var(--line) !important;
-    white-space: nowrap !important;
-    flex-shrink: 0 !important;
   }
   .stitch-search-input-wrap {
     display: flex !important;

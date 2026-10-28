@@ -24,9 +24,7 @@ function renderNavbar() {
     return;
   }
   const roleName = ROLE_NAMES[user.role] || user.role;
-  const navItems = [
-    h('span', { class: 'header-tag desktop-only' }, h('i', { class: 'live-dot', 'aria-hidden': 'true' }), 'Servicio activo')
-  ];
+  const navItems = [];
 
   if (user.role === 'CLIENTE') {
     navItems.push(
