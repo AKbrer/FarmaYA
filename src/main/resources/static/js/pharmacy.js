@@ -485,7 +485,7 @@ function pharmacyDemandForecast() {
           refreshAll();
         }, 'Modelo actualizado');
       }
-    }, '🔄 Recalcular con Histórico Reciente');
+    }, 'Recalcular con Histórico Reciente');
 
     const toolbar = h('div', { class: 'flex items-center justify-between', style: 'flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;' },
       filters,
@@ -505,13 +505,13 @@ function pharmacyDemandForecast() {
       if (c === 'ALTA') {
         bg = 'rgba(217, 56, 58, 0.15)';
         color = '#c5221f';
-        label = '🔥 ALTA';
+        label = 'ALTA';
       } else if (c === 'MEDIA') {
         bg = 'rgba(2, 132, 199, 0.15)';
         color = '#0284c7';
-        label = '📊 MEDIA';
+        label = 'MEDIA';
       } else {
-        label = '💤 BAJA';
+        label = 'BAJA';
       }
       return h('span', {
         class: 'tag',
@@ -521,10 +521,10 @@ function pharmacyDemandForecast() {
 
     const trendBadge = (trend) => {
       const t = trend || 'Estable';
-      let icon = '➡️';
-      if (t === 'Creciente') icon = '📈 Creciente';
-      else if (t === 'Decreciente') icon = '📉 Decreciente';
-      else icon = '➡️ Estable';
+      let icon = 'Estable';
+      if (t === 'Creciente') icon = 'Creciente';
+      else if (t === 'Decreciente') icon = 'Decreciente';
+      else icon = 'Estable';
       return h('span', { class: 'text-xs muted' }, icon);
     };
 

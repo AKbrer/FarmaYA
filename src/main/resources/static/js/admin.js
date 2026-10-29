@@ -124,9 +124,9 @@ function adminDemandForecast() {
 
     const filters = h('div', { class: 'flex items-center gap-2', style: 'flex-wrap: wrap;' },
       filterBtn('Todos (' + list.length + ')', 'TODAS'),
-      filterBtn('🔥 ALTA (' + summary.alta + ')', 'ALTA'),
-      filterBtn('📊 MEDIA (' + summary.media + ')', 'MEDIA'),
-      filterBtn('💤 BAJA (' + summary.baja + ')', 'BAJA')
+      filterBtn('ALTA (' + summary.alta + ')', 'ALTA'),
+      filterBtn('MEDIA (' + summary.media + ')', 'MEDIA'),
+      filterBtn('BAJA (' + summary.baja + ')', 'BAJA')
     );
 
     // Buscador interactivo
@@ -157,7 +157,7 @@ function adminDemandForecast() {
           refreshAll();
         }, 'Modelo reentrenado');
       }
-    }, '🔄 Recalcular y Reentrenar con MongoDB');
+    }, 'Recalcular y Reentrenar con MongoDB');
 
     const toolbar = h('div', { class: 'flex items-center justify-between', style: 'flex-wrap: wrap; gap: 1rem; margin: 1.25rem 0;' },
       h('div', { class: 'flex items-center gap-2', style: 'flex-wrap: wrap;' }, filters, searchInput),
@@ -178,13 +178,13 @@ function adminDemandForecast() {
       if (c === 'ALTA') {
         bg = 'rgba(217, 56, 58, 0.15)';
         color = '#c5221f';
-        label = '🔥 ALTA';
+        label = 'ALTA';
       } else if (c === 'MEDIA') {
         bg = 'rgba(2, 132, 199, 0.15)';
         color = '#0284c7';
-        label = '📊 MEDIA';
+        label = 'MEDIA';
       } else {
-        label = '💤 BAJA';
+        label = 'BAJA';
       }
       return h('span', {
         class: 'tag',
@@ -194,9 +194,9 @@ function adminDemandForecast() {
 
     const trendBadge = trend => {
       const t = trend || 'Estable';
-      let icon = '➡️ Estable';
-      if (t === 'Creciente') icon = '📈 Creciente';
-      else if (t === 'Decreciente') icon = '📉 Decreciente';
+      let icon = 'Estable';
+      if (t === 'Creciente') icon = 'Creciente';
+      else if (t === 'Decreciente') icon = 'Decreciente';
       return h('span', { class: 'text-xs muted', style: 'font-weight: 600;' }, icon);
     };
 

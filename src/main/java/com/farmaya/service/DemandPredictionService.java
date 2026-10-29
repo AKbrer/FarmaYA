@@ -60,7 +60,7 @@ public class DemandPredictionService {
         Map<String, List<OrderItemSample>> ordersByMed = new HashMap<>();
 
         for (Order ord : allOrders) {
-            if (ord.status == OrderStatus.CANCELADO) continue;
+            if (ord.status == OrderStatus.CANCELADA || ord.status == OrderStatus.RECHAZADA) continue;
             Instant date = ord.createdAt != null ? ord.createdAt : now;
             
             // Preferir items confirmados si existen
