@@ -303,8 +303,65 @@ function buildLoginCard() {
   return card;
 }
 
+let regUploadedDocs = [];
+
+function buildPdfFileInput(docType, title, required = false) {
+  const fileInput = h('input', {
+    type: 'file',
+    accept: 'application/pdf',
+    style: 'display:none;'
+  });
+
+  const statusLabel = h('span', { class: 'pdf-upload-status muted small' }, required ? 'Requerido (PDF)' : 'Opcional (PDF)');
+  const selectBtn = h('button', {
+    type: 'button',
+    class: 'btn secondary small pdf-upload-btn',
+    onclick: () => fileInput.click()
+  }, 'Subir PDF');
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (!file) return;
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      toast('El archivo debe ser un documento PDF válido.', 'error');
+      fileInput.value = '';
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast('El archivo PDF no debe superar 8 MB.', 'error');
+      fileInput.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      regUploadedDocs = regUploadedDocs.filter(d => d.docType !== docType);
+      regUploadedDocs.push({
+        docType,
+        title,
+        filename: file.name,
+        dataUrl: reader.result
+      });
+      statusLabel.textContent = file.name + ' (' + Math.round(file.size / 1024) + ' KB)';
+      statusLabel.className = 'pdf-upload-status small pdf-file-ready';
+      selectBtn.textContent = 'Cambiar PDF';
+      selectBtn.className = 'btn ghost small';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  return h('div', { class: 'pdf-upload-row' },
+    h('div', { class: 'pdf-upload-info' },
+      h('strong', { class: 'pdf-upload-title' }, title),
+      statusLabel
+    ),
+    selectBtn,
+    fileInput
+  );
+}
+
 function buildRegisterCard() {
   currentRegStep = 1;
+  regUploadedDocs = [];
 
   const roleSelect = h('select', { id: 'regRole', required: true },
     h('option', { value: 'CLIENTE', selected: true }, 'Paciente / Cliente'),
@@ -366,7 +423,7 @@ function buildRegisterCard() {
     )
   );
 
-  // PASO 2 FARMACIA: Nombre de Farmacia y Ubicación en Mapa
+  // PASO 2 FARMACIA: Nombre de Farmacia y Ubicación en Mapa OpenStreetMap
   const step2PhBox = h('div', { id: 'regStep2Ph', class: 'form-stack', style: 'display:none;' },
     h('div', { class: 'reg-step-subheading' },
       h('h3', null, 'Establecimiento y Ubicación'),
@@ -394,20 +451,26 @@ function buildRegisterCard() {
         type: 'button',
         style: 'flex:1;',
         onclick: () => handleStep2PhNext()
-      }, 'Siguiente: Licencia y Horarios →')
+      }, 'Siguiente: Licencia y Documentos →')
     )
   );
 
-  // PASO 3 FARMACIA: Registro Sanitario / Licencia y Horarios
+  // PASO 3 FARMACIA: Registro Sanitario, Horarios y Documentos en PDF
   const step3PhBox = h('div', { id: 'regStep3Ph', class: 'form-stack', style: 'display:none;' },
     h('div', { class: 'reg-step-subheading' },
-      h('h3', null, 'Verificación Sanitaria y Horarios'),
-      h('p', null, 'Para verificar que la droguería sea real, ingresa su licencia y horario comercial.')
+      h('h3', null, 'Verificación Sanitaria y Documentos PDF'),
+      h('p', null, 'Ingresa tu licencia sanitaria, horarios y sube los documentos en PDF para la verificación oficial.')
     ),
     field('Registro sanitario INVIMA / Licencia', h('input', { id: 'regLicense', type: 'text', placeholder: 'Ej. LIC-2024-FARM-089' })),
     h('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:12px;' },
       field('Abre a las', h('input', { id: 'regFrom', type: 'time', value: '08:00' })),
       field('Cierra a las', h('input', { id: 'regTo', type: 'time', value: '22:00' }))
+    ),
+    h('div', { class: 'reg-pdf-section' },
+      h('strong', { class: 'block-line small bold', style: 'margin-bottom:6px; color:var(--text);' }, 'Documentos requeridos en PDF:'),
+      buildPdfFileInput('INVIMA', 'Licencia Sanitaria / Registro INVIMA (PDF)', true),
+      buildPdfFileInput('RUT', 'Cámara de Comercio / RUT de la Droguería (PDF)', true),
+      buildPdfFileInput('CEDULA_REGENTE', 'Cédula del Químico Regente o Representante (PDF)', true)
     ),
     h('div', { class: 'reg-wizard-actions' },
       h('button', { class: 'btn ghost', type: 'button', onclick: () => showStep(2) }, '← Atrás'),
@@ -417,6 +480,39 @@ function buildRegisterCard() {
         type: 'submit',
         style: 'flex:1;'
       }, 'Crear cuenta de Droguería')
+    )
+  );
+
+  // PASO 2 REPARTIDOR: Vehículo y Documentos en PDF
+  const vehicleSelect = h('select', { id: 'regVehicle', required: true },
+    h('option', { value: 'Moto', selected: true }, 'Motocicleta (Moto)'),
+    h('option', { value: 'Carro' }, 'Automóvil (Carro)')
+  );
+  const plateInput = h('input', { id: 'regPlate', type: 'text', placeholder: 'Ej. ABC-12D o ABC-123', required: true, style: 'text-transform:uppercase;' });
+
+  const step2CrBox = h('div', { id: 'regStep2Cr', class: 'form-stack', style: 'display:none;' },
+    h('div', { class: 'reg-step-subheading' },
+      h('h3', null, 'Vehículo y Documentos Obligatorios'),
+      h('p', null, 'Para habilitar entregas clínicas, adjunta los documentos de tu vehículo en PDF.')
+    ),
+    field('Tipo de vehículo para entregas', vehicleSelect),
+    field('Placa del vehículo', plateInput),
+    h('div', { class: 'reg-pdf-section' },
+      h('strong', { class: 'block-line small bold', style: 'margin-bottom:6px; color:var(--text);' }, 'Documentación requerida en PDF:'),
+      buildPdfFileInput('CEDULA', 'Cédula de Ciudadanía del Repartidor (PDF)', true),
+      buildPdfFileInput('LICENCIA_CONDUCCION', 'Licencia de Conducción vigente (PDF)', true),
+      buildPdfFileInput('SOAT', 'Póliza SOAT vigente del vehículo (PDF)', true),
+      buildPdfFileInput('TECNOMECANICA', 'Certificado de Revisión Tecnomecánica (PDF)', true),
+      buildPdfFileInput('LICENCIA_TRANSITO', 'Licencia de Tránsito / Tarjeta de Propiedad (PDF)', true)
+    ),
+    h('div', { class: 'reg-wizard-actions' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => showStep(1) }, '← Atrás'),
+      h('button', {
+        id: 'btnSubmitCourier',
+        class: 'btn primary',
+        type: 'submit',
+        style: 'flex:1;'
+      }, 'Crear cuenta de Repartidor')
     )
   );
 
@@ -432,7 +528,12 @@ function buildRegisterCard() {
       steps = [
         { num: 1, label: '1. Tu cuenta', short: '1. Cuenta' },
         { num: 2, label: '2. Establecimiento', short: '2. Sede' },
-        { num: 3, label: '3. Licencia y Horarios', short: '3. Licencia' }
+        { num: 3, label: '3. Licencia y PDFs', short: '3. Licencia' }
+      ];
+    } else if (role === 'REPARTIDOR') {
+      steps = [
+        { num: 1, label: '1. Tu cuenta', short: '1. Cuenta' },
+        { num: 2, label: '2. Vehículo y PDFs', short: '2. Vehículo' }
       ];
     } else {
       steps = [
@@ -465,6 +566,7 @@ function buildRegisterCard() {
     step1Box.style.display = (stepNumber === 1) ? '' : 'none';
     step2PhBox.style.display = (stepNumber === 2 && role === 'FARMACIA') ? '' : 'none';
     step3PhBox.style.display = (stepNumber === 3 && role === 'FARMACIA') ? '' : 'none';
+    step2CrBox.style.display = (stepNumber === 2 && role === 'REPARTIDOR') ? '' : 'none';
 
     updateStepper();
 
@@ -494,7 +596,7 @@ function buildRegisterCard() {
   function handleStep1Next() {
     if (!validateStep1()) return;
     const role = roleSelect.value;
-    if (role === 'FARMACIA') {
+    if (role === 'FARMACIA' || role === 'REPARTIDOR') {
       showStep(2);
     } else {
       document.getElementById('registerForm').requestSubmit();
@@ -526,7 +628,7 @@ function buildRegisterCard() {
       } else if (role === 'FARMACIA') {
         btnNext.textContent = 'Siguiente: Ubicación de Farmacia →';
       } else {
-        btnNext.textContent = 'Crear cuenta de Repartidor';
+        btnNext.textContent = 'Siguiente: Vehículo y Documentos →';
       }
     }
     showStep(1);
@@ -545,6 +647,7 @@ function buildRegisterCard() {
       step1Box,
       step2PhBox,
       step3PhBox,
+      step2CrBox,
       h('div', { id: 'authAlert', hidden: true })
     ),
     h('div', { class: 'auth-footer' },
@@ -556,6 +659,11 @@ function buildRegisterCard() {
       }, 'Iniciar sesión')
     )
   );
+
+  card.querySelector('#registerForm').addEventListener('submit', handleRegisterSubmit);
+  setTimeout(syncRoleFields, 50);
+  return card;
+}
 
   card.querySelector('#registerForm').addEventListener('submit', handleRegisterSubmit);
   setTimeout(syncRoleFields, 50);
@@ -666,7 +774,8 @@ async function handleRegisterSubmit(event) {
     email: document.getElementById('regEmail').value.trim(),
     password: document.getElementById('regPassword').value,
     phone: document.getElementById('regPhone').value.trim(),
-    role
+    role,
+    documents: regUploadedDocs
   };
   if (role === 'FARMACIA') {
     const latVal = document.getElementById('regLatitude')?.value;
@@ -682,7 +791,8 @@ async function handleRegisterSubmit(event) {
     });
   }
   if (role === 'REPARTIDOR') {
-    body.vehicle = 'Repartidor';
+    body.vehicle = document.getElementById('regVehicle')?.value || 'Moto';
+    body.plate = document.getElementById('regPlate')?.value?.trim() || '';
   }
   await act(btn, async () => {
     const response = await fetch('/api/auth/register', {

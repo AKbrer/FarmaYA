@@ -46,6 +46,11 @@ public class AdminController {
         return admin.users(role);
     }
 
+    @GetMapping("/verifications")
+    public List<User> verifications() {
+        return admin.pendingVerifications();
+    }
+
     @PostMapping("/administrators")
     public User createAdministrator(@RequestBody com.farmaya.model.Dtos.CreateAdminRequest req, @RequestAttribute("user") User me) {
         return admin.createAdmin(req, me);

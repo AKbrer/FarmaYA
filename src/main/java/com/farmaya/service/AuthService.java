@@ -92,7 +92,17 @@ public class AuthService {
                 throw ApiException.bad("Revisa el horario de atención.");
         } else if (role == Role.REPARTIDOR) {
             u.vehicle = clean(r.vehicle());
-            if (u.vehicle.isEmpty()) u.vehicle = "Motocicleta";
+            if (u.vehicle.isEmpty()) u.vehicle = "Moto";
+            u.plate = clean(r.plate());
+        }
+
+        if (r.documents() != null && !r.documents().isEmpty()) {
+            for (var doc : r.documents()) {
+                if (doc != null && doc.dataUrl() != null && !doc.dataUrl().isBlank()) {
+                    u.verificationDocuments.add(new User.VerificationDoc(
+                            clean(doc.docType()), clean(doc.title()), clean(doc.filename()), doc.dataUrl()));
+                }
+            }
         }
 
         if (users.findByEmailIgnoreCase(email).isPresent()) throw ApiException.conflict("Ya existe una cuenta con ese correo.");

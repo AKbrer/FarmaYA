@@ -37,6 +37,26 @@ public class User {
 
     // Repartidor
     public String vehicle;
+    public String plate;
+
+    // Expediente de Verificación (PDFs subidos al registrarse o postularse)
+    public java.util.List<VerificationDoc> verificationDocuments = new java.util.ArrayList<>();
+
+    public static class VerificationDoc {
+        public String docType;
+        public String title;
+        public String filename;
+        public String dataUrl;
+        public Instant uploadedAt = Instant.now();
+
+        public VerificationDoc() {}
+        public VerificationDoc(String docType, String title, String filename, String dataUrl) {
+            this.docType = docType;
+            this.title = title;
+            this.filename = filename;
+            this.dataUrl = dataUrl;
+        }
+    }
 
     // Autenticación con Google
     public String googleId;

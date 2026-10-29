@@ -2541,8 +2541,8 @@ dialog.sheet.drawer::backdrop {
   width: 100%;
   max-width: 680px;
   background: var(--surface);
-  border: 1.5px solid var(--line-strong);
-  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
   padding: 4px 6px 4px 14px;
   box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -2550,22 +2550,23 @@ dialog.sheet.drawer::backdrop {
 }
 
 .stitch-search-box:focus-within {
-  border-color: var(--stitch-primary);
-  box-shadow: 0 0 0 3px rgba(0, 78, 70, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22, 134, 93, 0.15);
 }
 
-.stitch-search-icon {
-  color: var(--muted);
+.stitch-search-input-wrap {
   display: flex;
   align-items: center;
-  margin-right: 10px;
+  flex: 1;
+  min-width: 0;
 }
 
 .stitch-search-input {
   flex: 1;
+  width: 100%;
   border: none !important;
   background: transparent !important;
-  padding: 8px 4px !important;
+  padding: 10px 8px !important;
   font-size: 15px !important;
   color: var(--text) !important;
   outline: none !important;
@@ -2573,11 +2574,26 @@ dialog.sheet.drawer::backdrop {
 }
 
 .stitch-search-action {
-  padding: 8px 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 9px 20px !important;
   font-size: 14px !important;
-  border-radius: 8px !important;
-  background: var(--stitch-primary) !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  background: var(--primary) !important;
   color: #ffffff !important;
+  border: none !important;
+  flex-shrink: 0 !important;
+  cursor: pointer !important;
+  transition: background 0.18s ease, transform 0.15s ease !important;
+}
+
+.stitch-search-action:hover {
+  background: var(--primary-dark) !important;
+  transform: translateY(-1px) !important;
+}
   border: none !important;
 }
 
@@ -5593,4 +5609,177 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
 
 .pharmacy-status-dot.paused {
   background: var(--muted);
+}
+
+/* ==========================================================================
+   54. EXPEDIENTES PDF Y CENTRO DE VERIFICACIÓN ADMINISTRATIVA
+   ========================================================================== */
+.courier-header-card {
+  margin-bottom: 8px;
+}
+
+.courier-offer-payout-highlight {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--primary-soft);
+  border-radius: 10px;
+  border: 1px solid rgba(22, 134, 93, 0.25);
+  margin: 10px 0;
+}
+
+[data-theme="dark"] .courier-offer-payout-highlight {
+  background: rgba(22, 134, 93, 0.12);
+  border-color: rgba(22, 134, 93, 0.35);
+}
+
+.courier-payout-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.pdf-upload-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft);
+  margin-bottom: 8px;
+}
+
+.pdf-upload-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pdf-upload-title {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.pdf-upload-status {
+  font-size: 11.5px;
+}
+
+.pdf-file-ready {
+  color: var(--primary) !important;
+  font-weight: 700;
+}
+
+.reg-pdf-section {
+  margin-top: 10px;
+}
+
+.verification-cards-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.verification-item-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.verification-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 14px;
+}
+
+.verification-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.verification-pdf-section {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+
+.doc-pdf-badges-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.doc-pdf-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.doc-pdf-pill-title {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.sm-btn {
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  min-height: auto !important;
+  border-radius: 6px !important;
+}
+
+.verification-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.doc-pdf-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.doc-pdf-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.doc-pdf-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.doc-pdf-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

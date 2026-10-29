@@ -17,7 +17,7 @@ function renderClientDashboard() {
   const searchInput = h('input', {
     type: 'search',
     class: 'search-input stitch-search-input',
-    placeholder: 'Buscar medicamentos con o sin receta, laboratorios, principio activo...',
+    placeholder: 'Buscar medicamentos',
     value: clientSearch,
     'aria-label': 'Buscar medicamentos o productos de cuidado personal',
     oninput: () => {
@@ -654,10 +654,9 @@ function renderClientDashboard() {
       ),
       h('h1', null, 'Hola, ' + (user.name || 'bienvenido').split(' ')[0]),
       h('p', null, 'Tu farmacia de confianza directo a tu hogar. Consulta farmacéutica y despacho asistencial en tiempo real.'),
-      // Buscador clínico con símbolo de búsqueda a un lado
+      // Buscador clínico con botón integrado a un lado
       h('div', { class: 'stitch-search-box' },
         h('div', { class: 'stitch-search-input-wrap' },
-          h('span', { class: 'stitch-search-icon', 'aria-hidden': 'true' }, icon('search')),
           searchInput
         ),
         h('button', {

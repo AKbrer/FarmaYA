@@ -6,12 +6,40 @@ Object.assign(ICONS, {
   wallet: '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v14a2 2 0 0 0 2 2h15V7"/><circle cx="16.5" cy="14" r="1.2"/></svg>'
 });
 
+function courierHeaderCard(user) {
+  const statusLabel = h('span', { class: 'pharmacy-switch-label' }, user.active ? 'Disponible para entregas' : 'En pausa');
+  const control = switchControl(user.active, async input => {
+    try {
+      const u = await API.post('/auth/active', { value: input.checked });
+      state.user = u;
+      statusLabel.textContent = u.active ? 'Disponible para entregas' : 'En pausa';
+      toast(u.active ? 'Modo disponible activado' : 'Modo en pausa activado');
+      refreshAll();
+    } catch (err) {
+      input.checked = !input.checked;
+      toast(err.message, 'error');
+    }
+  }, 'Disponible para entregas');
+
+  const activationBox = h('div', { class: 'pharmacy-activation-box' },
+    control,
+    statusLabel
+  );
+
+  const vehicleLabel = user.vehicle ? (user.vehicle + (user.plate ? ' (' + user.plate + ')' : '')) : 'Repartidor Clínico';
+
+  return h('div', { class: 'pharmacy-header-card courier-header-card' },
+    h('div', { class: 'pharmacy-header-info' },
+      h('h1', { class: 'pharmacy-header-title' }, user.name),
+      h('span', { class: 'pharmacy-header-address muted' }, vehicleLabel + (user.city ? ' · ' + user.city : ' · Cobertura 5 km'))
+    ),
+    activationBox
+  );
+}
+
 function courierView(user) {
   return h('div', { class: 'stack courier-root' },
-    // Barra de telemetría IoT Stitch
-    courierTelemetryBar(),
-    h('h1', { class: 'page-title' }, user.name),
-    availabilityBar(user, 'Disponible para entregas', 'En pausa', 'Repartidor FarmaYA · Radio hasta 5 km'),
+    courierHeaderCard(user),
     !user.verified && notice('warn', 'Tu cuenta está pendiente de verificación sanitaria', 'Un regente farmacéutico o administrador revisará tu documentación y licencia vial. Hasta entonces no recibirás ofertas.'),
     sideNavigation([
       { label: 'Dashboard & Billetera', icon: 'layout-dashboard', render: courierDashboard },
@@ -223,6 +251,9 @@ function courierOffers() {
     seenCourierOffers = ids;
     if (!data.orders.length) return empty('No hay entregas pendientes en tu rango de cobertura', 'Esta pantalla se actualiza automáticamente cuando una droguería prepare un pedido dentro de tu radio de entrega.');
     return h('div', { class: 'list' }, data.orders.map(o => {
+      const distKm = o.deliveryDistanceKm != null ? o.deliveryDistanceKm : (o.pharmacyLatitude && o.latitude ? Math.round(farmayaDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude, o.latitude, o.longitude) * 1.3 * 10) / 10 : 2.5);
+      const fee = o.courierEarnings != null ? o.courierEarnings : Math.max(3000, 2000 + Math.ceil(distKm) * 1000);
+
       const card = h('article', { class: 'offer stitch-offer' + (fresh.includes(o.id) ? ' fresh' : '') },
         h('div', { class: 'offer-head' },
           h('div', null,
@@ -231,11 +262,18 @@ function courierOffers() {
           ),
           h('span', { class: 'muted' }, 'Listo hace ', elapsedEl(o.courierSearchStartedAt || o.updatedAt))
         ),
+        h('div', { class: 'courier-offer-payout-highlight' },
+          h('div', null,
+            h('span', { class: 'small muted block-line' }, 'Ganancia del domicilio:'),
+            h('strong', { class: 'courier-payout-val' }, money(fee))
+          ),
+          h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, `~${distKm} km ruta`)
+        ),
         h('dl', { class: 'facts' },
           h('div', null, h('dt', null, 'Dirección de farmacia'), h('dd', null, o.pharmacyAddress || 'Dirección de farmacia')),
           h('div', null, h('dt', null, 'Entregar a cliente en'), h('dd', null, o.address || o.city || 'Destino de entrega')),
-          o.deliveryDistanceKm != null && h('div', null, h('dt', null, 'Distancia de entrega'), h('dd', null, `~${o.deliveryDistanceKm} km`)),
-          o.courierEarnings != null && h('div', null, h('dt', null, 'Tarifa del domicilio'), h('dd', null, h('strong', { style: 'color:var(--teal); font-weight:700;' }, money(o.courierEarnings)))),
+          h('div', null, h('dt', null, 'Distancia Farmacia → Cliente'), h('dd', null, `~${distKm} km`)),
+          h('div', null, h('dt', null, 'Tarifa del domicilio'), h('dd', null, h('strong', { style: 'color:var(--primary); font-weight:700;' }, money(fee)))),
           h('div', null, h('dt', null, 'Paquete clínico'), h('dd', null, itemsSummary(o))),
           o.total != null && h('div', null, h('dt', null, 'Valor del pedido'), h('dd', null, money(o.total)))
         ),
@@ -246,7 +284,7 @@ function courierOffers() {
               const r = await act(e.currentTarget, () => API.post('/courier/orders/' + o.id + '/accept'), 'Entrega aceptada. Dirígete a la farmacia.');
               if (r) leaveCard(card); else refreshAll();
             }
-          }, 'Aceptar entrega y ruta')
+          }, 'Aceptar entrega y ruta (' + money(fee) + ')')
         )
       );
       return card;

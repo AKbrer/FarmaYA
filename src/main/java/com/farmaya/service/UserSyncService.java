@@ -43,12 +43,15 @@ public class UserSyncService {
             doc.put("enabled", user.enabled);
             doc.put("verified", user.verified);
             doc.put("active", user.active);
+            doc.put("city", user.city);
             doc.put("createdAt", user.createdAt);
 
             // Campos de farmacia
             if (user.role == Role.FARMACIA) {
                 doc.put("pharmacyName", user.pharmacyName);
                 doc.put("address", user.address);
+                doc.put("latitude", user.latitude);
+                doc.put("longitude", user.longitude);
                 doc.put("licenseNumber", user.licenseNumber);
                 doc.put("openFrom", user.openFrom);
                 doc.put("openTo", user.openTo);
@@ -61,6 +64,11 @@ public class UserSyncService {
             // Campos de repartidor
             if (user.role == Role.REPARTIDOR) {
                 doc.put("vehicle", user.vehicle);
+                doc.put("plate", user.plate);
+            }
+
+            if (user.verificationDocuments != null && !user.verificationDocuments.isEmpty()) {
+                doc.put("verificationDocuments", user.verificationDocuments);
             }
 
             // Upsert: inserta si no existe, actualiza si ya existe (mismo _id)

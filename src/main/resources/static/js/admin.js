@@ -19,6 +19,7 @@ function adminView(user) {
   root = h('div', { class: 'stack admin-root' }, adminHeaderCard(user), sideNavigation([
     { label: 'Dashboard', icon: 'layout-dashboard', render: () => adminSummary(status => { adminFilter = status; root.querySelectorAll('.side-nav-item')[1]?.click(); }) },
     { label: 'Pedidos', icon: 'package', render: adminOrders },
+    { label: 'Verificaciones', icon: 'prescriptions', render: adminVerificationCenter },
     { label: 'Farmacias', icon: 'store', render: () => adminUsers('FARMACIA') },
     { label: 'Repartidores', icon: 'truck', render: () => adminUsers('REPARTIDOR') },
     { label: 'Clientes', icon: 'users', render: () => adminUsers('CLIENTE') },
@@ -200,6 +201,9 @@ function adminUsers(role) {
           role === 'FARMACIA' && u.editPermissionRequested && !u.canEditProfile && h('small', { class: 'block-line attention', style: 'margin-top:5px;font-weight:700;' }, 'Solicitó editar datos / número' + (u.editRequestNote ? ': ' + u.editRequestNote : '')),
           role === 'FARMACIA' && u.canEditProfile && h('small', { class: 'block-line text-success', style: 'margin-top:5px;font-weight:700;' }, 'Edición autorizada por admin')),
         h('td', { class: 'row-actions' },
+          u.verificationDocuments && u.verificationDocuments.length
+            ? h('button', { class: 'btn link small', onclick: () => openUserDocumentsModal(u) }, 'Expediente (' + u.verificationDocuments.length + ' PDFs)')
+            : null,
           needsVerify && (u.verified
             ? h('button', { class: 'btn ghost small', onclick: toggle(u, 'verified', false, 'Verificación retirada') }, 'Quitar verificación')
             : h('button', { class: 'btn primary small', onclick: toggle(u, 'verified', true, 'Cuenta verificada') }, 'Verificar')),
@@ -211,6 +215,180 @@ function adminUsers(role) {
             : h('button', { class: 'btn ghost small', onclick: toggle(u, 'enabled', true, 'Cuenta habilitada') }, 'Habilitar')))))));
   });
   return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, search), list);
+}
+
+function openPdfViewerDialog(title, dataUrl, filename) {
+  const content = h('div', { class: 'sheet-body', style: 'padding: 16px; max-width: 900px; width: 92vw;' },
+    h('div', { style: 'display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;' },
+      h('div', null,
+        h('h3', { style: 'margin:0;' }, title),
+        h('span', { class: 'small muted' }, filename || 'Documento PDF oficial')
+      ),
+      h('div', { style: 'display:flex; gap:8px;' },
+        h('a', { class: 'btn ghost small', href: dataUrl, download: filename || 'documento.pdf', target: '_blank' }, 'Descargar'),
+        h('button', { class: 'btn ghost small', onclick: () => d.close() }, 'Cerrar')
+      )
+    ),
+    h('div', { style: 'width:100%; height:72vh; border-radius:10px; overflow:hidden; border:1px solid var(--line); background:#525659;' },
+      h('iframe', {
+        src: dataUrl,
+        style: 'width:100%; height:100%; border:none;',
+        title: title
+      })
+    )
+  );
+  const d = openDialog(content, { wide: true });
+}
+
+function openUserDocumentsModal(user) {
+  const docs = user.verificationDocuments || [];
+  const list = docs.length
+    ? h('div', { class: 'doc-pdf-list' }, docs.map(doc => h('div', { class: 'doc-pdf-item' },
+        h('div', { class: 'doc-pdf-left' },
+          h('span', { class: 'doc-pdf-icon' }, icon('prescriptions')),
+          h('div', null,
+            h('strong', { class: 'block-line' }, doc.title || doc.docType),
+            h('span', { class: 'small muted' }, doc.filename || 'Documento PDF')
+          )
+        ),
+        h('div', { class: 'doc-pdf-actions' },
+          h('button', { class: 'btn primary small', onclick: () => openPdfViewerDialog(doc.title, doc.dataUrl, doc.filename) }, 'Ver PDF'),
+          h('a', { class: 'btn ghost small', href: doc.dataUrl, download: doc.filename, target: '_blank' }, 'Descargar')
+        )
+      )))
+    : empty('Sin documentos PDF', 'Este usuario no adjuntó archivos PDF al momento de su registro.');
+
+  const body = h('div', { class: 'sheet-body', style: 'max-width:680px; width:90vw;' },
+    h('div', { style: 'display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;' },
+      h('div', null,
+        h('span', { class: 'eyebrow' }, 'EXPEDIENTE DIGITAL DE VERIFICACIÓN'),
+        h('h3', { style: 'margin:2px 0 0;' }, user.pharmacyName || user.name),
+        h('p', { class: 'muted small', style: 'margin:0;' }, user.role === 'FARMACIA' ? ('Licencia: ' + (user.licenseNumber || 'No especificada')) : ('Vehículo: ' + (user.vehicle || 'No especificado') + (user.plate ? ' · Placa: ' + user.plate : '')))
+      ),
+      h('button', { class: 'close', onclick: () => d.close() }, '×')
+    ),
+    list
+  );
+  const d = openDialog(body);
+}
+
+function adminVerificationCenter() {
+  let filterRole = '';
+  const filterButtons = [
+    { label: 'Todas las solicitudes', role: '' },
+    { label: 'Farmacias pendientes', role: 'FARMACIA' },
+    { label: 'Repartidores pendientes', role: 'REPARTIDOR' }
+  ];
+
+  const toolbar = h('div', { class: 'filter-tabs-bar', style: 'display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;' });
+  const container = h('div', { class: 'stack' });
+
+  function renderView() {
+    toolbar.replaceChildren(...filterButtons.map(fb => h('button', {
+      type: 'button',
+      class: 'btn ' + (filterRole === fb.role ? 'primary' : 'secondary'),
+      onclick: () => { filterRole = fb.role; renderView(); }
+    }, fb.label)));
+
+    const content = live(() => API.get('/admin/verifications'), users => {
+      let filtered = users;
+      if (filterRole) filtered = users.filter(u => u.role === filterRole);
+
+      if (!filtered.length) {
+        return empty('No hay solicitudes pendientes', filterRole
+          ? 'No hay cuentas de ' + (filterRole === 'FARMACIA' ? 'farmacias' : 'repartidores') + ' pendientes por verificar.'
+          : 'Todas las cuentas de farmacias y repartidores han sido revisadas y verificadas.');
+      }
+
+      return h('div', { class: 'verification-cards-grid' }, filtered.map(u => {
+        const isPh = u.role === 'FARMACIA';
+        const docs = u.verificationDocuments || [];
+
+        const actVerify = async (val) => {
+          await act(null, () => API.post('/admin/users/' + u.id + '/verified', { value: val }),
+            val ? 'Cuenta verificada y autorizada para operar' : 'Verificación rechazada');
+          refreshAll();
+        };
+
+        const actDisable = async () => {
+          if (await confirmBox({ title: '¿Rechazar esta solicitud?', message: 'La cuenta quedará deshabilitada y no podrá operar.', ok: 'Rechazar y Deshabilitar', danger: true })) {
+            await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false }), 'Cuenta deshabilitada');
+            refreshAll();
+          }
+        };
+
+        return h('article', { class: 'block verification-item-card' },
+          h('div', { class: 'verification-card-header' },
+            h('div', null,
+              h('div', { style: 'display:flex; align-items:center; gap:8px;' },
+                h('strong', { style: 'font-size:16px;' }, isPh ? (u.pharmacyName || u.name) : u.name),
+                h('span', { class: 'badge ' + (isPh ? 'tone-teal' : 'tone-blue') }, isPh ? 'Farmacia' : 'Repartidor')
+              ),
+              h('span', { class: 'muted small block-line' }, 'Registrado ' + relTime(u.createdAt) + ' · ' + (u.city || u.zone || 'Barranquilla'))
+            ),
+            h('span', { class: 'badge tone-wait' }, 'Pendiente por verificar')
+          ),
+
+          h('div', { class: 'verification-details-grid' },
+            h('div', null,
+              h('span', { class: 'small muted block-line' }, 'Responsable / Titular:'),
+              h('strong', null, u.name),
+              h('span', { class: 'small muted block-line' }, u.email),
+              h('span', { class: 'small muted block-line' }, 'Tel: ' + (u.phone || 'No registrado'))
+            ),
+            isPh ? h('div', null,
+              h('span', { class: 'small muted block-line' }, 'Establecimiento y Licencia:'),
+              h('strong', null, u.address || 'Sin dirección física'),
+              h('span', { class: 'small muted block-line' }, 'Registro Sanitario / Licencia: ' + (u.licenseNumber || 'No registrada')),
+              h('span', { class: 'small muted block-line' }, 'Horario: ' + (u.openFrom || '08:00') + ' a ' + (u.openTo || '22:00')),
+              u.latitude && u.longitude ? h('span', { class: 'small text-success block-line' }, 'Ubicación en OpenStreetMap (' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + ')') : null
+            ) : h('div', null,
+              h('span', { class: 'small muted block-line' }, 'Datos del Repartidor:'),
+              h('strong', null, 'Vehículo: ' + (u.vehicle || 'Moto')),
+              h('span', { class: 'small muted block-line' }, 'Placa: ' + (u.plate || 'No registrada'))
+            )
+          ),
+
+          h('div', { class: 'verification-pdf-section' },
+            h('strong', { class: 'small bold block-line', style: 'margin-bottom:6px; color:var(--text);' },
+              'Documentos adjuntos en PDF (' + docs.length + '):'),
+            docs.length ? h('div', { class: 'doc-pdf-badges-wrap' }, docs.map(doc => h('div', { class: 'doc-pdf-pill' },
+              h('span', { class: 'doc-pdf-pill-title' }, doc.title || doc.docType),
+              h('button', {
+                type: 'button',
+                class: 'btn primary sm-btn',
+                onclick: () => openPdfViewerDialog(doc.title, doc.dataUrl, doc.filename)
+              }, 'Ver PDF'),
+              h('a', {
+                class: 'btn ghost sm-btn',
+                href: doc.dataUrl,
+                download: doc.filename || 'documento.pdf',
+                target: '_blank'
+              }, 'Descargar')
+            ))) : h('p', { class: 'muted small', style: 'margin:0;' }, 'No se adjuntaron archivos PDF al momento de crear la cuenta.')
+          ),
+
+          h('div', { class: 'verification-actions-bar' },
+            h('button', {
+              class: 'btn primary',
+              type: 'button',
+              onclick: () => actVerify(true)
+            }, 'Aprobar y Verificar Cuenta'),
+            h('button', {
+              class: 'btn danger-ghost',
+              type: 'button',
+              onclick: actDisable
+            }, 'Rechazar / Deshabilitar')
+          )
+        );
+      }));
+    });
+
+    container.replaceChildren(toolbar, content);
+  }
+
+  renderView();
+  return container;
 }
 
 /* Auditoría administrativa: acciones sobre aliados, catálogo, usuarios y sistema. */

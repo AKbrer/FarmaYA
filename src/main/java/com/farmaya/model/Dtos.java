@@ -5,9 +5,12 @@ import java.util.List;
 public final class Dtos {
     private Dtos() {}
 
+    public record VerificationDocDto(String docType, String title, String filename, String dataUrl) {}
+
     public record RegisterRequest(String name, String email, String password, String phone, String role,
                                   String zone, String pharmacyName, String address, String licenseNumber,
-                                  String openFrom, String openTo, String vehicle, Double latitude, Double longitude) {}
+                                  String openFrom, String openTo, String vehicle, String plate,
+                                  Double latitude, Double longitude, List<VerificationDocDto> documents) {}
 
     public record LoginRequest(String email, String password) {}
 

@@ -1,11 +1,25 @@
 package com.farmaya.service;
 
-import static com.farmaya.model.OrderStatus.*;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.stereotype.Service;
 
 import com.farmaya.config.FarmaYaProperties;
 import com.farmaya.model.Dtos;
-import com.farmaya.model.Dtos.AvailabilityResponse;
 import com.farmaya.model.Dtos.ConfirmItem;
 import com.farmaya.model.Dtos.ConfirmRequest;
 import com.farmaya.model.Dtos.CreateOrderRequest;
@@ -14,28 +28,27 @@ import com.farmaya.model.Order;
 import com.farmaya.model.Order.ConfirmedItem;
 import com.farmaya.model.Order.HistoryEntry;
 import com.farmaya.model.OrderStatus;
+import static com.farmaya.model.OrderStatus.BUSCANDO_FARMACIA;
+import static com.farmaya.model.OrderStatus.BUSCANDO_REPARTIDOR;
+import static com.farmaya.model.OrderStatus.CANCELADA;
+import static com.farmaya.model.OrderStatus.CON_INCIDENCIA;
+import static com.farmaya.model.OrderStatus.ENTREGADO;
+import static com.farmaya.model.OrderStatus.EN_CAMINO;
+import static com.farmaya.model.OrderStatus.FARMACIA_ASIGNADA;
+import static com.farmaya.model.OrderStatus.PEDIDO_EN_PREPARACION;
+import static com.farmaya.model.OrderStatus.PEDIDO_LISTO;
+import static com.farmaya.model.OrderStatus.PEDIDO_RECOGIDO;
+import static com.farmaya.model.OrderStatus.PRECIO_CONFIRMADO;
+import static com.farmaya.model.OrderStatus.PRECIO_POR_ACEPTAR;
+import static com.farmaya.model.OrderStatus.RECHAZADA;
+import static com.farmaya.model.OrderStatus.REPARTIDOR_ASIGNADO;
+import static com.farmaya.model.OrderStatus.SOLICITUD_ENVIADA;
+import static com.farmaya.model.OrderStatus.VENCIDA;
 import com.farmaya.model.Role;
 import com.farmaya.model.User;
 import com.farmaya.repo.OrderRepository;
 import com.farmaya.repo.UserRepository;
 import com.farmaya.web.ApiException;
-import java.security.SecureRandom;
-import java.time.Instant;
-import java.time.LocalTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.FindAndModifyOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.stereotype.Service;
 
 /**
  * Reglas del negocio de FarmaYa.
@@ -274,8 +287,14 @@ public class OrderService {
 
     public Order markReady(String id, User ph) {
         Instant now = Instant.now();
+        Order current = get(id);
         Update u = new Update().set("status", BUSCANDO_REPARTIDOR).set("updatedAt", now)
                 .set("courierSearchStartedAt", now).set("courierRound", 1);
+        Double distanceKm = estimatedRoadDistanceKm(current.pharmacyLatitude, current.pharmacyLongitude, current.latitude, current.longitude);
+        if (distanceKm != null) {
+            u.set("deliveryDistanceKm", distanceKm)
+             .set("courierEarnings", courierFee(distanceKm));
+        }
         u.push("history").each(
                 new HistoryEntry(PEDIDO_LISTO, ph, "Pedido listo para recoger"),
                 new HistoryEntry(BUSCANDO_REPARTIDOR, null, "Buscando un repartidor disponible"));
@@ -469,7 +488,7 @@ public class OrderService {
      * Si no hay farmacias disponibles, se evita generar el pedido para no dejar al cliente desatendido.
      */
     public Dtos.AvailabilityResponse checkPharmacyAvailability(String city, Double latitude, Double longitude) {
-        String normCity = blank(city) ? "Barranquilla" : city.trim();
+        String normCity = blank(city) ? "tu ciudad" : city.trim();
         List<User> activePharmacies = users.findByRole(Role.FARMACIA).stream()
                 .filter(ph -> ph.enabled && ph.verified && ph.active)
                 .filter(ph -> sameCity(normCity, ph.city, ph.zone))
@@ -489,7 +508,7 @@ public class OrderService {
 
             if (countNear == 0) {
                 return new Dtos.AvailabilityResponse(false, 0,
-                        "No hay farmacias disponibles cerca de tu zona (radio máximo 5 km). Por esta razón no se puede completar el pedido actualmente.");
+                        "No hay farmacias disponibles cerca de tu zona. Por esta razón no se puede completar el pedido actualmente.");
             }
             return new Dtos.AvailabilityResponse(true, (int) countNear, "Hay " + countNear + " farmacia(s) disponible(s) en tu zona.");
         }
@@ -699,6 +718,12 @@ public class OrderService {
         if (o.platformCommissionRate == null) o.platformCommissionRate = 0.10;
         if (o.total != null && o.platformEarnings == null) {
             o.platformEarnings = Math.round(o.total * 0.10 * 100) / 100.0;
+        }
+        if (o.deliveryDistanceKm == null && o.pharmacyLatitude != null && o.pharmacyLongitude != null && o.latitude != null && o.longitude != null) {
+            o.deliveryDistanceKm = estimatedRoadDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude, o.latitude, o.longitude);
+        }
+        if (o.deliveryDistanceKm != null && o.courierEarnings == null) {
+            o.courierEarnings = courierFee(o.deliveryDistanceKm);
         }
         if (v.role == Role.FARMACIA || v.role == Role.REPARTIDOR) o.deliveryCode = null;
         if (v.role == Role.FARMACIA) {

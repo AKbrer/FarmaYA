@@ -77,6 +77,14 @@ public class AdminService {
         return users.findAll().stream().limit(500).toList();
     }
 
+    public List<User> pendingVerifications() {
+        return users.findAll().stream()
+                .filter(u -> !u.verified && (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR))
+                .sorted(java.util.Comparator.comparing((User u) -> u.createdAt,
+                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
+                .limit(500).toList();
+    }
+
     public User setVerified(String id, boolean value, User admin) {
         User u = find(id);
         if (u.role == Role.CLIENTE || u.role == Role.ADMIN) throw ApiException.bad("Solo se verifican farmacias y repartidores.");
