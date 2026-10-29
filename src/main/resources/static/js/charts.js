@@ -448,55 +448,89 @@ function fyDownloadBytes(bytes, filename, mime) {
  * Muestra la serie temporal historica (meses previos) y la proyeccion futura con Machine Learning.
  */
 function fyDemandLineChartSvg(chartData, selectedMed) {
-  const W = 760, H = 260, L = 55, R = 30, T = 25, B = 40;
+  const W = 760, H = 270, L = 55, R = 35, T = 30, B = 45;
   const pw = W - L - R, ph = H - T - B;
 
-  const labels = (chartData && chartData.labels) || ['Mes -3', 'Mes -2', 'Mes -1', 'Proy. IA'];
+  let rawLabels = (chartData && Array.isArray(chartData.labels) && chartData.labels.length >= 2)
+    ? chartData.labels
+    : ['Mes -3', 'Mes -2', 'Mes -1', 'Proy. IA'];
+  const labels = rawLabels.slice(0, 4);
   const n = labels.length;
   const x = i => L + (pw * i) / Math.max(1, n - 1);
 
   let lines = [];
-  if (selectedMed && selectedMed.historyPoints && selectedMed.historyPoints.length >= n) {
+  if (selectedMed) {
+    let pts = null;
+    if (selectedMed.historyPoints && Array.isArray(selectedMed.historyPoints) && selectedMed.historyPoints.length >= 2) {
+      pts = selectedMed.historyPoints.map(v => Number(v) || 0);
+    }
+    if (!pts || pts.length < n) {
+      const est = Math.max(1, Number(selectedMed.estimatedOrders) || 20);
+      const tr = String(selectedMed.historicalTrend || '').toLowerCase();
+      if (tr.indexOf('crec') >= 0) {
+        pts = [Math.max(1, Math.round(est * 0.65)), Math.max(1, Math.round(est * 0.78)), Math.max(1, Math.round(est * 0.90)), est];
+      } else if (tr.indexOf('dec') >= 0) {
+        pts = [Math.max(1, Math.round(est * 1.35)), Math.max(1, Math.round(est * 1.20)), Math.max(1, Math.round(est * 1.10)), est];
+      } else {
+        pts = [Math.max(1, est - 2), Math.max(1, est + 1), Math.max(1, est - 1), est];
+      }
+    }
+    const cat = String(selectedMed.category || '').toUpperCase();
+    const color = (cat === 'ALTA') ? '#d9383a' : ((cat === 'BAJA') ? '#64748b' : '#0284c7');
     lines.push({
       id: 'selected',
-      name: selectedMed.medicineName,
-      color: selectedMed.category === 'ALTA' ? '#d9383a' : (selectedMed.category === 'BAJA' ? '#64748b' : '#0284c7'),
-      points: selectedMed.historyPoints
+      name: String(selectedMed.medicineName || 'Medicamento'),
+      color: color,
+      points: pts.slice(0, n),
+      isSelected: true
     });
   } else {
-    const altaPts = (chartData && chartData.alta) || [35, 42, 48, 56];
-    const mediaPts = (chartData && chartData.media) || [18, 20, 22, 24];
-    const bajaPts = (chartData && chartData.baja) || [6, 7, 5, 6];
+    const altaPts = (chartData && Array.isArray(chartData.alta) && chartData.alta.length >= 2)
+      ? chartData.alta.map(v => Number(v) || 0) : [35, 42, 48, 56];
+    const mediaPts = (chartData && Array.isArray(chartData.media) && chartData.media.length >= 2)
+      ? chartData.media.map(v => Number(v) || 0) : [18, 20, 22, 24];
+    const bajaPts = (chartData && Array.isArray(chartData.baja) && chartData.baja.length >= 2)
+      ? chartData.baja.map(v => Number(v) || 0) : [5, 6, 6, 7];
 
-    lines.push({ id: 'alta', name: 'Demanda ALTA', color: '#d9383a', points: altaPts });
-    lines.push({ id: 'media', name: 'Demanda MEDIA', color: '#0284c7', points: mediaPts });
-    lines.push({ id: 'baja', name: 'Demanda BAJA', color: '#64748b', points: bajaPts });
+    lines.push({ id: 'alta', name: 'Demanda ALTA', color: '#d9383a', points: altaPts.slice(0, n) });
+    lines.push({ id: 'media', name: 'Demanda MEDIA', color: '#0284c7', points: mediaPts.slice(0, n) });
+    lines.push({ id: 'baja', name: 'Demanda BAJA', color: '#64748b', points: bajaPts.slice(0, n) });
   }
 
   let allVals = [];
-  lines.forEach(l => l.points.forEach(v => allVals.push(v)));
+  lines.forEach(l => l.points.forEach(v => {
+    const num = Number(v);
+    if (Number.isFinite(num)) allVals.push(num);
+  }));
   const maxV = Math.max(10, ...allVals);
   const sc = fyNiceScale(maxV, 4);
-  const y = v => T + ph - (v / sc.max) * ph;
+  const y = v => {
+    const num = Number(v) || 0;
+    const clamped = Math.max(0, Math.min(sc.max, num));
+    return T + ph - (clamped / Math.max(1, sc.max)) * ph;
+  };
 
   let g = '';
 
+  // Cuadricula horizontal y etiquetas en Eje Y
   for (let i = 0; i <= sc.count; i++) {
     const v = i * sc.step;
     const yy = y(v).toFixed(1);
     g += `<line class="fy-grid" x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"/>`;
-    g += `<text class="fy-axis" x="${L - 8}" y="${(+yy + 4).toFixed(1)}" text-anchor="end" fill="#64748b" font-size="11" font-weight="500">${v}</text>`;
+    g += `<text class="fy-axis" x="${L - 10}" y="${(+yy + 4).toFixed(1)}" text-anchor="end" fill="#64748b" font-size="11" font-weight="600">${v}</text>`;
   }
 
+  // Columnas verticales de mes y etiquetas en Eje X
   labels.forEach((lbl, i) => {
     const cx = x(i).toFixed(1);
     const isProj = i === n - 1;
     const color = isProj ? '#087068' : '#475569';
-    const weight = isProj ? '700' : '500';
+    const weight = isProj ? '700' : '600';
     g += `<line x1="${cx}" x2="${cx}" y1="${T}" y2="${T + ph}" stroke="${isProj ? '#087068' : '#f1f5f9'}" stroke-width="${isProj ? '1.5' : '1'}" stroke-dasharray="${isProj ? '4,3' : 'none'}"/>`;
-    g += `<text x="${cx}" y="${H - 12}" text-anchor="middle" fill="${color}" font-size="11.5" font-weight="${weight}">${fyEsc(lbl)}</text>`;
+    g += `<text x="${cx}" y="${H - 14}" text-anchor="middle" fill="${color}" font-size="12" font-weight="${weight}">${fyEsc(lbl)}</text>`;
   });
 
+  // Trazar las lineas
   lines.forEach(line => {
     const pts = line.points;
     let histPath = '';
@@ -505,21 +539,35 @@ function fyDemandLineChartSvg(chartData, selectedMed) {
     }
     const projPath = 'M' + x(n - 2).toFixed(1) + ' ' + y(pts[n - 2]).toFixed(1) + ' L' + x(n - 1).toFixed(1) + ' ' + y(pts[n - 1]).toFixed(1);
 
-    g += `<path d="${histPath}" fill="none" stroke="${line.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
-    g += `<path d="${projPath}" fill="none" stroke="${line.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,4"/>`;
+    // Area suave si es un medicamento individual
+    if (line.isSelected) {
+      let areaD = histPath + 'L' + x(n - 1).toFixed(1) + ' ' + y(pts[n - 1]).toFixed(1) + ' L' + x(n - 1).toFixed(1) + ' ' + (T + ph) + ' L' + x(0).toFixed(1) + ' ' + (T + ph) + ' Z';
+      g += `<path d="${areaD}" fill="${line.color}" opacity="0.12"/>`;
+    }
 
+    // Linea solida historica
+    g += `<path d="${histPath}" fill="none" stroke="${line.color}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    // Linea discontinua de proyeccion
+    g += `<path d="${projPath}" fill="none" stroke="${line.color}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,4"/>`;
+
+    // Puntos con circulos y etiqueta de valor encima
     pts.forEach((v, i) => {
       const px = x(i).toFixed(1);
-      const py = y(v).toFixed(1);
+      const py = y(pts[i]).toFixed(1);
       const isProj = i === n - 1;
       const tip = `${line.name} (${labels[i]}): ${v} solicitudes ${isProj ? '- Proyeccion Machine Learning' : '- Historico'}`;
+
+      // Texto de valor encima del punto
+      g += `<text x="${px}" y="${(py - 9).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="${line.color}">${v}</text>`;
+
+      // Circulo de datos
       g += `<g class="fy-pt-group">
         <circle cx="${px}" cy="${py}" r="${isProj ? '6' : '4.5'}" fill="${isProj ? line.color : '#ffffff'}" stroke="${line.color}" stroke-width="2.5"/>
-        ${isProj ? `<circle cx="${px}" cy="${py}" r="9" fill="none" stroke="${line.color}" stroke-width="1.5" opacity="0.4"/>` : ''}
+        ${isProj ? `<circle cx="${px}" cy="${py}" r="9" fill="none" stroke="${line.color}" stroke-width="1.5" opacity="0.45"/>` : ''}
         <title>${fyEsc(tip)}</title>
       </g>`;
     });
   });
 
-  return `<svg class="fy-chart" viewBox="0 0 ${W} ${H}" style="width: 100%; height: auto; max-height: 290px; overflow: visible;" role="img" aria-label="Tendencia y Proyeccion de Demanda">${g}</svg>`;
+  return `<svg class="fy-chart" viewBox="0 0 ${W} ${H}" style="width: 100%; height: auto; display: block; overflow: visible;" role="img" aria-label="Tendencia y Proyeccion de Demanda">${g}</svg>`;
 }

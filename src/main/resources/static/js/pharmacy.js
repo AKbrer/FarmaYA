@@ -520,7 +520,11 @@ function pharmacyDemandForecast() {
           }, 'Ver comparativa global') : null
         )
       ),
-      h('div', { class: 'chart-container', style: 'width: 100%; min-height: 250px;', innerHTML: fyDemandLineChartSvg(data.chartSeries, selectedMed) }),
+(() => {
+        const holder = h('div', { class: 'chart-container', style: 'width: 100%; min-height: 270px; margin-top: 0.5rem;' });
+        holder.innerHTML = fyDemandLineChartSvg(data.chartSeries, selectedMed);
+        return holder;
+      })(),
       h('div', { class: 'flex items-center justify-between text-xs muted', style: 'margin-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;' },
         h('div', { class: 'flex items-center gap-3' },
           h('span', { style: 'display: flex; align-items: center; gap: 0.35rem;' }, h('span', { style: 'width: 10px; height: 10px; border-radius: 50%; background: #d9383a; display: inline-block;' }), 'ALTA'),
