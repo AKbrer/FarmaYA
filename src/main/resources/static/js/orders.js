@@ -89,28 +89,41 @@ function timerLine(o) {
 }
 
 function statusMessage(o, role) {
+  if (o.status === 'VENCIDA' && o.statusNote) {
+    return o.statusNote;
+  }
+  if (o.status === 'CON_INCIDENCIA' && o.incidentNote) {
+    return o.incidentNote;
+  }
+  const lastHistoryNote = o.history && o.history.length ? o.history[o.history.length - 1]?.note : null;
+  if (o.status === 'VENCIDA' && lastHistoryNote && lastHistoryNote.includes('5 km')) {
+    return lastHistoryNote;
+  }
+  if (o.status === 'CON_INCIDENCIA' && lastHistoryNote && lastHistoryNote.includes('5 km')) {
+    return lastHistoryNote;
+  }
   const ph = o.pharmacyName || 'La farmacia';
   const cr = o.courierName || 'El repartidor';
   const client = role === 'CLIENTE';
   const m = {
     SOLICITUD_ENVIADA: 'Recibimos la solicitud.',
     BUSCANDO_FARMACIA: client
-      ? 'Estamos preguntando a las farmacias si tienen tus productos. La primera que los tenga aceptará tu pedido.'
-      : 'Esperando que una farmacia acepte el pedido.',
+      ? 'Estamos buscando farmacias cercanas en tu ciudad (radio máximo 5 km). La primera que los tenga aceptará tu pedido.'
+      : 'Esperando que una farmacia cercana acepte el pedido.',
     FARMACIA_ASIGNADA: ph + ' aceptó el pedido y está confirmando existencias y precios.',
     PRECIO_POR_ACEPTAR: client ? 'Revisa lo que confirmó la farmacia y acepta el precio para continuar.' : 'Esperando que el cliente acepte el precio.',
     PRECIO_CONFIRMADO: 'Precio aceptado. La farmacia empezará a preparar el pedido.',
     PEDIDO_EN_PREPARACION: ph + ' está alistando el pedido' + (o.prepMinutes ? ' (unos ' + o.prepMinutes + ' min).' : '.'),
-    PEDIDO_LISTO: 'El pedido está listo. Buscamos un repartidor.',
-    BUSCANDO_REPARTIDOR: 'El pedido está listo para recoger. Buscamos un repartidor disponible.',
+    PEDIDO_LISTO: 'El pedido está listo. Buscamos un repartidor cercano (radio máximo 5 km).',
+    BUSCANDO_REPARTIDOR: 'El pedido está listo para recoger. Buscamos un repartidor disponible (radio máximo 5 km).',
     REPARTIDOR_ASIGNADO: cr + ' va hacia la farmacia.',
     PEDIDO_RECOGIDO: cr + ' ya recogió el pedido.',
     EN_CAMINO: client ? 'Tu pedido va en camino. Ten a la mano tu código de entrega.' : 'El pedido va en camino hacia el cliente.',
     ENTREGADO: 'Pedido entregado.',
     RECHAZADA: 'Ninguna farmacia pudo atender este pedido.',
     CANCELADA: 'El pedido fue cancelado.',
-    VENCIDA: 'Ninguna farmacia disponible lo aceptó a tiempo, o el precio no se confirmó. Puedes volver a pedirlo.',
-    CON_INCIDENCIA: 'Hay una incidencia abierta. La administración la está revisando.'
+    VENCIDA: 'No hay farmacia disponible cerca de tu ubicación (radio máximo 5 km en tu ciudad).',
+    CON_INCIDENCIA: 'No hay repartidor disponible cerca de tu farmacia (radio máximo 5 km).'
   };
   return m[o.status] || statusLabel(o.status);
 }
@@ -173,7 +186,10 @@ function orderDetail(o, viewer) {
             h('td', null, c.available ? c.quantity : ''),
             h('td', null, c.available ? money(c.unitPrice) : ''),
             h('td', null, c.available ? money(c.quantity * c.unitPrice) : '')))),
-          h('tfoot', null, h('tr', null, h('td', { colspan: 3 }, 'Total'), h('td', null, money(o.total)))))),
+          h('tfoot', null,
+            h('tr', null, h('td', { colspan: 3 }, 'Total'), h('td', null, money(o.total))),
+            role === 'ADMIN' && o.total != null ? h('tr', { style: 'font-weight:700; color:var(--teal);' }, h('td', { colspan: 3 }, 'Ganancia FarmaYA (10%)'), h('td', null, money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.10)))) : null
+          )))),
         o.pharmacyNote && h('p', { class: 'muted' }, 'Nota de la farmacia: ' + o.pharmacyNote))
     : (o.items && o.items.length
       ? block('Productos solicitados', h('ul', { class: 'plain' }, o.items.map(i => h('li', null,
@@ -187,6 +203,7 @@ function orderDetail(o, viewer) {
       o.city && h('span', { class: 'muted block-line' }, o.city),
       o.deliveryDistanceKm ? h('span', { class: 'tag tone-teal', style: 'margin-top:6px; display:inline-block;' }, `Distancia estimada: ${o.deliveryDistanceKm} km`) : null,
       o.courierEarnings ? h('span', { class: 'tag tone-done', style: 'margin-top:6px; margin-left:6px; display:inline-block;' }, `Tarifa domicilio: ${money(o.courierEarnings)}`) : null,
+      role === 'ADMIN' && o.total != null ? h('span', { class: 'tag tone-teal', style: 'margin-top:6px; margin-left:6px; display:inline-block; font-weight:700;' }, `Ganancia FarmaYA (10%): ${money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.10))}`) : null,
       o.clientPhone && h('span', { class: 'muted block-line' }, o.clientPhone),
       o.notes && h('span', { class: 'muted block-line' }, 'Nota: ' + o.notes)
     )

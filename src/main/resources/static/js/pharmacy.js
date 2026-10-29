@@ -249,7 +249,10 @@ function leaveCard(card) {
 function offerRow(o, isFresh) {
   const card = h('article', { class: 'offer' + (isFresh ? ' fresh' : '') },
     h('div', { class: 'offer-head' },
-      h('strong', null, 'Solicitud ' + (o.city ? 'en ' + o.city : 'por cercanía') + (o.deliveryDistanceKm ? ' (~' + o.deliveryDistanceKm + ' km)' : '')),
+      h('div', null,
+        h('strong', null, 'Solicitud ' + (o.city ? 'en ' + o.city : 'por cercanía') + (o.deliveryDistanceKm ? ' (~' + o.deliveryDistanceKm + ' km)' : '')),
+        o.address && h('span', { class: 'block-line muted small', style: 'margin-top:2px;' }, 'Ubicación de entrega: ' + o.address)
+      ),
       h('span', { class: 'muted' }, 'Esperando hace ', elapsedEl(o.searchStartedAt || o.createdAt))),
     h('ul', { class: 'plain' }, o.items.map(i => h('li', null,
       h('span', null, i.name + ' ×' + i.quantity), i.prescription && h('span', { class: 'tag' }, 'Con fórmula médica'), i.note && h('small', { class: 'muted' }, i.note)))),

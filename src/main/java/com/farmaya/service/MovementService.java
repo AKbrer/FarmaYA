@@ -54,6 +54,15 @@ public class MovementService {
 
     public List<Movement> latest() { return repository.findTop500ByOrderByCreatedAtDesc(); }
 
+    /** Movimientos exclusivos de administradores (auditoría administrativa, excluye pedidos operativos). */
+    public List<Movement> latestForAdmin() {
+        return repository.findTop500ByOrderByCreatedAtDesc().stream()
+                .filter(m -> "ADMIN".equalsIgnoreCase(m.actorRole)
+                          || (m.type != null && (m.type.startsWith("USUARIO_") || m.type.startsWith("ADMIN_")
+                          || m.type.contains("VERIFICACION") || m.type.contains("EDICION") || m.type.contains("PERMISO"))))
+                .toList();
+    }
+
     public List<Movement> forActor(User actor) {
         if (actor == null || actor.id == null) return List.of();
         return repository.findTop500ByActorIdOrderByCreatedAtDesc(actor.id);

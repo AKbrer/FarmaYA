@@ -105,7 +105,7 @@ public class AdminService {
         return changed;
     }
 
-    public List<com.farmaya.model.Movement> movements() { return movements.latest(); }
+    public List<com.farmaya.model.Movement> movements() { return movements.latestForAdmin(); }
 
     public Map<String, Object> stats() {
         Map<String, Long> byStatus = new LinkedHashMap<>();
@@ -124,12 +124,16 @@ public class AdminService {
             if (v instanceof Number n) revenue = n.doubleValue();
         }
 
+        double platformEarnings = Math.round(revenue * 0.10 * 100) / 100.0;
+
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("byStatus", byStatus);
         m.put("pharmacies", Map.of("verified", count(Role.FARMACIA, true), "pending", count(Role.FARMACIA, false)));
         m.put("couriers", Map.of("verified", count(Role.REPARTIDOR, true), "pending", count(Role.REPARTIDOR, false)));
         m.put("clients", count(Role.CLIENTE, true));
         m.put("revenue", revenue);
+        m.put("platformEarnings", platformEarnings);
+        m.put("commissionRate", 0.10);
         return m;
     }
 

@@ -11,7 +11,7 @@ function courierView(user) {
     // Barra de telemetría IoT Stitch
     courierTelemetryBar(),
     h('h1', { class: 'page-title' }, user.name),
-    availabilityBar(user, 'Disponible para entregas', 'En pausa', (user.vehicle || 'Motocicleta') + ' · Cobertura en toda la ciudad'),
+    availabilityBar(user, 'Disponible para entregas', 'En pausa', 'Repartidor FarmaYA · Radio hasta 5 km'),
     !user.verified && notice('warn', 'Tu cuenta está pendiente de verificación sanitaria', 'Un regente farmacéutico o administrador revisará tu documentación y licencia vial. Hasta entonces no recibirás ofertas.'),
     sideNavigation([
       { label: 'Dashboard & Billetera', icon: 'layout-dashboard', render: courierDashboard },

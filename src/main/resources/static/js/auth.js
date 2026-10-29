@@ -309,13 +309,7 @@ function buildRegisterCard() {
   const roleSelect = h('select', { id: 'regRole', required: true },
     h('option', { value: 'CLIENTE', selected: true }, 'Paciente / Cliente'),
     h('option', { value: 'FARMACIA' }, 'Farmacia o Droguería'),
-    h('option', { value: 'REPARTIDOR' }, 'Domiciliario / Repartidor (Toda la ciudad)')
-  );
-
-  const vehicleSelect = h('select', { id: 'regVehicle' },
-    h('option', { value: 'Motocicleta', selected: true }, 'Motocicleta'),
-    h('option', { value: 'Bicicleta' }, 'Bicicleta'),
-    h('option', { value: 'Automóvil' }, 'Automóvil')
+    h('option', { value: 'REPARTIDOR' }, 'Domiciliario / Repartidor')
   );
 
   // --- Elementos del Mapa OpenStreetMap ---
@@ -426,24 +420,6 @@ function buildRegisterCard() {
     )
   );
 
-  // PASO 2 REPARTIDOR: Vehículo y Cobertura
-  const step2CourierBox = h('div', { id: 'regStep2Courier', class: 'form-stack', style: 'display:none;' },
-    h('div', { class: 'reg-step-subheading' },
-      h('h3', null, 'Vehículo de Entrega'),
-      h('p', null, 'Como repartidor recibirás pedidos en toda la ciudad por proximidad.')
-    ),
-    field('Vehículo de entrega rápida', vehicleSelect),
-    h('div', { class: 'reg-wizard-actions' },
-      h('button', { class: 'btn ghost', type: 'button', onclick: () => showStep(1) }, '← Atrás'),
-      h('button', {
-        id: 'btnSubmitCourier',
-        class: 'btn primary',
-        type: 'submit',
-        style: 'flex:1;'
-      }, 'Crear cuenta de Repartidor')
-    )
-  );
-
   // Stepper superior
   const stepperContainer = h('div', { id: 'regStepper', class: 'reg-wizard-steps' });
 
@@ -457,11 +433,6 @@ function buildRegisterCard() {
         { num: 1, label: '1. Tu cuenta', short: '1. Cuenta' },
         { num: 2, label: '2. Establecimiento', short: '2. Sede' },
         { num: 3, label: '3. Licencia y Horarios', short: '3. Licencia' }
-      ];
-    } else if (role === 'REPARTIDOR') {
-      steps = [
-        { num: 1, label: '1. Tu cuenta', short: '1. Cuenta' },
-        { num: 2, label: '2. Vehículo', short: '2. Vehículo' }
       ];
     } else {
       steps = [
@@ -494,7 +465,6 @@ function buildRegisterCard() {
     step1Box.style.display = (stepNumber === 1) ? '' : 'none';
     step2PhBox.style.display = (stepNumber === 2 && role === 'FARMACIA') ? '' : 'none';
     step3PhBox.style.display = (stepNumber === 3 && role === 'FARMACIA') ? '' : 'none';
-    step2CourierBox.style.display = (stepNumber === 2 && role === 'REPARTIDOR') ? '' : 'none';
 
     updateStepper();
 
@@ -524,10 +494,10 @@ function buildRegisterCard() {
   function handleStep1Next() {
     if (!validateStep1()) return;
     const role = roleSelect.value;
-    if (role === 'CLIENTE') {
-      document.getElementById('registerForm').requestSubmit();
-    } else {
+    if (role === 'FARMACIA') {
       showStep(2);
+    } else {
+      document.getElementById('registerForm').requestSubmit();
     }
   }
 
@@ -556,7 +526,7 @@ function buildRegisterCard() {
       } else if (role === 'FARMACIA') {
         btnNext.textContent = 'Siguiente: Ubicación de Farmacia →';
       } else {
-        btnNext.textContent = 'Siguiente: Vehículo de entrega →';
+        btnNext.textContent = 'Crear cuenta de Repartidor';
       }
     }
     showStep(1);
@@ -575,7 +545,6 @@ function buildRegisterCard() {
       step1Box,
       step2PhBox,
       step3PhBox,
-      step2CourierBox,
       h('div', { id: 'authAlert', hidden: true })
     ),
     h('div', { class: 'auth-footer' },
@@ -713,7 +682,7 @@ async function handleRegisterSubmit(event) {
     });
   }
   if (role === 'REPARTIDOR') {
-    body.vehicle = document.getElementById('regVehicle').value;
+    body.vehicle = 'Repartidor';
   }
   await act(btn, async () => {
     const response = await fetch('/api/auth/register', {

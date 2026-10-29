@@ -412,7 +412,7 @@ function renderClientDashboard() {
 
   async function checkout() {
     const address = h('input', { required: true, minlength: 5, maxlength: 200, placeholder: 'Barrio, calle, número, apto o casa...', value: user.address || '' });
-    const cityInput = h('input', { required: true, maxlength: 100, placeholder: 'Ciudad o municipio (ej. Bogotá, Medellín, Turbaco)' });
+    const cityInput = h('input', { required: true, maxlength: 100, placeholder: 'Ciudad o municipio (ej. Barranquilla, Bogotá)', value: user.city || 'Barranquilla' });
     const latInput = h('input', { type: 'hidden', value: '' });
     const lngInput = h('input', { type: 'hidden', value: '' });
     const notes = h('textarea', { rows: 2, maxlength: 400, placeholder: 'Indicaciones de entrega (ej. timbre 201, portería, preguntar por...)' });
@@ -462,8 +462,8 @@ function renderClientDashboard() {
         const payload = {
           items: clientCart.map(i => ({ name: i.name, quantity: i.quantity, prescription: !!i.rx, note: '' })),
           address: address.value.trim(),
-          zone: cityInput.value.trim(),
-          city: cityInput.value.trim(),
+          zone: address.value.trim(),
+          city: cityInput.value.trim() || user.city || 'Barranquilla',
           latitude: Number(latInput.value),
           longitude: Number(lngInput.value),
           phone: user.phone || '',

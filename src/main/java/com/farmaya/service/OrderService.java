@@ -76,7 +76,11 @@ public class OrderService {
         if (blank(address) || address.length() < 5) throw ApiException.bad("Escribe la dirección de entrega completa.");
         String city = clean(r.city(), 100);
         if (blank(city)) city = clean(r.zone(), 100);
-        String zone = blank(city) ? client.zone : city;
+        if (blank(city) || city.equalsIgnoreCase("Zona General")) city = clean(client.city, 100);
+        if (blank(city)) city = "Barranquilla";
+
+        // La ubicación del cliente es su dirección / punto real, nunca "Zona General"
+        String zone = address;
         if (r.latitude() != null && (r.latitude() < -90 || r.latitude() > 90)) throw ApiException.bad("Latitud inválida.");
         if (r.longitude() != null && (r.longitude() < -180 || r.longitude() > 180)) throw ApiException.bad("Longitud inválida.");
 
@@ -99,6 +103,7 @@ public class OrderService {
         o.latitude = r.latitude();
         o.longitude = r.longitude();
         o.notes = clean(r.notes(), 400);
+        o.platformCommissionRate = 0.10; // 10% de ganancia para la empresa FarmaYA
         o.deliveryCode = String.format("%04d", RND.nextInt(10_000));
         o.status = BUSCANDO_FARMACIA;
         o.searchStartedAt = now;
@@ -237,9 +242,12 @@ public class OrderService {
         int prep = r.prepMinutes() == null ? 20 : r.prepMinutes();
         if (prep < 1 || prep > 240) throw ApiException.bad("El tiempo de preparación debe estar entre 1 y 240 minutos.");
 
+        double platformEarnings = Math.round(total * 0.10 * 100) / 100.0;
         Update u = step(PRECIO_POR_ACEPTAR, ph, "La farmacia confirmó existencias y precio")
                 .set("confirmedItems", list)
                 .set("total", Math.round(total * 100) / 100.0)
+                .set("platformCommissionRate", 0.10)
+                .set("platformEarnings", platformEarnings)
                 .set("prepMinutes", prep)
                 .set("pharmacyNote", clean(r.note(), 300))
                 .set("priceAskedAt", Instant.now());
@@ -365,37 +373,84 @@ public class OrderService {
 
     /**
      * Valida si un pedido está dentro del radio de alcance para la farmacia según la ronda de búsqueda.
-     * Ronda 1: radio cercano (<= 6 km)
-     * Ronda 2: radio ampliado (<= 15 km)
-     * Ronda 3+: radio extendido (<= 30 km)
+     * Regla estricta: El pedido NUNCA sale de la ciudad del cliente.
+     * Ronda 1: farmacias más cercanas (<= 2.5 km)
+     * Ronda 2: radio ampliado hasta el máximo permitido (<= 5.0 km)
+     * Si supera 5.0 km o está en otra ciudad, no es elegible.
      */
     public boolean isPharmacyEligible(Order o, User ph) {
         if (o.status != BUSCANDO_FARMACIA) return false;
         if (o.rejectedPharmacies != null && o.rejectedPharmacies.contains(ph.id)) return false;
+
+        // 1. Límite estricto de ciudad: el pedido NO sale de su ciudad
+        if (!sameCity(o.city, ph.city, ph.zone)) {
+            return false;
+        }
+
         if (ph.latitude == null || ph.longitude == null || o.latitude == null || o.longitude == null) {
             return true; // Fallback si no hay geolocalización
         }
         Double dist = estimatedRoadDistanceKm(ph.latitude, ph.longitude, o.latitude, o.longitude);
         if (dist == null) return true;
+
+        // Límite máximo absoluto para farmacia: 5.0 km
+        if (dist > 5.0) {
+            return false;
+        }
+
         int round = o.searchRound <= 0 ? 1 : o.searchRound;
-        if (round == 1) return dist <= 6.0;
-        if (round == 2) return dist <= 15.0;
-        return dist <= 30.0;
+        if (round == 1) return dist <= 2.5; // Primero farmacias más cercanas (<= 2.5 km)
+        return dist <= 5.0; // Ronda 2: radio ampliado hasta el máximo de 5.0 km
     }
 
     /**
      * Valida si una entrega está dentro del radio razonable para los domiciliarios.
-     * Ronda 1: radio cercano / estándar (<= 10 km)
-     * Ronda 2+: radio ampliado (<= 22 km, para que el domicilio no demore en llegar)
+     * Regla estricta: El repartidor debe estar en la misma ciudad que la farmacia y el cliente.
+     * Ronda 1: repartidores cerca de la farmacia (<= 3.0 km)
+     * Ronda 2: radio ampliado hasta el máximo permitido (<= 5.0 km)
+     * Si supera 5.0 km, no hay repartidor disponible cerca de la farmacia.
      */
     public boolean isCourierEligible(Order o, User c) {
         if (o.status != BUSCANDO_REPARTIDOR) return false;
         if (o.rejectedCouriers != null && o.rejectedCouriers.contains(c.id)) return false;
-        Double dist = estimatedRoadDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude, o.latitude, o.longitude);
+
+        // 1. Límite estricto de ciudad: el repartidor debe pertenecer a la misma ciudad
+        if (!sameCity(o.city, c.city, c.zone)) {
+            return false;
+        }
+
+        Double dist = estimatedRoadDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude,
+                c.latitude != null ? c.latitude : o.latitude,
+                c.longitude != null ? c.longitude : o.longitude);
         if (dist == null) return true;
+
+        // Límite máximo absoluto para repartidor: 5.0 km
+        if (dist > 5.0) return false;
+
         int round = o.courierRound <= 0 ? 1 : o.courierRound;
-        if (round == 1) return dist <= 10.0;
-        return dist <= 22.0;
+        if (round == 1) return dist <= 3.0; // Primero los más cercanos a la farmacia (<= 3.0 km)
+        return dist <= 5.0; // Ronda 2: un poco más alejados hasta máximo 5.0 km
+    }
+
+    public static boolean sameCity(String city1, String city2, String zone2) {
+        String c1 = normalizeCity(city1);
+        String c2 = normalizeCity(city2);
+        if (c1.isEmpty() && c2.isEmpty()) return true;
+        if (!c1.isEmpty() && !c2.isEmpty()) {
+            return c1.equalsIgnoreCase(c2) || c1.contains(c2) || c2.contains(c1);
+        }
+        String z2 = normalizeCity(zone2);
+        if (!c1.isEmpty() && !z2.isEmpty()) {
+            return c1.equalsIgnoreCase(z2) || c1.contains(z2) || z2.contains(c1);
+        }
+        return true;
+    }
+
+    private static String normalizeCity(String str) {
+        if (str == null) return "";
+        return str.trim().toLowerCase()
+                .replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+                .replace("zona general", "").trim();
     }
 
     // =====================================================================
@@ -478,18 +533,18 @@ public class OrderService {
     public void sweep() {
         Instant now = Instant.now();
 
-        // 1) Nadie aceptó: se amplía el radio y se reenvía; si se agotan las rondas, vence.
+        // 1) Nadie aceptó: se amplía el radio y se reenvía; si se agotan las rondas (máximo 5 km), vence.
         Query q1 = new Query(where("status").is(BUSCANDO_FARMACIA)
                 .and("searchStartedAt").lt(now.minusSeconds(props.searchTimeoutSeconds())));
         for (Order o : mongo.find(q1, Order.class)) {
             Criteria same = where("id").is(o.id).and("status").is(BUSCANDO_FARMACIA).and("searchRound").is(o.searchRound);
-            if (o.searchRound < props.maxSearchRounds()) {
-                Update u = step(BUSCANDO_FARMACIA, null, "Ampliamos el radio de búsqueda a farmacias más lejanas.")
+            if (o.searchRound < 2) {
+                Update u = step(BUSCANDO_FARMACIA, null, "Ampliamos el radio de búsqueda hasta 5 km dentro de tu ciudad.")
                         .set("searchRound", o.searchRound + 1).set("searchStartedAt", now);
                 recordScheduledUpdate(mongo.findAndModify(new Query(same), u, Order.class), o.history.size());
             } else {
                 recordScheduledUpdate(mongo.findAndModify(new Query(same),
-                        step(VENCIDA, null, "Ninguna farmacia disponible dentro del rango aceptó el pedido a tiempo."), Order.class), o.history.size());
+                        step(VENCIDA, null, "No hay farmacia disponible cerca de tu ubicación (radio máximo 5 km en tu ciudad)."), Order.class), o.history.size());
             }
         }
 
@@ -511,14 +566,19 @@ public class OrderService {
                     step(VENCIDA, null, "El precio no fue aceptado a tiempo."), Order.class), o.history.size());
         }
 
-        // 4) Sin repartidor cercano: se amplía el radio de cobertura a repartidores de la ciudad.
-        Query q4 = new Query(where("status").is(BUSCANDO_REPARTIDOR).and("courierRound").is(1)
+        // 4) Sin repartidor cercano: se amplía el radio hasta 5 km; si supera 5 km y nadie toma, no hay repartidor.
+        Query q4 = new Query(where("status").is(BUSCANDO_REPARTIDOR)
                 .and("courierSearchStartedAt").lt(now.minusSeconds(props.searchTimeoutSeconds())));
         for (Order o : mongo.find(q4, Order.class)) {
-            Criteria same = where("id").is(o.id).and("status").is(BUSCANDO_REPARTIDOR).and("courierRound").is(1);
-            Update u = step(BUSCANDO_REPARTIDOR, null, "Ampliamos el radio de búsqueda a más repartidores.")
-                    .set("courierRound", 2).set("courierSearchStartedAt", now);
-            recordScheduledUpdate(mongo.findAndModify(new Query(same), u, Order.class), o.history.size());
+            Criteria same = where("id").is(o.id).and("status").is(BUSCANDO_REPARTIDOR).and("courierRound").is(o.courierRound);
+            if (o.courierRound < 2) {
+                Update u = step(BUSCANDO_REPARTIDOR, null, "Ampliamos la búsqueda a repartidores hasta 5 km.")
+                        .set("courierRound", 2).set("courierSearchStartedAt", now);
+                recordScheduledUpdate(mongo.findAndModify(new Query(same), u, Order.class), o.history.size());
+            } else {
+                recordScheduledUpdate(mongo.findAndModify(new Query(same),
+                        step(CON_INCIDENCIA, null, "No hay repartidor disponible cerca de tu farmacia (radio máximo 5 km)."), Order.class), o.history.size());
+            }
         }
     }
 
@@ -592,6 +652,10 @@ public class OrderService {
      * - El repartidor no ve qué medicamentos son; ve dirección y contacto solo cuando la entrega es suya.
      */
     private Order present(Order o, User v) {
+        if (o.platformCommissionRate == null) o.platformCommissionRate = 0.10;
+        if (o.total != null && o.platformEarnings == null) {
+            o.platformEarnings = Math.round(o.total * 0.10 * 100) / 100.0;
+        }
         if (v.role == Role.FARMACIA || v.role == Role.REPARTIDOR) o.deliveryCode = null;
         if (v.role == Role.FARMACIA) {
             if (!v.id.equals(o.pharmacyId)) o.address = null;

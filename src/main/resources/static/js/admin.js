@@ -81,6 +81,20 @@ function adminSummary(go) {
         h('div', { class: 'kpi-footer-note' },
           h('span', null, (s.pharmacies.pending + s.couriers.pending) + ' pendientes de verificación')
         )
+      ),
+
+      h('div', { class: 'stitch-admin-kpi-card' },
+        h('div', { class: 'kpi-top' },
+          h('span', { class: 'kpi-lbl' }, 'Ganancia FarmaYA (10%)'),
+          h('span', { class: 'badge-flash' }, '10% tarifa neta')
+        ),
+        h('div', { class: 'kpi-amt-row' },
+          h('strong', { class: 'kpi-amt tone-teal' }, money(s.platformEarnings != null ? s.platformEarnings : (s.revenue * 0.10))),
+          h('small', null, 'margen FarmaYA por pedidos generados')
+        ),
+        h('div', { class: 'kpi-footer-note' },
+          h('span', null, 'Liquidación automática del 10% por pedido')
+        )
       )
     );
 
@@ -124,7 +138,13 @@ function adminOrders() {
   select.value = status;
   const draw = () => holder.replaceChildren(live(() => API.get('/admin/orders' + (status ? '?status=' + status : '')), orders => {
     if (!orders.length) return empty('No hay pedidos con este filtro', 'Prueba con otro estado o muestra todos.');
-    return h('div', { class: 'list' }, orders.map(o => orderRow(o, h('span', { class: 'muted small' }, o.city || o.address || ''))));
+    return h('div', { class: 'list' }, orders.map(o => {
+      const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0);
+      return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
+        h('span', { class: 'muted small' }, o.address || o.city || 'Barranquilla'),
+        o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
+      ));
+    }));
   }));
   draw();
   return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, select), holder);
@@ -181,32 +201,41 @@ function adminUsers(role) {
   return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, search), list);
 }
 
-/* Auditoría: movimientos de pedidos y acciones administrativas, con código trazable. */
+/* Auditoría administrativa: acciones sobre aliados, catálogo, usuarios y sistema. */
 function adminMovements() {
   let query = '';
   let type = '';
   const holder = h('div', { class: 'stack' });
-  const search = h('input', { type: 'search', placeholder: 'Buscar código, pedido, usuario o descripción', 'aria-label': 'Buscar movimientos', oninput: () => { query = search.value.trim().toLowerCase(); draw(); } });
-  const filter = h('select', { 'aria-label': 'Filtrar movimientos', onchange: () => { type = filter.value; draw(); } },
-    h('option', { value: '' }, 'Todos los movimientos'),
-    h('option', { value: 'PEDIDO' }, 'Pedidos'),
-    h('option', { value: 'USUARIO' }, 'Usuarios'),
+  const search = h('input', { type: 'search', placeholder: 'Buscar código, usuario, acción o detalle administrativo', 'aria-label': 'Buscar movimientos administrativos', oninput: () => { query = search.value.trim().toLowerCase(); draw(); } });
+  const filter = h('select', { 'aria-label': 'Filtrar movimientos administrativos', onchange: () => { type = filter.value; draw(); } },
+    h('option', { value: '' }, 'Todos los movimientos administrativos'),
+    h('option', { value: 'USUARIO' }, 'Cuentas de usuario'),
+    h('option', { value: 'PRODUCTO' }, 'Catálogo y productos'),
+    h('option', { value: 'VERIFICACION' }, 'Verificaciones y permisos'),
     h('option', { value: 'SISTEMA' }, 'Sistema'));
   const draw = () => {
     holder.replaceChildren(live(() => API.get('/admin/movements'), movements => {
       const filtered = movements.filter(m => {
-        const searchable = [m.code, m.type, m.description, m.orderCode, m.actorName, m.actorRole].filter(Boolean).join(' ').toLowerCase();
-        const typeOk = !type || (type === 'PEDIDO' ? !!m.orderCode : type === 'USUARIO' ? String(m.type).startsWith('USUARIO_') : m.actorRole === 'SISTEMA');
+        // Excluir eventos estándar de delivery / pedidos ordinarios de clientes
+        if (m.orderCode && !String(m.type).startsWith('ADMIN') && !String(m.type).includes('VERIFICACION')) {
+          return false;
+        }
+        const searchable = [m.code, m.type, m.description, m.actorName, m.actorRole].filter(Boolean).join(' ').toLowerCase();
+        let typeOk = true;
+        if (type === 'USUARIO') typeOk = String(m.type).startsWith('USUARIO_') || String(m.type).includes('USUARIO');
+        else if (type === 'PRODUCTO') typeOk = String(m.type).includes('PRODUCTO');
+        else if (type === 'VERIFICACION') typeOk = String(m.type).includes('VERIFICACION') || String(m.type).includes('PERMISO');
+        else if (type === 'SISTEMA') typeOk = m.actorRole === 'SISTEMA' || String(m.type).includes('SISTEMA');
         return typeOk && (!query || searchable.includes(query));
       });
-      if (!filtered.length) return empty('No hay movimientos para mostrar', 'Los cambios de estado de pedidos y las acciones administrativas aparecerán aquí.');
+      if (!filtered.length) return empty('No hay movimientos administrativos', 'Las acciones de administración sobre usuarios, verificaciones, catálogo y configuración del sistema aparecerán aquí.');
       return h('div', { class: 'table-wrap movement-table' }, h('table', { class: 'users' },
-        h('thead', null, h('tr', null, h('th', null, 'Código'), h('th', null, 'Movimiento'), h('th', null, 'Pedido'), h('th', null, 'Responsable'), h('th', null, 'Fecha y hora'))),
+        h('thead', null, h('tr', null, h('th', null, 'Código'), h('th', null, 'Acción Administrativa'), h('th', null, 'Detalle'), h('th', null, 'Responsable'), h('th', null, 'Fecha y hora'))),
         h('tbody', null, filtered.map(m => h('tr', null,
           h('td', null, h('strong', { class: 'movement-code' }, m.code || '—')),
-          h('td', null, h('strong', null, movementTypeLabel(m.type)), h('small', { class: 'block-line muted movement-description' }, m.description || 'Sin descripción')),
-          h('td', null, m.orderCode ? h('span', { class: 'code' }, m.orderCode) : '—'),
-          h('td', null, h('strong', null, m.actorName || 'FarmaYa'), h('small', { class: 'block-line muted' }, m.actorRole || 'SISTEMA')),
+          h('td', null, h('strong', null, movementTypeLabel(m.type))),
+          h('td', null, h('span', { class: 'movement-description' }, m.description || 'Sin descripción')),
+          h('td', null, h('strong', null, m.actorName || 'Administrador'), h('small', { class: 'block-line muted' }, m.actorRole || 'ADMIN')),
           h('td', null, formatMovementDate(m.createdAt)))))));
     }));
   };
@@ -215,8 +244,18 @@ function adminMovements() {
 }
 
 function movementTypeLabel(type) {
-  const labels = { SOLICITUD_ENVIADA: 'Pedido creado', BUSCANDO_FARMACIA: 'Buscando farmacia', FARMACIA_ASIGNADA: 'Farmacia asignada', PRECIO_POR_ACEPTAR: 'Precio pendiente', PRECIO_CONFIRMADO: 'Precio confirmado', BUSCANDO_REPARTIDOR: 'Buscando repartidor', REPARTIDOR_ASIGNADO: 'Repartidor asignado', PEDIDO_RECOGIDO: 'Pedido recogido', EN_CAMINO: 'En camino', ENTREGADO: 'Pedido entregado', CANCELADA: 'Pedido cancelado', VENCIDA: 'Pedido vencido', RECHAZADA: 'Pedido rechazado', CON_INCIDENCIA: 'Incidencia', USUARIO_VERIFICACION: 'Verificación de usuario', USUARIO_ESTADO: 'Estado de usuario' };
-  return labels[type] || String(type || 'Movimiento').replaceAll('_', ' ').toLowerCase().replace(/^./, c => c.toUpperCase());
+  const labels = {
+    USUARIO_VERIFICACION: 'Verificación de aliado',
+    USUARIO_ESTADO: 'Estado de usuario',
+    USUARIO_PERMISO_EDICION: 'Permiso de edición',
+    ADMIN_CREACION: 'Creación de administrador',
+    ADMIN_ESTADO: 'Estado de administrador',
+    ADMIN_PRODUCTO_CREADO: 'Nuevo producto en catálogo',
+    ADMIN_PRODUCTO_ACTUALIZADO: 'Producto editado',
+    ADMIN_PRODUCTO_ELIMINADO: 'Producto eliminado',
+    ADMIN_PRODUCTO_IMAGEN: 'Foto de producto actualizada'
+  };
+  return labels[type] || String(type || 'Acción administrativa').replaceAll('_', ' ').toLowerCase().replace(/^./, c => c.toUpperCase());
 }
 function formatMovementDate(value) {
   if (!value) return '—';
@@ -552,7 +591,7 @@ function adminCatalogManager() {
                 class: 'btn ghost small',
                 type: 'button',
                 title: 'Editar información y características del producto',
-                onclick: () => openProductModal(p, () => {
+                onclick: () => openAdminProductModal(p, () => {
                   if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
                   draw();
                 })
@@ -619,7 +658,7 @@ function adminCatalogManager() {
       h('button', {
         class: 'btn primary',
         type: 'button',
-        onclick: () => openProductModal(null, () => {
+        onclick: () => openAdminProductModal(null, () => {
           if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
           draw();
         })
@@ -635,7 +674,7 @@ function adminCatalogManager() {
 }
 
 /* Modal integral para INGRESAR NUEVO o EDITAR producto existente */
-function openProductModal(p, onSaved) {
+function openAdminProductModal(p, onSaved) {
   const isEditing = !!p;
   const customImages = typeof getCustomProductImages === 'function' ? getCustomProductImages() : {};
   let currentImageUrl = (p && (p.imageUrl || customImages[p.name])) || '';

@@ -35,6 +35,10 @@ public class Order {
     // Repartidor
     public String courierId, courierName, courierPhone;
 
+    // Ganancia y comisión empresarial FarmaYA (empresa dueña del programa)
+    public Double platformCommissionRate = 0.10; // 10%
+    public Double platformEarnings; // Ganancia retenida por pedido
+
     // Verificación de entrega
     public String deliveryCode;
     public int codeAttempts;
