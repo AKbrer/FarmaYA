@@ -12,6 +12,7 @@ public class User {
     public String phone;
     public Role role;
     public String zone;
+    public String city;
 
     /** El administrador puede deshabilitar cuentas. */
     public boolean enabled = true;
