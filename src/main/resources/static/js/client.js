@@ -533,7 +533,7 @@ function renderClientDashboard() {
         h('span', { class: 'callout-ico' }, '!'),
         h('div', null,
           h('strong', null, 'INFORMACIÓN IMPORTANTE SOBRE EL PAGO'),
-          h('p', null, 'Los productos se pagarán en línea a la cuenta oficial de FarmaYA mediante PSE o Nequi. El valor del domicilio se le debe pagar directamente al repartidor al momento de llegar a tu dirección.')
+          h('p', null, 'El valor del domicilio se le debe pagar directamente al repartidor al momento de llegar a tu dirección.')
         )
       ),
       coverageNoticeBox,
