@@ -5956,3 +5956,296 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(10, 92, 168, 0.08);
 }
+
+/* ==========================================================================
+   MEJORA INTEGRAL DE TIPOGRAFÍA, TAMAÑO DE LETRA Y VISIBILIDAD (WEB Y MÓVIL)
+   ========================================================================== */
+
+/* 1. Tipografía Base y Contraste General */
+body {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Mejora de elementos pequeños y secundarios */
+small, .small, .muted small, .users small, .card small {
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+.muted, .text-muted {
+  color: #3b5949 !important;
+}
+
+[data-theme="dark"] .muted,
+[data-theme="dark"] .text-muted {
+  color: #a4c4b5 !important;
+}
+
+/* 2. Tablas del Administrador, Farmacias, Repartidores y Clientes */
+.table-wrap {
+  border-radius: 16px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.users, .prices, .movement-table {
+  font-size: 15px !important;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.users th, .prices th, .movement-table th {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  padding: 16px 18px !important;
+  color: var(--text) !important;
+  background: var(--surface-soft) !important;
+  border-bottom: 2px solid var(--line) !important;
+}
+
+.users td, .prices td, .movement-table td {
+  font-size: 15px !important;
+  padding: 16px 18px !important;
+  vertical-align: middle !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+.users td strong, .prices td strong, .movement-table td strong {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  display: inline-block;
+  margin-bottom: 3px;
+}
+
+.users td small, .prices td small, .movement-table td small {
+  font-size: 13.5px !important;
+  color: #436353 !important;
+}
+
+[data-theme="dark"] .users td small,
+[data-theme="dark"] .prices td small,
+[data-theme="dark"] .movement-table td small {
+  color: #b0d0c1 !important;
+}
+
+/* 3. Panel de Navegación Lateral (Admin, Farmacia, Repartidor) */
+.side-nav-item {
+  font-size: 15.5px !important;
+  font-weight: 700 !important;
+  padding: 13px 18px !important;
+  gap: 12px !important;
+}
+
+.side-nav-icon {
+  width: 26px !important;
+  height: 26px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.side-nav-icon svg, .side-nav-icon .ico svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.side-nav-label {
+  font-size: 15.5px !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* 4. Badges y Etiquetas con máxima legibilidad */
+.badge, .tag {
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  padding: 5px 11px !important;
+  border-radius: 8px !important;
+  letter-spacing: 0.02em;
+}
+
+/* 5. Vista Móvil Estilo Flutter (Celulares y Pantallas Angostas) */
+@media (max-width: 768px) {
+  body {
+    font-size: 15.5px !important;
+  }
+  
+  .users th, .prices th {
+    font-size: 12px !important;
+    padding: 12px 14px !important;
+  }
+  
+  .users td, .prices td {
+    font-size: 14.5px !important;
+    padding: 14px !important;
+  }
+  
+  .users td strong {
+    font-size: 15.5px !important;
+  }
+  
+  .side-nav-item {
+    font-size: 14.5px !important;
+    padding: 11px 14px !important;
+  }
+}
+
+/* ==========================================================================
+   PIE DE PÁGINA UNIVERSAL DE SOPORTE Y CONTACTO (TODAS LAS VISTAS)
+   ========================================================================== */
+.farmaya-support-footer {
+  margin-top: 48px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(10, 92, 168, 0.04);
+  padding: 32px 36px 24px 36px;
+  color: var(--text);
+}
+
+.farmaya-footer-inner {
+  display: grid;
+  grid-template-columns: 1.4fr 1.1fr 1.1fr;
+  gap: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.farmaya-footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.farmaya-footer-brand-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark-footer {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.brand-title-footer {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.farmaya-footer-slogan {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.footer-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(22, 134, 93, 0.1);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22, 134, 93, 0.2);
+}
+
+.footer-col-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.footer-contact-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.footer-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.footer-ico svg {
+  width: 17px;
+  height: 17px;
+}
+
+.contact-meta-label {
+  display: block;
+  font-size: 12.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.contact-link {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.contact-link:hover {
+  text-decoration: underline;
+  color: var(--primary-dark);
+}
+
+.farmaya-footer-bottom {
+  padding-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+@media (max-width: 900px) {
+  .farmaya-footer-inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .farmaya-support-footer {
+    padding: 24px 20px 20px 20px;
+    margin-top: 36px;
+  }
+}

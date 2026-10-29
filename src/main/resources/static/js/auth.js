@@ -35,7 +35,7 @@ function renderAuth(mode = 'login') {
 
   currentAuthMode = mode;
   const layout = buildUnifiedAuthLayout(mode);
-  app.replaceChildren(layout);
+  app.replaceChildren(layout, farmayaSupportFooter());
   switchAuthMode(mode, false, false);
 }
 

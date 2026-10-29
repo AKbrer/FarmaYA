@@ -141,13 +141,13 @@ async function renderApp() {
     return;
   }
   const expected = routeForRole(state.user.role);
-  if (route === '#orders') { document.title = 'FarmaYa · Pedidos'; renderOrdersPage(); renderNavbar(); return; }
+  if (route === '#orders') { document.title = 'FarmaYa · Pedidos'; renderOrdersPage(); app.append(farmayaSupportFooter()); renderNavbar(); return; }
   if (route !== expected) { location.hash = expected; return; }
   document.title = 'FarmaYa · ' + (state.user.name || 'Inicio');
-  if (state.user.role === 'CLIENTE') renderClientDashboard();
-  else if (state.user.role === 'FARMACIA') app.replaceChildren(pharmacyView(state.user));
-  else if (state.user.role === 'REPARTIDOR') app.replaceChildren(courierView(state.user));
-  else if (state.user.role === 'ADMIN') app.replaceChildren(adminView(state.user));
+  if (state.user.role === 'CLIENTE') { renderClientDashboard(); app.append(farmayaSupportFooter()); }
+  else if (state.user.role === 'FARMACIA') app.replaceChildren(pharmacyView(state.user), farmayaSupportFooter());
+  else if (state.user.role === 'REPARTIDOR') app.replaceChildren(courierView(state.user), farmayaSupportFooter());
+  else if (state.user.role === 'ADMIN') app.replaceChildren(adminView(state.user), farmayaSupportFooter());
   renderNavbar();
   if (!state.user || state.user.role !== 'CLIENTE') {
     document.getElementById('fy_mobile_cart_bar')?.remove();

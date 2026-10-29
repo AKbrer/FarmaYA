@@ -21,7 +21,7 @@ function adminView(user) {
     { label: 'Pedidos', icon: 'package', render: adminOrders },
     { label: 'Verificaciones', icon: 'prescriptions', render: adminVerificationCenter },
     { label: 'Farmacias', icon: 'store', render: () => adminUsers('FARMACIA') },
-    { label: 'Repartidores', icon: 'truck', render: () => adminUsers('REPARTIDOR') },
+    { label: 'Repartidores', icon: 'bike', render: () => adminUsers('REPARTIDOR') },
     { label: 'Clientes', icon: 'users', render: () => adminUsers('CLIENTE') },
     { label: 'Administradores', icon: 'shield', render: () => adminAdministratorsView(user) },
     { label: 'Catálogo de Productos', icon: 'capsule', render: adminCatalogManager },
@@ -518,18 +518,18 @@ function adminAdministratorsView(currentUser) {
         return h('tr', { class: u.enabled ? '' : 'disabled' },
           h('td', null,
             h('div', { style: 'display:flex;align-items:center;gap:8px;' },
-              h('strong', null, u.name),
-              isSelf && h('span', { class: 'badge tone-done', style: 'font-size:10px;padding:2px 6px;' }, 'Tú (Sesión actual)')
+              h('strong', { style: 'font-size:16px;' }, u.name),
+              isSelf && h('span', { class: 'badge tone-done', style: 'font-size:12px;padding:3px 8px;font-weight:700;' }, 'Tú (Sesión actual)')
             ),
-            h('small', { class: 'block-line muted' }, 'ID: ' + (u.id || '—'))
+            h('small', { class: 'block-line muted', style: 'font-size:13px;' }, 'ID de cuenta: ' + (u.id || '—'))
           ),
           h('td', null,
-            h('span', null, u.email),
-            h('small', { class: 'block-line muted' }, u.phone ? ('Tel: ' + u.phone) : 'Sin teléfono registrado')
+            h('span', { style: 'font-size:15px;font-weight:600;' }, u.email),
+            h('small', { class: 'block-line muted', style: 'font-size:13px;' }, u.phone ? ('Tel: ' + u.phone) : 'Sin teléfono registrado')
           ),
           h('td', null,
-            h('span', { class: 'badge tone-lime' }, 'Colección: administradores'),
-            h('small', { class: 'block-line muted' }, 'Rol: ADMIN (Acceso Total)')
+            h('span', { class: 'badge tone-teal', style: 'font-size:12.5px;' }, 'Rol: Administrador General'),
+            h('small', { class: 'block-line muted', style: 'font-size:13px;' }, 'Colección: administradores (Acceso Total)')
           ),
           h('td', null,
             u.enabled
