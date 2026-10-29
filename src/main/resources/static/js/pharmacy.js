@@ -21,26 +21,23 @@ function availabilityBar(user, onLabel, offLabel, detail) {
 }
 
 function pharmacyHeaderCard(user) {
-  const statusBtn = h('button', {
-    type: 'button',
-    class: 'btn pharmacy-status-compact-btn ' + (user.active ? 'primary' : 'secondary'),
-    title: user.active ? 'Pausar recepción de pedidos' : 'Activar recepción de pedidos',
-    onclick: async (e) => {
-      const btn = e.currentTarget;
-      btn.disabled = true;
-      try {
-        const u = await API.post('/auth/active', { value: !user.active });
-        state.user = u;
-        refreshAll();
-      } catch (err) {
-        toast(err.message, 'error');
-      } finally {
-        btn.disabled = false;
-      }
+  const statusLabel = h('span', { class: 'pharmacy-switch-label' }, user.active ? 'Recibiendo pedidos' : 'En pausa');
+  const control = switchControl(user.active, async input => {
+    try {
+      const u = await API.post('/auth/active', { value: input.checked });
+      state.user = u;
+      statusLabel.textContent = u.active ? 'Recibiendo pedidos' : 'En pausa';
+      toast(u.active ? 'Recepción de pedidos activada' : 'Recepción de pedidos pausada');
+      refreshAll();
+    } catch (err) {
+      input.checked = !input.checked;
+      toast(err.message, 'error');
     }
-  },
-    h('span', { class: 'pharmacy-status-dot ' + (user.active ? 'active' : 'paused') }),
-    user.active ? 'Recibiendo pedidos' : 'En pausa'
+  }, 'Recibiendo pedidos');
+
+  const activationBox = h('div', { class: 'pharmacy-activation-box' },
+    control,
+    statusLabel
   );
 
   return h('div', { class: 'pharmacy-header-card' },
@@ -48,7 +45,7 @@ function pharmacyHeaderCard(user) {
       h('h1', { class: 'pharmacy-header-title' }, user.pharmacyName || user.name),
       user.address && h('span', { class: 'pharmacy-header-address muted' }, user.address)
     ),
-    statusBtn
+    activationBox
   );
 }
 
@@ -397,7 +394,11 @@ function pharmacyOrders() {
     if (!orders.length) return empty('Todavía no tienes pedidos', 'Los pedidos que aceptes aparecerán aquí con el siguiente paso a realizar.');
     const active = orders.filter(o => !FINAL.includes(o.status));
     const past = orders.filter(o => FINAL.includes(o.status));
+
+    const courierIncident = active.some(o => o.status === 'CON_INCIDENCIA' && ((o.incidentNote || '').toLowerCase().includes('repartidor') || (o.incidentNote || '').toLowerCase().includes('5 km') || (o.incidentNote || '').toLowerCase().includes('zona')));
+
     return h('div', { class: 'stack' },
+      courierIncident ? notice('warn', 'Alerta: Sin repartidores disponibles en tu zona', 'Actualmente no hay repartidores disponibles cerca de tu farmacia (radio máximo 5 km). Estamos buscando activamente para continuar con la entrega tan pronto haya un repartidor disponible.') : null,
       active.length ? h('div', { class: 'list' }, h('h3', { class: 'list-title' }, 'En curso'), active.map(o => orderRow(o, pharmacyAction(o)))) : null,
       past.length ? h('div', { class: 'list' }, h('h3', { class: 'list-title' }, 'Anteriores'), past.map(o => orderRow(o))) : null);
   });
@@ -415,6 +416,7 @@ function pharmacyAction(o) {
     case 'PEDIDO_EN_PREPARACION': return step('Marcar listo para recoger', 'ready', 'Pedido listo. Buscamos repartidor.');
     case 'BUSCANDO_REPARTIDOR': return h('span', { class: 'waiting' }, 'Buscando repartidor');
     case 'REPARTIDOR_ASIGNADO': return h('span', { class: 'waiting' }, (o.courierName || 'El repartidor') + ' viene por el pedido');
+    case 'CON_INCIDENCIA': return h('span', { class: 'tag', style: 'background: var(--warning-soft); color: var(--warning); font-weight: 700;' }, 'Sin repartidor en tu zona (5 km)');
     default: return null;
   }
 }

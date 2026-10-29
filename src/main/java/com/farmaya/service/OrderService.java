@@ -4,6 +4,8 @@ import static com.farmaya.model.OrderStatus.*;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import com.farmaya.config.FarmaYaProperties;
+import com.farmaya.model.Dtos;
+import com.farmaya.model.Dtos.AvailabilityResponse;
 import com.farmaya.model.Dtos.ConfirmItem;
 import com.farmaya.model.Dtos.ConfirmRequest;
 import com.farmaya.model.Dtos.CreateOrderRequest;
@@ -15,6 +17,7 @@ import com.farmaya.model.OrderStatus;
 import com.farmaya.model.Role;
 import com.farmaya.model.User;
 import com.farmaya.repo.OrderRepository;
+import com.farmaya.repo.UserRepository;
 import com.farmaya.web.ApiException;
 import java.security.SecureRandom;
 import java.time.Instant;
@@ -57,12 +60,14 @@ public class OrderService {
     private final OrderRepository orders;
     private final FarmaYaProperties props;
     private final MovementService movements;
+    private final UserRepository users;
 
-    public OrderService(MongoTemplate mongo, OrderRepository orders, FarmaYaProperties props, MovementService movements) {
+    public OrderService(MongoTemplate mongo, OrderRepository orders, FarmaYaProperties props, MovementService movements, UserRepository users) {
         this.mongo = mongo;
         this.orders = orders;
         this.props = props;
         this.movements = movements;
+        this.users = users;
     }
 
     // =====================================================================
@@ -78,6 +83,12 @@ public class OrderService {
         if (blank(city)) city = clean(r.zone(), 100);
         if (blank(city) || city.equalsIgnoreCase("Zona General")) city = clean(client.city, 100);
         if (blank(city)) city = "Barranquilla";
+
+        // Validar cobertura: si no hay farmacias activas cerca de la zona, NO generar el pedido
+        Dtos.AvailabilityResponse avail = checkPharmacyAvailability(city, r.latitude(), r.longitude());
+        if (!avail.available()) {
+            throw ApiException.bad(avail.message());
+        }
 
         // La ubicación del cliente es su dirección / punto real, nunca "Zona General"
         String zone = address;
@@ -451,6 +462,39 @@ public class OrderService {
         return str.trim().toLowerCase()
                 .replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
                 .replace("zona general", "").trim();
+    }
+
+    /**
+     * Consulta si existen farmacias activas y verificadas dentro del radio máximo (5.0 km) en la misma ciudad.
+     * Si no hay farmacias disponibles, se evita generar el pedido para no dejar al cliente desatendido.
+     */
+    public Dtos.AvailabilityResponse checkPharmacyAvailability(String city, Double latitude, Double longitude) {
+        String normCity = blank(city) ? "Barranquilla" : city.trim();
+        List<User> activePharmacies = users.findByRole(Role.FARMACIA).stream()
+                .filter(ph -> ph.enabled && ph.verified && ph.active)
+                .filter(ph -> sameCity(normCity, ph.city, ph.zone))
+                .toList();
+
+        if (activePharmacies.isEmpty()) {
+            return new Dtos.AvailabilityResponse(false, 0,
+                    "No hay farmacias disponibles cerca de tu zona en este momento (en " + normCity + "). Por esta razón no es posible completar el pedido actualmente.");
+        }
+
+        if (latitude != null && longitude != null) {
+            long countNear = activePharmacies.stream().filter(ph -> {
+                if (ph.latitude == null || ph.longitude == null) return true;
+                Double d = estimatedRoadDistanceKm(ph.latitude, ph.longitude, latitude, longitude);
+                return d == null || d <= 5.0;
+            }).count();
+
+            if (countNear == 0) {
+                return new Dtos.AvailabilityResponse(false, 0,
+                        "No hay farmacias disponibles cerca de tu zona (radio máximo 5 km). Por esta razón no se puede completar el pedido actualmente.");
+            }
+            return new Dtos.AvailabilityResponse(true, (int) countNear, "Hay " + countNear + " farmacia(s) disponible(s) en tu zona.");
+        }
+
+        return new Dtos.AvailabilityResponse(true, activePharmacies.size(), "Hay farmacias disponibles en tu zona.");
     }
 
     // =====================================================================

@@ -1,5 +1,6 @@
 package com.farmaya.web;
 
+import com.farmaya.model.Dtos;
 import com.farmaya.model.Dtos.CreateOrderRequest;
 import com.farmaya.model.Dtos.NoteRequest;
 import com.farmaya.model.Order;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,6 +24,14 @@ public class OrderController {
 
     public OrderController(OrderService orders) {
         this.orders = orders;
+    }
+
+    @GetMapping("/check-availability")
+    public Dtos.AvailabilityResponse checkAvailability(
+            @RequestParam(value = "city", required = false) String city,
+            @RequestParam(value = "lat", required = false) Double lat,
+            @RequestParam(value = "lng", required = false) Double lng) {
+        return orders.checkPharmacyAvailability(city, lat, lng);
     }
 
     @Roles(Role.CLIENTE)

@@ -5434,10 +5434,17 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
     border-radius: 14px !important;
   }
   .pharmacy-header-title {
-    font-size: 17px !important;
+    font-size: 18px !important;
   }
   .pharmacy-header-address {
     font-size: 11.5px !important;
+  }
+  .pharmacy-activation-box {
+    padding: 6px 10px !important;
+    gap: 8px !important;
+  }
+  .pharmacy-switch-label {
+    font-size: 12px !important;
   }
   .pharmacy-status-compact-btn {
     padding: 8px 14px !important;
@@ -5448,7 +5455,7 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
 }
 
 /* ==========================================================================
-   53. RECUADRO DE CABECERA DE FARMACIA (Botica Central + Botón Corto)
+   53. RECUADRO DE CABECERA DE FARMACIA Y ADMINISTRACIÓN
    ========================================================================== */
 .pharmacy-header-card {
   display: flex;
@@ -5479,7 +5486,7 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
 
 .pharmacy-header-title {
   margin: 0;
-  font-size: clamp(20px, 2.6vw, 28px);
+  font-size: clamp(23px, 3.2vw, 32px);
   font-weight: 800;
   letter-spacing: -0.03em;
   color: var(--text);
@@ -5489,6 +5496,40 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
 .pharmacy-header-address {
   font-size: 13px;
   color: var(--muted);
+}
+
+.pharmacy-activation-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  flex-shrink: 0;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+[data-theme="dark"] .pharmacy-activation-box {
+  background: rgba(22, 134, 93, 0.08);
+  border-color: rgba(22, 134, 93, 0.28);
+}
+
+.pharmacy-switch-label {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.admin-header-card {
+  margin-bottom: 8px;
+}
+
+.admin-header-status-box {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .pharmacy-status-compact-btn {

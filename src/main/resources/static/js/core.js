@@ -189,10 +189,10 @@ function toast(msg, kind = 'ok') {
   const textSpan = h('span', { class: 'toast-msg' }, msg);
   const t = h('div', { class: 'toast ' + kind, role: kind === 'error' ? 'alert' : 'status' }, iconSpan, textSpan);
   t.style.cursor = 'pointer';
-  t.title = 'Haz clic para cerrar';
+  t.title = 'Toca para cerrar';
   t.addEventListener('click', () => {
     t.classList.add('out');
-    setTimeout(() => t.remove(), 250);
+    setTimeout(() => t.remove(), 320);
   });
 
   const activeDialog = document.querySelector('dialog[open]');
@@ -207,10 +207,25 @@ function toast(msg, kind = 'ok') {
     container = document.getElementById('toasts');
   }
 
-  if (container) container.append(t);
+  if (container) {
+    // Máximo 2 alarmas activas simultáneamente: si ya hay 2, se retira la más antigua suavemente
+    const activeToasts = container.querySelectorAll('.toast:not(.out)');
+    if (activeToasts.length >= 2) {
+      for (let i = 0; i <= activeToasts.length - 2; i++) {
+        const old = activeToasts[i];
+        old.classList.add('out');
+        setTimeout(() => old.remove(), 320);
+      }
+    }
+    container.append(t);
+  }
 
-  setTimeout(() => t.classList.add('out'), 3800);
-  setTimeout(() => t.remove(), 4400);
+  setTimeout(() => {
+    if (t.parentNode) {
+      t.classList.add('out');
+      setTimeout(() => t.remove(), 320);
+    }
+  }, 4200);
 }
 
 function openDialog(content, opts = {}) {

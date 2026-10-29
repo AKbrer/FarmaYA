@@ -35,6 +35,7 @@ public final class Dtos {
     public record PasswordRequest(String current, String next) {}
     public record EditPermissionRequest(String reason) {}
     public record CreateAdminRequest(String name, String email, String phone, String password) {}
+    public record AvailabilityResponse(boolean available, int pharmacyCount, String message) {}
     public record GoogleLoginRequest(
         @com.fasterxml.jackson.annotation.JsonProperty("idToken") String idToken,
         @com.fasterxml.jackson.annotation.JsonProperty("email") String email,

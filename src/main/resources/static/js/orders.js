@@ -214,7 +214,11 @@ function orderDetail(o, viewer) {
     blister(o, '', { hint: 'Toca un paso para ver cuándo ocurrió.' }),
     h('p', { class: 'status-line' }, statusMessage(o, role)),
     timerLine(o),
-    o.status === 'CON_INCIDENCIA' && h('div', { class: 'notice bad' }, h('strong', null, 'Incidencia reportada por ' + (o.incidentBy || '')), h('span', null, o.incidentNote)),
+    o.status === 'CON_INCIDENCIA' && (
+      viewer.role === 'FARMACIA' && (o.incidentNote || '').toLowerCase().includes('repartidor')
+        ? notice('warn', 'Alerta: Sin repartidor disponible en tu zona', (o.incidentNote || 'No se encontraron repartidores disponibles en un radio de 5.0 km alrededor de tu farmacia.') + ' Reintentaremos la asignación tan pronto haya un repartidor en cobertura.')
+        : h('div', { class: 'notice bad' }, h('strong', null, 'Incidencia reportada por ' + (o.incidentBy || '')), h('span', null, o.incidentNote))
+    ),
     codeVisible && h('div', { class: 'code-card' },
       h('div', { class: 'digits', 'aria-label': 'Código de entrega ' + o.deliveryCode.split('').join(' ') }, o.deliveryCode.split('').map(d => h('span', null, d))),
       h('p', null, 'Es tu código de entrega. Díctaselo al repartidor solo cuando tengas el pedido en la mano.')),

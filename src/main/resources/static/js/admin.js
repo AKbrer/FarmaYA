@@ -2,9 +2,21 @@
 
 let adminFilter = '';
 
+function adminHeaderCard(user) {
+  return h('div', { class: 'pharmacy-header-card admin-header-card' },
+    h('div', { class: 'pharmacy-header-info' },
+      h('h1', { class: 'pharmacy-header-title' }, 'Panel de Administración'),
+      h('span', { class: 'pharmacy-header-address muted' }, (user.name || 'Administrador') + (user.email ? ' · ' + user.email : '') + ' · Control Central FarmaYA')
+    ),
+    h('div', { class: 'admin-header-status-box' },
+      h('span', { class: 'header-tag' }, 'Operación Central Activa')
+    )
+  );
+}
+
 function adminView(user) {
   let root;
-  root = h('div', { class: 'stack' }, h('h1', { class: 'page-title' }, 'Administración'), sideNavigation([
+  root = h('div', { class: 'stack admin-root' }, adminHeaderCard(user), sideNavigation([
     { label: 'Dashboard', icon: 'layout-dashboard', render: () => adminSummary(status => { adminFilter = status; root.querySelectorAll('.side-nav-item')[1]?.click(); }) },
     { label: 'Pedidos', icon: 'package', render: adminOrders },
     { label: 'Farmacias', icon: 'store', render: () => adminUsers('FARMACIA') },

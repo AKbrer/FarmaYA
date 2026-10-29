@@ -420,6 +420,35 @@ function renderClientDashboard() {
     const mapNode = h('div', { class: 'farmaya-map', role: 'application', 'aria-label': 'Mapa para seleccionar la entrega' });
 
     let map, marker;
+    const coverageNoticeBox = h('div', { class: 'checkout-coverage-notice', style: 'margin: 12px 0;' });
+    const submitBtn = h('button', { class: 'btn primary', type: 'submit' }, 'Confirmar y solicitar');
+    let coverageCheckTimer = null;
+
+    async function checkCoverage() {
+      const lat = Number(latInput.value);
+      const lng = Number(lngInput.value);
+      const city = cityInput.value.trim() || user.city || 'Barranquilla';
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return true;
+      try {
+        const res = await API.get('/orders/check-availability?city=' + encodeURIComponent(city) + '&lat=' + lat + '&lng=' + lng);
+        if (res && res.available === false) {
+          coverageNoticeBox.replaceChildren(
+            notice('warn', 'Sin farmacia cerca de tu zona', res.message || 'No hay farmacias disponibles en tu zona en este momento.')
+          );
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Sin farmacia en tu zona';
+          return false;
+        } else {
+          coverageNoticeBox.replaceChildren();
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Confirmar y solicitar';
+          return true;
+        }
+      } catch (e) {
+        return true;
+      }
+    }
+
     function selectPoint(pos) {
       const lat = Number(pos.lat), lng = Number(pos.lng);
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
@@ -427,7 +456,14 @@ function renderClientDashboard() {
       lngInput.value = String(lng);
       if (marker) marker.setLatLng([lat, lng]);
       mapStatus.textContent = 'Ubicación seleccionada (' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '). Puedes afinar arrastrando el marcador.';
+      clearTimeout(coverageCheckTimer);
+      coverageCheckTimer = setTimeout(checkCoverage, 400);
     }
+
+    cityInput.addEventListener('change', () => {
+      clearTimeout(coverageCheckTimer);
+      coverageCheckTimer = setTimeout(checkCoverage, 400);
+    });
 
     const locateBtn = h('button', {
       class: 'btn secondary',
@@ -442,6 +478,8 @@ function renderClientDashboard() {
             if (r) {
               if (!address.value.trim()) address.value = r.address || '';
               if (!cityInput.value.trim()) cityInput.value = r.city || '';
+              clearTimeout(coverageCheckTimer);
+              coverageCheckTimer = setTimeout(checkCoverage, 400);
             }
           });
         } catch (err) {
@@ -458,7 +496,11 @@ function renderClientDashboard() {
           mapStatus.textContent = 'Por favor selecciona tu ubicación exacta en el mapa o pulsa «Usar mi ubicación actual».';
           return;
         }
-        const btn = form.querySelector('button[type=submit]');
+        const hasCoverage = await checkCoverage();
+        if (!hasCoverage) {
+          toast('No hay farmacia disponible cerca de tu zona (radio máximo 5 km)', 'error');
+          return;
+        }
         const payload = {
           items: clientCart.map(i => ({ name: i.name, quantity: i.quantity, prescription: !!i.rx, note: '' })),
           address: address.value.trim(),
@@ -469,14 +511,23 @@ function renderClientDashboard() {
           phone: user.phone || '',
           notes: notes.value.trim()
         };
-        const result = await act(btn, () => API.post('/orders', payload), 'Solicitud enviada a la red de farmacias');
-        if (result) {
-          clientCart = [];
-          d.close();
-          refreshAll();
-          drawCart();
-          drawProducts();
-          openOrderDetail(result.id);
+        try {
+          const result = await act(submitBtn, () => API.post('/orders', payload), 'Solicitud enviada a la red de farmacias');
+          if (result) {
+            clientCart = [];
+            d.close();
+            refreshAll();
+            drawCart();
+            drawProducts();
+            openOrderDetail(result.id);
+          }
+        } catch (err) {
+          coverageNoticeBox.replaceChildren(
+            notice('warn', 'Sin farmacia cerca de tu zona', err.message || 'No hay farmacias disponibles en tu zona en este momento. El pedido no se ha generado.')
+          );
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Sin farmacia en tu zona';
+          toast(err.message, 'error');
         }
       }
     },
@@ -490,9 +541,10 @@ function renderClientDashboard() {
       latInput,
       lngInput,
       field('Indicaciones adicionales (opcional)', notes),
+      coverageNoticeBox,
       h('div', { class: 'actions' },
         h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Volver al catálogo'),
-        h('button', { class: 'btn primary', type: 'submit' }, 'Confirmar y solicitar')
+        submitBtn
       )
     );
 
