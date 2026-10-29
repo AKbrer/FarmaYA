@@ -88,15 +88,26 @@ public class AdminService {
     public User setVerified(String id, boolean value, User admin) {
         User u = find(id);
         if (u.role == Role.CLIENTE || u.role == Role.ADMIN) throw ApiException.bad("Solo se verifican farmacias y repartidores.");
-        User changed = update(id, new Update().set("verified", value));
+        Update up = new Update().set("verified", value);
+        if (value) {
+            up.set("enabled", true).set("active", true);
+        }
+        User changed = update(id, up);
         movements.record("USUARIO_VERIFICACION", (value ? "Verificó " : "Retiró verificación a ") + displayName(changed), admin, null);
+        if (value && changed.email != null && !changed.email.isBlank()) {
+            movements.record("NOTIFICACION_CORREO", "Notificación oficial de aprobación y activación de cuenta enviada a " + changed.email, admin, null);
+        }
         return changed;
     }
 
     public User setEnabled(String id, boolean value, User admin) {
         User u = find(id);
         if (u.id.equals(admin.id)) throw ApiException.bad("No puedes deshabilitar tu propia cuenta.");
-        User changed = update(id, new Update().set("enabled", value));
+        Update up = new Update().set("enabled", value);
+        if (value) {
+            up.set("active", true);
+        }
+        User changed = update(id, up);
         movements.record("USUARIO_ESTADO", (value ? "Habilitó " : "Deshabilitó ") + displayName(changed), admin, null);
         return changed;
     }
@@ -160,9 +171,9 @@ public class AdminService {
     private User update(String id, Update update) {
         User user = find(id);
         org.springframework.data.mongodb.core.query.Query q = new org.springframework.data.mongodb.core.query.Query(
-                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(id));
+                com.farmaya.repo.UserRepository.idCriteria(id));
         for (String col : com.farmaya.repo.UserRepository.COLLECTIONS) {
-            mongo.updateFirst(q, update, col);
+            mongo.updateMulti(q, update, col);
         }
         org.bson.Document changes = update.getUpdateObject();
         Object set = changes.get("$set");
@@ -170,7 +181,11 @@ public class AdminService {
             fields.forEach((key, value) -> {
                 switch (key) {
                     case "verified" -> user.verified = Boolean.TRUE.equals(value);
-                    case "enabled" -> user.enabled = Boolean.TRUE.equals(value);
+                    case "enabled" -> {
+                        user.enabled = Boolean.TRUE.equals(value);
+                        if (user.enabled) user.active = true;
+                    }
+                    case "active" -> user.active = Boolean.TRUE.equals(value);
                     case "canEditProfile" -> user.canEditProfile = Boolean.TRUE.equals(value);
                     case "editPermissionRequested" -> user.editPermissionRequested = Boolean.TRUE.equals(value);
                     default -> { }

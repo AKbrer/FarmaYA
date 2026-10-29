@@ -53,8 +53,9 @@ public class OrderController {
 
     @Roles(Role.CLIENTE)
     @PostMapping("/{id}/accept-price")
-    public Order acceptPrice(@PathVariable String id, @RequestAttribute("user") User user) {
-        return orders.acceptPrice(id, user);
+    public Order acceptPrice(@PathVariable String id, @RequestAttribute("user") User user,
+                             @RequestBody(required = false) java.util.Map<String, Object> paymentData) {
+        return orders.acceptPrice(id, user, paymentData);
     }
 
     @Roles(Role.CLIENTE)

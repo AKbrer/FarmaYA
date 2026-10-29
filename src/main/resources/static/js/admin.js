@@ -179,8 +179,12 @@ function adminUsers(role) {
     if (!shown.length) return empty('Sin resultados', 'No encontramos ' + titles[role] + ' que coincidan con la búsqueda.');
     const needsVerify = role !== 'CLIENTE';
     const toggle = (u, kind, value, ok) => async e => {
-      await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
-      u[kind] = value;
+      const updated = await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
+      if (updated) {
+        Object.assign(u, updated);
+      } else {
+        u[kind] = value;
+      }
       refreshAll();
     };
     return h('div', { class: 'table-wrap' }, h('table', { class: 'users' },
@@ -498,8 +502,12 @@ function adminAdministratorsView(currentUser) {
     if (!shown.length) return empty('Sin resultados', 'No encontramos administradores que coincidan con la búsqueda.');
 
     const toggle = (u, kind, value, ok) => async e => {
-      await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
-      u[kind] = value;
+      const updated = await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
+      if (updated) {
+        Object.assign(u, updated);
+      } else {
+        u[kind] = value;
+      }
       refreshAll();
     };
 

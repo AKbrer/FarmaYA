@@ -463,58 +463,76 @@ function partnerActivity(endpoint) {
 
 /* Pie de página unificado de soporte y contacto asistencial para todas las vistas */
 function farmayaSupportFooter() {
-  return h('footer', { class: 'farmaya-support-footer', role: 'contentinfo' },
-    h('div', { class: 'farmaya-footer-inner' },
-      h('div', { class: 'farmaya-footer-col brand-col' },
-        h('div', { class: 'farmaya-footer-brand-head' },
-          h('span', { class: 'brand-mark-footer' }, '+'),
-          h('strong', { class: 'brand-title-footer' }, 'FarmaYA')
-        ),
-        h('p', { class: 'farmaya-footer-slogan' },
-          'Canal de salud digital asistencial, conexión directa con droguerías autorizadas y entregas seguras.'
-        ),
-        h('div', { class: 'footer-status-pill' },
-          h('span', { class: 'pulse-dot' }),
-          h('span', null, 'Canal de Soporte 24/7 Disponible')
+  return h('footer', { class: 'farmaya-split-footer', role: 'contentinfo' },
+    h('div', { class: 'farmaya-split-container' },
+      // Lado Izquierdo: Atención Telefónica & Urgencias
+      h('div', { class: 'split-half left-half' },
+        h('div', { class: 'split-half-content' },
+          h('div', { class: 'split-badge emergency-badge' },
+            h('span', { class: 'pulse-dot' }),
+            h('span', null, 'Línea de Atención & Emergencias 24/7')
+          ),
+          h('h3', { class: 'split-heading' }, 'Atención Médica & Urgencias'),
+          h('p', { class: 'split-desc' }, 'Canal directo prioritario para orientación farmacéutica, reporte de emergencias y pedidos urgentes con cobertura nacional.'),
+          h('div', { class: 'split-cards-row' },
+            h('div', { class: 'split-contact-card' },
+              h('span', { class: 'split-ico-circle' }, icon('phone')),
+              h('div', null,
+                h('span', { class: 'split-label' }, 'PBX Nacional / Línea Gratuita Directa'),
+                h('a', { class: 'split-val', href: 'tel:+576053092244' }, '+57 (605) 309-2244'),
+                h('small', { class: 'split-sub' }, 'Atención continua las 24 horas del día')
+              )
+            ),
+            h('div', { class: 'split-contact-card' },
+              h('span', { class: 'split-ico-circle' }, icon('phone')),
+              h('div', null,
+                h('span', { class: 'split-label' }, 'WhatsApp de Urgencias & Despacho'),
+                h('a', { class: 'split-val', href: 'https://wa.me/573009123456', target: '_blank' }, '+57 300 912 3456'),
+                h('small', { class: 'split-sub' }, 'Chat asistencial en tiempo real con farmacéuticos de turno')
+              )
+            )
+          )
         )
       ),
-      h('div', { class: 'farmaya-footer-col' },
-        h('h4', { class: 'footer-col-title' }, 'Líneas de Atención & Ayuda'),
-        h('div', { class: 'footer-contact-row' },
-          h('span', { class: 'footer-ico' }, icon('phone')),
-          h('div', null,
-            h('span', { class: 'contact-meta-label' }, 'PBX / Línea Directa:'),
-            h('a', { class: 'contact-link', href: 'tel:+576053092244' }, '+57 (605) 309-2244')
-          )
-        ),
-        h('div', { class: 'footer-contact-row' },
-          h('span', { class: 'footer-ico' }, icon('phone')),
-          h('div', null,
-            h('span', { class: 'contact-meta-label' }, 'WhatsApp de Urgencias:'),
-            h('a', { class: 'contact-link', href: 'https://wa.me/573009123456', target: '_blank' }, '+57 300 912 3456')
-          )
-        )
-      ),
-      h('div', { class: 'farmaya-footer-col' },
-        h('h4', { class: 'footer-col-title' }, 'Correos & Reporte de Problemas'),
-        h('div', { class: 'footer-contact-row' },
-          h('span', { class: 'footer-ico' }, icon('inbox')),
-          h('div', null,
-            h('span', { class: 'contact-meta-label' }, 'Soporte e Incidencias:'),
-            h('a', { class: 'contact-link', href: 'mailto:soporte@farmaya.com.co' }, 'soporte@farmaya.com.co')
-          )
-        ),
-        h('div', { class: 'footer-contact-row' },
-          h('span', { class: 'footer-ico' }, icon('shield')),
-          h('div', null,
-            h('span', { class: 'contact-meta-label' }, 'Atención al Usuario:'),
-            h('a', { class: 'contact-link', href: 'mailto:atencion@farmaya.com.co' }, 'atencion@farmaya.com.co')
+      // Lado Derecho: Centro de Soporte Digital & PQRS
+      h('div', { class: 'split-half right-half' },
+        h('div', { class: 'split-half-content' },
+          h('div', { class: 'split-badge support-badge' },
+            h('span', { class: 'split-mini-ico' }, icon('shield')),
+            h('span', null, 'Centro de Soporte Institucional FarmaYA')
+          ),
+          h('h3', { class: 'split-heading' }, 'Canales Digitales & PQRS'),
+          h('p', { class: 'split-desc' }, 'Soporte técnico a droguerías aliadas, verificación de domiciliarios, gestión de incidencias y atención a clientes.'),
+          h('div', { class: 'split-cards-row' },
+            h('div', { class: 'split-contact-card' },
+              h('span', { class: 'split-ico-circle navy' }, icon('inbox')),
+              h('div', null,
+                h('span', { class: 'split-label' }, 'Soporte Técnico & Plataforma'),
+                h('a', { class: 'split-val navy', href: 'mailto:soporte@farmaya.com.co' }, 'soporte@farmaya.com.co'),
+                h('small', { class: 'split-sub' }, 'Respuesta garantizada en menos de 15 minutos')
+              )
+            ),
+            h('div', { class: 'split-contact-card' },
+              h('span', { class: 'split-ico-circle navy' }, icon('shield')),
+              h('div', null,
+                h('span', { class: 'split-label' }, 'Atención al Usuario & Afiliaciones'),
+                h('a', { class: 'split-val navy', href: 'mailto:atencion@farmaya.com.co' }, 'atencion@farmaya.com.co'),
+                h('small', { class: 'split-sub' }, 'Lunes a Domingo con cobertura nacional en Colombia')
+              )
+            )
           )
         )
       )
     ),
-    h('div', { class: 'farmaya-footer-bottom' },
-      h('small', null, '© 2026 FarmaYA Tecnologías en Salud S.A.S. • Todos los derechos reservados • Cobertura Asistencial Colombia')
+    h('div', { class: 'farmaya-split-footer-bar' },
+      h('div', { class: 'split-footer-bar-inner' },
+        h('div', { class: 'brand-mini-row' },
+          h('span', { class: 'brand-mark-footer' }, '+'),
+          h('strong', null, 'FarmaYA'),
+          h('span', { class: 'muted' }, '· Red Digital Asistencial de Droguerías y Repartos de Salud')
+        ),
+        h('span', { class: 'muted' }, '© 2026 FarmaYA S.A.S. • Todos los derechos reservados • Colombia')
+      )
     )
   );
 }

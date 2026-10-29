@@ -196,14 +196,29 @@ function orderDetail(o, viewer) {
           h('span', null, i.name + ' ×' + i.quantity), i.note && h('small', { class: 'muted' }, i.note)))))
       : null);
 
-  const delivery = (o.address || o.city) && block('Entrega y Trayecto',
+  const deliveryFee = o.courierEarnings != null ? o.courierEarnings : Math.max(3000, 2000 + Math.ceil(o.deliveryDistanceKm || 2.5) * 1000);
+  const delivery = (o.address || o.city) && block('Entrega, Ruta & Tarifa de Domicilio',
     h('div', null,
       o.clientName && h('strong', null, o.clientName),
       o.address && h('span', { class: 'block-line' }, o.address),
       o.city && h('span', { class: 'muted block-line' }, o.city),
-      o.deliveryDistanceKm ? h('span', { class: 'tag tone-teal', style: 'margin-top:6px; display:inline-block;' }, `Distancia estimada: ${o.deliveryDistanceKm} km`) : null,
-      o.courierEarnings ? h('span', { class: 'tag tone-done', style: 'margin-top:6px; margin-left:6px; display:inline-block;' }, `Tarifa domicilio: ${money(o.courierEarnings)}`) : null,
-      role === 'ADMIN' && o.total != null ? h('span', { class: 'tag tone-teal', style: 'margin-top:6px; margin-left:6px; display:inline-block; font-weight:700;' }, `Ganancia FarmaYA (10%): ${money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.10))}`) : null,
+      h('div', { style: 'display:flex; flex-wrap:wrap; gap:8px; margin: 8px 0;' },
+        o.deliveryDistanceKm ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, `Distancia calculada: ${o.deliveryDistanceKm} km`) : null,
+        h('span', { class: 'tag tone-done', style: 'font-weight:700;' }, `Tarifa del domicilio: ${money(deliveryFee)}`),
+        role === 'ADMIN' && o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, `Ganancia FarmaYA (10%): ${money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.10))}`) : null,
+        o.paymentStatus === 'PAGADO_FARMAYA' ? h('span', { class: 'badge tone-done', style: 'font-weight:700;' }, `Productos Pagados a FarmaYA (${o.paymentMethod || 'PSE/Nequi'})`) : null
+      ),
+      h('div', { class: 'delivery-fee-callout', style: 'margin: 10px 0 6px 0; padding: 10px 14px;' },
+        h('span', { class: 'callout-ico', style: 'width:22px; height:22px; font-size:13px;' }, '!'),
+        h('div', null,
+          h('strong', { style: 'font-size:13px;' }, 'PAGO DEL DOMICILIO AL REPARTIDOR'),
+          h('p', { style: 'font-size:12.5px; margin:0;' },
+            'El valor del domicilio (',
+            h('strong', null, money(deliveryFee)),
+            ') se le debe realizar directamente al domiciliario al momento de llegar en efectivo o transferencia.'
+          )
+        )
+      ),
       o.clientPhone && h('span', { class: 'muted block-line' }, o.clientPhone),
       o.notes && h('span', { class: 'muted block-line' }, 'Nota: ' + o.notes)
     )
@@ -239,7 +254,10 @@ function detailActions(o, viewer) {
 
   if (viewer.role === 'CLIENTE') {
     if (o.status === 'PRECIO_POR_ACEPTAR') {
-      btns.push(h('button', { class: 'btn primary', onclick: run(post('/orders/' + o.id + '/accept-price', 'Precio aceptado')) }, 'Aceptar precio de ' + money(o.total)));
+      btns.push(h('button', {
+        class: 'btn primary',
+        onclick: () => openPaymentGatewayDialog(o)
+      }, 'Pagar ' + money(o.total) + ' por PSE / Nequi'));
       btns.push(h('button', { class: 'btn ghost', onclick: async e => {
         if (await confirmBox({ title: '¿Buscar otra farmacia?', message: 'No continuaremos con esta farmacia. Enviaremos tu pedido a las demás.', ok: 'Buscar otra' }))
           post('/orders/' + o.id + '/decline-price', 'Buscando otra farmacia')(e.target);
@@ -275,4 +293,156 @@ function detailActions(o, viewer) {
     } }, 'Reportar un problema'));
   }
   return btns.length ? h('div', { class: 'detail-actions' }, btns) : null;
+}
+
+function openPaymentGatewayDialog(o) {
+  const subtotal = o.total || 0;
+  const deliveryDist = o.deliveryDistanceKm || 2.5;
+  const deliveryFee = o.courierEarnings || Math.max(3000, 2000 + Math.ceil(deliveryDist) * 1000);
+  const generalTotal = subtotal + deliveryFee;
+  let selectedMethod = 'PSE';
+
+  const bankSelect = h('select', { class: 'input block' },
+    ['Bancolombia', 'Nequi', 'Davivienda', 'Banco de Bogotá', 'BBVA Colombia', 'Banco de Occidente', 'Scotiabank Colpatria', 'Banco Popular', 'Itaú Colombia', 'Dale!', 'Lulo Bank'].map(b =>
+      h('option', { value: b }, b)
+    )
+  );
+  const docTypeSelect = h('select', { class: 'input', style: 'max-width:120px;' },
+    [
+      { id: 'CC', name: 'C.C.' },
+      { id: 'CE', name: 'C.E.' },
+      { id: 'NIT', name: 'NIT' },
+      { id: 'TI', name: 'T.I.' }
+    ].map(t => h('option', { value: t.id }, t.name))
+  );
+  const docNumberInput = h('input', { type: 'text', class: 'input block', placeholder: 'Ej. 1042389123', required: true });
+  const nequiPhoneInput = h('input', { type: 'tel', maxlength: '10', class: 'input block', placeholder: '3001234567 (10 dígitos)', value: (state.user?.phone || '') });
+
+  const psePane = h('div', { id: 'psePaymentPane', class: 'form-stack' },
+    field('Banco de origen (PSE Colombia)', bankSelect),
+    h('div', { style: 'display:grid; grid-template-columns: 120px 1fr; gap: 10px;' },
+      field('Tipo Doc.', docTypeSelect),
+      field('Número de Documento', docNumberInput)
+    )
+  );
+
+  const nequiPane = h('div', { id: 'nequiPaymentPane', class: 'form-stack', style: 'display:none;' },
+    field('Número de celular registrado en Nequi', nequiPhoneInput),
+    h('small', { class: 'muted' }, 'Recibirás una notificación push en tu App Nequi para autorizar el débito seguro de ' + money(subtotal) + '.')
+  );
+
+  const tabPse = h('button', {
+    type: 'button',
+    class: 'payment-tab-btn active',
+    onclick: () => {
+      selectedMethod = 'PSE';
+      tabPse.classList.add('active');
+      tabNequi.classList.remove('active');
+      psePane.style.display = 'grid';
+      nequiPane.style.display = 'none';
+      updatePayBtn();
+    }
+  }, icon('shield'), 'PSE · Débito Bancario');
+
+  const tabNequi = h('button', {
+    type: 'button',
+    class: 'payment-tab-btn',
+    onclick: () => {
+      selectedMethod = 'NEQUI';
+      tabNequi.classList.add('active');
+      tabPse.classList.remove('active');
+      psePane.style.display = 'none';
+      nequiPane.style.display = 'grid';
+      updatePayBtn();
+    }
+  }, icon('phone'), 'Nequi Colombia');
+
+  const payBtn = h('button', {
+    class: 'btn primary block',
+    type: 'button',
+    style: 'margin-top: 16px; font-size:16px; padding:14px;'
+  }, 'Pagar ' + money(subtotal) + ' por PSE y Confirmar');
+
+  const updatePayBtn = () => {
+    payBtn.textContent = 'Pagar ' + money(subtotal) + ' por ' + selectedMethod + ' y Confirmar';
+  };
+
+  payBtn.addEventListener('click', async e => {
+    if (selectedMethod === 'NEQUI' && nequiPhoneInput.value.trim().length < 10) {
+      toast('Ingresa un número de celular Nequi válido de 10 dígitos.', 'error');
+      return;
+    }
+    await act(e.currentTarget, async () => {
+      await API.post('/orders/' + o.id + '/accept-price', {
+        method: selectedMethod,
+        bank: selectedMethod === 'PSE' ? bankSelect.value : 'Nequi',
+        docNumber: docNumberInput.value.trim(),
+        phone: nequiPhoneInput.value.trim(),
+        amount: subtotal
+      });
+      d.close();
+      refreshAll();
+    }, 'Pago de productos recaudado exitosamente en cuenta FarmaYA.');
+  });
+
+  const content = h('div', { class: 'sheet-body payment-modal-body' },
+    h('div', { class: 'payment-header' },
+      h('span', { class: 'payment-gateway-ico' }, icon('shield')),
+      h('div', null,
+        h('h3', { style: 'margin:0;' }, 'Pasarela de Pagos FarmaYA (Colombia)'),
+        h('span', { class: 'small muted' }, 'Recaudo seguro para el pedido ' + o.code)
+      )
+    ),
+
+    // Desglose Financiero
+    h('div', { class: 'payment-breakdown-card' },
+      h('div', { class: 'breakdown-row' },
+        h('span', null, 'Subtotal Medicamentos (Productos):'),
+        h('strong', null, money(subtotal))
+      ),
+      h('div', { class: 'breakdown-row' },
+        h('span', null, `Tarifa de Domicilio (~${deliveryDist} km):`),
+        h('strong', { class: 'muted' }, money(deliveryFee))
+      ),
+      h('div', { class: 'breakdown-row total-row' },
+        h('span', null, 'Total General del Pedido:'),
+        h('strong', { style: 'color:var(--primary);' }, money(generalTotal))
+      )
+    ),
+
+    // AVISO OBLIGATORIO Y DESTACADO
+    h('div', { class: 'delivery-fee-callout' },
+      h('span', { class: 'callout-ico' }, '!'),
+      h('div', null,
+        h('strong', null, 'AVISO IMPORTANTE SOBRE EL PAGO DEL DOMICILIO'),
+        h('p', null,
+          'El valor de los medicamentos (',
+          h('strong', null, money(subtotal)),
+          ') se procesa y recauda en línea a la cuenta oficial de FarmaYA. ',
+          h('strong', null, 'El valor del domicilio (' + money(deliveryFee) + ') SE LE DEBE REALIZAR DIRECTAMENTE AL DOMICILIARIO AL MOMENTO DE LLEGAR en efectivo o transferencia.')
+        )
+      )
+    ),
+
+    // Cuenta Bancaria FarmaYA
+    h('div', { class: 'farmaya-bank-banner' },
+      h('span', null, 'Cuenta Institucional de Recaudo FarmaYA Colombia:'),
+      h('strong', null, 'Bancolombia Cuenta Ahorros # 482-910245-81 (NIT 901.684.220-4 FarmaYA S.A.S.)'),
+      h('small', null, 'FarmaYA retiene la comisión del 10% por servicio digital y liquida el excedente a la droguería.')
+    ),
+
+    // Selector PSE / Nequi
+    h('div', { class: 'payment-method-tabs' }, tabPse, tabNequi),
+    psePane,
+    nequiPane,
+    payBtn,
+    h('button', {
+      class: 'btn ghost block',
+      type: 'button',
+      style: 'margin-top:8px;',
+      onclick: () => d.close()
+    }, 'Cerrar')
+  );
+
+  const d = openDialog(content);
 }

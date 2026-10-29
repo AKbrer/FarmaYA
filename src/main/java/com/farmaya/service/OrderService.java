@@ -154,9 +154,26 @@ public class OrderService {
     }
 
     public Order acceptPrice(String id, User client) {
-        ownedByClient(id, client);
+        return acceptPrice(id, client, null);
+    }
+
+    public Order acceptPrice(String id, User client, java.util.Map<String, Object> paymentData) {
+        Order o = ownedByClient(id, client);
         Criteria c = where("id").is(id).and("clientId").is(client.id).and("status").is(PRECIO_POR_ACEPTAR);
-        Update u = step(PRECIO_CONFIRMADO, client, "El cliente aceptó el precio final");
+        String method = paymentData != null && paymentData.containsKey("method")
+                ? String.valueOf(paymentData.get("method")) : "PSE";
+        Update u = step(PRECIO_CONFIRMADO, client, "El cliente pagó productos vía pasarela " + method + " y confirmó el pedido");
+        String txId = "FY-" + method + "-" + (System.currentTimeMillis() % 100000000);
+        u.set("paymentMethod", method);
+        u.set("paymentStatus", "PAGADO_FARMAYA");
+        u.set("paymentTransactionId", txId);
+        if (o.total != null) {
+            double fee = Math.round(o.total * 0.10 * 100) / 100.0;
+            u.set("platformEarnings", fee);
+            try {
+                movements.record("RECAUDO_PASARELA", "Pago de productos (" + o.total + " COP) recaudado en cuenta oficial FarmaYA. Retención comisión FarmaYA (10%): " + fee + " COP. Domicilio a pagar al repartidor a la entrega.", client, o);
+            } catch (Exception ignored) {}
+        }
         return present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
     }
 

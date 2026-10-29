@@ -742,19 +742,135 @@ function loginSceneMarkup() {
     </div>`;
 }
 
+function promptEmailOtpVerification({ email, role, onVerified }) {
+  let generatedCode = null;
+  const d = openDialog(h('div', { class: 'sheet-body otp-modal-body' },
+    h('div', { class: 'otp-icon-header' }, icon('shield')),
+    h('h2', { style: 'margin:0 0 8px 0;' }, 'Verificación de Seguridad'),
+    h('p', { class: 'muted', style: 'margin:0 0 16px 0;' }, 'Protección de cuenta y validación de correo electrónico.'),
+
+    // Paso 1: Confirmación de Correo
+    h('div', { id: 'otpStepConfirm' },
+      h('p', { style: 'font-size:15px; margin-bottom:8px;' }, '¿Confirmas que este es tu correo electrónico registrado para acceder?'),
+      h('div', { class: 'otp-email-highlight' }, email),
+      h('p', { class: 'muted small', style: 'margin-bottom:20px;' },
+        'Enviaremos un código numérico generado automáticamente de 6 dígitos para validar tu cuenta.'
+      ),
+      h('div', { class: 'actions', style: 'display:flex; gap:10px; justify-content:flex-end;' },
+        h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Corregir correo'),
+        h('button', {
+          class: 'btn primary',
+          type: 'button',
+          id: 'btnSendOtpCode',
+          onclick: async e => {
+            await act(e.currentTarget, async () => {
+              const res = await API.post('/auth/send-otp', { email, purpose: 'AUTH' });
+              generatedCode = res.code;
+              showOtpInputStep();
+            }, 'Código de 6 dígitos generado y enviado');
+          }
+        }, 'Sí, enviar código')
+      )
+    ),
+
+    // Paso 2: Ingreso de Código OTP
+    h('div', { id: 'otpStepCode', style: 'display:none;' },
+      h('p', { style: 'font-size:14.5px;' },
+        'Hemos generado y enviado un código de seguridad a ',
+        h('strong', null, email), '.'
+      ),
+      h('div', { class: 'notice info', id: 'otpDemoNotice', style: 'margin: 14px 0;' },
+        h('strong', null, 'Código de verificación recibido: '),
+        h('span', { class: 'otp-demo-code', id: 'otpDemoCodeDisplay' }, '------'),
+        h('small', { class: 'block-line muted', style: 'margin-top:4px;' },
+          'Ingresa los 6 dígitos a continuación para validar el acceso.'
+        )
+      ),
+      h('div', { class: 'otp-input-wrap' },
+        h('input', {
+          id: 'inputOtpCode',
+          type: 'text',
+          maxlength: '6',
+          class: 'otp-input-field',
+          placeholder: '000000',
+          autocomplete: 'one-time-code',
+          inputmode: 'numeric',
+          pattern: '[0-9]*'
+        })
+      ),
+      h('div', { class: 'actions', style: 'display:flex; justify-content:space-between; align-items:center;' },
+        h('button', {
+          class: 'btn link small',
+          type: 'button',
+          onclick: async e => {
+            await act(e.currentTarget, async () => {
+              const res = await API.post('/auth/send-otp', { email, purpose: 'RESEND' });
+              generatedCode = res.code;
+              document.getElementById('otpDemoCodeDisplay').textContent = res.code;
+            }, 'Nuevo código enviado');
+          }
+        }, 'Reenviar código'),
+        h('div', { style: 'display:flex; gap:8px;' },
+          h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Cancelar'),
+          h('button', {
+            class: 'btn primary',
+            type: 'button',
+            id: 'btnVerifyOtpCode',
+            onclick: async e => {
+              const codeVal = document.getElementById('inputOtpCode').value.trim();
+              if (codeVal.length !== 6) {
+                toast('Ingresa el código completo de 6 dígitos.', 'error');
+                return;
+              }
+              await act(e.currentTarget, async () => {
+                await API.post('/auth/verify-otp', { email, code: codeVal });
+                d.close();
+                await onVerified();
+              }, 'Correo verificado con éxito');
+            }
+          }, 'Verificar e Ingresar')
+        )
+      )
+    )
+  ));
+
+  function showOtpInputStep() {
+    const s1 = d.querySelector('#otpStepConfirm');
+    const s2 = d.querySelector('#otpStepCode');
+    if (s1) s1.style.display = 'none';
+    if (s2) s2.style.display = 'block';
+    if (generatedCode) {
+      const codeDisplay = d.querySelector('#otpDemoCodeDisplay');
+      if (codeDisplay) codeDisplay.textContent = generatedCode;
+    }
+    const input = d.querySelector('#inputOtpCode');
+    if (input) {
+      if (generatedCode) input.value = generatedCode;
+      setTimeout(() => input.focus(), 100);
+    }
+  }
+}
+
 async function handleLoginSubmit(event) {
   event.preventDefault();
   const btn = document.getElementById('btnLogin');
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
-  await act(btn, async () => {
-    const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'No pudimos iniciar sesión. Revisa tus datos.');
-    API.setToken(data.token); state.user = data.user;
-    location.hash = routeForRole(data.user.role);
-    renderApp();
-    return data;
+
+  promptEmailOtpVerification({
+    email,
+    role: 'LOGIN',
+    onVerified: async () => {
+      await act(btn, async () => {
+        const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'No pudimos iniciar sesión. Revisa tus datos.');
+        API.setToken(data.token); state.user = data.user;
+        location.hash = routeForRole(data.user.role);
+        renderApp();
+        return data;
+      });
+    }
   });
 }
 
@@ -763,9 +879,10 @@ async function handleRegisterSubmit(event) {
   const form = event.currentTarget;
   const role = document.getElementById('regRole').value;
   const btn = event.submitter || form.querySelector('button[type=submit]') || document.getElementById('btnStep1Next');
+  const email = document.getElementById('regEmail').value.trim();
   const body = {
     name: document.getElementById('regName').value.trim(),
-    email: document.getElementById('regEmail').value.trim(),
+    email,
     password: document.getElementById('regPassword').value,
     phone: document.getElementById('regPhone').value.trim(),
     role,
@@ -788,19 +905,26 @@ async function handleRegisterSubmit(event) {
     body.vehicle = document.getElementById('regVehicle')?.value || 'Moto';
     body.plate = document.getElementById('regPlate')?.value?.trim() || '';
   }
-  await act(btn, async () => {
-    const response = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'No pudimos crear la cuenta. Revisa los datos.');
-    API.setToken(data.token);
-    state.user = data.user;
-    toast(role === 'CLIENTE' ? 'Cuenta creada. ¡Bienvenido a FarmaYa!' : 'Cuenta creada. Quedará pendiente de verificación.');
-    location.hash = routeForRole(data.user.role);
-    renderApp();
-    return data;
+
+  promptEmailOtpVerification({
+    email,
+    role,
+    onVerified: async () => {
+      await act(btn, async () => {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || 'No pudimos crear la cuenta. Revisa los datos.');
+        API.setToken(data.token);
+        state.user = data.user;
+        toast(role === 'CLIENTE' ? 'Cuenta creada y correo verificado. ¡Bienvenido a FarmaYa!' : 'Cuenta creada y correo verificado. Quedará pendiente de verificación.');
+        location.hash = routeForRole(data.user.role);
+        renderApp();
+        return data;
+      });
+    }
   });
 }

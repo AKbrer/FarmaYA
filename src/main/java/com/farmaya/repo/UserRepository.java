@@ -27,17 +27,58 @@ public class UserRepository {
         this.mongo = mongo;
     }
 
+    public static Criteria idCriteria(String id) {
+        if (id == null || id.isBlank()) return Criteria.where("_id").is(id);
+        if (org.bson.types.ObjectId.isValid(id)) {
+            org.bson.types.ObjectId objId = new org.bson.types.ObjectId(id);
+            return new Criteria().orOperator(
+                    Criteria.where("_id").is(id),
+                    Criteria.where("_id").is(objId)
+            );
+        }
+        return Criteria.where("_id").is(id);
+    }
+
     public User save(User user) {
         if (user == null || user.role == null) {
             throw new IllegalArgumentException("La cuenta debe tener un rol antes de guardarse.");
         }
-        return mongo.save(user, collectionFor(user.role));
+        String col = collectionFor(user.role);
+        if (user.id != null && !user.id.isBlank()) {
+            Query q = new Query(idCriteria(user.id));
+            org.springframework.data.mongodb.core.query.Update update = new org.springframework.data.mongodb.core.query.Update()
+                    .set("enabled", user.enabled)
+                    .set("verified", user.verified)
+                    .set("active", user.active)
+                    .set("name", user.name)
+                    .set("phone", user.phone)
+                    .set("address", user.address)
+                    .set("city", user.city)
+                    .set("zone", user.zone)
+                    .set("pharmacyName", user.pharmacyName)
+                    .set("licenseNumber", user.licenseNumber)
+                    .set("openFrom", user.openFrom)
+                    .set("openTo", user.openTo)
+                    .set("canEditProfile", user.canEditProfile)
+                    .set("editPermissionRequested", user.editPermissionRequested)
+                    .set("editRequestNote", user.editRequestNote)
+                    .set("vehicle", user.vehicle)
+                    .set("plate", user.plate);
+            if (user.latitude != null) update.set("latitude", user.latitude);
+            if (user.longitude != null) update.set("longitude", user.longitude);
+            if (user.verificationDocuments != null) update.set("verificationDocuments", user.verificationDocuments);
+            for (String c : COLLECTIONS) {
+                mongo.updateMulti(q, update, c);
+            }
+        }
+        return mongo.save(user, col);
     }
 
     public Optional<User> findById(String id) {
         if (id == null || id.isBlank()) return Optional.empty();
+        Query q = new Query(idCriteria(id)).limit(1);
         for (String collection : COLLECTIONS) {
-            User user = mongo.findById(id, User.class, collection);
+            User user = mongo.findOne(q, User.class, collection);
             if (user != null) return Optional.of(user);
         }
         return Optional.empty();

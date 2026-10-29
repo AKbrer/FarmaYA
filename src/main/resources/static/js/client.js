@@ -529,6 +529,13 @@ function renderClientDashboard() {
       latInput,
       lngInput,
       field('Indicaciones adicionales (opcional)', notes),
+      h('div', { class: 'delivery-fee-callout', style: 'margin: 14px 0;' },
+        h('span', { class: 'callout-ico' }, '!'),
+        h('div', null,
+          h('strong', null, 'INFORMACIÓN IMPORTANTE SOBRE EL PAGO'),
+          h('p', null, 'Los productos se pagarán en línea a la cuenta oficial de FarmaYA mediante PSE o Nequi. El valor del domicilio se le debe pagar directamente al repartidor al momento de llegar a tu dirección.')
+        )
+      ),
       coverageNoticeBox,
       h('div', { class: 'actions' },
         h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Volver al catálogo'),

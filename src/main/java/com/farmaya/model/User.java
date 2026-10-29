@@ -20,6 +20,8 @@ public class User {
     public boolean verified;
     /** Farmacia: recibiendo pedidos. Repartidor: disponible. */
     public boolean active = true;
+    /** Validación de correo mediante código OTP. */
+    public boolean emailVerified = true;
 
     // Farmacia
     public String pharmacyName;

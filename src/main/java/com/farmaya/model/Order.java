@@ -35,6 +35,11 @@ public class Order {
     // Repartidor
     public String courierId, courierName, courierPhone;
 
+    // Pasarela de Pagos (PSE, Nequi y cuenta oficial FarmaYA)
+    public String paymentMethod; // "PSE", "NEQUI", "TRANSFERENCIA"
+    public String paymentStatus; // "PAGADO_FARMAYA", "PENDIENTE"
+    public String paymentTransactionId;
+
     // Ganancia y comisión empresarial FarmaYA (empresa dueña del programa)
     public Double platformCommissionRate = 0.10; // 10%
     public Double platformEarnings; // Ganancia retenida por pedido

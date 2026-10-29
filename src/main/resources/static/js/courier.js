@@ -264,8 +264,9 @@ function courierOffers() {
         ),
         h('div', { class: 'courier-offer-payout-highlight' },
           h('div', null,
-            h('span', { class: 'small muted block-line' }, 'Ganancia del domicilio:'),
-            h('strong', { class: 'courier-payout-val' }, money(fee))
+            h('span', { class: 'small muted block-line' }, 'Ganancia del domicilio a cobrar:'),
+            h('strong', { class: 'courier-payout-val' }, money(fee)),
+            h('small', { class: 'block-line muted', style: 'font-size:12px; margin-top:2px;' }, 'El cliente te pagará esta tarifa directamente al entregar')
           ),
           h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, `~${distKm} km ruta`)
         ),
@@ -273,9 +274,9 @@ function courierOffers() {
           h('div', null, h('dt', null, 'Dirección de farmacia'), h('dd', null, o.pharmacyAddress || 'Dirección de farmacia')),
           h('div', null, h('dt', null, 'Entregar a cliente en'), h('dd', null, o.address || o.city || 'Destino de entrega')),
           h('div', null, h('dt', null, 'Distancia Farmacia → Cliente'), h('dd', null, `~${distKm} km`)),
-          h('div', null, h('dt', null, 'Tarifa del domicilio'), h('dd', null, h('strong', { style: 'color:var(--primary); font-weight:700;' }, money(fee)))),
+          h('div', null, h('dt', null, 'Tarifa del domicilio a cobrar'), h('dd', null, h('strong', { style: 'color:var(--primary); font-weight:700;' }, money(fee) + ' (Cobro en mano al llegar)'))),
           h('div', null, h('dt', null, 'Paquete clínico'), h('dd', null, itemsSummary(o))),
-          o.total != null && h('div', null, h('dt', null, 'Valor del pedido'), h('dd', null, money(o.total)))
+          o.total != null && h('div', null, h('dt', null, 'Valor de los productos (Ya pagados)'), h('dd', null, money(o.total) + ' (Recaudado por FarmaYA)'))
         ),
         h('div', { class: 'actions left' },
           h('button', {
@@ -284,7 +285,7 @@ function courierOffers() {
               const r = await act(e.currentTarget, () => API.post('/courier/orders/' + o.id + '/accept'), 'Entrega aceptada. Dirígete a la farmacia.');
               if (r) leaveCard(card); else refreshAll();
             }
-          }, 'Aceptar entrega y ruta (' + money(fee) + ')')
+          }, 'Aceptar entrega y cobrar ' + money(fee) + ' al cliente')
         )
       );
       return card;
@@ -359,6 +360,13 @@ function courierCard(o) {
           h('span', { class: 'block-line muted' }, 'Tel: ' + (o.clientPhone || 'No registrado')),
           o.notes && h('span', { class: 'block-line muted' }, 'Nota: ' + o.notes),
           o.address && h('button', { class: 'btn link', type: 'button', onclick: () => openCourierRoute(o, false) }, 'Ver ruta al paciente')
+        )
+      ),
+      h('div', null,
+        h('dt', null, 'Tarifa a cobrar al paciente:'),
+        h('dd', null,
+          h('strong', { style: 'color:var(--primary); font-size:15px;' }, money(o.courierEarnings || 4500)),
+          h('span', { class: 'block-line muted small' }, 'Recuerda cobrar este valor en mano al cliente al entregar.')
         )
       )
     ),

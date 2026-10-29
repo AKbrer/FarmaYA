@@ -29,6 +29,23 @@ public class AuthController {
     }
 
     @Public
+    @PostMapping("/send-otp")
+    public Map<String, Object> sendOtp(@RequestBody Map<String, String> body) {
+        String email = body != null ? body.get("email") : null;
+        String purpose = body != null ? body.getOrDefault("purpose", "LOGIN") : "LOGIN";
+        return auth.sendOtp(email, purpose);
+    }
+
+    @Public
+    @PostMapping("/verify-otp")
+    public Map<String, Object> verifyOtp(@RequestBody Map<String, String> body) {
+        String email = body != null ? body.get("email") : null;
+        String code = body != null ? body.get("code") : null;
+        boolean valid = auth.verifyOtp(email, code);
+        return Map.of("ok", valid, "verified", valid);
+    }
+
+    @Public
     @PostMapping("/register")
     public AuthResponse register(@RequestBody RegisterRequest r) {
         return auth.register(r);

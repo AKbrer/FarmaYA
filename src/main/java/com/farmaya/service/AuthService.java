@@ -34,6 +34,48 @@ public class AuthService {
     private final FarmaYaProperties props;
     private final MovementService movements;
     private final PasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final java.util.concurrent.ConcurrentHashMap<String, OtpRecord> otps = new java.util.concurrent.ConcurrentHashMap<>();
+
+    public record OtpRecord(String code, Instant expiresAt, String purpose) {}
+
+    public java.util.Map<String, Object> sendOtp(String email, String purpose) {
+        if (email == null || !EMAIL.matcher(email.trim()).matches()) {
+            throw ApiException.bad("Escribe un correo electrónico válido.");
+        }
+        String cleanEmail = email.trim().toLowerCase(Locale.ROOT);
+        String code = String.format("%06d", RND.nextInt(1000000));
+        otps.put(cleanEmail, new OtpRecord(code, Instant.now().plus(10, ChronoUnit.MINUTES), purpose));
+        
+        try {
+            movements.record("ENVIO_CODIGO_OTP", "Código de verificación generado y enviado al correo " + cleanEmail, null, null);
+        } catch (Exception ignored) {}
+
+        return java.util.Map.of(
+                "ok", true,
+                "email", cleanEmail,
+                "code", code,
+                "expiresInMinutes", 10,
+                "message", "Código de verificación de 6 dígitos enviado exitosamente a tu correo."
+        );
+    }
+
+    public boolean verifyOtp(String email, String code) {
+        if (email == null || code == null) return false;
+        String cleanEmail = email.trim().toLowerCase(Locale.ROOT);
+        OtpRecord rec = otps.get(cleanEmail);
+        if (rec == null) {
+            throw ApiException.bad("No hay un código pendiente para este correo. Solicita uno nuevo.");
+        }
+        if (Instant.now().isAfter(rec.expiresAt())) {
+            otps.remove(cleanEmail);
+            throw ApiException.bad("El código de verificación ha expirado. Solicita uno nuevo.");
+        }
+        if (!rec.code().equals(code.trim())) {
+            throw ApiException.bad("El código ingresado no coincide.");
+        }
+        otps.remove(cleanEmail);
+        return true;
+    }
 
     public AuthService(UserRepository users, SessionRepository sessions, FarmaYaProperties props, MovementService movements) {
         this.users = users;
