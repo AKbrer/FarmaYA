@@ -14,10 +14,13 @@ function adminHeaderCard(user) {
   );
 }
 
+let adminDemandFilter = 'TODAS';
+let adminDemandSearch = '';
+
 function adminView(user) {
   let root;
   root = h('div', { class: 'stack admin-root' }, adminHeaderCard(user), sideNavigation([
-    { label: 'Dashboard', icon: 'layout-dashboard', render: () => adminSummary(status => { adminFilter = status; root.querySelectorAll('.side-nav-item')[1]?.click(); }) },
+    { label: 'Predicción de Demanda (IA)', icon: 'trending-up', render: adminDemandForecast },
     { label: 'Pedidos', icon: 'package', render: adminOrders },
     { label: 'Verificaciones', icon: 'prescriptions', render: adminVerificationCenter },
     { label: 'Farmacias', icon: 'store', render: () => adminUsers('FARMACIA') },
@@ -30,113 +33,212 @@ function adminView(user) {
   return root;
 }
 
-function adminSummary(go) {
-  return live(() => API.get('/admin/stats'), s => {
-    const total = Object.values(s.byStatus).reduce((a, b) => a + b, 0);
-    const max = Math.max(1, ...Object.values(s.byStatus));
-    const rows = Object.entries(s.byStatus).filter(([, n]) => n > 0);
+/**
+ * Modelo Predictivo de Demanda Mensual de Medicamentos (Machine Learning)
+ * Reemplaza el dashboard anterior con la clasificación de demanda en ALTA, MEDIA y BAJA
+ * utilizando los pedidos históricos de MongoDB.
+ */
+function adminDemandForecast() {
+  return live(() => API.get('/demand-forecast'), data => {
+    const list = data.forecasts || [];
+    const summary = data.summary || { totalMedicines: list.length, alta: 0, media: 0, baja: 0 };
+    const period = data.period || 'Próximo Mes';
 
-    const activeOrdersCount = (s.byStatus['EN_CAMINO'] || 0) + (s.byStatus['PEDIDO_EN_PREPARACION'] || 0) + (s.byStatus['REPARTIDOR_ASIGNADO'] || 0) + (s.byStatus['BUSCANDO_FARMACIA'] || 0);
+    // Banner explicativo del Modelo ML
+    const banner = notice('info',
+      'Modelo Predictivo de Demanda Mensual (Machine Learning con MongoDB)',
+      'Clasificación predictiva de la demanda mensual de medicamentos en tres categorías (ALTA, MEDIA, BAJA) utilizando los registros históricos de pedidos, series temporales y estacionalidad. Permite a la red de farmacias FarmaYA planificar existencias y evitar roturas de stock.'
+    );
 
-    // 4 Tarjetas de KPIs estilo Stitch Screen 11
+    // 4 Tarjetas de KPIs estilo Stitch Admin
     const kpiSection = h('div', { class: 'stitch-admin-kpis-grid' },
       h('div', { class: 'stitch-admin-kpi-card' },
         h('div', { class: 'kpi-top' },
-          h('span', { class: 'kpi-lbl' }, 'Despachos Activos'),
-          h('span', { class: 'badge-flash' }, 'SLA 98.2%')
+          h('span', { class: 'kpi-lbl' }, 'Periodo Proyectado'),
+          h('span', { class: 'badge-flash' }, 'IA FarmaYA')
         ),
         h('div', { class: 'kpi-amt-row' },
-          h('strong', { class: 'kpi-amt' }, activeOrdersCount),
-          h('small', null, 'órdenes en ruta o preparación')
+          h('strong', { class: 'kpi-amt', style: 'font-size: 1.35rem; color: var(--primary);' }, period),
+          h('small', null, 'pronóstico mensual')
         ),
         h('div', { class: 'kpi-footer-note' },
-          h('span', null, 'Promedio entrega: <strong>26 min</strong>')
+          h('span', null, 'Total en catálogo analizado: <strong>' + summary.totalMedicines + '</strong>')
         )
       ),
 
       h('div', { class: 'stitch-admin-kpi-card' },
         h('div', { class: 'kpi-top' },
-          h('span', { class: 'kpi-lbl' }, 'Validación de Fórmulas'),
-          h('span', { class: 'kpi-sub-tag tone-teal' }, 'ReTHUS MinSalud')
+          h('span', { class: 'kpi-lbl' }, 'Demanda ALTA'),
+          h('span', { class: 'kpi-sub-tag', style: 'background: rgba(217, 56, 58, 0.15); color: #c5221f; font-weight: 700;' }, 'Rotación Crítica')
         ),
         h('div', { class: 'kpi-amt-row' },
-          h('strong', { class: 'kpi-amt tone-teal' }, (s.byStatus['FARMACIA_ASIGNADA'] || 0) + 2),
-          h('small', null, 'recetas médicas auditadas')
+          h('strong', { class: 'kpi-amt', style: 'color: #d9383a;' }, String(summary.alta || 0)),
+          h('small', null, 'medicamentos con muchas solicitudes')
         ),
         h('div', { class: 'kpi-footer-note' },
-          h('span', null, 'Tiempo promedio auditoría: <strong>3.4 min</strong>')
+          h('span', null, 'Stock de seguridad recomendado: <strong>+35%</strong>')
         )
       ),
 
       h('div', { class: 'stitch-admin-kpi-card' },
         h('div', { class: 'kpi-top' },
-          h('span', { class: 'kpi-lbl' }, 'Facturación y Ventas'),
-          h('span', { class: 'kpi-sub-tag' }, 'Total red')
+          h('span', { class: 'kpi-lbl' }, 'Demanda MEDIA'),
+          h('span', { class: 'kpi-sub-tag tone-teal', style: 'font-weight: 700;' }, 'Rotación Moderada')
         ),
         h('div', { class: 'kpi-amt-row' },
-          h('strong', { class: 'kpi-amt' }, money(s.revenue)),
-          h('small', null, 'COP liquidados')
+          h('strong', { class: 'kpi-amt tone-teal' }, String(summary.media || 0)),
+          h('small', null, 'demanda estándar y predecible')
         ),
         h('div', { class: 'kpi-footer-note' },
-          h('span', null, '62% Venta Libre · 38% Fórmula Rx')
+          h('span', null, 'Ciclo de reposición quincenal sugerido')
         )
       ),
 
       h('div', { class: 'stitch-admin-kpi-card' },
         h('div', { class: 'kpi-top' },
-          h('span', { class: 'kpi-lbl' }, 'Red de Aliados'),
-          h('span', { class: 'kpi-sub-tag tone-lime' }, 'INVIMA Certificado')
+          h('span', { class: 'kpi-lbl' }, 'Demanda BAJA'),
+          h('span', { class: 'kpi-sub-tag', style: 'background: rgba(100, 116, 139, 0.15); color: #475569; font-weight: 700;' }, 'Bajo Movimiento')
         ),
         h('div', { class: 'kpi-amt-row' },
-          h('strong', { class: 'kpi-amt' }, s.pharmacies.verified + s.couriers.verified),
-          h('small', null, 'farmacias y repartidores activos')
+          h('strong', { class: 'kpi-amt', style: 'color: #64748b;' }, String(summary.baja || 0)),
+          h('small', null, 'pocas solicitudes mensuales')
         ),
         h('div', { class: 'kpi-footer-note' },
-          h('span', null, (s.pharmacies.pending + s.couriers.pending) + ' pendientes de verificación')
-        )
-      ),
-
-      h('div', { class: 'stitch-admin-kpi-card' },
-        h('div', { class: 'kpi-top' },
-          h('span', { class: 'kpi-lbl' }, 'Ganancia FarmaYA (10%)'),
-          h('span', { class: 'badge-flash' }, '10% tarifa neta')
-        ),
-        h('div', { class: 'kpi-amt-row' },
-          h('strong', { class: 'kpi-amt tone-teal' }, money(s.platformEarnings != null ? s.platformEarnings : (s.revenue * 0.10))),
-          h('small', null, 'margen FarmaYA por pedidos generados')
-        ),
-        h('div', { class: 'kpi-footer-note' },
-          h('span', null, 'Liquidación automática del 10% por pedido')
+          h('span', null, 'Compra bajo pedido para prevenir vencimientos')
         )
       )
     );
 
-    return h('div', { class: 'summary stitch-admin-summary' },
-      kpiSection,
-      h('section', { class: 'block stitch-status-chart-block' },
-        h('h3', null, 'Distribución de Pedidos por Estado Operativo'),
-        total === 0 ? h('p', { class: 'muted' }, 'Todavía no hay pedidos registrados.') :
-          h('div', null,
-            h('p', { class: 'muted small' }, 'Haz clic en una barra para inspeccionar los pedidos correspondientes.'),
-            h('ul', { class: 'bars' }, rows.map(([k, n]) => {
-              const fill = h('span', { class: 'bar-fill tone-' + statusTone(k), style: 'width:0%' });
-              requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = (n / max * 100) + '%'; }));
-              return h('li', null, h('button', {
-                class: 'bar-link', type: 'button', onclick: () => go(k),
-                'aria-label': statusLabel(k) + ': ' + n + '. Ver pedidos'
-              }, h('span', { class: 'bar-label' }, statusLabel(k)), h('span', { class: 'bar-track' }, fill), h('span', { class: 'bar-n' }, n)));
-            }))
-          )
-      ),
-      h('section', { class: 'block' },
-        h('h3', null, 'Estado de la Red Asistencial FarmaYA'),
-        h('dl', { class: 'facts stacked' },
-          h('div', null, h('dt', null, 'Droguerías y Farmacias Verificadas'), h('dd', null, s.pharmacies.verified, s.pharmacies.pending > 0 && h('span', { class: 'attention' }, s.pharmacies.pending + ' por verificar'))),
-          h('div', null, h('dt', null, 'Repartidores Clínicos Verificados'), h('dd', null, s.couriers.verified, s.couriers.pending > 0 && h('span', { class: 'attention' }, s.couriers.pending + ' por verificar'))),
-          h('div', null, h('dt', null, 'Pacientes Registrados'), h('dd', null, s.clients)),
-          h('div', null, h('dt', null, 'Total de Medicamentos y Productos Entregados'), h('dd', null, money(s.revenue)))
-        )
+    // Botones de filtro
+    const filterBtn = (label, cat) => {
+      const active = adminDemandFilter === cat;
+      return h('button', {
+        class: 'btn ' + (active ? 'primary' : 'secondary'),
+        style: 'font-size: 0.85rem; padding: 0.35rem 0.85rem;',
+        onclick: () => {
+          adminDemandFilter = cat;
+          refreshAll();
+        }
+      }, label);
+    };
+
+    const filters = h('div', { class: 'flex items-center gap-2', style: 'flex-wrap: wrap;' },
+      filterBtn('Todos (' + list.length + ')', 'TODAS'),
+      filterBtn('🔥 ALTA (' + summary.alta + ')', 'ALTA'),
+      filterBtn('📊 MEDIA (' + summary.media + ')', 'MEDIA'),
+      filterBtn('💤 BAJA (' + summary.baja + ')', 'BAJA')
+    );
+
+    // Buscador interactivo
+    const searchInput = h('input', {
+      type: 'search',
+      placeholder: 'Buscar medicamento...',
+      value: adminDemandSearch,
+      style: 'max-width: 260px; font-size: 0.85rem; padding: 0.4rem 0.75rem;',
+      oninput: e => {
+        adminDemandSearch = e.target.value;
+        const term = adminDemandSearch.toLowerCase().trim();
+        const rows = document.querySelectorAll('.admin-forecast-row');
+        rows.forEach(r => {
+          const name = (r.getAttribute('data-name') || '').toLowerCase();
+          r.style.display = (!term || name.includes(term)) ? '' : 'none';
+        });
+      }
+    });
+
+    // Botón de reentrenamiento/recálculo en tiempo real
+    const recalculateBtn = h('button', {
+      class: 'btn secondary',
+      style: 'font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;',
+      onclick: async e => {
+        await act(e.currentTarget, async () => {
+          const res = await API.post('/demand-forecast/recalculate', {});
+          toast(res.message || 'Pronóstico recalculado exitosamente con IA.');
+          refreshAll();
+        }, 'Modelo reentrenado');
+      }
+    }, '🔄 Recalcular y Reentrenar con MongoDB');
+
+    const toolbar = h('div', { class: 'flex items-center justify-between', style: 'flex-wrap: wrap; gap: 1rem; margin: 1.25rem 0;' },
+      h('div', { class: 'flex items-center gap-2', style: 'flex-wrap: wrap;' }, filters, searchInput),
+      recalculateBtn
+    );
+
+    // Filtrar lista
+    const filtered = list.filter(item => {
+      const matchCat = adminDemandFilter === 'TODAS' || (item.category || '').toUpperCase() === adminDemandFilter;
+      const matchSearch = !adminDemandSearch || (item.medicineName || '').toLowerCase().includes(adminDemandSearch.toLowerCase().trim());
+      return matchCat && matchSearch;
+    });
+
+    // Insignia de categoría (ALTA, MEDIA, BAJA)
+    const categoryBadge = cat => {
+      const c = (cat || '').toUpperCase();
+      let bg = 'rgba(100, 116, 139, 0.15)', color = '#475569', label = 'BAJA';
+      if (c === 'ALTA') {
+        bg = 'rgba(217, 56, 58, 0.15)';
+        color = '#c5221f';
+        label = '🔥 ALTA';
+      } else if (c === 'MEDIA') {
+        bg = 'rgba(2, 132, 199, 0.15)';
+        color = '#0284c7';
+        label = '📊 MEDIA';
+      } else {
+        label = '💤 BAJA';
+      }
+      return h('span', {
+        class: 'tag',
+        style: 'background: ' + bg + '; color: ' + color + '; font-weight: 700; border-radius: 999px; padding: 0.25rem 0.7rem; font-size: 0.85rem;'
+      }, label);
+    };
+
+    const trendBadge = trend => {
+      const t = trend || 'Estable';
+      let icon = '➡️ Estable';
+      if (t === 'Creciente') icon = '📈 Creciente';
+      else if (t === 'Decreciente') icon = '📉 Decreciente';
+      return h('span', { class: 'text-xs muted', style: 'font-weight: 600;' }, icon);
+    };
+
+    // Tabla de pronóstico detallada
+    const tableHeader = h('thead', null,
+      h('tr', null,
+        h('th', { style: 'text-align: left; padding: 0.75rem 1rem;' }, 'Medicamento'),
+        h('th', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, 'Demanda Prevista'),
+        h('th', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, 'Confianza'),
+        h('th', { style: 'text-align: right; padding: 0.75rem 0.75rem;' }, 'Solicitudes Est.'),
+        h('th', { style: 'text-align: right; padding: 0.75rem 0.75rem;' }, 'Unidades Proy.'),
+        h('th', { style: 'text-align: right; padding: 0.75rem 0.75rem;' }, 'Stock Sugerido'),
+        h('th', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, 'Tendencia'),
+        h('th', { style: 'text-align: left; padding: 0.75rem 1rem;' }, 'Recomendación de Planificación de Existencias')
       )
+    );
+
+    const tableRows = filtered.map(item => {
+      return h('tr', { class: 'admin-forecast-row', 'data-name': item.medicineName, style: 'border-bottom: 1px solid var(--border);' },
+        h('td', { style: 'padding: 0.75rem 1rem; font-weight: 600;' }, item.medicineName),
+        h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, categoryBadge(item.category)),
+        h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem;', class: 'muted' }, (item.confidence ? item.confidence.toFixed(1) : '90.0') + '%'),
+        h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem; font-weight: 600;' }, String(item.estimatedOrders || 0)),
+        h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem;' }, String(item.predictedUnits || 0) + ' uds'),
+        h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem; font-weight: 700; color: var(--primary);' }, String(item.recommendedStock || 0) + ' uds'),
+        h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, trendBadge(item.historicalTrend)),
+        h('td', { style: 'padding: 0.75rem 1rem; font-size: 0.85rem;', class: 'muted' }, item.actionRecommendation || '')
+      );
+    });
+
+    const table = h('div', { class: 'card', style: 'padding: 0; overflow-x: auto;' },
+      h('table', { style: 'width: 100%; border-collapse: collapse;' },
+        tableHeader,
+        h('tbody', null, ...tableRows)
+      )
+    );
+
+    return h('div', { class: 'stack stitch-admin-demand-view' },
+      banner,
+      kpiSection,
+      toolbar,
+      filtered.length ? table : empty('Sin coincidencias', 'No se encontraron medicamentos para el criterio seleccionado.')
     );
   });
 }

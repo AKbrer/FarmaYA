@@ -85,3 +85,11 @@ Actualización de interfaz: el logotipo PNG se encuentra en `src/main/resources/
 ### Separación de usuarios por tipo
 
 La aplicación actual utiliza el repositorio `UserRepository` y el modelo `User` compartido por autenticación, administración y directorio de farmacias. Separar físicamente esos documentos en `clientes`, `domiciliarios` y `farmacias` requiere migrar también las consultas de inicio de sesión, autorización, administración y directorio. No se realiza una copia automática destructiva para evitar duplicar o perder cuentas.
+
+## Modelo de Machine Learning para Predicción de Demanda Mensual
+
+Se incluye el módulo de predicción y clasificación de demanda de medicamentos (`ml/` y servicio integrado `DemandPredictionService`):
+- **Clasificación**: Clasifica la demanda mensual en tres categorías: **ALTA**, **MEDIA** y **BAJA**.
+- **Entrenamiento e Inferencia**: Pipeline en Python (`ml/demand_model.py`) con `RandomForestClassifier` y scikit-learn, calculando rezagos temporales, medias móviles, tendencias y estacionalidad a partir de la colección `pedidos` de MongoDB.
+- **Planificación de Existencias**: Calcula el stock de seguridad y sugerencia de compra recomendada para cada farmacia.
+- **Acceso en Plataforma**: Disponible a través de la API `GET /api/demand-forecast` y en el panel web de la farmacia en la pestaña **«Predicción de Demanda (IA)»**. Consultar `ml/README.md` para detalles de ejecución.
