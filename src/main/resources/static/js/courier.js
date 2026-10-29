@@ -40,7 +40,7 @@ function courierHeaderCard(user) {
 function courierView(user) {
   return h('div', { class: 'stack courier-root' },
     courierHeaderCard(user),
-    !user.verified && notice('warn', 'Tu cuenta está pendiente de verificación sanitaria', 'Un regente farmacéutico o administrador revisará tu documentación y licencia vial. Hasta entonces no recibirás ofertas.'),
+    !user.verified && notice('warn', 'Tu cuenta está pendiente de verificación sanitaria', 'Un administrador revisará tu documentación y licencia vial. Hasta entonces no recibirás ofertas.'),
     sideNavigation([
       { label: 'Dashboard & Billetera', icon: 'layout-dashboard', render: courierDashboard },
       { label: 'Entregas disponibles', icon: 'package-search', render: courierOffers },

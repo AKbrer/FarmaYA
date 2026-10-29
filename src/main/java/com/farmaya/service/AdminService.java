@@ -159,6 +159,11 @@ public class AdminService {
 
     private User update(String id, Update update) {
         User user = find(id);
+        org.springframework.data.mongodb.core.query.Query q = new org.springframework.data.mongodb.core.query.Query(
+                org.springframework.data.mongodb.core.query.Criteria.where("_id").is(id));
+        for (String col : com.farmaya.repo.UserRepository.COLLECTIONS) {
+            mongo.updateFirst(q, update, col);
+        }
         org.bson.Document changes = update.getUpdateObject();
         Object set = changes.get("$set");
         if (set instanceof org.bson.Document fields) {

@@ -469,8 +469,7 @@ function buildRegisterCard() {
     h('div', { class: 'reg-pdf-section' },
       h('strong', { class: 'block-line small bold', style: 'margin-bottom:6px; color:var(--text);' }, 'Documentos requeridos en PDF:'),
       buildPdfFileInput('INVIMA', 'Licencia Sanitaria / Registro INVIMA (PDF)', true),
-      buildPdfFileInput('RUT', 'Cámara de Comercio / RUT de la Droguería (PDF)', true),
-      buildPdfFileInput('CEDULA_REGENTE', 'Cédula del Químico Regente o Representante (PDF)', true)
+      buildPdfFileInput('RUT', 'Cámara de Comercio / RUT de la Droguería (PDF)', true)
     ),
     h('div', { class: 'reg-wizard-actions' },
       h('button', { class: 'btn ghost', type: 'button', onclick: () => showStep(2) }, '← Atrás'),

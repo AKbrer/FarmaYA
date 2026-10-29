@@ -119,20 +119,6 @@ const CATALOG = [
     storage: 'Temperatura ambiente'
   },
   { 
-    name: 'Amoxicilina 500 mg', 
-    cat: 'meds', 
-    price: 14500, 
-    art: 'box', 
-    color: '#d79a14', 
-    rx: true, 
-    lab: 'Lafrancol', 
-    presentation: 'Caja x 15 cápsulas', 
-    invima: 'INVIMA 2016M-0001928-R3', 
-    active: 'Amoxicilina Trihidrato 500 mg', 
-    indication: 'Antibiótico bactericida de amplio espectro. Venta obligatoria bajo fórmula médica.', 
-    storage: 'Lugar seco a menos de 30°C'
-  },
-  { 
     name: 'Suero oral Electrolit Fresa', 
     cat: 'vital', 
     price: 8500, 
@@ -343,7 +329,7 @@ async function syncCatalogWithBackend() {
     if (typeof API !== 'undefined' && API.get) {
       const list = await API.get('/products');
       if (Array.isArray(list) && list.length > 0) {
-        list.forEach(rp => {
+        list.filter(rp => !rp.rx).forEach(rp => {
           const idx = CATALOG.findIndex(p => (rp.id && p.id === rp.id) || norm(p.name) === norm(rp.name));
           if (idx >= 0) {
             CATALOG[idx] = Object.assign(CATALOG[idx], rp);

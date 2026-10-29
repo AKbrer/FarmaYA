@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class UserRepository {
-    private static final List<String> COLLECTIONS = List.of(
+    public static final List<String> COLLECTIONS = List.of(
             "clientes", "farmacias", "domiciliarios", "administradores");
 
     private final MongoTemplate mongo;

@@ -180,6 +180,7 @@ function adminUsers(role) {
     const needsVerify = role !== 'CLIENTE';
     const toggle = (u, kind, value, ok) => async e => {
       await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
+      u[kind] = value;
       refreshAll();
     };
     return h('div', { class: 'table-wrap' }, h('table', { class: 'users' },
@@ -275,20 +276,20 @@ function openUserDocumentsModal(user) {
 function adminVerificationCenter() {
   let filterRole = '';
   const filterButtons = [
-    { label: 'Todas las solicitudes', role: '' },
-    { label: 'Farmacias pendientes', role: 'FARMACIA' },
-    { label: 'Repartidores pendientes', role: 'REPARTIDOR' }
+    { label: 'Todas las solicitudes', role: '', iconName: 'clipboard-list' },
+    { label: 'Farmacias pendientes', role: 'FARMACIA', iconName: 'building' },
+    { label: 'Repartidores pendientes', role: 'REPARTIDOR', iconName: 'bike' }
   ];
 
-  const toolbar = h('div', { class: 'filter-tabs-bar', style: 'display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;' });
-  const container = h('div', { class: 'stack' });
+  const toolbar = h('div', { class: 'filter-tabs-bar verification-tabs-bar' });
+  const container = h('div', { class: 'stack verification-center-root' });
 
   function renderView() {
     toolbar.replaceChildren(...filterButtons.map(fb => h('button', {
       type: 'button',
-      class: 'btn ' + (filterRole === fb.role ? 'primary' : 'secondary'),
+      class: 'btn tab-pill-btn ' + (filterRole === fb.role ? 'primary' : 'secondary'),
       onclick: () => { filterRole = fb.role; renderView(); }
-    }, fb.label)));
+    }, icon(fb.iconName), h('span', null, fb.label))));
 
     const content = live(() => API.get('/admin/verifications'), users => {
       let filtered = users;
@@ -300,19 +301,25 @@ function adminVerificationCenter() {
           : 'Todas las cuentas de farmacias y repartidores han sido revisadas y verificadas.');
       }
 
-      return h('div', { class: 'verification-cards-grid' }, filtered.map(u => {
+      const sliderHint = h('div', { class: 'verification-slider-hint' },
+        h('span', { class: 'small muted' }, 'Desliza horizontalmente para revisar las solicitudes pendientes (' + filtered.length + ') →')
+      );
+
+      const cardsContainer = h('div', { class: 'verification-cards-carousel' }, filtered.map(u => {
         const isPh = u.role === 'FARMACIA';
         const docs = u.verificationDocuments || [];
 
         const actVerify = async (val) => {
           await act(null, () => API.post('/admin/users/' + u.id + '/verified', { value: val }),
             val ? 'Cuenta verificada y autorizada para operar' : 'Verificación rechazada');
+          u.verified = val;
           refreshAll();
         };
 
         const actDisable = async () => {
           if (await confirmBox({ title: '¿Rechazar esta solicitud?', message: 'La cuenta quedará deshabilitada y no podrá operar.', ok: 'Rechazar y Deshabilitar', danger: true })) {
             await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false }), 'Cuenta deshabilitada');
+            u.enabled = false;
             refreshAll();
           }
         };
@@ -322,11 +329,14 @@ function adminVerificationCenter() {
             h('div', null,
               h('div', { style: 'display:flex; align-items:center; gap:8px;' },
                 h('strong', { style: 'font-size:16px;' }, isPh ? (u.pharmacyName || u.name) : u.name),
-                h('span', { class: 'badge ' + (isPh ? 'tone-teal' : 'tone-blue') }, isPh ? 'Farmacia' : 'Repartidor')
+                h('span', { class: 'badge ' + (isPh ? 'tone-teal' : 'tone-blue'), style: 'display:inline-flex; align-items:center; gap:4px;' },
+                  icon(isPh ? 'building' : 'bike'),
+                  h('span', null, isPh ? 'Farmacia' : 'Repartidor')
+                )
               ),
-              h('span', { class: 'muted small block-line' }, 'Registrado ' + relTime(u.createdAt) + ' · ' + (u.city || u.zone || 'Barranquilla'))
+              h('span', { class: 'muted small block-line', style: 'margin-top:4px;' }, 'Registrado ' + relTime(u.createdAt) + ' · ' + (u.city || u.zone || 'Barranquilla'))
             ),
-            h('span', { class: 'badge tone-wait' }, 'Pendiente por verificar')
+            h('span', { class: 'badge tone-wait' }, 'Pendiente')
           ),
 
           h('div', { class: 'verification-details-grid' },
@@ -339,7 +349,7 @@ function adminVerificationCenter() {
             isPh ? h('div', null,
               h('span', { class: 'small muted block-line' }, 'Establecimiento y Licencia:'),
               h('strong', null, u.address || 'Sin dirección física'),
-              h('span', { class: 'small muted block-line' }, 'Registro Sanitario / Licencia: ' + (u.licenseNumber || 'No registrada')),
+              h('span', { class: 'small muted block-line' }, 'Registro Sanitario: ' + (u.licenseNumber || 'No registrada')),
               h('span', { class: 'small muted block-line' }, 'Horario: ' + (u.openFrom || '08:00') + ' a ' + (u.openTo || '22:00')),
               u.latitude && u.longitude ? h('span', { class: 'small text-success block-line' }, 'Ubicación en OpenStreetMap (' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + ')') : null
             ) : h('div', null,
@@ -357,31 +367,37 @@ function adminVerificationCenter() {
               h('button', {
                 type: 'button',
                 class: 'btn primary sm-btn',
-                onclick: () => openPdfViewerDialog(doc.title, doc.dataUrl, doc.filename)
-              }, 'Ver PDF'),
+                onclick: () => openPdfViewerDialog(doc.title, doc.dataUrl, doc.filename),
+                style: 'display:inline-flex; align-items:center; gap:4px;'
+              }, icon('prescriptions'), h('span', null, 'Ver PDF')),
               h('a', {
                 class: 'btn ghost sm-btn',
                 href: doc.dataUrl,
                 download: doc.filename || 'documento.pdf',
-                target: '_blank'
-              }, 'Descargar')
+                target: '_blank',
+                style: 'display:inline-flex; align-items:center; gap:4px;'
+              }, icon('download'), h('span', null, 'Descargar'))
             ))) : h('p', { class: 'muted small', style: 'margin:0;' }, 'No se adjuntaron archivos PDF al momento de crear la cuenta.')
           ),
 
-          h('div', { class: 'verification-actions-bar' },
+          h('div', { class: 'verification-actions-bar', style: 'margin-top:auto;' },
             h('button', {
               class: 'btn primary',
               type: 'button',
-              onclick: () => actVerify(true)
-            }, 'Aprobar y Verificar Cuenta'),
+              onclick: () => actVerify(true),
+              style: 'display:inline-flex; align-items:center; gap:6px;'
+            }, icon('check'), h('span', null, 'Aprobar y Verificar')),
             h('button', {
               class: 'btn danger-ghost',
               type: 'button',
-              onclick: actDisable
-            }, 'Rechazar / Deshabilitar')
+              onclick: actDisable,
+              style: 'display:inline-flex; align-items:center; gap:6px;'
+            }, icon('x'), h('span', null, 'Rechazar / Deshabilitar'))
           )
         );
       }));
+
+      return h('div', { class: 'stack' }, sliderHint, cardsContainer);
     });
 
     container.replaceChildren(toolbar, content);
@@ -483,6 +499,7 @@ function adminAdministratorsView(currentUser) {
 
     const toggle = (u, kind, value, ok) => async e => {
       await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
+      u[kind] = value;
       refreshAll();
     };
 

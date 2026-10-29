@@ -53,12 +53,11 @@ function pharmacyView(user) {
   window.__farmayaSeenOffers = null;
   return h('div', { class: 'stack pharmacy-root' },
     pharmacyHeaderCard(user),
-    !user.verified && notice('warn', 'Tu farmacia está pendiente de verificación sanitaria', 'Un químico farmacéutico supervisor revisará tu licencia y registro INVIMA. Hasta entonces no verás solicitudes.'),
+    !user.verified && notice('warn', 'Tu farmacia está pendiente de verificación sanitaria', 'Un administrador revisará tu licencia y documentación INVIMA. Hasta entonces no verás solicitudes.'),
     sideNavigation([
       { label: 'Dashboard & Ventas', icon: 'layout-dashboard', render: pharmacyDashboard },
       { label: 'Solicitudes y Despacho', icon: 'inbox', render: pharmacyOffers },
       { label: 'Mis pedidos activos', icon: 'package-check', render: pharmacyOrders },
-      { label: 'Auditoría de Fórmulas', icon: 'prescriptions', render: pharmacyPrescriptionsView },
       { label: 'Kárdex de Movimientos', icon: 'history', render: () => movementHistory('/pharmacy/movements') }
     ], 0));
 }
@@ -280,8 +279,7 @@ function offerRow(o, isFresh) {
       ),
       h('span', { class: 'muted' }, 'Esperando hace ', elapsedEl(o.searchStartedAt || o.createdAt))),
     h('ul', { class: 'plain' }, o.items.map(i => h('li', null,
-      h('span', null, i.name + ' ×' + i.quantity), i.prescription && h('span', { class: 'tag' }, 'Con fórmula médica'), i.note && h('small', { class: 'muted' }, i.note)))),
-    o.items.some(i => i.prescription) && h('p', { class: 'muted small' }, 'Verifica la fórmula médica antes de entregar medicamentos que la requieren.'),
+      h('span', null, i.name + ' ×' + i.quantity), i.note && h('small', { class: 'muted' }, i.note)))),
     o.notes && h('p', { class: 'muted' }, 'Nota: ' + o.notes),
     h('div', { class: 'actions left' },
       h('button', { class: 'btn primary', onclick: async e => {
@@ -308,7 +306,6 @@ function openPriceForm(order) {
       h('td', { class: 'q-check', 'data-label': 'Tengo' }, r.avail),
       h('td', { class: 'q-name' },
         h('span', { class: 'q-product' }, r.it.name),
-        r.it.prescription && h('span', { class: 'tag' }, 'Con fórmula médica'),
         r.it.note && h('small', { class: 'muted block-line' }, r.it.note)),
       h('td', { class: 'q-qty', 'data-label': 'Cantidad' }, r.qty),
       h('td', { class: 'q-price', 'data-label': 'Precio unitario' },
@@ -421,147 +418,4 @@ function pharmacyAction(o) {
   }
 }
 
-/**
- * Módulo de Validación Colegiada de Fórmulas Médicas (Stitch Screen 14)
- * Auditoría médica, registro ReTHUS, verificación de dosis y autorización de despacho.
- */
-function pharmacyPrescriptionsView() {
-  let activeFormulaIndex = 0;
 
-  const mockPrescriptions = [
-    {
-      code: 'REC-8841',
-      patient: 'Marcela Andrea Ospina H.',
-      cc: '52.840.192',
-      eps: 'Compensar EPS • Plan Complementario',
-      doctor: 'Dr. Roberto Gómez Bolaños',
-      rethus: 'RM-849201 (Cardiólogo / Internista)',
-      center: 'Clínica del Country • Cra 16 # 82-57',
-      diagnosis: 'Amigdalitis bacteriana aguda (CIE-10: J03.0)',
-      rxItem: 'Amoxicilina 500 mg Cápsulas',
-      dosage: 'Tomar 1 cápsula cada 8 horas por 7 días calendario',
-      qty: 'Caja x 21 cápsulas (3 blísteres)',
-      status: 'PENDIENTE',
-      verified: true
-    },
-    {
-      code: 'REC-8839',
-      patient: 'Carlos Eduardo Restrepo M.',
-      cc: '79.324.910',
-      eps: 'Sanitas EPS • Plan Premium',
-      doctor: 'Dra. Liliana Patricia Morales',
-      rethus: 'RM-721458 (Médico General)',
-      center: 'Centro Médico Colsanitas Calle 127',
-      diagnosis: 'Hipertensión arterial esencial (CIE-10: I10)',
-      rxItem: 'Losartán Potásico 50 mg Tabletas',
-      dosage: 'Tomar 1 tableta cada 24 horas por la mañana',
-      qty: 'Caja x 30 tabletas',
-      status: 'PENDIENTE',
-      verified: true
-    }
-  ];
-
-  const root = h('div', { class: 'stitch-prescriptions-root' });
-
-  function draw() {
-    const active = mockPrescriptions[activeFormulaIndex] || mockPrescriptions[0];
-
-    const cards = mockPrescriptions.map((rec, i) => {
-      const isSel = i === activeFormulaIndex;
-      return h('div', {
-        class: 'stitch-rx-card' + (isSel ? ' active' : ''),
-        onclick: () => {
-          activeFormulaIndex = i;
-          draw();
-        }
-      },
-        h('div', { class: 'rx-card-head' },
-          h('span', { class: 'rx-code-pill' }, '#' + rec.code),
-          h('span', { class: 'rx-status-tag' + (rec.status === 'APROBADA' ? ' approved' : '') }, rec.status)
-        ),
-        h('strong', { class: 'rx-patient-name' }, rec.patient),
-        h('small', { class: 'rx-eps-sub' }, rec.eps),
-        h('div', { class: 'rx-med-pill' }, rec.rxItem)
-      );
-    });
-
-    const inspector = h('div', { class: 'stitch-rx-inspector' },
-      h('header', { class: 'inspector-head' },
-        h('div', null,
-          h('span', { class: 'eyebrow' }, 'AUDITORÍA QUÍMICO-FARMACÉUTICA'),
-          h('h2', null, 'Fórmula #' + active.code + ' · ' + active.patient)
-        ),
-        h('span', { class: 'badge-rethus' }, 'ReTHUS MinSalud Verificado')
-      ),
-
-      h('div', { class: 'inspector-sections-grid' },
-        h('div', { class: 'inspector-card' },
-          h('strong', null, 'Médico Prescriptor'),
-          h('p', null, active.doctor),
-          h('small', { class: 'muted block-line' }, 'Registro ReTHUS: ' + active.rethus),
-          h('small', { class: 'muted block-line' }, 'Institución: ' + active.center)
-        ),
-        h('div', { class: 'inspector-card' },
-          h('strong', null, 'Paciente'),
-          h('p', null, active.patient + ' (C.C. ' + active.cc + ')'),
-          h('small', { class: 'muted block-line' }, 'Aseguradora: ' + active.eps),
-          h('small', { class: 'muted block-line' }, 'Diagnóstico: ' + active.diagnosis)
-        )
-      ),
-
-      h('div', { class: 'inspector-rx-box' },
-        h('div', { class: 'rx-box-header' },
-          h('strong', null, 'Medicamento Prescrito: ' + active.rxItem),
-          h('span', { class: 'rx-controlled-tag' }, 'Control Ético de Dispensación')
-        ),
-        h('p', { class: 'rx-posology' }, 'Posología: ' + active.dosage),
-        h('small', { class: 'muted block-line' }, 'Cantidad solicitada: ' + active.qty)
-      ),
-
-      h('div', { class: 'inspector-interaction-check' },
-        h('span', { class: 'badge tone-done', style: 'font-weight:700;' }, 'OK'),
-        h('div', null,
-          h('strong', null, 'Interacción Farmacológica'),
-          h('p', null, 'Sin alertas críticas de contraindicación o sobredosificación en el sistema asistencial.')
-        )
-      ),
-
-      h('div', { class: 'inspector-actions' },
-        h('button', {
-          class: 'btn danger-ghost',
-          type: 'button',
-          onclick: () => {
-            active.status = 'RECHAZADA';
-            toast('Fórmula #' + active.code + ' rechazada con observaciones sanitarias.');
-            draw();
-          }
-        }, 'Rechazar Fórmula'),
-        h('button', {
-          class: 'btn primary',
-          type: 'button',
-          onclick: () => {
-            active.status = 'APROBADA';
-            toast('Fórmula #' + active.code + ' aprobada colegiadamente. Despacho liberado.');
-            draw();
-          }
-        }, 'Aprobar y Liberar Despacho')
-      )
-    );
-
-    root.replaceChildren(
-      h('div', { class: 'stitch-prescriptions-layout' },
-        h('div', { class: 'rx-queue-column' },
-          h('div', { class: 'queue-heading' },
-            h('strong', null, 'Prescripciones Médicas Entrantes'),
-            h('small', { class: 'muted' }, mockPrescriptions.length + ' fórmulas en cola')
-          ),
-          h('div', { class: 'rx-cards-list' }, cards)
-        ),
-        h('div', { class: 'rx-inspector-column' }, inspector)
-      )
-    );
-  }
-
-  draw();
-  return root;
-}

@@ -193,7 +193,7 @@ function orderDetail(o, viewer) {
         o.pharmacyNote && h('p', { class: 'muted' }, 'Nota de la farmacia: ' + o.pharmacyNote))
     : (o.items && o.items.length
       ? block('Productos solicitados', h('ul', { class: 'plain' }, o.items.map(i => h('li', null,
-          h('span', null, i.name + ' ×' + i.quantity), i.prescription && h('span', { class: 'tag' }, 'Con fórmula médica'), i.note && h('small', { class: 'muted' }, i.note)))))
+          h('span', null, i.name + ' ×' + i.quantity), i.note && h('small', { class: 'muted' }, i.note)))))
       : null);
 
   const delivery = (o.address || o.city) && block('Entrega y Trayecto',

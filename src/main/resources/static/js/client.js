@@ -83,9 +83,7 @@ function renderClientDashboard() {
       return h('article', { class: 'product-card stitch-card' },
         // Cabecera de la tarjeta con badges clínicos
         h('div', { class: 'product-top-badges' },
-          p.rx
-            ? h('span', { class: 'badge-rx' }, 'Requiere Fórmula (Rx)')
-            : h('span', { class: 'badge-otc' }, 'Venta Libre'),
+          h('span', { class: 'badge-otc' }, 'Venta Libre'),
           h('span', { class: 'badge-flash' }, '45 min')
         ),
         // Imagen / Ilustración farmacéutica
@@ -174,15 +172,10 @@ function renderClientDashboard() {
       !clientCart.length
         ? empty('Tu carrito está vacío', 'Explora el catálogo y agrega los medicamentos que requieres para cotizar con farmacias aliadas.')
         : h('div', { class: 'cart-items stitch-cart-items' },
-            hasRx && h('div', { class: 'cart-rx-notice' },
-              h('strong', null, 'Contiene medicamentos bajo prescripción'),
-              h('p', null, 'Un químico farmacéutico validará tu fórmula médica antes de proceder con el cobro y despacho.')
-            ),
             clientCart.map(item =>
               h('div', { class: 'cart-item stitch-cart-item' },
                 h('div', { class: 'cart-item-info' },
                   h('strong', { class: 'cart-item-name' }, item.name),
-                  item.rx && h('span', { class: 'badge-rx inline' }, 'Rx Fórmula médica'),
                   h('small', { class: 'muted block-line' }, money(item.price) + ' c/u · precio sugerido'),
                   h('div', { class: 'quantity-control' },
                     h('button', {
@@ -325,16 +318,11 @@ function renderClientDashboard() {
       const hasRx = clientCart.some(i => i.rx);
 
       container.replaceChildren(
-        hasRx ? h('div', { class: 'cart-rx-notice' },
-          h('strong', null, 'Requiere prescripción médica'),
-          h('p', null, 'Un químico farmacéutico validará tu fórmula médica antes de proceder.')
-        ) : '',
         h('div', { class: 'cart-items stitch-cart-items' },
           clientCart.map(item =>
             h('div', { class: 'cart-item stitch-cart-item' },
               h('div', { class: 'cart-item-info' },
                 h('strong', { class: 'cart-item-name' }, item.name),
-                item.rx && h('span', { class: 'badge-rx inline' }, 'Rx Fórmula médica'),
                 h('small', { class: 'muted block-line' }, money(item.price) + ' c/u · sugerido'),
                 h('div', { class: 'quantity-control' },
                   h('button', {
@@ -693,7 +681,7 @@ function renderClientDashboard() {
       h('div', { class: 'trust-card-icon tone-blue', innerHTML: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>' }),
       h('div', null,
         h('strong', null, 'Respaldo Farmacéutico'),
-        h('p', null, 'Revisión colegiada permanente de fórmulas por profesionales regentes.')
+        h('p', null, 'Medicamentos originales despachados por farmacias autorizadas.')
       )
     )
   );
@@ -765,13 +753,20 @@ function renderClientDashboard() {
       h('div', { class: 'client-main-grid' },
         h('div', { class: 'client-products-column' },
           stickyCategory,
-          h('section', { class: 'block' },
-            h('div', { class: 'section-heading' },
-              h('div', null,
-                h('span', { class: 'eyebrow' }, 'CATÁLOGO DE PRODUCTOS ASISTENCIALES'),
-                h('h2', null, 'Medicamentos y Cuidado de la Salud')
+          h('section', { class: 'block catalog-showcase-block' },
+            h('div', { class: 'catalog-header-card' },
+              h('div', { class: 'catalog-header-info' },
+                h('div', { class: 'catalog-header-pill' },
+                  icon('shield'),
+                  h('span', null, 'Catálogo Oficial FarmaYA')
+                ),
+                h('h2', { class: 'catalog-title-main' }, 'Medicamentos y Cuidado de la Salud'),
+                h('p', { class: 'catalog-subtitle-desc' }, 'Productos originales con despacho prioritario garantizado por droguerías autorizadas.')
               ),
-              h('span', { class: 'muted small' }, 'Precios sugeridos confirmados por droguería')
+              h('div', { class: 'catalog-pricing-tag-box' },
+                h('span', { class: 'catalog-price-badge' }, icon('shopping-bag'), h('strong', null, 'Precios sugeridos')),
+                h('small', { class: 'catalog-price-hint' }, 'Confirmados directamente por la droguería asignada')
+              )
             ),
             productGrid
           ),
@@ -779,7 +774,7 @@ function renderClientDashboard() {
           h('section', { class: 'trust-card stitch-sidebar-trust' },
             h('span', null, icon('shield')),
             h('strong', null, 'Despacho Seguro FarmaYA'),
-            h('p', null, 'Fórmulas médicas auditadas por Químico Farmacéutico colegiado. Entregas con PIN de validación en mano.')
+            h('p', null, 'Medicamentos certificados despachados por farmacias autorizadas. Entregas con PIN de validación en mano.')
           )
         ),
         h('aside', { class: 'client-side-column' },
