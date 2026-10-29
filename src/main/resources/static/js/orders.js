@@ -302,6 +302,36 @@ function openPaymentGatewayDialog(o) {
   const generalTotal = subtotal + deliveryFee;
   let selectedMethod = 'PSE';
 
+  const launchWompi = () => {
+    if (window.WidgetCheckout) {
+      const amountInCents = Math.round(subtotal * 100);
+      const checkout = new WidgetCheckout({
+        currency: 'COP',
+        amountInCents: amountInCents,
+        reference: o.code + '-' + Date.now(),
+        publicKey: window.FARMAYA_WOMPI_KEY || 'pub_test_X0zDA9xoKdePzhSGeVe9HAhes1ScGZqq'
+      });
+      checkout.open(async result => {
+        const tx = result?.transaction;
+        if (tx && (tx.status === 'APPROVED' || tx.status === 'PENDING')) {
+          await API.post('/orders/' + o.id + '/accept-price', {
+            method: tx.payment_method_type || 'WOMPI',
+            bank: tx.payment_method?.extra?.institution_name || 'Bancolombia',
+            docNumber: tx.id,
+            amount: subtotal
+          });
+          toast('Pago procesado y verificado en Wompi Bancolombia.');
+          d.close();
+          refreshAll();
+        } else if (tx) {
+          toast('Estado de transacción: ' + (tx.status || 'Cancelada'), 'warn');
+        }
+      });
+      return true;
+    }
+    return false;
+  };
+
   const bankSelect = h('select', { class: 'input block' },
     ['Bancolombia', 'Nequi', 'Davivienda', 'Banco de Bogotá', 'BBVA Colombia', 'Banco de Occidente', 'Scotiabank Colpatria', 'Banco Popular', 'Itaú Colombia', 'Dale!', 'Lulo Bank'].map(b =>
       h('option', { value: b }, b)
@@ -385,6 +415,18 @@ function openPaymentGatewayDialog(o) {
     }, 'Pago de productos recaudado exitosamente en cuenta FarmaYA.');
   });
 
+  const btnWompiWidget = h('button', {
+    class: 'btn secondary block',
+    type: 'button',
+    style: 'margin-bottom: 16px; font-weight:800; border: 2px solid var(--primary); padding:12px;',
+    onclick: () => {
+      const opened = launchWompi();
+      if (!opened) {
+        toast('Cargando pasarela Wompi en línea...', 'info');
+      }
+    }
+  }, 'Pagar mediante Wompi Oficial (PSE / Nequi / Bancolombia)');
+
   const content = h('div', { class: 'sheet-body payment-modal-body' },
     h('div', { class: 'payment-header' },
       h('span', { class: 'payment-gateway-ico' }, icon('shield')),
@@ -431,7 +473,9 @@ function openPaymentGatewayDialog(o) {
       h('small', null, 'FarmaYA retiene la comisión del 10% por servicio digital y liquida el excedente a la droguería.')
     ),
 
-    // Selector PSE / Nequi
+    btnWompiWidget,
+
+    // Selector PSE / Nequi Directo
     h('div', { class: 'payment-method-tabs' }, tabPse, tabNequi),
     psePane,
     nequiPane,

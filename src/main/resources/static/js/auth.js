@@ -857,20 +857,19 @@ async function handleLoginSubmit(event) {
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
 
-  promptEmailOtpVerification({
-    email,
-    role: 'LOGIN',
-    onVerified: async () => {
-      await act(btn, async () => {
-        const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'No pudimos iniciar sesión. Revisa tus datos.');
-        API.setToken(data.token); state.user = data.user;
-        location.hash = routeForRole(data.user.role);
-        renderApp();
-        return data;
-      });
-    }
+  await act(btn, async () => {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'No pudimos iniciar sesión. Revisa tus datos.');
+    API.setToken(data.token);
+    state.user = data.user;
+    location.hash = routeForRole(data.user.role);
+    renderApp();
+    return data;
   });
 }
 

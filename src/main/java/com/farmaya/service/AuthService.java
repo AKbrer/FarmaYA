@@ -33,6 +33,7 @@ public class AuthService {
     private final SessionRepository sessions;
     private final FarmaYaProperties props;
     private final MovementService movements;
+    private final EmailService emailService;
     private final PasswordEncoder encoder = new BCryptPasswordEncoder();
     private final java.util.concurrent.ConcurrentHashMap<String, OtpRecord> otps = new java.util.concurrent.ConcurrentHashMap<>();
 
@@ -47,15 +48,20 @@ public class AuthService {
         otps.put(cleanEmail, new OtpRecord(code, Instant.now().plus(10, ChronoUnit.MINUTES), purpose));
         
         try {
-            movements.record("ENVIO_CODIGO_OTP", "Código de verificación generado y enviado al correo " + cleanEmail, null, null);
+            movements.record("ENVIO_CODIGO_OTP", "Código de verificación generado para el correo " + cleanEmail, null, null);
         } catch (Exception ignored) {}
+
+        EmailService.EmailDispatchResult dispatch = emailService.sendVerificationOtp(cleanEmail, code, null);
 
         return java.util.Map.of(
                 "ok", true,
                 "email", cleanEmail,
                 "code", code,
                 "expiresInMinutes", 10,
-                "message", "Código de verificación de 6 dígitos enviado exitosamente a tu correo."
+                "emailSent", dispatch.success(),
+                "message", dispatch.success()
+                        ? "Código enviado exitosamente a tu bandeja de correo " + cleanEmail
+                        : "Código generado para tu cuenta: " + code + ". " + dispatch.message()
         );
     }
 
@@ -77,11 +83,12 @@ public class AuthService {
         return true;
     }
 
-    public AuthService(UserRepository users, SessionRepository sessions, FarmaYaProperties props, MovementService movements) {
+    public AuthService(UserRepository users, SessionRepository sessions, FarmaYaProperties props, MovementService movements, EmailService emailService) {
         this.users = users;
         this.sessions = sessions;
         this.props = props;
         this.movements = movements;
+        this.emailService = emailService;
     }
 
     public String hashPassword(String raw) {
