@@ -444,17 +444,40 @@ function fyDownloadBytes(bytes, filename, mime) {
 }
 
 /**
+ * Retorna las etiquetas reales de los meses cronologicos en espanol.
+ */
+function fyGetTimelineMonthLabels(providedLabels) {
+  if (Array.isArray(providedLabels) && providedLabels.length >= 2 && String(providedLabels[0]).indexOf('Mes') < 0) {
+    return providedLabels.slice(0, 4);
+  }
+  const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const now = new Date();
+  const m = now.getMonth();
+  const y = now.getFullYear();
+
+  // 3 meses anteriores en orden cronologico hacia adelante + mes proyectado
+  const d3 = new Date(y, m - 3, 1);
+  const d2 = new Date(y, m - 2, 1);
+  const d1 = new Date(y, m - 1, 1);
+  const dNext = new Date(y, m + 1, 1);
+
+  return [
+    MONTHS[d3.getMonth()],
+    MONTHS[d2.getMonth()],
+    MONTHS[d1.getMonth()],
+    MONTHS[dNext.getMonth()] + ' (Proy. IA)'
+  ];
+}
+
+/**
  * Grafico de Lineas para el Modelo Predictivo de Demanda Mensual de Medicamentos.
  * Muestra la serie temporal historica (meses previos) y la proyeccion futura con Machine Learning.
  */
 function fyDemandLineChartSvg(chartData, selectedMed) {
-  const W = 760, H = 270, L = 55, R = 35, T = 30, B = 45;
+  const W = 760, H = 270, L = 60, R = 40, T = 30, B = 45;
   const pw = W - L - R, ph = H - T - B;
 
-  let rawLabels = (chartData && Array.isArray(chartData.labels) && chartData.labels.length >= 2)
-    ? chartData.labels
-    : ['Mes -3', 'Mes -2', 'Mes -1', 'Proy. IA'];
-  const labels = rawLabels.slice(0, 4);
+  const labels = fyGetTimelineMonthLabels(chartData && chartData.labels);
   const n = labels.length;
   const x = i => L + (pw * i) / Math.max(1, n - 1);
 
@@ -520,11 +543,11 @@ function fyDemandLineChartSvg(chartData, selectedMed) {
     g += `<text class="fy-axis" x="${L - 10}" y="${(+yy + 4).toFixed(1)}" text-anchor="end" fill="#64748b" font-size="11" font-weight="600">${v}</text>`;
   }
 
-  // Columnas verticales de mes y etiquetas en Eje X
+  // Columnas verticales de mes y nombres reales de meses en Eje X
   labels.forEach((lbl, i) => {
     const cx = x(i).toFixed(1);
     const isProj = i === n - 1;
-    const color = isProj ? '#087068' : '#475569';
+    const color = isProj ? '#087068' : '#334155';
     const weight = isProj ? '700' : '600';
     g += `<line x1="${cx}" x2="${cx}" y1="${T}" y2="${T + ph}" stroke="${isProj ? '#087068' : '#f1f5f9'}" stroke-width="${isProj ? '1.5' : '1'}" stroke-dasharray="${isProj ? '4,3' : 'none'}"/>`;
     g += `<text x="${cx}" y="${H - 14}" text-anchor="middle" fill="${color}" font-size="12" font-weight="${weight}">${fyEsc(lbl)}</text>`;
