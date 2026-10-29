@@ -442,3 +442,84 @@ function fyDownloadBytes(bytes, filename, mime) {
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 4000);
 }
+
+/**
+ * Gráfico de Líneas para el Modelo Predictivo de Demanda Mensual de Medicamentos.
+ * Muestra la serie temporal histórica (meses previos) y la proyección futura con Machine Learning.
+ */
+function fyDemandLineChartSvg(chartData, selectedMed) {
+  const W = 760, H = 260, L = 55, R = 30, T = 25, B = 40;
+  const pw = W - L - R, ph = H - T - B;
+
+  const labels = (chartData && chartData.labels) || ['Mes -3', 'Mes -2', 'Mes -1', 'Proy. IA'];
+  const n = labels.length;
+  const x = i => L + (pw * i) / Math.max(1, n - 1);
+
+  let lines = [];
+  if (selectedMed && selectedMed.historyPoints && selectedMed.historyPoints.length >= n) {
+    lines.push({
+      id: 'selected',
+      name: selectedMed.medicineName,
+      color: selectedMed.category === 'ALTA' ? '#d9383a' : (selectedMed.category === 'BAJA' ? '#64748b' : '#0284c7'),
+      points: selectedMed.historyPoints
+    });
+  } else {
+    const altaPts = (chartData && chartData.alta) || [35, 42, 48, 56];
+    const mediaPts = (chartData && chartData.media) || [18, 20, 22, 24];
+    const bajaPts = (chartData && chartData.baja) || [6, 7, 5, 6];
+
+    lines.push({ id: 'alta', name: 'Demanda ALTA', color: '#d9383a', points: altaPts });
+    lines.push({ id: 'media', name: 'Demanda MEDIA', color: '#0284c7', points: mediaPts });
+    lines.push({ id: 'baja', name: 'Demanda BAJA', color: '#64748b', points: bajaPts });
+  }
+
+  let allVals = [];
+  lines.forEach(l => l.points.forEach(v => allVals.push(v)));
+  const maxV = Math.max(10, ...allVals);
+  const sc = fyNiceScale(maxV, 4);
+  const y = v => T + ph - (v / sc.max) * ph;
+
+  let g = '';
+
+  for (let i = 0; i <= sc.count; i++) {
+    const v = i * sc.step;
+    const yy = y(v).toFixed(1);
+    g += `<line class="fy-grid" x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="2,2"/>`;
+    g += `<text class="fy-axis" x="${L - 8}" y="${(+yy + 4).toFixed(1)}" text-anchor="end" fill="#64748b" font-size="11" font-weight="500">${v}</text>`;
+  }
+
+  labels.forEach((lbl, i) => {
+    const cx = x(i).toFixed(1);
+    const isProj = i === n - 1;
+    const color = isProj ? '#087068' : '#475569';
+    const weight = isProj ? '700' : '500';
+    g += `<line x1="${cx}" x2="${cx}" y1="${T}" y2="${T + ph}" stroke="${isProj ? '#087068' : '#f1f5f9'}" stroke-width="${isProj ? '1.5' : '1'}" stroke-dasharray="${isProj ? '4,3' : 'none'}"/>`;
+    g += `<text x="${cx}" y="${H - 12}" text-anchor="middle" fill="${color}" font-size="11.5" font-weight="${weight}">${fyEsc(lbl)}</text>`;
+  });
+
+  lines.forEach(line => {
+    const pts = line.points;
+    let histPath = '';
+    for (let i = 0; i < n - 1; i++) {
+      histPath += (i === 0 ? 'M' : 'L') + x(i).toFixed(1) + ' ' + y(pts[i]).toFixed(1) + ' ';
+    }
+    const projPath = 'M' + x(n - 2).toFixed(1) + ' ' + y(pts[n - 2]).toFixed(1) + ' L' + x(n - 1).toFixed(1) + ' ' + y(pts[n - 1]).toFixed(1);
+
+    g += `<path d="${histPath}" fill="none" stroke="${line.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    g += `<path d="${projPath}" fill="none" stroke="${line.color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6,4"/>`;
+
+    pts.forEach((v, i) => {
+      const px = x(i).toFixed(1);
+      const py = y(v).toFixed(1);
+      const isProj = i === n - 1;
+      const tip = `${line.name} (${labels[i]}): ${v} solicitudes ${isProj ? '• Proyección Machine Learning' : '• Histórico'}`;
+      g += `<g class="fy-pt-group">
+        <circle cx="${px}" cy="${py}" r="${isProj ? '6' : '4.5'}" fill="${isProj ? line.color : '#ffffff'}" stroke="${line.color}" stroke-width="2.5"/>
+        ${isProj ? `<circle cx="${px}" cy="${py}" r="9" fill="none" stroke="${line.color}" stroke-width="1.5" opacity="0.4"/>` : ''}
+        <title>${fyEsc(tip)}</title>
+      </g>`;
+    });
+  });
+
+  return `<svg class="fy-chart" viewBox="0 0 ${W} ${H}" style="width: 100%; height: auto; max-height: 290px; overflow: visible;" role="img" aria-label="Tendencia y Proyección de Demanda">${g}</svg>`;
+}

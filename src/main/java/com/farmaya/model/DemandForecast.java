@@ -1,6 +1,8 @@
 package com.farmaya.model;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -38,6 +40,10 @@ public class DemandForecast {
     
     /** Periodo pronosticado (ej. "Noviembre 2026") */
     public String forecastPeriod;
+
+    /** Puntos de evolución mensual para gráfico de líneas (histórico + proyección) */
+    public List<Integer> historyPoints = new ArrayList<>();
+    public List<String> monthLabels = new ArrayList<>();
     
     public Instant generatedAt;
 

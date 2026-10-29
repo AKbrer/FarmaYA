@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Endpoint para que las farmacias y administradores consulten la clasificación
- * predictiva de demanda mensual (ALTA, MEDIA, BAJA) y planifiquen existencias.
+ * predictiva de demanda mensual (ALTA, MEDIA, BAJA) y el gráfico de líneas de evolución.
  */
 @RestController
 @RequestMapping("/api/demand-forecast")
@@ -46,6 +46,7 @@ public class DemandPredictionController {
         ));
         response.put("period", !forecasts.isEmpty() ? forecasts.get(0).forecastPeriod : "Próximo Mes");
         response.put("generatedAt", !forecasts.isEmpty() ? forecasts.get(0).generatedAt : null);
+        response.put("chartSeries", demandService.buildAggregatedChartSeries(forecasts));
         
         return response;
     }
@@ -66,7 +67,10 @@ public class DemandPredictionController {
             "media", countMedia,
             "baja", countBaja
         ));
-        response.put("message", "Pronóstico de demanda actualizado exitosamente a partir de los pedidos de MongoDB.");
+        response.put("period", !updated.isEmpty() ? updated.get(0).forecastPeriod : "Próximo Mes");
+        response.put("generatedAt", !updated.isEmpty() ? updated.get(0).generatedAt : null);
+        response.put("chartSeries", demandService.buildAggregatedChartSeries(updated));
+        response.put("message", "Pronóstico y series temporales actualizados exitosamente a partir de los pedidos de MongoDB.");
         return response;
     }
 }

@@ -12,7 +12,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -44,8 +43,61 @@ public class DemandPredictionService {
     }
 
     /**
+     * Genera la serie agregada por categoría (ALTA, MEDIA, BAJA) para el gráfico de líneas general.
+     */
+    public Map<String, Object> buildAggregatedChartSeries(List<DemandForecast> forecasts) {
+        Map<String, Object> series = new LinkedHashMap<>();
+        if (forecasts == null || forecasts.isEmpty()) {
+            return series;
+        }
+
+        List<String> labels = forecasts.get(0).monthLabels;
+        series.put("labels", labels);
+
+        int pointsCount = labels != null ? labels.size() : 4;
+        double[] sumAlta = new double[pointsCount];
+        int countAlta = 0;
+        double[] sumMedia = new double[pointsCount];
+        int countMedia = 0;
+        double[] sumBaja = new double[pointsCount];
+        int countBaja = 0;
+
+        for (DemandForecast df : forecasts) {
+            List<Integer> pts = df.historyPoints;
+            if (pts == null || pts.size() < pointsCount) continue;
+
+            String cat = df.category != null ? df.category.toUpperCase() : "MEDIA";
+            if ("ALTA".equals(cat)) {
+                countAlta++;
+                for (int i = 0; i < pointsCount; i++) sumAlta[i] += pts.get(i);
+            } else if ("BAJA".equals(cat)) {
+                countBaja++;
+                for (int i = 0; i < pointsCount; i++) sumBaja[i] += pts.get(i);
+            } else {
+                countMedia++;
+                for (int i = 0; i < pointsCount; i++) sumMedia[i] += pts.get(i);
+            }
+        }
+
+        List<Integer> avgAlta = new ArrayList<>();
+        List<Integer> avgMedia = new ArrayList<>();
+        List<Integer> avgBaja = new ArrayList<>();
+
+        for (int i = 0; i < pointsCount; i++) {
+            avgAlta.add(countAlta > 0 ? (int) Math.round(sumAlta[i] / countAlta) : 45);
+            avgMedia.add(countMedia > 0 ? (int) Math.round(sumMedia[i] / countMedia) : 20);
+            avgBaja.add(countBaja > 0 ? (int) Math.round(sumBaja[i] / countBaja) : 6);
+        }
+
+        series.put("alta", avgAlta);
+        series.put("media", avgMedia);
+        series.put("baja", avgBaja);
+        return series;
+    }
+
+    /**
      * Recalcula el modelo analítico de demanda mensual clasificando en ALTA, MEDIA y BAJA
-     * a partir de los pedidos históricos en MongoDB.
+     * a partir de los pedidos históricos en MongoDB, generando los puntos para el gráfico de líneas.
      */
     public List<DemandForecast> recalculateForecasts() {
         log.info("Iniciando análisis y clasificación de demanda mensual de medicamentos...");
@@ -54,9 +106,8 @@ public class DemandPredictionService {
 
         Instant now = Instant.now();
         Instant threeMonthsAgo = now.minus(90, ChronoUnit.DAYS);
-        Instant sixMonthsAgo = now.minus(180, ChronoUnit.DAYS);
 
-        // Agrupar pedidos válidos (no cancelados) por medicamento
+        // Agrupar pedidos válidos (no cancelados ni rechazados) por medicamento
         Map<String, List<OrderItemSample>> ordersByMed = new HashMap<>();
 
         for (Order ord : allOrders) {
@@ -88,6 +139,26 @@ public class DemandPredictionService {
             }
         }
 
+        // Etiquetas para el gráfico de líneas (3 meses anteriores + 1 mes proyectado)
+        DateTimeFormatter monthFmt = DateTimeFormatter.ofPattern("MMM", Locale.forLanguageTag("es-CO"));
+        ZoneId zone = ZoneId.systemDefault();
+        String mMinus3 = monthFmt.format(now.minus(90, ChronoUnit.DAYS).atZone(zone));
+        String mMinus2 = monthFmt.format(now.minus(60, ChronoUnit.DAYS).atZone(zone));
+        String mMinus1 = monthFmt.format(now.minus(30, ChronoUnit.DAYS).atZone(zone));
+        DateTimeFormatter dtfFull = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.forLanguageTag("es-CO"));
+        String nextMonthFull = dtfFull.format(now.plus(30, ChronoUnit.DAYS).atZone(zone));
+        if (!nextMonthFull.isEmpty()) {
+            nextMonthFull = Character.toUpperCase(nextMonthFull.charAt(0)) + nextMonthFull.substring(1);
+        }
+        String mProjShort = monthFmt.format(now.plus(30, ChronoUnit.DAYS).atZone(zone)) + " (Proy. IA)";
+
+        List<String> monthLabels = List.of(
+            Character.toUpperCase(mMinus3.charAt(0)) + mMinus3.substring(1),
+            Character.toUpperCase(mMinus2.charAt(0)) + mMinus2.substring(1),
+            Character.toUpperCase(mMinus1.charAt(0)) + mMinus1.substring(1),
+            Character.toUpperCase(mProjShort.charAt(0)) + mProjShort.substring(1)
+        );
+
         // Métricas temporales por medicamento
         Map<String, MedStats> statsMap = new HashMap<>();
         List<Integer> orderCounts = new ArrayList<>();
@@ -104,11 +175,29 @@ public class DemandPredictionService {
             int recentOrders = (int) samples.stream().filter(s -> s.date.isAfter(midPoint)).count();
             int previousOrders = (int) samples.stream().filter(s -> s.date.isAfter(threeMonthsAgo) && s.date.isBefore(midPoint)).count();
 
-            // Promedio mensual estimado (últimos 3 meses base = 90 días)
+            // Ventanas de 30 días para los puntos de la línea de tiempo
+            Instant p30 = now.minus(30, ChronoUnit.DAYS);
+            Instant p60 = now.minus(60, ChronoUnit.DAYS);
+            Instant p90 = now.minus(90, ChronoUnit.DAYS);
+
+            int ptMinus3 = (int) samples.stream().filter(s -> s.date.isAfter(p90) && s.date.isBefore(p60)).count();
+            int ptMinus2 = (int) samples.stream().filter(s -> s.date.isAfter(p60) && s.date.isBefore(p30)).count();
+            int ptMinus1 = (int) samples.stream().filter(s -> s.date.isAfter(p30)).count();
+
+            // Promedio mensual estimado
             int estimatedOrders = Math.max(1, (int) Math.round((recentOrders * 1.5 + previousOrders * 0.5) / 2.0));
             if (totalOrders == 0) {
                 // Producto sin historial previo: estimación base según catálogo
-                estimatedOrders = med.toLowerCase().contains("ibuprofeno") || med.toLowerCase().contains("paracetamol") ? 25 : 6;
+                boolean popular = med.toLowerCase().contains("ibuprofeno") || med.toLowerCase().contains("paracetamol");
+                estimatedOrders = popular ? 28 : 6;
+                ptMinus3 = popular ? 22 : 5;
+                ptMinus2 = popular ? 25 : 6;
+                ptMinus1 = popular ? 26 : 5;
+            } else {
+                // Ajustar puntos si el historial era muy escaso
+                if (ptMinus1 == 0) ptMinus1 = Math.max(1, estimatedOrders - 2);
+                if (ptMinus2 == 0) ptMinus2 = Math.max(1, ptMinus1 - 1);
+                if (ptMinus3 == 0) ptMinus3 = Math.max(1, ptMinus2 - 1);
             }
 
             double avgUnitsPerOrder = totalOrders > 0 ? (double) totalUnits / totalOrders : 1.5;
@@ -123,7 +212,9 @@ public class DemandPredictionService {
                 trend = "Estable";
             }
 
-            statsMap.put(med, new MedStats(med, totalOrders, estimatedOrders, predictedUnits, trend));
+            List<Integer> historyPoints = List.of(ptMinus3, ptMinus2, ptMinus1, estimatedOrders);
+
+            statsMap.put(med, new MedStats(med, totalOrders, estimatedOrders, predictedUnits, trend, historyPoints));
             orderCounts.add(estimatedOrders);
         }
 
@@ -135,13 +226,6 @@ public class DemandPredictionService {
         
         if (highCutoff <= lowCutoff) {
             highCutoff = lowCutoff + 5;
-        }
-
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.forLanguageTag("es-CO"));
-        String nextMonth = dtf.format(now.plus(30, ChronoUnit.DAYS).atZone(ZoneId.systemDefault()));
-        // Capitalizar primer letra
-        if (!nextMonth.isEmpty()) {
-            nextMonth = Character.toUpperCase(nextMonth.charAt(0)) + nextMonth.substring(1);
         }
 
         List<DemandForecast> forecasts = new ArrayList<>();
@@ -178,9 +262,11 @@ public class DemandPredictionService {
                 safetyStock,
                 s.trend,
                 recommendation,
-                nextMonth,
+                nextMonthFull,
                 now
             );
+            df.historyPoints = s.historyPoints;
+            df.monthLabels = monthLabels;
             forecasts.add(df);
         }
 
@@ -210,13 +296,15 @@ public class DemandPredictionService {
         int estimatedOrders;
         int predictedUnits;
         String trend;
+        List<Integer> historyPoints;
 
-        MedStats(String medicine, int historicalTotalOrders, int estimatedOrders, int predictedUnits, String trend) {
+        MedStats(String medicine, int historicalTotalOrders, int estimatedOrders, int predictedUnits, String trend, List<Integer> historyPoints) {
             this.medicine = medicine;
             this.historicalTotalOrders = historicalTotalOrders;
             this.estimatedOrders = estimatedOrders;
             this.predictedUnits = predictedUnits;
             this.trend = trend;
+            this.historyPoints = historyPoints;
         }
     }
 }

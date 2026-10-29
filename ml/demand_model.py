@@ -401,6 +401,8 @@ class DemandPredictorPipeline:
                 "historicalTrend": trend_label,
                 "actionRecommendation": action_recommendation,
                 "forecastPeriod": next_month,
+                "historyPoints": [int(lag3_orders), int(lag2_orders), int(lag1_orders), int(estimated_orders)],
+                "monthLabels": ["Mes -3", "Mes -2", "Mes -1", f"{next_month.split()[0][:3]} (Proy. IA)"],
                 "generatedAt": datetime.utcnow()
             })
             

@@ -16,6 +16,7 @@ function adminHeaderCard(user) {
 
 let adminDemandFilter = 'TODAS';
 let adminDemandSearch = '';
+let adminSelectedMedicineForChart = null;
 
 function adminView(user) {
   let root;
@@ -215,8 +216,8 @@ function adminDemandForecast() {
     );
 
     const tableRows = filtered.map(item => {
-      return h('tr', { class: 'admin-forecast-row', 'data-name': item.medicineName, style: 'border-bottom: 1px solid var(--border);' },
-        h('td', { style: 'padding: 0.75rem 1rem; font-weight: 600;' }, item.medicineName),
+      const isSelected = adminSelectedMedicineForChart && adminSelectedMedicineForChart.medicineName === item.medicineName;
+      return h('tr', { class: 'admin-forecast-row', 'data-name': item.medicineName, style: 'border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s;' + (isSelected ? ' background: rgba(8, 112, 104, 0.08); font-weight: 600;' : ''), onclick: () => { adminSelectedMedicineForChart = isSelected ? null : item; refreshAll(); } },
         h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, categoryBadge(item.category)),
         h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem;', class: 'muted' }, (item.confidence ? item.confidence.toFixed(1) : '90.0') + '%'),
         h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem; font-weight: 600;' }, String(item.estimatedOrders || 0)),
@@ -234,9 +235,35 @@ function adminDemandForecast() {
       )
     );
 
+    // Componente del Gráfico de Líneas para el Modelo Predictivo
+    const chartCard = h('div', { class: 'card', style: 'padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;' },
+      h('div', { class: 'flex items-center justify-between', style: 'flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;' },
+        h('div', null,
+          h('h3', { style: 'margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;' },
+            '?? Gráfico de Líneas: Evolución Histórica y Proyección de Demanda',
+            adminSelectedMedicineForChart ? h('span', { class: 'tag primary', style: 'font-size: 0.75rem;' }, adminSelectedMedicineForChart.medicineName) : null
+          ),
+          h('small', { class: 'muted' }, 'Línea continua: Histórico de pedidos en MongoDB • Línea discontinua (- -): Proyección calculada con Machine Learning')
+        ),
+        h('div', { class: 'flex items-center gap-3 text-xs' },
+          adminSelectedMedicineForChart ? h('button', {
+            class: 'btn secondary',
+            style: 'font-size: 0.75rem; padding: 0.25rem 0.6rem;',
+            onclick: () => { adminSelectedMedicineForChart = null; refreshAll(); }
+          }, '? Ver comparativa global') : null,
+          h('span', { style: 'display: flex; align-items: center; gap: 0.35rem;' }, h('span', { style: 'width: 10px; height: 10px; border-radius: 50%; background: #d9383a; display: inline-block;' }), 'ALTA'),
+          h('span', { style: 'display: flex; align-items: center; gap: 0.35rem;' }, h('span', { style: 'width: 10px; height: 10px; border-radius: 50%; background: #0284c7; display: inline-block;' }), 'MEDIA'),
+          h('span', { style: 'display: flex; align-items: center; gap: 0.35rem;' }, h('span', { style: 'width: 10px; height: 10px; border-radius: 50%; background: #64748b; display: inline-block;' }), 'BAJA')
+        )
+      ),
+      h('div', { class: 'chart-container', style: 'width: 100%; min-height: 250px;', innerHTML: fyDemandLineChartSvg(data.chartSeries, adminSelectedMedicineForChart) }),
+      h('p', { class: 'muted text-xs', style: 'margin: 0.75rem 0 0 0; text-align: right;' }, '?? Haz clic en cualquier medicamento de la tabla para trazar su curva individual en el gráfico.')
+    );
+
     return h('div', { class: 'stack stitch-admin-demand-view' },
       banner,
       kpiSection,
+      chartCard,
       toolbar,
       filtered.length ? table : empty('Sin coincidencias', 'No se encontraron medicamentos para el criterio seleccionado.')
     );
