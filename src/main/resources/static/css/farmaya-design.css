@@ -84,43 +84,43 @@
   --text:         #E5F2EB;
   --muted:        #8FA89C;
 
-  --primary:      #2ecc71;
-  --primary-dark: #27ae60;
-  --primary-soft: rgba(46, 204, 113, .14);
-  --on-primary:   #0B1410;
+  --primary:      #1ea271;
+  --primary-dark: #126e4c;
+  --primary-soft: rgba(22, 134, 93, .18);
+  --on-primary:   #ffffff;
 
-  --brand-blue:   #3b8fdb;
-  --brand-blue-soft: rgba(59, 143, 219, .14);
-  --brand-blue-dark: #1e6cb8;
+  --brand-blue:   #0a5ca8;
+  --brand-blue-soft: rgba(10, 92, 168, .18);
+  --brand-blue-dark: #084985;
 
-  --accent:       #3b8fdb;
+  --accent:       #0a5ca8;
   --accent-ink:   #e1f0fc;
 
   --danger:       #FCA5A5;
   --danger-soft:  rgba(252, 165, 165, .1);
   --warning:      #FCD34D;
   --warning-soft: rgba(252, 211, 77, .1);
-  --success:      #34D399;
+  --success:      #1ea271;
 
   --hero-bg:      #081A14;
   --hero-ink:     #E5F2EB;
 
   --shadow:       0 6px 30px rgba(0, 0, 0, .45);
   --shadow-lg:    0 16px 50px rgba(0, 0, 0, .55);
-  --ring:         rgba(46, 204, 113, .3);
+  --ring:         rgba(22, 134, 93, .3);
 
-  --stitch-primary: #85d5c8;
-  --stitch-primary-container: #004e46;
-  --stitch-on-primary-container: #a1f1e4;
-  --stitch-secondary: #3b8fdb;
-  --stitch-secondary-container: #0d2f5c;
-  --stitch-on-secondary-container: #b8dcff;
+  --stitch-primary: #1ea271;
+  --stitch-primary-container: #103b2c;
+  --stitch-on-primary-container: #d2f2e4;
+  --stitch-secondary: #0a5ca8;
+  --stitch-secondary-container: #0d2845;
+  --stitch-on-secondary-container: #d6e8fa;
   --stitch-surface: #0a1712;
   --stitch-surface-low: #10211a;
   --stitch-surface-container: #162a22;
   --stitch-on-surface: #eef7f2;
   --stitch-on-surface-variant: #9ab3a6;
-  --stitch-outline: #476155;
+  --stitch-outline: #2c4238;
 }
 
 /* ==========================================================================
@@ -256,8 +256,8 @@ a {
 
 [data-theme="dark"] .brand-mark {
   background: var(--primary);
-  color: var(--on-primary);
-  box-shadow: 0 4px 14px rgba(46, 204, 113, .2);
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
 }
 
 .header-tag {
@@ -398,13 +398,16 @@ a {
 
 [data-theme="dark"] .btn.primary {
   background: var(--primary);
-  color: var(--on-primary);
-  box-shadow: 0 5px 20px rgba(46, 204, 113, .25),
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35),
               inset 0 1px 0 rgba(255, 255, 255, .1);
 }
 
 [data-theme="dark"] .btn.primary:hover {
-  background: #27ae60;
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  color: #ffffff;
 }
 
 [data-theme="dark"] .btn.secondary,
@@ -615,13 +618,13 @@ a {
 
 [data-theme="dark"] .welcome-banner::before {
   background:
-    radial-gradient(ellipse 60% 50% at 15% 80%, rgba(46, 204, 113, .22), transparent),
-    radial-gradient(ellipse 40% 40% at 85% 20%, rgba(59, 143, 219, .15), transparent),
-    radial-gradient(ellipse 30% 30% at 70% 70%, rgba(46, 204, 113, .08), transparent);
+    radial-gradient(ellipse 60% 50% at 15% 80%, rgba(22, 134, 93, .16), transparent),
+    radial-gradient(ellipse 40% 40% at 85% 20%, rgba(10, 92, 168, .12), transparent),
+    radial-gradient(ellipse 30% 30% at 70% 70%, rgba(22, 134, 93, .08), transparent);
 }
 
 [data-theme="dark"] .welcome-banner .eyebrow {
-  color: #2ecc71;
+  color: var(--primary);
 }
 
 [data-theme="dark"] .welcome-banner h1 {
@@ -964,8 +967,8 @@ a {
 }
 
 [data-theme="dark"] .product-card:hover {
-  border-color: rgba(46, 204, 113, .4);
-  box-shadow: 0 10px 32px rgba(46, 204, 113, .12);
+  border-color: rgba(22, 134, 93, .45);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, .35);
 }
 
 [data-theme="dark"] .product-art-wrap {
@@ -1243,7 +1246,7 @@ a {
 }
 
 [data-theme="dark"] .order-row:hover {
-  border-color: rgba(46, 204, 113, .4);
+  border-color: rgba(22, 134, 93, .45);
   background: var(--surface-soft);
 }
 
@@ -1492,7 +1495,7 @@ a {
 }
 
 [data-theme="dark"] .close:hover {
-  background: rgba(46, 204, 113, .12);
+  background: rgba(22, 134, 93, .14);
   color: var(--primary);
 }
 
@@ -1867,7 +1870,7 @@ a {
 }
 
 [data-theme="dark"] .skeleton {
-  background: linear-gradient(90deg, var(--surface-soft), rgba(46, 204, 113, .06), var(--surface-soft));
+  background: linear-gradient(90deg, var(--surface-soft), rgba(22, 134, 93, .06), var(--surface-soft));
   background-size: 200% 100%;
 }
 
@@ -1971,7 +1974,7 @@ a {
 
 [data-theme="dark"] .client-sticky-categories {
   background: rgba(18, 26, 22, 0.96) !important;
-  border-color: rgba(46, 204, 113, 0.22) !important;
+  border-color: rgba(22, 134, 93, 0.25) !important;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4) !important;
 }
 
@@ -2659,8 +2662,8 @@ dialog.sheet.drawer::backdrop {
 }
 
 .trust-card-icon.tone-lime {
-  background: rgba(177, 246, 111, 0.25);
-  color: var(--stitch-secondary);
+  background: rgba(22, 134, 93, 0.15);
+  color: var(--primary);
 }
 
 .trust-card-icon.tone-blue {
@@ -2741,16 +2744,16 @@ dialog.sheet.drawer::backdrop {
 }
 
 [data-theme="dark"] .badge-otc {
-  background: rgba(133, 213, 200, 0.15);
-  color: #a1f1e4;
-  border-color: rgba(133, 213, 200, 0.3);
+  background: rgba(22, 134, 93, 0.16);
+  color: var(--primary);
+  border-color: rgba(22, 134, 93, 0.35);
 }
 
 .badge-flash {
   padding: 2px 8px;
   border-radius: 6px;
-  background: rgba(177, 246, 111, 0.3);
-  color: var(--stitch-secondary);
+  background: rgba(22, 134, 93, 0.16);
+  color: var(--primary);
   font-size: 11px;
   font-weight: 700;
 }
@@ -3106,8 +3109,8 @@ dialog.sheet.drawer::backdrop {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--stitch-secondary-container);
-  box-shadow: 0 0 0 3px rgba(177, 246, 111, 0.35);
+  background: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22, 134, 93, 0.25);
   animation: pulse-dot 1.8s infinite;
 }
 
@@ -3237,7 +3240,7 @@ dialog.sheet.drawer::backdrop {
 }
 
 .wallet-card .card-amt.tone-lime {
-  color: var(--stitch-secondary);
+  color: var(--primary);
 }
 
 .wallet-card .card-amt.tone-teal {
@@ -3365,8 +3368,8 @@ dialog.sheet.drawer::backdrop {
   gap: 10px;
   padding: 10px 14px;
   border-radius: 8px;
-  background: rgba(177, 246, 111, 0.2);
-  border: 1px solid rgba(177, 246, 111, 0.4);
+  background: rgba(22, 134, 93, 0.12);
+  border: 1px solid rgba(22, 134, 93, 0.28);
   font-size: 12px;
   margin-bottom: 16px;
 }
@@ -3649,8 +3652,8 @@ dialog.sheet.drawer::backdrop {
 }
 
 .kpi-sub-tag.tone-lime {
-  background: rgba(177, 246, 111, 0.3);
-  color: var(--stitch-secondary);
+  background: rgba(22, 134, 93, 0.14);
+  color: var(--primary);
 }
 
 .kpi-amt-row {
@@ -4183,7 +4186,7 @@ dialog.sheet.drawer::backdrop {
 
 [data-theme="dark"] .minimalist-logo-badge {
   background: rgba(18, 32, 26, 0.85);
-  border-color: rgba(46, 204, 113, 0.25);
+  border-color: rgba(22, 134, 93, 0.28);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
 }
 
@@ -4309,8 +4312,8 @@ dialog.sheet.drawer::backdrop {
 
 [data-theme="dark"] .header-cart-pill {
   background: rgba(22, 134, 93, 0.2);
-  border-color: rgba(74, 222, 128, 0.3);
-  color: #4ade80;
+  border-color: rgba(22, 134, 93, 0.35);
+  color: var(--primary);
 }
 
 [data-theme="dark"] .header-cart-total {
@@ -5420,4 +5423,133 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
     border-radius: 14px !important;
     box-sizing: border-box !important;
   }
+
+  /* Cabecera compacta de farmacia en celular */
+  .pharmacy-header-card {
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 12px 14px !important;
+    gap: 10px !important;
+    border-radius: 14px !important;
+  }
+  .pharmacy-header-title {
+    font-size: 17px !important;
+  }
+  .pharmacy-header-address {
+    font-size: 11.5px !important;
+  }
+  .pharmacy-status-compact-btn {
+    padding: 8px 14px !important;
+    font-size: 12px !important;
+    min-width: 130px !important;
+    max-width: 160px !important;
+  }
+}
+
+/* ==========================================================================
+   53. RECUADRO DE CABECERA DE FARMACIA (Botica Central + Botón Corto)
+   ========================================================================== */
+.pharmacy-header-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .pharmacy-header-card {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.pharmacy-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pharmacy-header-title {
+  margin: 0;
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.pharmacy-header-address {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pharmacy-status-compact-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px !important;
+  width: auto !important;
+  min-width: 150px;
+  max-width: 195px;
+  white-space: nowrap;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border-radius: 10px !important;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.15s ease;
+}
+
+.pharmacy-status-compact-btn:hover {
+  transform: translateY(-1px);
+}
+
+.pharmacy-status-compact-btn.primary {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--primary) !important;
+}
+
+[data-theme="dark"] .pharmacy-status-compact-btn.primary {
+  background: #16865d !important;
+  color: #ffffff !important;
+  border-color: #16865d !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.pharmacy-status-compact-btn.secondary {
+  background: var(--surface-soft) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--line) !important;
+}
+
+[data-theme="dark"] .pharmacy-status-compact-btn.secondary {
+  background: var(--surface-soft) !important;
+  color: var(--text) !important;
+  border-color: var(--line) !important;
+}
+
+.pharmacy-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pharmacy-status-dot.active {
+  background: #ffffff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.8);
+}
+
+.pharmacy-status-dot.paused {
+  background: var(--muted);
 }

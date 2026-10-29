@@ -20,14 +20,42 @@ function availabilityBar(user, onLabel, offLabel, detail) {
   return h('div', { class: 'availability' }, control, h('div', null, text, detail && h('small', { class: 'muted block-line' }, detail)));
 }
 
+function pharmacyHeaderCard(user) {
+  const statusBtn = h('button', {
+    type: 'button',
+    class: 'btn pharmacy-status-compact-btn ' + (user.active ? 'primary' : 'secondary'),
+    title: user.active ? 'Pausar recepción de pedidos' : 'Activar recepción de pedidos',
+    onclick: async (e) => {
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      try {
+        const u = await API.post('/auth/active', { value: !user.active });
+        state.user = u;
+        refreshAll();
+      } catch (err) {
+        toast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  },
+    h('span', { class: 'pharmacy-status-dot ' + (user.active ? 'active' : 'paused') }),
+    user.active ? 'Recibiendo pedidos' : 'En pausa'
+  );
+
+  return h('div', { class: 'pharmacy-header-card' },
+    h('div', { class: 'pharmacy-header-info' },
+      h('h1', { class: 'pharmacy-header-title' }, user.pharmacyName || user.name),
+      user.address && h('span', { class: 'pharmacy-header-address muted' }, user.address)
+    ),
+    statusBtn
+  );
+}
+
 function pharmacyView(user) {
   window.__farmayaSeenOffers = null;
-  const hours = user.openFrom === user.openTo ? 'Abierta las 24 horas' : 'Atiende de ' + user.openFrom + ' a ' + user.openTo;
   return h('div', { class: 'stack pharmacy-root' },
-    // Ribbon Stitch de Regulación Sanitaria
-    pharmacyRegulatoryRibbon(),
-    h('h1', { class: 'page-title' }, user.pharmacyName || user.name),
-    availabilityBar(user, 'Recibiendo pedidos', 'En pausa', hours + (user.address ? ' · ' + user.address : '')),
+    pharmacyHeaderCard(user),
     !user.verified && notice('warn', 'Tu farmacia está pendiente de verificación sanitaria', 'Un químico farmacéutico supervisor revisará tu licencia y registro INVIMA. Hasta entonces no verás solicitudes.'),
     sideNavigation([
       { label: 'Dashboard & Ventas', icon: 'layout-dashboard', render: pharmacyDashboard },

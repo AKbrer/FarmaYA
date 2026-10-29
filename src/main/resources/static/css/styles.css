@@ -153,19 +153,19 @@
    FARMAYA · TEMA OSCURO, MENÚ HAMBURGUESA Y PANEL DESPLEGABLE (TIPO RAPPI)
    ========================================================================== */
 
-/* Variables para Modo Oscuro — redesign overrides live in farmaya-design.css */
+/* Variables para Modo Oscuro — colores institucionales FarmaYA */
 [data-theme="dark"] {
   color-scheme: dark;
-  --bg: #0B0F1A;
-  --surface: #131827;
-  --surface-soft: #1C2333;
-  --line: #2D3548;
-  --text: #E2E8F0;
-  --muted: #94A3B8;
-  --primary: #2ecc71;
-  --primary-dark: #27ae60;
-  --primary-soft: rgba(46,204,113,.14);
-  --accent: #081A14;
+  --bg: #0B1410;
+  --surface: #12201A;
+  --surface-soft: #182C24;
+  --line: #233B31;
+  --text: #E5F2EB;
+  --muted: #8FA89C;
+  --primary: #1ea271;
+  --primary-dark: #126e4c;
+  --primary-soft: rgba(22, 134, 93, .18);
+  --accent: #0a5ca8;
   --danger: #FCA5A5;
   --danger-soft: #3B1616;
   --warning: #FCD34D;
@@ -179,7 +179,7 @@
 }
 
 [data-theme="dark"] .site-header {
-  background: rgba(11, 15, 26, 0.94);
+  background: rgba(11, 20, 16, 0.94);
   border-bottom-color: var(--line);
 }
 
@@ -188,8 +188,8 @@
 }
 
 [data-theme="dark"] .brand-mark {
-  background: var(--primary);
-  color: #0B0F1A;
+  background: #16865d;
+  color: #ffffff;
 }
 
 [data-theme="dark"] .user-pill,
@@ -209,12 +209,15 @@
 }
 
 [data-theme="dark"] .btn.primary {
-  background: var(--primary);
-  color: #0B0F1A;
-  box-shadow: 0 5px 14px rgba(129, 140, 248, 0.25);
+  background: #16865d;
+  color: #ffffff;
+  border-color: #16865d;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 [data-theme="dark"] .btn.primary:hover {
-  background: #A5B4FC;
+  background: #126e4c;
+  border-color: #126e4c;
+  color: #ffffff;
 }
 
 [data-theme="dark"] .btn.secondary,
@@ -265,9 +268,9 @@
   color: #94A3B8;
 }
 [data-theme="dark"] .welcome-pills span {
-  background: rgba(46,204,113,.12);
+  background: rgba(22, 134, 93, .16);
   border-color: #2F4D40;
-  color: #2ecc71;
+  color: var(--primary);
 }
 [data-theme="dark"] .welcome-art {
   background: rgba(255,255,255,0.04);
@@ -292,12 +295,12 @@
 [data-theme="dark"] .category-chip.active,
 [data-theme="dark"] .category-chip:hover {
   background: var(--primary-soft);
-  border-color: #4338CA;
-  color: #A5B4FC;
+  border-color: var(--primary);
+  color: var(--text);
 }
 
 [data-theme="dark"] .product-art-wrap {
-  background: linear-gradient(145deg, #1C2333, #131827);
+  background: linear-gradient(145deg, #12201A, #182C24);
 }
 [data-theme="dark"] .trust-card {
   background: var(--surface-soft);
@@ -314,8 +317,8 @@
   border-color: var(--line);
 }
 [data-theme="dark"] .order-row:hover {
-  border-color: #4338CA;
-  background: #1C2333;
+  border-color: var(--primary);
+  background: var(--surface-soft);
 }
 
 [data-theme="dark"] .field input,
@@ -699,9 +702,9 @@ dialog.sheet.drawer {
   color: #0f6b4a;
 }
 [data-theme="dark"] .perm-box.granted {
-  background: rgba(46,204,113,.1);
-  border-color: #27ae60;
-  color: #2ecc71;
+  background: rgba(22, 134, 93, .12);
+  border-color: #16865d;
+  color: #1ea271;
 }
 .perm-box.pending {
   background: #e8f2fc;
@@ -1052,7 +1055,7 @@ dialog.sheet.drawer {
   box-shadow: 0 6px 18px rgba(0, 0, 0, .32);
 }
 [data-theme="dark"] .client-sticky-inner .catalog-control > span { color: #b6c9bd; }
-[data-theme="dark"] .client-sticky-inner > strong { color: #4ade80; }
+[data-theme="dark"] .client-sticky-inner > strong { color: #1ea271; }
 [data-theme="dark"] .client-sticky-inner .catalog-select {
   background-color: #141f19;
   color: #eaf3ee;
@@ -1162,7 +1165,7 @@ dialog.sheet.drawer {
 .courier-ledger-money{align-items:flex-end;text-align:right;flex:0 0 auto}
 .courier-ledger-money strong{font-family:Manrope,'DM Sans',sans-serif;font-size:16px}
 .courier-plus{color:var(--primary-dark)}
-[data-theme="dark"] .courier-plus{color:#5fd6a0}
+[data-theme="dark"] .courier-plus{color:#1ea271}
 @media(max-width:600px){.courier-wallet{padding:18px}.courier-wallet-icon{display:none}}
 
 /* Menú lateral fijo, pegado al borde izquierdo (admin, farmacia y repartidor) */
@@ -1187,7 +1190,7 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
 .auth-icon{display:block;width:120px;height:106px;margin:0 auto 14px;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;font-size:0}
 .pharmacy-avatar{padding:5px;background:transparent}
 .welcome-art{padding:0;background:transparent;transform:none;width:130px;height:114px;flex-basis:130px;border-radius:0}
-[data-theme="dark"] .fy-cross{filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55)) drop-shadow(0 2px 8px rgba(120,230,170,.18))}
+[data-theme="dark"] .fy-cross{filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
 
 /* Escena del login en 3D real (WebGL): lienzo detrás de los textos; el SVG queda como respaldo */
 .ls-pending .ls-svg{visibility:hidden}
@@ -1474,6 +1477,20 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
   18%  { opacity: 0.85; }
   82%  { opacity: 0.70; }
   100% { transform: translateX(-240%) skewX(-26deg); opacity: 0; }
+}
+
+[data-theme="dark"] .login-motion-lines i {
+  background: linear-gradient(90deg, transparent, rgba(22, 134, 93, 0.08), rgba(22, 134, 93, 0.35), transparent);
+}
+[data-theme="dark"] .courier-road-strip {
+  background: linear-gradient(90deg, transparent 0%, rgba(22, 134, 93, 0.12) 20%, rgba(22, 134, 93, 0.25) 50%, rgba(22, 134, 93, 0.12) 80%, transparent 100%);
+}
+[data-theme="dark"] .login-stage-courier img,
+[data-theme="dark"] .login-courier-only .login-stage-courier img {
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.65)) !important;
+}
+[data-theme="dark"] .courier-ground-shadow {
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.65) 0%, rgba(0, 0, 0, 0) 72%);
 }
 
 @media (prefers-reduced-motion: reduce) {
