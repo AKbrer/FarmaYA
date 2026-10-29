@@ -665,11 +665,6 @@ function buildRegisterCard() {
   return card;
 }
 
-  card.querySelector('#registerForm').addEventListener('submit', handleRegisterSubmit);
-  setTimeout(syncRoleFields, 50);
-  return card;
-}
-
 async function initRegPharmacyMap() {
   const container = document.getElementById('regPharmacyMap');
   if (!container) return;
