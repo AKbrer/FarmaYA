@@ -1,0 +1,66 @@
+================================================================================
+   FARMAYA - PAQUETE INDEPENDIENTE DEL MODELO PREDICTIVO DE DEMANDA (ML)
+================================================================================
+
+Este directorio contiene la copia 100% aislada e independiente del módulo de
+Machine Learning de FarmaYA, listo para presentar y sustentar a tu profesora.
+
+--------------------------------------------------------------------------------
+ CONTENIDO DEL PAQUETE:
+--------------------------------------------------------------------------------
+
+1. simulador_interactivo.py
+   -> Script interactivo con menú en consola para demostración en vivo.
+      Permite probar medicamentos personalizados, ver métricas, precisión y
+      ver la lógica de stock de seguridad (+35%, +20%, +10%).
+
+2. modelo_predictivo_farmaya.ipynb
+   -> Notebook de Jupyter / Google Colab con el paso a paso gráfico del modelo:
+      Carga de datos -> Feature Engineering -> Random Forest -> Matriz de Confusión
+      -> Importancia de Variables -> Inferencia.
+      (Ideal si tu profe prefiere ver notebooks en Google Colab o Jupyter).
+
+3. demand_model.py
+   -> Código fuente del pipeline completo de producción: extracción,
+      ingeniería de características, entrenamiento, validación y pronósticos.
+      Exporta automáticamente a 'predicciones_pronostico.csv' y '.json'.
+
+4. seed_historical_orders.py
+   -> Generador de datos históricos de pedidos para MongoDB Atlas si se
+      desea poblar la base de datos en vivo.
+
+5. INFORME_TECNICO_Y_SUSTENTACION.md
+   -> Documento académico completo con:
+      - Planteamiento del problema (desabastecimiento vs caducidad).
+      - Fórmulas matemáticas de variables y rezagos (lags).
+      - Justificación de Random Forest vs otros modelos.
+      - Métricas de evaluación (Accuracy > 90%, F1, Matriz de Confusión).
+      - Guion de exposición de 3 a 5 minutos paso a paso.
+      - Respuestas a las preguntas típicas de los profesores.
+
+6. requirements.txt
+   -> Librerías requeridas (pandas, numpy, scikit-learn, pymongo, joblib).
+
+7. ejecutar_modelo.bat
+   -> Lanzador para Windows con doble clic.
+
+--------------------------------------------------------------------------------
+ TRES FORMAS DE MOSTRARLO A LA PROFESORA:
+--------------------------------------------------------------------------------
+
+OPCIÓN A (La más recomendada si tienes Python en tu PC):
+1. Haz doble clic en 'ejecutar_modelo.bat'.
+2. Elige la Opción [1] para abrir el simulador interactivo.
+3. Muestra cómo clasifica un medicamento en vivo.
+
+OPCIÓN B (Google Colab - 100% en la nube, sin instalar nada):
+1. Abre tu navegador y ve a https://colab.research.google.com/
+2. Haz clic en "Subir" (Upload) y selecciona 'modelo_predictivo_farmaya.ipynb'.
+3. Ejecuta las celdas frente a la profe. ¡Se verá impecable con gráficos y tablas!
+
+OPCIÓN C (Revisión técnica en código / Markdown):
+1. Abre esta carpeta en VS Code.
+2. Muestra 'INFORME_TECNICO_Y_SUSTENTACION.md' con el Preview de Markdown.
+3. Revisa con la profe el código en 'demand_model.py'.
+
+================================================================================
