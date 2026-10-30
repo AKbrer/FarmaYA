@@ -1,4 +1,4 @@
-/* FarmaYA · gráficos SVG del dashboard y generador de PDF (sin librerías externas). */
+﻿/* FarmaYA · gráficos SVG del dashboard y generador de PDF (sin librerías externas). */
 
 /* ---------- Utilidades ---------- */
 const FY_BOGOTA_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -444,8 +444,8 @@ function fyDownloadBytes(bytes, filename, mime) {
 }
 
 /**
- * Gráfico de Líneas para el Modelo Predictivo de Demanda Mensual de Medicamentos.
- * Muestra la serie temporal histórica (meses previos) y la proyección futura con Machine Learning.
+ * Grafico de Lineas para el Modelo Predictivo de Demanda Mensual de Medicamentos.
+ * Muestra la serie temporal historica (meses previos) y la proyeccion futura con Machine Learning.
  */
 function fyDemandLineChartSvg(chartData, selectedMed) {
   const W = 760, H = 260, L = 55, R = 30, T = 25, B = 40;
@@ -512,7 +512,7 @@ function fyDemandLineChartSvg(chartData, selectedMed) {
       const px = x(i).toFixed(1);
       const py = y(v).toFixed(1);
       const isProj = i === n - 1;
-      const tip = `${line.name} (${labels[i]}): ${v} solicitudes ${isProj ? '• Proyección Machine Learning' : '• Histórico'}`;
+      const tip = `${line.name} (${labels[i]}): ${v} solicitudes ${isProj ? '- Proyeccion Machine Learning' : '- Historico'}`;
       g += `<g class="fy-pt-group">
         <circle cx="${px}" cy="${py}" r="${isProj ? '6' : '4.5'}" fill="${isProj ? line.color : '#ffffff'}" stroke="${line.color}" stroke-width="2.5"/>
         ${isProj ? `<circle cx="${px}" cy="${py}" r="9" fill="none" stroke="${line.color}" stroke-width="1.5" opacity="0.4"/>` : ''}
@@ -521,5 +521,5 @@ function fyDemandLineChartSvg(chartData, selectedMed) {
     });
   });
 
-  return `<svg class="fy-chart" viewBox="0 0 ${W} ${H}" style="width: 100%; height: auto; max-height: 290px; overflow: visible;" role="img" aria-label="Tendencia y Proyección de Demanda">${g}</svg>`;
+  return `<svg class="fy-chart" viewBox="0 0 ${W} ${H}" style="width: 100%; height: auto; max-height: 290px; overflow: visible;" role="img" aria-label="Tendencia y Proyeccion de Demanda">${g}</svg>`;
 }
