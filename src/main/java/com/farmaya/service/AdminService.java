@@ -106,6 +106,8 @@ public class AdminService {
         Update up = new Update().set("enabled", value);
         if (value) {
             up.set("active", true);
+        } else {
+            up.set("active", false);
         }
         User changed = update(id, up);
         movements.record("USUARIO_ESTADO", (value ? "Habilitó " : "Deshabilitó ") + displayName(changed), admin, null);
@@ -184,6 +186,7 @@ public class AdminService {
                     case "enabled" -> {
                         user.enabled = Boolean.TRUE.equals(value);
                         if (user.enabled) user.active = true;
+                        else user.active = false;
                     }
                     case "active" -> user.active = Boolean.TRUE.equals(value);
                     case "canEditProfile" -> user.canEditProfile = Boolean.TRUE.equals(value);

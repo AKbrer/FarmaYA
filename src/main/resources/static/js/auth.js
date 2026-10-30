@@ -412,7 +412,7 @@ function buildRegisterCard() {
     field('Nombre completo', h('input', { id: 'regName', type: 'text', autocomplete: 'name', placeholder: 'Tu nombre y apellido', required: true })),
     field('Correo electrónico', h('input', { id: 'regEmail', type: 'email', autocomplete: 'username', placeholder: 'tu@correo.com', required: true })),
     field('Teléfono de contacto', h('input', { id: 'regPhone', type: 'tel', autocomplete: 'tel', placeholder: 'Ej. 300 123 4567', required: true })),
-    field('Contraseña segura', h('input', { id: 'regPassword', type: 'password', autocomplete: 'new-password', placeholder: 'Mínimo 6 caracteres', required: true, minlength: 6 })),
+    field('Contraseña segura', h('input', { id: 'regPassword', type: 'password', autocomplete: 'new-password', placeholder: 'Mínimo 8 caracteres', required: true, minlength: 8 })),
     h('div', { id: 'step1Actions', class: 'actions' },
       h('button', {
         id: 'btnStep1Next',
@@ -483,11 +483,11 @@ function buildRegisterCard() {
   );
 
   // PASO 2 REPARTIDOR: Vehículo y Documentos en PDF
-  const vehicleSelect = h('select', { id: 'regVehicle', required: true },
+  const vehicleSelect = h('select', { id: 'regVehicle' },
     h('option', { value: 'Moto', selected: true }, 'Motocicleta (Moto)'),
     h('option', { value: 'Carro' }, 'Automóvil (Carro)')
   );
-  const plateInput = h('input', { id: 'regPlate', type: 'text', placeholder: 'Ej. ABC-12D o ABC-123', required: true, style: 'text-transform:uppercase;' });
+  const plateInput = h('input', { id: 'regPlate', type: 'text', placeholder: 'Ej. ABC-12D o ABC-123', style: 'text-transform:uppercase;' });
 
   const step2CrBox = h('div', { id: 'regStep2Cr', class: 'form-stack', style: 'display:none;' },
     h('div', { class: 'reg-step-subheading' },
@@ -588,7 +588,7 @@ function buildRegisterCard() {
     if (!name.value.trim()) { name.focus(); toast('Por favor escribe tu nombre y apellido.', 'error'); return false; }
     if (!email.value.trim() || !email.checkValidity()) { email.focus(); toast('Por favor ingresa un correo electrónico válido.', 'error'); return false; }
     if (!phone.value.trim()) { phone.focus(); toast('Por favor ingresa tu teléfono de contacto.', 'error'); return false; }
-    if (!pass.value || pass.value.length < 6) { pass.focus(); toast('La contraseña debe tener al menos 6 caracteres.', 'error'); return false; }
+    if (!pass.value || pass.value.length < 8) { pass.focus(); toast('La contraseña debe tener al menos 8 caracteres.', 'error'); return false; }
     return true;
   }
 
@@ -642,7 +642,7 @@ function buildRegisterCard() {
       h('p', null, 'Salud a domicilio, medicamentos originales y seguimiento en vivo')
     ),
     stepperContainer,
-    h('form', { id: 'registerForm', class: 'form-stack' },
+    h('form', { id: 'registerForm', class: 'form-stack', novalidate: true },
       step1Box,
       step2PhBox,
       step3PhBox,
@@ -888,21 +888,39 @@ async function handleRegisterSubmit(event) {
     documents: regUploadedDocs
   };
   if (role === 'FARMACIA') {
+    const phName = document.getElementById('regPharmacyName')?.value?.trim() || '';
+    const phAddr = document.getElementById('regAddress')?.value?.trim() || '';
+    if (!phName) {
+      document.getElementById('regPharmacyName')?.focus();
+      toast('Por favor escribe el nombre de la farmacia.', 'error');
+      return;
+    }
+    if (!phAddr) {
+      document.getElementById('regAddress')?.focus();
+      toast('Por favor escribe la dirección de la farmacia.', 'error');
+      return;
+    }
     const latVal = document.getElementById('regLatitude')?.value;
     const lngVal = document.getElementById('regLongitude')?.value;
     Object.assign(body, {
-      pharmacyName: document.getElementById('regPharmacyName').value.trim(),
-      address: document.getElementById('regAddress').value.trim(),
-      licenseNumber: document.getElementById('regLicense').value.trim(),
-      openFrom: document.getElementById('regFrom').value,
-      openTo: document.getElementById('regTo').value,
+      pharmacyName: phName,
+      address: phAddr,
+      licenseNumber: document.getElementById('regLicense')?.value?.trim() || '',
+      openFrom: document.getElementById('regFrom')?.value || '08:00',
+      openTo: document.getElementById('regTo')?.value || '22:00',
       latitude: latVal ? parseFloat(latVal) : null,
       longitude: lngVal ? parseFloat(lngVal) : null
     });
   }
   if (role === 'REPARTIDOR') {
+    const plate = document.getElementById('regPlate')?.value?.trim() || '';
+    if (!plate) {
+      document.getElementById('regPlate')?.focus();
+      toast('Por favor escribe la placa de tu vehículo.', 'error');
+      return;
+    }
     body.vehicle = document.getElementById('regVehicle')?.value || 'Moto';
-    body.plate = document.getElementById('regPlate')?.value?.trim() || '';
+    body.plate = plate;
   }
 
   promptEmailOtpVerification({

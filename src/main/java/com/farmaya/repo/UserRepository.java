@@ -4,7 +4,9 @@ import com.farmaya.model.Role;
 import com.farmaya.model.User;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -19,7 +21,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class UserRepository {
     public static final List<String> COLLECTIONS = List.of(
-            "clientes", "farmacias", "domiciliarios", "administradores");
+            "clientes", "farmacias", "domiciliarios", "administradores", "users");
 
     private final MongoTemplate mongo;
 
@@ -98,7 +100,14 @@ public class UserRepository {
 
     public List<User> findByRole(Role role) {
         if (role == null) return List.of();
-        return mongo.find(new Query(Criteria.where("role").is(role)), User.class, collectionFor(role));
+        Map<String, User> byId = new LinkedHashMap<>();
+        for (User u : mongo.find(new Query(Criteria.where("role").is(role)), User.class, collectionFor(role))) {
+            if (u.id != null) byId.put(u.id, u);
+        }
+        for (User u : mongo.find(new Query(Criteria.where("role").is(role)), User.class, "users")) {
+            if (u.id != null) byId.putIfAbsent(u.id, u);
+        }
+        return new ArrayList<>(byId.values());
     }
 
     public boolean existsByRole(Role role) {
@@ -106,10 +115,13 @@ public class UserRepository {
     }
 
     public List<User> findAll() {
-        List<User> all = new ArrayList<>();
+        Map<String, User> allById = new LinkedHashMap<>();
         for (String collection : COLLECTIONS) {
-            all.addAll(mongo.find(new Query(Criteria.where("role").exists(true)), User.class, collection));
+            for (User u : mongo.find(new Query(Criteria.where("role").exists(true)), User.class, collection)) {
+                if (u.id != null) allById.putIfAbsent(u.id, u);
+            }
         }
+        List<User> all = new ArrayList<>(allById.values());
         all.sort(Comparator.comparing((User u) -> u.createdAt,
                 Comparator.nullsLast(Comparator.naturalOrder())).reversed());
         return all;
