@@ -465,15 +465,15 @@ function partnerActivity(endpoint) {
 function farmayaSupportFooter() {
   return h('footer', { class: 'farmaya-split-footer', role: 'contentinfo' },
     h('div', { class: 'farmaya-split-container' },
-      // Lado Izquierdo: Atención Telefónica & Urgencias
+      // Lado Izquierdo: Números telefónicos y emergencias
       h('div', { class: 'split-half left-half' },
         h('div', { class: 'split-half-content' },
           h('div', { class: 'split-badge emergency-badge' },
             h('span', { class: 'pulse-dot' }),
-            h('span', null, 'Línea de Atención & Emergencias 24/7')
+            h('span', null, 'Línea Directa & Emergencias 24/7')
           ),
-          h('h3', { class: 'split-heading' }, 'Atención Médica & Urgencias'),
-          h('p', { class: 'split-desc' }, 'Canal directo prioritario para orientación farmacéutica, reporte de emergencias y pedidos urgentes con cobertura nacional.'),
+          h('h3', { class: 'split-heading' }, 'Atención Telefónica & Urgencias'),
+          h('p', { class: 'split-desc' }, 'Canal directo para orientación farmacéutica, reporte de emergencias médicas y pedidos prioritarios.'),
           h('div', { class: 'split-cards-row' },
             h('div', { class: 'split-contact-card' },
               h('span', { class: 'split-ico-circle' }, icon('phone')),
@@ -494,20 +494,20 @@ function farmayaSupportFooter() {
           )
         )
       ),
-      // Lado Derecho: Centro de Soporte Digital & PQRS
+      // Lado Derecho: Reportes, incidencias y correos a los que comunicarse
       h('div', { class: 'split-half right-half' },
         h('div', { class: 'split-half-content' },
           h('div', { class: 'split-badge support-badge' },
             h('span', { class: 'split-mini-ico' }, icon('shield')),
             h('span', null, 'Centro de Soporte Institucional FarmaYA')
           ),
-          h('h3', { class: 'split-heading' }, 'Canales Digitales & PQRS'),
-          h('p', { class: 'split-desc' }, 'Soporte técnico a droguerías aliadas, verificación de domiciliarios, gestión de incidencias y atención a clientes.'),
+          h('h3', { class: 'split-heading' }, 'Reportes, Incidencias & Correos Oficiales'),
+          h('p', { class: 'split-desc' }, 'Gestión de incidencias de pedidos, soporte a droguerías y domiciliarios, y atención al cliente.'),
           h('div', { class: 'split-cards-row' },
             h('div', { class: 'split-contact-card' },
               h('span', { class: 'split-ico-circle navy' }, icon('inbox')),
               h('div', null,
-                h('span', { class: 'split-label' }, 'Soporte Técnico & Plataforma'),
+                h('span', { class: 'split-label' }, 'Correo de Soporte Técnico & Plataforma'),
                 h('a', { class: 'split-val navy', href: 'mailto:soporte@farmaya.com.co' }, 'soporte@farmaya.com.co'),
                 h('small', { class: 'split-sub' }, 'Respuesta garantizada en menos de 15 minutos')
               )
@@ -515,7 +515,7 @@ function farmayaSupportFooter() {
             h('div', { class: 'split-contact-card' },
               h('span', { class: 'split-ico-circle navy' }, icon('shield')),
               h('div', null,
-                h('span', { class: 'split-label' }, 'Atención al Usuario & Afiliaciones'),
+                h('span', { class: 'split-label' }, 'Correo de Atención al Usuario & PQRS'),
                 h('a', { class: 'split-val navy', href: 'mailto:atencion@farmaya.com.co' }, 'atencion@farmaya.com.co'),
                 h('small', { class: 'split-sub' }, 'Lunes a Domingo con cobertura nacional en Colombia')
               )

@@ -337,85 +337,23 @@ function adminDemandForecast() {
 function adminOrders() {
   let status = adminFilter;
   adminFilter = '';
-  let orderQuery = '';
-  let timer;
-  const holder = h('div', { style: 'width: 100%;' });
-
-  const select = h('select', {
-    class: 'input select',
-    style: 'font-size: 0.9rem; padding: 0.5rem 0.85rem; border-radius: 8px;',
-    'aria-label': 'Filtrar por estado',
-    onchange: () => { status = select.value; draw(); }
-  },
+  const holder = h('div');
+  const select = h('select', { 'aria-label': 'Filtrar por estado', onchange: () => { status = select.value; draw(); } },
     h('option', { value: '' }, 'Todos los estados'),
     Object.entries(state.meta.statuses).map(([k, v]) => h('option', { value: k }, v)));
   select.value = status;
-
-  const searchInput = h('input', {
-    type: 'search',
-    placeholder: 'Buscar pedidos por código (#FY-...), cliente, farmacia o dirección...',
-    style: 'width: 100%; font-size: 0.95rem; padding: 0.65rem 1rem; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text);',
-    oninput: () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        orderQuery = searchInput.value.trim().toLowerCase();
-        draw();
-      }, 150);
-    }
-  });
-
   const draw = () => holder.replaceChildren(live(() => API.get('/admin/orders' + (status ? '?status=' + status : '')), orders => {
-    let filtered = orders;
-    if (orderQuery) {
-      filtered = orders.filter(o => {
-        const text = [o.code, o.id, o.clientName, o.pharmacyName, o.address, o.city].filter(Boolean).join(' ').toLowerCase();
-        return text.includes(orderQuery);
-      });
-    }
-    if (!filtered.length) return empty('No hay pedidos con este filtro', 'Prueba con otro estado o modifica el texto de búsqueda.');
-
-    const totalVolume = filtered.reduce((acc, o) => acc + (o.total || 0), 0);
-    const totalEarnings = filtered.reduce((acc, o) => acc + (o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0)), 0);
-
-    const statsBar = h('div', {
-      class: 'stitch-admin-kpi-card',
-      style: 'display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem 1.25rem; margin-bottom: 1rem; width: 100%;'
-    },
-      h('div', null,
-        h('span', { class: 'muted small block-line' }, 'Pedidos Filtrados'),
-        h('strong', { style: 'font-size: 1.2rem; color: var(--text);' }, String(filtered.length) + ' pedidos')
-      ),
-      h('div', null,
-        h('span', { class: 'muted small block-line' }, 'Volumen Total'),
-        h('strong', { style: 'font-size: 1.2rem; color: var(--text);' }, money(totalVolume))
-      ),
-      h('div', null,
-        h('span', { class: 'muted small block-line' }, 'Ganancia FarmaYA (10%)'),
-        h('strong', { style: 'font-size: 1.2rem; color: #16865d;' }, money(totalEarnings))
-      )
-    );
-
-    return h('div', { class: 'stack', style: 'width: 100%;' },
-      statsBar,
-      h('div', { class: 'list', style: 'width: 100%; display: flex; flex-direction: column; gap: 12px;' }, filtered.map(o => {
-        const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0);
-        return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
-          h('span', { class: 'muted small' }, o.address || o.city || 'Barranquilla'),
-          o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
-        ));
-      }))
-    );
+    if (!orders.length) return empty('No hay pedidos con este filtro', 'Prueba con otro estado o muestra todos.');
+    return h('div', { class: 'list' }, orders.map(o => {
+      const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0);
+      return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
+        h('span', { class: 'muted small' }, o.address || o.city || 'Barranquilla'),
+        o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
+      ));
+    }));
   }));
   draw();
-  return h('div', { class: 'stack', style: 'width: 100%;' },
-    h('div', { style: 'width: 100%; display: flex; flex-direction: column; gap: 0.75rem;' },
-      searchInput,
-      h('div', { class: 'toolbar', style: 'width: 100%; display: flex; justify-content: space-between; align-items: center;' },
-        select
-      )
-    ),
-    holder
-  );
+  return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, select), holder);
 }
 
 function adminUsers(role) {

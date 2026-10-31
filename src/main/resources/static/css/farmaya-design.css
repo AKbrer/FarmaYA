@@ -6107,15 +6107,29 @@ small, .small, .muted small, .users small, .card small {
   clear: both;
   position: relative;
   z-index: 10;
+  box-sizing: border-box;
+}
+
+body:has(.side-nav-layout) #fy_global_footer {
+  width: calc(100% - 250px);
+  margin-left: 250px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+  body:has(.side-nav-layout) #fy_global_footer {
+    width: 100%;
+    margin-left: 0;
+  }
 }
 
 .farmaya-split-footer {
-  margin-top: 60px;
+  margin-top: 50px;
   width: 100%;
   position: relative;
   box-sizing: border-box;
   overflow: hidden;
-  border-top: 2.5px solid var(--line-strong, var(--line));
+  border-top: 3px solid var(--line-strong, var(--line));
   background: var(--bg);
 }
 
@@ -6123,23 +6137,28 @@ small, .small, .muted small, .users small, .card small {
   display: grid;
   grid-template-columns: 1fr 1fr;
   width: 100%;
+  min-height: 280px;
+  box-sizing: border-box;
 }
 
 .split-half {
-  padding: 44px 5vw;
+  padding: 48px clamp(24px, 4.5vw, 64px);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   transition: background 0.2s ease;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .split-half.left-half {
   background: rgba(22, 134, 93, 0.05);
-  border-right: 1px solid var(--line);
+  border-right: 2px solid var(--line);
 }
 
 [data-theme="dark"] .split-half.left-half {
-  background: rgba(22, 134, 93, 0.09);
+  background: rgba(22, 134, 93, 0.12);
+  border-right-color: var(--line);
 }
 
 .split-half.right-half {
@@ -6147,19 +6166,18 @@ small, .small, .muted small, .users small, .card small {
 }
 
 [data-theme="dark"] .split-half.right-half {
-  background: rgba(10, 92, 168, 0.08);
+  background: rgba(10, 92, 168, 0.10);
 }
 
 .split-half-content {
-  max-width: 580px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-.split-half.left-half .split-half-content {
-  margin-left: auto;
-}
-
+.split-half.left-half .split-half-content,
 .split-half.right-half .split-half-content {
-  margin-right: auto;
+  margin: 0;
 }
 
 .split-badge {
@@ -6205,29 +6223,32 @@ small, .small, .muted small, .users small, .card small {
   font-size: 14.5px;
   color: var(--muted);
   line-height: 1.5;
-  margin: 0 0 24px 0;
+  margin: 0 0 20px 0;
 }
 
 .split-cards-row {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
+  width: 100%;
 }
 
 .split-contact-card {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 14px 18px;
+  padding: 16px 20px;
   border-radius: 14px;
   background: var(--surface);
   border: 1px solid var(--line);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  box-shadow: var(--shadow-sm, 0 2px 8px rgba(0,0,0,0.03));
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .split-ico-circle {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 12px;
   background: rgba(22, 134, 93, 0.12);
   color: #16865d;
@@ -6301,6 +6322,16 @@ small, .small, .muted small, .users small, .card small {
   font-size: 12.5px;
   color: var(--muted);
   margin-top: 3px;
+}
+
+@media (max-width: 900px) {
+  .farmaya-split-container {
+    grid-template-columns: 1fr;
+  }
+  .split-half.left-half {
+    border-right: none;
+    border-bottom: 2px solid var(--line);
+  }
 }
 
 .farmaya-split-footer-bar {
