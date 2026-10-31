@@ -112,10 +112,10 @@ function adminDemandForecast() {
     // Medicamento seleccionado para el grafico de lineas
     const selectedMed = list.find(m => m.medicineName === adminSelectedMedName) || null;
 
-    // Selector desplegable para seleccionar medicamentos directamente
+    // Selector desplegable que ocupa toda la anchura
     const medSelect = h('select', {
-      class: 'input select',
-      style: 'max-width: 340px; font-size: 0.85rem; padding: 0.4rem 0.75rem;',
+      class: 'input select forecast-med-select',
+      style: 'width: 100%; font-size: 0.9rem; padding: 0.6rem 0.9rem; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text);',
       onchange: e => {
         adminSelectedMedName = e.target.value;
         refreshAll();
@@ -125,25 +125,30 @@ function adminDemandForecast() {
       list.map(m => h('option', { value: m.medicineName, selected: m.medicineName === adminSelectedMedName }, m.medicineName + ' [' + m.category + ']'))
     );
 
-    // Componente del Grafico de Lineas
-    const chartCard = h('div', { class: 'card', style: 'padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;' },
-      h('div', { class: 'flex items-center justify-between', style: 'flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;' },
+    const selectorSection = h('div', {
+      class: 'forecast-full-selection',
+      style: 'width: 100%; display: flex; align-items: center; gap: 0.75rem; margin-top: 1rem; padding-top: 1rem; border-top: 1.5px solid var(--line);'
+    },
+      h('div', { style: 'flex: 1; width: 100%;' }, medSelect),
+      selectedMed ? h('button', {
+        class: 'btn secondary',
+        style: 'white-space: nowrap; font-size: 0.85rem; padding: 0.55rem 1rem;',
+        onclick: () => { adminSelectedMedName = ''; refreshAll(); }
+      }, 'Ver comparativa global') : null
+    );
+
+    // Componente del Grafico de Lineas a ancho completo
+    const chartCard = h('div', { class: 'card forecast-chart-card', style: 'padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; width: 100%;' },
+      h('div', { class: 'flex items-center justify-between', style: 'flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;' },
         h('div', null,
-          h('h3', { style: 'margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem;' },
+          h('h3', { style: 'margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;' },
             'Grafico de Lineas: Evolucion Historica y Proyeccion de Demanda',
             selectedMed ? h('span', { class: 'tag primary', style: 'font-size: 0.75rem;' }, selectedMed.medicineName) : null
           ),
           h('small', { class: 'muted' }, 'Linea continua: Historico de pedidos en MongoDB | Linea discontinua (- -): Proyeccion mensual con Machine Learning')
-        ),
-        h('div', { class: 'flex items-center gap-2', style: 'flex-wrap: wrap;' },
-          medSelect,
-          selectedMed ? h('button', {
-            class: 'btn secondary',
-            style: 'font-size: 0.75rem; padding: 0.35rem 0.7rem;',
-            onclick: () => { adminSelectedMedName = ''; refreshAll(); }
-          }, 'Ver comparativa global') : null
         )
       ),
+      selectorSection,
 (() => {
         const holder = h('div', { class: 'chart-container', style: 'width: 100%; min-height: 270px; margin-top: 0.5rem;' });
         holder.innerHTML = fyDemandLineChartSvg(data.chartSeries, selectedMed);
@@ -179,12 +184,12 @@ function adminDemandForecast() {
       filterBtn('BAJA (' + summary.baja + ')', 'BAJA')
     );
 
-    // Buscador interactivo
+    // Buscador interactivo que ocupa toda la anchura de la seccion
     const searchInput = h('input', {
       type: 'search',
-      placeholder: 'Buscar medicamento...',
+      placeholder: 'Buscar medicamentos por nombre comercial, principio activo o indicación clínica...',
       value: adminDemandSearch,
-      style: 'max-width: 240px; font-size: 0.85rem; padding: 0.4rem 0.75rem;',
+      style: 'width: 100%; font-size: 0.95rem; padding: 0.7rem 1.1rem; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--text);',
       oninput: e => {
         adminDemandSearch = e.target.value;
         const term = adminDemandSearch.toLowerCase().trim();
@@ -209,9 +214,13 @@ function adminDemandForecast() {
       }
     }, 'Recalcular Modelo con MongoDB');
 
-    const toolbar = h('div', { class: 'flex items-center justify-between', style: 'flex-wrap: wrap; gap: 1rem; margin: 1.25rem 0;' },
-      h('div', { class: 'flex items-center gap-2', style: 'flex-wrap: wrap;' }, filters, searchInput),
-      recalculateBtn
+    // Barra de búsqueda y filtros a todo lo ancho con línea divisoria
+    const toolbar = h('div', { class: 'stack forecast-search-bar-wrap', style: 'width: 100%; gap: 0.85rem; margin: 1.5rem 0 1rem;' },
+      h('div', { class: 'forecast-search-row', style: 'width: 100%;' }, searchInput),
+      h('div', { class: 'flex items-center justify-between', style: 'width: 100%; flex-wrap: wrap; gap: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1.5px solid var(--line);' },
+        filters,
+        recalculateBtn
+      )
     );
 
     // Filtrar lista
@@ -252,7 +261,7 @@ function adminDemandForecast() {
 
     // Encabezado de tabla
     const tableHeader = h('thead', null,
-      h('tr', { style: 'background: #f8fafc; border-bottom: 2px solid var(--border, #cbd5e1);' },
+      h('tr', { style: 'background: var(--surface-soft); border-bottom: 1.5px solid var(--line);' },
         h('th', { style: 'text-align: center; padding: 0.75rem 0.5rem; width: 90px;' }, 'Grafico'),
         h('th', { style: 'text-align: left; padding: 0.75rem 1rem;' }, 'Medicamento'),
         h('th', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, 'Demanda Prevista'),
@@ -281,7 +290,7 @@ function adminDemandForecast() {
       return h('tr', {
         class: 'admin-forecast-row',
         'data-name': item.medicineName,
-        style: 'border-bottom: 1px solid var(--border, #e2e8f0); cursor: pointer; transition: background 0.15s;' + (isSelected ? ' background: rgba(8, 112, 104, 0.08); font-weight: 600;' : ''),
+        style: 'border-bottom: 1px solid var(--line); cursor: pointer; transition: background 0.15s;' + (isSelected ? ' background: var(--primary-soft); font-weight: 600;' : ''),
         onclick: () => {
           adminSelectedMedName = isSelected ? '' : item.medicineName;
           refreshAll();
@@ -299,17 +308,17 @@ function adminDemandForecast() {
       );
     });
 
-    // Tabla dentro de un recuadro cerrado y estructurado
+    // Tabla dentro de un recuadro estructurado compatible con tema oscuro y todo el ancho
     const tableFrame = h('div', {
-      class: 'card',
-      style: 'padding: 0; border: 1.5px solid var(--border, #cbd5e1); border-radius: 12px; overflow: hidden; background: #ffffff; box-shadow: 0 2px 6px rgba(0,0,0,0.04); margin-top: 1rem;'
+      class: 'card forecast-table-frame',
+      style: 'padding: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow-sm, 0 2px 6px rgba(0,0,0,0.04)); margin-top: 1rem; width: 100%;'
     },
-      h('div', { style: 'padding: 0.9rem 1.25rem; background: #f8fafc; border-bottom: 1.5px solid var(--border, #cbd5e1); display: flex; justify-content: space-between; align-items: center;' },
-        h('strong', { style: 'font-size: 0.95rem; color: #1e293b;' }, 'Planificacion y Clasificacion de Existencias'),
+      h('div', { class: 'forecast-table-head', style: 'padding: 0.9rem 1.25rem; background: var(--surface-soft); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;' },
+        h('strong', { style: 'font-size: 0.95rem; color: var(--text);' }, 'Planificacion y Clasificacion de Existencias'),
         h('span', { class: 'muted text-xs' }, 'Mostrando ' + filtered.length + ' de ' + list.length + ' medicamentos')
       ),
-      h('div', { style: 'overflow-x: auto;' },
-        h('table', { style: 'width: 100%; border-collapse: collapse;' },
+      h('div', { style: 'overflow-x: auto; width: 100%;' },
+        h('table', { class: 'forecast-table', style: 'width: 100%; border-collapse: collapse;' },
           tableHeader,
           h('tbody', null, ...tableRows)
         )
@@ -328,23 +337,85 @@ function adminDemandForecast() {
 function adminOrders() {
   let status = adminFilter;
   adminFilter = '';
-  const holder = h('div');
-  const select = h('select', { 'aria-label': 'Filtrar por estado', onchange: () => { status = select.value; draw(); } },
+  let orderQuery = '';
+  let timer;
+  const holder = h('div', { style: 'width: 100%;' });
+
+  const select = h('select', {
+    class: 'input select',
+    style: 'font-size: 0.9rem; padding: 0.5rem 0.85rem; border-radius: 8px;',
+    'aria-label': 'Filtrar por estado',
+    onchange: () => { status = select.value; draw(); }
+  },
     h('option', { value: '' }, 'Todos los estados'),
     Object.entries(state.meta.statuses).map(([k, v]) => h('option', { value: k }, v)));
   select.value = status;
+
+  const searchInput = h('input', {
+    type: 'search',
+    placeholder: 'Buscar pedidos por código (#FY-...), cliente, farmacia o dirección...',
+    style: 'width: 100%; font-size: 0.95rem; padding: 0.65rem 1rem; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text);',
+    oninput: () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        orderQuery = searchInput.value.trim().toLowerCase();
+        draw();
+      }, 150);
+    }
+  });
+
   const draw = () => holder.replaceChildren(live(() => API.get('/admin/orders' + (status ? '?status=' + status : '')), orders => {
-    if (!orders.length) return empty('No hay pedidos con este filtro', 'Prueba con otro estado o muestra todos.');
-    return h('div', { class: 'list' }, orders.map(o => {
-      const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0);
-      return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
-        h('span', { class: 'muted small' }, o.address || o.city || 'Barranquilla'),
-        o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
-      ));
-    }));
+    let filtered = orders;
+    if (orderQuery) {
+      filtered = orders.filter(o => {
+        const text = [o.code, o.id, o.clientName, o.pharmacyName, o.address, o.city].filter(Boolean).join(' ').toLowerCase();
+        return text.includes(orderQuery);
+      });
+    }
+    if (!filtered.length) return empty('No hay pedidos con este filtro', 'Prueba con otro estado o modifica el texto de búsqueda.');
+
+    const totalVolume = filtered.reduce((acc, o) => acc + (o.total || 0), 0);
+    const totalEarnings = filtered.reduce((acc, o) => acc + (o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0)), 0);
+
+    const statsBar = h('div', {
+      class: 'stitch-admin-kpi-card',
+      style: 'display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem 1.25rem; margin-bottom: 1rem; width: 100%;'
+    },
+      h('div', null,
+        h('span', { class: 'muted small block-line' }, 'Pedidos Filtrados'),
+        h('strong', { style: 'font-size: 1.2rem; color: var(--text);' }, String(filtered.length) + ' pedidos')
+      ),
+      h('div', null,
+        h('span', { class: 'muted small block-line' }, 'Volumen Total'),
+        h('strong', { style: 'font-size: 1.2rem; color: var(--text);' }, money(totalVolume))
+      ),
+      h('div', null,
+        h('span', { class: 'muted small block-line' }, 'Ganancia FarmaYA (10%)'),
+        h('strong', { style: 'font-size: 1.2rem; color: #16865d;' }, money(totalEarnings))
+      )
+    );
+
+    return h('div', { class: 'stack', style: 'width: 100%;' },
+      statsBar,
+      h('div', { class: 'list', style: 'width: 100%; display: flex; flex-direction: column; gap: 12px;' }, filtered.map(o => {
+        const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0);
+        return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
+          h('span', { class: 'muted small' }, o.address || o.city || 'Barranquilla'),
+          o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
+        ));
+      }))
+    );
   }));
   draw();
-  return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, select), holder);
+  return h('div', { class: 'stack', style: 'width: 100%;' },
+    h('div', { style: 'width: 100%; display: flex; flex-direction: column; gap: 0.75rem;' },
+      searchInput,
+      h('div', { class: 'toolbar', style: 'width: 100%; display: flex; justify-content: space-between; align-items: center;' },
+        select
+      )
+    ),
+    holder
+  );
 }
 
 function adminUsers(role) {
@@ -352,14 +423,15 @@ function adminUsers(role) {
   let query = '';
   let timer;
   const search = h('input', {
-    type: 'search', placeholder: 'Buscar por nombre, correo o dirección', 'aria-label': 'Buscar ' + titles[role],
+    type: 'search', placeholder: 'Buscar por nombre, correo, teléfono o dirección...', 'aria-label': 'Buscar ' + titles[role],
+    style: 'width: 100%; font-size: 0.95rem; padding: 0.65rem 1rem; border-radius: 8px;',
     oninput: () => { clearTimeout(timer); timer = setTimeout(() => { query = search.value.trim().toLowerCase(); refreshAll(); }, 150); }
   });
 
   const list = live(() => API.get('/admin/users?role=' + role), users => {
     if (!users.length) return empty('Aún no hay ' + titles[role]);
     const shown = users.filter(u => !query ||
-      [u.name, u.email, u.address, u.pharmacyName, u.phone].filter(Boolean).join(' ').toLowerCase().includes(query));
+      [u.name, u.email, u.address, u.pharmacyName, u.phone, u.city].filter(Boolean).join(' ').toLowerCase().includes(query));
     if (!shown.length) return empty('Sin resultados', 'No encontramos ' + titles[role] + ' que coincidan con la búsqueda.');
     const needsVerify = role !== 'CLIENTE';
     const toggle = (u, kind, value, ok) => async e => {
@@ -371,22 +443,26 @@ function adminUsers(role) {
       }
       refreshAll();
     };
-    return h('div', { class: 'table-wrap' }, h('table', { class: 'users' },
+    return h('div', { class: 'table-wrap', style: 'width: 100%;' }, h('table', { class: 'users', style: 'width: 100%;' },
       h('thead', null, h('tr', null,
         h('th', null, role === 'FARMACIA' ? 'Farmacia' : 'Nombre'), h('th', null, 'Contacto'), h('th', null, 'Ubicación'), h('th', null, 'Estado'), h('th', null, 'Acciones'))),
       h('tbody', null, shown.map(u => h('tr', { class: u.enabled ? '' : 'disabled' },
         h('td', null,
-          h('strong', null, role === 'FARMACIA' ? u.pharmacyName : u.name),
+          h('strong', null, role === 'FARMACIA' ? (u.pharmacyName || u.name) : u.name),
           role === 'FARMACIA' && h('small', { class: 'block-line muted' }, u.address),
-          role === 'FARMACIA' && h('small', { class: 'block-line muted' }, 'Licencia ' + u.licenseNumber + ', atiende de ' + u.openFrom + ' a ' + u.openTo),
-          role === 'REPARTIDOR' && h('small', { class: 'block-line muted' }, u.vehicle),
+          role === 'FARMACIA' && h('small', { class: 'block-line muted' }, 'Licencia ' + (u.licenseNumber || 'N/A') + ', horario: ' + (u.openFrom || '08:00') + ' a ' + (u.openTo || '20:00')),
+          role === 'REPARTIDOR' && h('small', { class: 'block-line muted' }, (u.vehicle || 'Vehículo') + (u.plate ? ' [' + u.plate + ']' : '')),
           role === 'FARMACIA' && h('small', { class: 'block-line muted' }, 'Responsable: ' + u.name)),
-        h('td', null, u.email, h('small', { class: 'block-line muted' }, u.phone)),
+        h('td', null, u.email, h('small', { class: 'block-line muted' }, u.phone || 'Sin teléfono')),
         h('td', null, u.address || u.city || 'Ciudad completa'),
         h('td', null,
           !u.enabled ? h('span', { class: 'badge tone-bad' }, 'Deshabilitada')
-            : needsVerify ? h('span', { class: 'badge ' + (u.verified ? 'tone-done' : 'tone-wait') }, u.verified ? 'Verificada' : 'Por verificar')
-              : h('span', { class: 'badge tone-done' }, 'Activa'),
+            : [
+                needsVerify ? h('span', { class: 'badge ' + (u.verified ? 'tone-done' : 'tone-wait') }, u.verified ? 'Verificada' : 'Por verificar') : null,
+                u.active === false
+                  ? h('span', { class: 'badge tone-wait', style: 'margin-left: 4px;' }, 'En pausa')
+                  : h('span', { class: 'badge tone-done', style: 'margin-left: 4px;' }, 'En servicio')
+              ],
           role === 'FARMACIA' && u.editPermissionRequested && !u.canEditProfile && h('small', { class: 'block-line attention', style: 'margin-top:5px;font-weight:700;' }, 'Solicitó editar datos / número' + (u.editRequestNote ? ': ' + u.editRequestNote : '')),
           role === 'FARMACIA' && u.canEditProfile && h('small', { class: 'block-line text-success', style: 'margin-top:5px;font-weight:700;' }, 'Edición autorizada por admin')),
         h('td', { class: 'row-actions' },
@@ -399,11 +475,14 @@ function adminUsers(role) {
           role === 'FARMACIA' && (u.canEditProfile
             ? h('button', { class: 'btn ghost small', onclick: toggle(u, 'edit-permission', false, 'Permiso de edición revocado') }, 'Revocar permiso edición')
             : h('button', { class: 'btn ' + (u.editPermissionRequested ? 'primary' : 'ghost') + ' small', onclick: toggle(u, 'edit-permission', true, 'Permiso de edición concedido') }, u.editPermissionRequested ? 'Autorizar edición' : 'Permitir editar datos')),
+          u.enabled && (role === 'FARMACIA' || role === 'REPARTIDOR') && (u.active !== false
+            ? h('button', { class: 'btn ghost small', onclick: toggle(u, 'active', false, 'Cuenta puesta en pausa') }, 'Pausar')
+            : h('button', { class: 'btn secondary small', onclick: toggle(u, 'active', true, 'Cuenta reanudada') }, 'Reanudar')),
           u.enabled
             ? h('button', { class: 'btn danger-ghost small', onclick: toggle(u, 'enabled', false, 'Cuenta deshabilitada') }, 'Deshabilitar')
             : h('button', { class: 'btn ghost small', onclick: toggle(u, 'enabled', true, 'Cuenta habilitada') }, 'Habilitar')))))));
   });
-  return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, search), list);
+  return h('div', { class: 'stack', style: 'width: 100%;' }, h('div', { class: 'toolbar', style: 'width: 100%;' }, search), list);
 }
 
 function openPdfViewerDialog(title, dataUrl, filename) {
@@ -489,11 +568,10 @@ function adminVerificationCenter() {
           : 'Todas las cuentas de farmacias y repartidores han sido revisadas y verificadas.');
       }
 
-      const sliderHint = h('div', { class: 'verification-slider-hint' },
-        h('span', { class: 'small muted' }, 'Desliza horizontalmente para revisar las solicitudes pendientes (' + filtered.length + ') →')
-      );
-
-      const cardsContainer = h('div', { class: 'verification-cards-carousel' }, filtered.map(u => {
+      const cardsContainer = h('div', {
+        class: 'verification-cards-grid',
+        style: 'display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 1.25rem; width: 100%;'
+      }, filtered.map(u => {
         const isPh = u.role === 'FARMACIA';
         const docs = u.verificationDocuments || [];
 
@@ -585,7 +663,7 @@ function adminVerificationCenter() {
         );
       }));
 
-      return h('div', { class: 'stack' }, sliderHint, cardsContainer);
+      return h('div', { class: 'stack', style: 'width: 100%;' }, cardsContainer);
     });
 
     container.replaceChildren(toolbar, content);

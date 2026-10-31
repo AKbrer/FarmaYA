@@ -114,6 +114,17 @@ public class AdminService {
         return changed;
     }
 
+    public User setActive(String id, boolean value, User admin) {
+        User u = find(id);
+        if (value && !u.enabled) {
+            throw ApiException.bad("No se puede poner activa una cuenta que está deshabilitada. Habilítela primero.");
+        }
+        Update up = new Update().set("active", value);
+        User changed = update(id, up);
+        movements.record("USUARIO_PAUSA", (value ? "Reanudó actividad de " : "Puso en pausa actividad de ") + displayName(changed), admin, null);
+        return changed;
+    }
+
     public User setEditPermission(String id, boolean value, User admin) {
         User u = find(id);
         if (u.role != Role.FARMACIA) throw ApiException.bad("El permiso de edición solo aplica a farmacias.");
@@ -176,6 +187,13 @@ public class AdminService {
                 com.farmaya.repo.UserRepository.idCriteria(id));
         for (String col : com.farmaya.repo.UserRepository.COLLECTIONS) {
             mongo.updateMulti(q, update, col);
+        }
+        if (user.email != null && !user.email.isBlank()) {
+            org.springframework.data.mongodb.core.query.Query qEmail = new org.springframework.data.mongodb.core.query.Query(
+                    org.springframework.data.mongodb.core.query.Criteria.where("email").regex("^" + java.util.regex.Pattern.quote(user.email.trim()) + "$", "i"));
+            for (String col : com.farmaya.repo.UserRepository.COLLECTIONS) {
+                mongo.updateMulti(qEmail, update, col);
+            }
         }
         org.bson.Document changes = update.getUpdateObject();
         Object set = changes.get("$set");

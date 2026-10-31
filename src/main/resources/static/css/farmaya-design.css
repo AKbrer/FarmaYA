@@ -6101,17 +6101,21 @@ small, .small, .muted small, .users small, .card small {
 /* ==========================================================================
    PIE DE PÁGINA UNIVERSAL DE SOPORTE Y CONTACTO (PANTALLA DIVIDIDA 50/50)
    ========================================================================== */
+#fy_global_footer {
+  width: 100%;
+  display: block;
+  clear: both;
+  position: relative;
+  z-index: 10;
+}
+
 .farmaya-split-footer {
   margin-top: 60px;
-  width: 100vw;
+  width: 100%;
   position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
   box-sizing: border-box;
   overflow: hidden;
-  border-top: 2px solid var(--line);
+  border-top: 2.5px solid var(--line-strong, var(--line));
   background: var(--bg);
 }
 
@@ -6597,4 +6601,181 @@ small, .small, .muted small, .users small, .card small {
   border-color: var(--primary);
   background: rgba(22, 134, 93, 0.08);
   color: var(--primary);
+}
+
+
+/* ==========================================================================
+   OPTIMIZACIONES FULL-WIDTH Y RECUADROS EN MODO OSCURO
+   ========================================================================== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  box-shadow: var(--shadow-sm, 0 1px 4px rgba(0,0,0,0.04));
+}
+
+[data-theme="dark"] .card {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--text);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+/* Apartado de selección de gráfica de línea a ancho completo */
+.forecast-full-selection {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.forecast-full-selection select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Buscador de medicamentos a ancho completo con línea divisoria */
+.forecast-search-bar-wrap {
+  width: 100%;
+}
+
+.forecast-search-row {
+  width: 100%;
+}
+
+.forecast-search-row input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Tabla del modelo predictivo */
+.forecast-table-frame {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.forecast-table-head {
+  background: var(--surface-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.forecast-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.forecast-table th {
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-bottom: 1.5px solid var(--line);
+}
+
+.forecast-table td {
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+}
+
+[data-theme="dark"] .forecast-table-frame {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .forecast-table-head {
+  background: var(--surface-soft);
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] .forecast-table th {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] .forecast-table td {
+  border-bottom-color: var(--line);
+  color: var(--text);
+}
+
+[data-theme="dark"] .admin-forecast-row:hover,
+[data-theme="dark"] .pharmacy-forecast-row:hover {
+  background: var(--surface-soft) !important;
+}
+
+/* Cuadrícula de verificaciones a ancho completo */
+.verification-cards-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)) !important;
+  gap: 20px !important;
+  width: 100% !important;
+  padding: 8px 0 20px 0;
+}
+
+.verification-cards-grid .verification-item-card,
+.verification-center-root .verification-item-card {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm, 0 2px 6px rgba(0,0,0,0.03));
+}
+
+[data-theme="dark"] .verification-cards-grid .verification-item-card,
+[data-theme="dark"] .verification-center-root .verification-item-card {
+  background: var(--surface);
+  border-color: var(--line);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+
+/* Modo oscuro perfeccionado para listas, tablas y recuadros */
+[data-theme="dark"] .stitch-admin-kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+[data-theme="dark"] .table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+[data-theme="dark"] .users,
+[data-theme="dark"] .prices {
+  background: var(--surface);
+}
+
+[data-theme="dark"] .users td,
+[data-theme="dark"] .prices td {
+  border-bottom-color: var(--line);
+  color: var(--text);
+}
+
+[data-theme="dark"] .users th,
+[data-theme="dark"] .prices th {
+  background: var(--surface-soft);
+  color: var(--muted);
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] .users tbody tr:hover,
+[data-theme="dark"] .prices tbody tr:hover {
+  background: var(--surface-soft);
+}
+
+[data-theme="dark"] .stitch-admin-demand-view .chart-container svg text {
+  fill: var(--text);
+}
+
+[data-theme="dark"] .pharmacy-demand-view .chart-container svg text {
+  fill: var(--text);
 }

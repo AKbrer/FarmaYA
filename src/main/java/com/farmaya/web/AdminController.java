@@ -66,6 +66,11 @@ public class AdminController {
         return admin.setEnabled(id, f.value(), me);
     }
 
+    @PostMapping("/users/{id}/active")
+    public User active(@PathVariable("id") String id, @RequestBody FlagRequest f, @RequestAttribute("user") User me) {
+        return admin.setActive(id, f.value(), me);
+    }
+
     @PostMapping("/users/{id}/edit-permission")
     public User editPermission(@PathVariable("id") String id, @RequestBody FlagRequest f, @RequestAttribute("user") User me) {
         return admin.setEditPermission(id, f.value(), me);

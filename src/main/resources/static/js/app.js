@@ -138,16 +138,18 @@ async function renderApp() {
   }
   if (!state.user) {
     if (route === '#register') renderRegister(); else renderLogin();
+    mountGlobalFooter();
     return;
   }
   const expected = routeForRole(state.user.role);
-  if (route === '#orders') { document.title = 'FarmaYa · Pedidos'; renderOrdersPage(); app.append(farmayaSupportFooter()); renderNavbar(); return; }
+  if (route === '#orders') { document.title = 'FarmaYa · Pedidos'; renderOrdersPage(); mountGlobalFooter(); renderNavbar(); return; }
   if (route !== expected) { location.hash = expected; return; }
   document.title = 'FarmaYa · ' + (state.user.name || 'Inicio');
-  if (state.user.role === 'CLIENTE') { renderClientDashboard(); app.append(farmayaSupportFooter()); }
-  else if (state.user.role === 'FARMACIA') app.replaceChildren(pharmacyView(state.user), farmayaSupportFooter());
-  else if (state.user.role === 'REPARTIDOR') app.replaceChildren(courierView(state.user), farmayaSupportFooter());
-  else if (state.user.role === 'ADMIN') app.replaceChildren(adminView(state.user), farmayaSupportFooter());
+  if (state.user.role === 'CLIENTE') { renderClientDashboard(); }
+  else if (state.user.role === 'FARMACIA') app.replaceChildren(pharmacyView(state.user));
+  else if (state.user.role === 'REPARTIDOR') app.replaceChildren(courierView(state.user));
+  else if (state.user.role === 'ADMIN') app.replaceChildren(adminView(state.user));
+  mountGlobalFooter();
   renderNavbar();
   if (!state.user || state.user.role !== 'CLIENTE') {
     document.getElementById('fy_mobile_cart_bar')?.remove();
@@ -174,3 +176,14 @@ window.addEventListener('load', () => { renderApp(); });
   window.addEventListener('scroll', sync, { passive: true });
   window.addEventListener('load', sync);
 })();
+
+
+/* Monta el pie de soporte dividido 50/50 a ancho completo universal */
+function mountGlobalFooter() {
+  let f = document.getElementById('fy_global_footer');
+  if (!f) {
+    f = h('div', { id: 'fy_global_footer' });
+    document.body.appendChild(f);
+  }
+  f.replaceChildren(farmayaSupportFooter());
+}

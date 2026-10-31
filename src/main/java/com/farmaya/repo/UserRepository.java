@@ -72,6 +72,12 @@ public class UserRepository {
             for (String c : COLLECTIONS) {
                 mongo.updateMulti(q, update, c);
             }
+            if (user.email != null && !user.email.isBlank()) {
+                Query qEmail = new Query(Criteria.where("email").regex("^" + Pattern.quote(user.email.trim()) + "$", "i"));
+                for (String c : COLLECTIONS) {
+                    mongo.updateMulti(qEmail, update, c);
+                }
+            }
         }
         return mongo.save(user, col);
     }
