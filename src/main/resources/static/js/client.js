@@ -243,43 +243,12 @@ function renderClientDashboard() {
       }
     }
 
-    // Barra flotante de carrito para móviles / pantallas reducidas
+    // Desactivada la barra flotante de carrito: se mantiene fija en el recuadro superior
     const mobileBar = document.getElementById('fy_mobile_cart_bar');
-    if (clientCart.length > 0) {
-      let bar = mobileBar;
-      if (!bar) {
-        bar = h('div', { id: 'fy_mobile_cart_bar', class: 'mobile-cart-float-bar' });
-        document.body.appendChild(bar);
-      }
-      bar.style.display = 'flex';
-      bar.replaceChildren(
-        h('div', { class: 'm-cart-info' },
-          h('span', { class: 'm-cart-title' }, qty + (qty === 1 ? ' artículo en canasta' : ' artículos en canasta')),
-          h('span', { class: 'm-cart-total' }, money(total))
-        ),
-        h('button', {
-          type: 'button',
-          class: 'm-cart-btn',
-          onclick: () => {
-            if (window.innerWidth <= 820) {
-              openMobileCartSheet();
-            } else {
-              cartBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              cartBox.classList.add('cart-highlight-glow');
-              setTimeout(() => cartBox.classList.remove('cart-highlight-glow'), 1400);
-            }
-          }
-        }, 'Ver Canasta')
-      );
-    } else {
-      // Cuando no hay productos en el carrito, eliminar por completo la barra flotante de compras
-      if (mobileBar) {
-        mobileBar.remove();
-      }
-      document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
-      if (window.activeMobileCartDialog) {
-        try { window.activeMobileCartDialog.close(); } catch(e) {}
-      }
+    if (mobileBar) mobileBar.remove();
+    document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
+    if (clientCart.length === 0 && window.activeMobileCartDialog) {
+      try { window.activeMobileCartDialog.close(); } catch(e) {}
     }
   }
 

@@ -820,11 +820,10 @@ a {
   gap: 16px !important;
   min-width: 0 !important;
   width: 100% !important;
-  position: -webkit-sticky !important;
-  position: sticky !important;
-  top: 86px !important;
+  position: static !important;
+  top: auto !important;
   align-self: start !important;
-  z-index: 30 !important;
+  z-index: 1 !important;
 }
 
 .cart-panel {
@@ -1956,18 +1955,15 @@ a {
    31. CATEGORIES BAR — STICKY CON EL SCROLL
    ========================================================================== */
 .client-sticky-categories {
-  position: -webkit-sticky !important;
-  position: sticky !important;
-  top: 86px !important;
-  z-index: 25 !important;
+  position: static !important;
+  top: auto !important;
+  z-index: 1 !important;
   margin: 0 0 18px 0 !important;
   padding: 14px 20px !important;
-  background: rgba(255, 255, 255, 0.96) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
+  background: var(--surface) !important;
   border: 1px solid var(--line) !important;
   border-radius: 16px !important;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, .06) !important;
+  box-shadow: none !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -6100,7 +6096,7 @@ small, .small, .muted small, .users small, .card small {
 
 /* ==========================================================================
    PIE DE PÁGINA UNIVERSAL DE SOPORTE Y CONTACTO (PANTALLA DIVIDIDA 50/50)
-   Rompe el panel lateral y abarca el 100% de la anchura cubriendo el 30% de la altura
+   Se mantiene abajo de todo en flujo normal, sin sombra/degradado negro ni línea divisora
    ========================================================================== */
 #fy_global_footer {
   width: 100% !important;
@@ -6109,241 +6105,237 @@ small, .small, .muted small, .users small, .card small {
   display: block !important;
   clear: both !important;
   position: relative !important;
-  z-index: 50 !important; /* Cubre y rompe el menú lateral (.side-nav z-index: 15) */
+  z-index: 1 !important; /* Flujo normal: no recubre la información de arriba */
   box-sizing: border-box !important;
+}
+
+body:has(.side-nav-layout) #fy_global_footer {
+  width: calc(100% - 250px) !important;
+  margin-left: 250px !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 900px) {
+  body:has(.side-nav-layout) #fy_global_footer {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
 }
 
 .farmaya-split-footer {
   margin: 0 !important;
   width: 100% !important;
-  min-height: clamp(250px, 30vh, 340px) !important; /* Cubre aproximadamente el 30% de la pantalla */
-  position: relative;
-  box-sizing: border-box;
-  overflow: hidden;
-  border-top: 3.5px solid var(--primary, #16865d);
-  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.18);
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  min-height: clamp(240px, 28vh, 320px) !important;
+  position: relative !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  border-top: none !important; /* Sin línea divisora */
+  box-shadow: none !important; /* Sin degradado negro */
+  background: var(--bg) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
 }
 
 [data-theme="dark"] .farmaya-split-footer {
-  border-top-color: var(--primary, #1ea271);
-  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.55);
+  border-top: none !important;
+  box-shadow: none !important;
 }
 
 .farmaya-split-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  width: 100%;
-  flex: 1;
-  box-sizing: border-box;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  width: 100% !important;
+  flex: 1 !important;
+  box-sizing: border-box !important;
 }
 
 .split-half {
-  padding: 24px clamp(20px, 4vw, 56px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  transition: background 0.2s ease;
-  box-sizing: border-box;
-  width: 100%;
+  padding: 24px clamp(20px, 4vw, 56px) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  transition: background 0.2s ease !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
 }
 
 .split-half.left-half {
-  background: rgba(22, 134, 93, 0.06);
-  border-right: 2px solid var(--line);
+  background: rgba(22, 134, 93, 0.06) !important;
+  border-right: 1px solid var(--line) !important;
 }
 
 [data-theme="dark"] .split-half.left-half {
-  background: rgba(22, 134, 93, 0.12);
-  border-right-color: var(--line);
+  background: rgba(22, 134, 93, 0.12) !important;
+  border-right-color: var(--line) !important;
 }
 
 .split-half.right-half {
-  background: rgba(10, 92, 168, 0.05);
+  background: rgba(10, 92, 168, 0.05) !important;
 }
 
 [data-theme="dark"] .split-half.right-half {
-  background: rgba(10, 92, 168, 0.10);
+  background: rgba(10, 92, 168, 0.10) !important;
 }
 
 .split-half-content {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  margin: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
 }
 
 .split-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 999px;
-  margin-bottom: 8px;
-  width: fit-content;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 7px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  padding: 4px 10px !important;
+  border-radius: 999px !important;
+  margin-bottom: 8px !important;
+  width: fit-content !important;
 }
 
 .emergency-badge {
-  background: rgba(22, 134, 93, 0.16);
-  color: #16865d;
+  background: rgba(22, 134, 93, 0.16) !important;
+  color: #16865d !important;
 }
 
 [data-theme="dark"] .emergency-badge {
-  color: #2dd4bf;
-  background: rgba(45, 212, 191, 0.18);
+  color: #2dd4bf !important;
+  background: rgba(45, 212, 191, 0.18) !important;
 }
 
 .support-badge {
-  background: rgba(10, 92, 168, 0.14);
-  color: #0a5ca8;
+  background: rgba(10, 92, 168, 0.14) !important;
+  color: #0a5ca8 !important;
 }
 
 [data-theme="dark"] .support-badge {
-  color: #60a5fa;
-  background: rgba(96, 165, 250, 0.18);
+  color: #60a5fa !important;
+  background: rgba(96, 165, 250, 0.18) !important;
 }
 
 .split-heading {
-  font-size: clamp(19px, 1.8vw, 24px);
-  font-weight: 800;
-  margin: 0 0 4px 0;
-  color: var(--text);
-  letter-spacing: -0.02em;
-  line-height: 1.25;
+  font-size: clamp(18px, 1.8vw, 23px) !important;
+  font-weight: 800 !important;
+  margin: 0 0 4px 0 !important;
+  color: var(--text) !important;
+  letter-spacing: -0.02em !important;
+  line-height: 1.25 !important;
 }
 
 .split-desc {
-  font-size: 13.5px;
-  color: var(--muted);
-  line-height: 1.45;
-  margin: 0 0 14px 0;
-  max-width: 620px;
+  font-size: 13px !important;
+  color: var(--muted) !important;
+  line-height: 1.45 !important;
+  margin: 0 0 12px 0 !important;
+  max-width: 620px !important;
 }
 
 .split-cards-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 12px;
-  width: 100%;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+  gap: 12px !important;
+  width: 100% !important;
 }
 
 .split-contact-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
-  box-sizing: border-box;
-  width: 100%;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-.split-contact-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+  padding: 12px 16px !important;
+  border-radius: 12px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
 }
 
 [data-theme="dark"] .split-contact-card {
-  background: var(--surface);
-  border-color: var(--line);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
 }
 
 .split-ico-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: rgba(22, 134, 93, 0.14);
-  color: #16865d;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 10px !important;
+  background: rgba(22, 134, 93, 0.14) !important;
+  color: #16865d !important;
+  display: grid !important;
+  place-items: center !important;
+  flex-shrink: 0 !important;
 }
 
 [data-theme="dark"] .split-ico-circle {
-  color: #2dd4bf;
-  background: rgba(45, 212, 191, 0.18);
+  color: #2dd4bf !important;
+  background: rgba(45, 212, 191, 0.18) !important;
 }
 
 .split-ico-circle.navy {
-  background: rgba(10, 92, 168, 0.14);
-  color: #0a5ca8;
+  background: rgba(10, 92, 168, 0.14) !important;
+  color: #0a5ca8 !important;
 }
 
 [data-theme="dark"] .split-ico-circle.navy {
-  color: #60a5fa;
-  background: rgba(96, 165, 250, 0.18);
+  color: #60a5fa !important;
+  background: rgba(96, 165, 250, 0.18) !important;
 }
 
 .split-ico-circle svg,
 .split-mini-ico svg {
-  width: 20px;
-  height: 20px;
-}
-
-.split-mini-ico {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  width: 20px !important;
+  height: 20px !important;
 }
 
 .split-label {
-  display: block;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 700;
-  color: var(--muted);
-  margin-bottom: 2px;
+  display: block !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  font-weight: 700 !important;
+  color: var(--muted) !important;
+  margin-bottom: 2px !important;
 }
 
 .split-val {
-  display: block;
-  font-size: 16px;
-  font-weight: 800;
-  color: #16865d;
-  text-decoration: none;
-  transition: color 0.15s ease;
+  display: block !important;
+  font-size: 15.5px !important;
+  font-weight: 800 !important;
+  color: #16865d !important;
+  text-decoration: none !important;
 }
 
 [data-theme="dark"] .split-val {
-  color: #2dd4bf;
+  color: #2dd4bf !important;
 }
 
 .split-val.navy {
-  color: #0a5ca8;
+  color: #0a5ca8 !important;
 }
 
 [data-theme="dark"] .split-val.navy {
-  color: #60a5fa;
-}
-
-.split-val:hover {
-  text-decoration: underline;
+  color: #60a5fa !important;
 }
 
 .split-sub {
-  display: block;
-  font-size: 11.5px;
-  color: var(--muted);
-  margin-top: 2px;
+  display: block !important;
+  font-size: 11px !important;
+  color: var(--muted) !important;
+  margin-top: 2px !important;
 }
 
 @media (max-width: 900px) {
   .farmaya-split-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
   }
   .split-half.left-half {
-    border-right: none;
-    border-bottom: 2px solid var(--line);
+    border-right: none !important;
+    border-bottom: 1px solid var(--line) !important;
   }
 }
 
@@ -6822,4 +6814,30 @@ small, .small, .muted small, .users small, .card small {
 
 [data-theme="dark"] .pharmacy-demand-view .chart-container svg text {
   fill: var(--text);
+}
+
+
+/* Desactivar cualquier flotante de canasta o sticky en filtros */
+.mobile-cart-float-bar,
+#fy_mobile_cart_bar {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.client-sticky-categories,
+.stitch-filter-bar {
+  position: static !important;
+  top: auto !important;
+  z-index: 1 !important;
+  box-shadow: none !important;
+}
+
+.client-side-column,
+.cart-panel,
+.stitch-cart-panel {
+  position: static !important;
+  top: auto !important;
+  z-index: 1 !important;
 }
