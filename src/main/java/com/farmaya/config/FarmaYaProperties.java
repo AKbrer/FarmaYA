@@ -16,5 +16,9 @@ public record FarmaYaProperties(
         String adminEmail,
         String adminPassword,
         boolean seedDemo,
-        String googleClientId) {
+        String googleClientId,
+        String wompiPublicKey,
+        String wompiPrivateKey,
+        String wompiIntegritySecret,
+        String wompiCurrency) {
 }

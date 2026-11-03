@@ -487,12 +487,14 @@ function renderClientDashboard() {
       }
     }, icon('my_location'), 'Detectar GPS');
 
+    let isOrderSubmitting = false;
     const form = h('form', {
       class: 'sheet-body narrow checkout-map-form',
       onsubmit: async ev => {
         ev.preventDefault();
+        if (isOrderSubmitting) return;
         if (!latInput.value || !lngInput.value) {
-          mapStatus.textContent = 'Por favor selecciona tu ubicación exacta en el mapa o pulsa «Usar mi ubicación actual».';
+          mapStatus.textContent = 'Por favor selecciona tu ubicación exacta en el mapa o pulsa «Detectar GPS».';
           return;
         }
         const hasCoverage = await checkCoverage();
@@ -500,6 +502,10 @@ function renderClientDashboard() {
           toast('No hay farmacias disponibles cerca de tu zona en este momento', 'error');
           return;
         }
+        isOrderSubmitting = true;
+        submitBtn.disabled = true;
+        const prevText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Enviando...';
         const payload = {
           items: clientCart.map(i => ({ name: i.name, quantity: i.quantity, prescription: !!i.rx, note: '' })),
           address: address.value.trim(),
@@ -511,7 +517,7 @@ function renderClientDashboard() {
           notes: notes.value.trim()
         };
         try {
-          const result = await act(submitBtn, () => API.post('/orders', payload), 'Solicitud enviada a la red de farmacias');
+          const result = await API.post('/orders', payload);
           if (result) {
             clientCart = [];
             d.close();
@@ -519,14 +525,17 @@ function renderClientDashboard() {
             drawCart();
             drawProducts();
             openOrderDetail(result.id);
+            toast('Solicitud enviada a la red de farmacias');
           }
         } catch (err) {
           coverageNoticeBox.replaceChildren(
             notice('warn', 'Sin farmacia cerca de tu zona', err.message || 'No hay farmacias disponibles en tu zona en este momento. El pedido no se ha generado.')
           );
-          submitBtn.disabled = true;
-          submitBtn.textContent = 'Sin cobertura';
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = prevText;
           toast(err.message, 'error');
+        } finally {
+          isOrderSubmitting = false;
         }
       }
     },

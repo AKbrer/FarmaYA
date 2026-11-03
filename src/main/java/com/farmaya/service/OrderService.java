@@ -97,6 +97,18 @@ public class OrderService {
         if (blank(city) || city.equalsIgnoreCase("Zona General")) city = clean(client.city, 100);
         if (blank(city)) city = "Cobertura General";
 
+        // Proteccin anti-duplicados por clics mltiples rpidos del cliente (ventana de 15 segundos)
+        Instant now = Instant.now();
+        Instant recentWindow = now.minusSeconds(15);
+        List<Order> clientRecentOrders = orders.findTop100ByClientIdOrderByCreatedAtDesc(client.id);
+        for (Order existing : clientRecentOrders) {
+            if (existing.status == BUSCANDO_FARMACIA && existing.createdAt != null && existing.createdAt.isAfter(recentWindow)) {
+                if (existing.address != null && existing.address.trim().equalsIgnoreCase(address.trim()) && sameOrderItems(existing.items, r.items())) {
+                    return present(existing, client);
+                }
+            }
+        }
+
         // Validar cobertura: si no hay farmacias activas cerca de la zona, NO generar el pedido
         Dtos.AvailabilityResponse avail = checkPharmacyAvailability(city, r.latitude(), r.longitude());
         if (!avail.available()) {
@@ -117,7 +129,7 @@ public class OrderService {
             o.items.add(new Order.Item(name, qty, Boolean.TRUE.equals(it.prescription()), clean(it.note(), 200)));
         }
 
-        Instant now = Instant.now();
+        now = Instant.now();
         o.clientId = client.id;
         o.clientName = client.name;
         o.clientPhone = blank(r.phone()) ? client.phone : clean(r.phone(), 30);
@@ -615,6 +627,18 @@ public class OrderService {
     // =====================================================================
     // Utilidades internas
     // =====================================================================
+
+    private static boolean sameOrderItems(List<Order.Item> list1, List<ItemRequest> list2) {
+        if (list1 == null || list2 == null || list1.size() != list2.size()) return false;
+        for (int i = 0; i < list1.size(); i++) {
+            Order.Item a = list1.get(i);
+            ItemRequest b = list2.get(i);
+            if (!a.name.equalsIgnoreCase(b.name())) return false;
+            int qb = b.quantity() == null ? 1 : b.quantity();
+            if (a.quantity != qb) return false;
+        }
+        return true;
+    }
 
     private Order get(String id) {
         return orders.findById(id).orElseThrow(() -> ApiException.notFound("Pedido no encontrado."));

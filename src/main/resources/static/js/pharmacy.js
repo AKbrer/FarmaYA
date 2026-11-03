@@ -1,3 +1,113 @@
+
+/* ==========================================================================
+   Sonido y Notificación Flotante para Farmacia
+   ========================================================================== */
+let activeFloatingNotice = null;
+
+function playOrderAlertSound() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!window.__fyAudioCtx) {
+      window.__fyAudioCtx = new AudioCtx();
+    }
+    const ctx = window.__fyAudioCtx;
+    if (ctx.state === 'suspended') {
+      ctx.resume();
+    }
+    const now = ctx.currentTime;
+    // Campana de 4 notas armónicas agradable y audible: Do - Mi - Sol - Do agudo
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const start = now + idx * 0.11;
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(0.35, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.25);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + 0.27);
+    });
+    if (navigator.vibrate) {
+      navigator.vibrate([250, 100, 250, 100, 350]);
+    }
+  } catch (err) {
+    console.warn('Audio alert error:', err);
+  }
+}
+
+function showFloatingOrderNotice(freshOrders) {
+  if (!freshOrders || !freshOrders.length) return;
+  const count = freshOrders.length;
+  const first = freshOrders[0];
+
+  playOrderAlertSound();
+
+  if (activeFloatingNotice) activeFloatingNotice.remove();
+
+  const title = count === 1 ? ('¡Nuevo pedido recibido (' + first.code + ')!') : ('¡Llegaron ' + count + ' nuevos pedidos!');
+  const subtitle = count === 1
+    ? (first.items.length + ' producto(s) solicitados · ' + (first.address || first.city || 'Entrega a domicilio'))
+    : 'Hay nuevas solicitudes esperando tu cotización en la red.';
+
+  const closeBtn = h('button', {
+    class: 'btn ghost small',
+    type: 'button',
+    style: 'height:32px; padding:0 10px; border-radius:8px; font-size:11.5px; border:1px solid var(--line);',
+    onclick: () => {
+      noticeBox.remove();
+      activeFloatingNotice = null;
+    }
+  }, 'Descartar');
+
+  const actionBtn = h('button', {
+    class: 'btn primary small',
+    type: 'button',
+    style: 'height:32px; padding:0 14px; border-radius:8px; font-size:12px; font-weight:700;',
+    onclick: () => {
+      noticeBox.remove();
+      activeFloatingNotice = null;
+      if (count === 1 && typeof openPriceForm === 'function') {
+        openPriceForm(first);
+      } else {
+        const tabs = document.querySelectorAll('.side-nav-item');
+        if (tabs && tabs[2]) tabs[2].click();
+      }
+    }
+  }, count === 1 ? 'Cotizar ahora' : 'Ver pedidos');
+
+  const noticeBox = h('div', {
+    class: 'floating-pharmacy-order-alert',
+    style: 'position:fixed; top:24px; left:50%; transform:translateX(-50%); z-index:999999; width:min(520px, calc(100vw - 32px)); background:var(--surface,#fff); border:2px solid var(--primary,#16865d); border-radius:14px; padding:12px 16px; box-shadow:0 14px 40px rgba(22,134,93,0.25); animation:slideDownAlert 0.28s ease; display:flex; align-items:center; justify-content:space-between; gap:12px;'
+  },
+    h('div', { style: 'display:flex; align-items:center; gap:12px; min-width:0;' },
+      h('div', { style: 'width:38px; height:38px; border-radius:9px; background:rgba(22,134,93,0.12); color:var(--primary); display:grid; place-items:center; flex:0 0 38px;' }, icon('inbox')),
+      h('div', { style: 'min-width:0;' },
+        h('strong', { style: 'display:block; font-size:13px; color:var(--text);' }, title),
+        h('span', { class: 'muted small', style: 'display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:260px; font-size:11.5px;' }, subtitle)
+      )
+    ),
+    h('div', { style: 'display:flex; align-items:center; gap:6px; flex-shrink:0;' },
+      closeBtn,
+      actionBtn
+    )
+  );
+
+  document.body.append(noticeBox);
+  activeFloatingNotice = noticeBox;
+
+  setTimeout(() => {
+    if (activeFloatingNotice === noticeBox) {
+      noticeBox.remove();
+      activeFloatingNotice = null;
+    }
+  }, 25000);
+}
+
 ﻿/* FarmaYA · panel de la farmacia */
 
 window.__farmayaSeenOffers = window.__farmayaSeenOffers || null;
@@ -93,8 +203,28 @@ function pharmacyHeaderCard(user) {
   );
 }
 
+let pharmacyPollerInterval = null;
 function pharmacyView(user) {
   window.__farmayaSeenOffers = null;
+  if (pharmacyPollerInterval) clearInterval(pharmacyPollerInterval);
+  pharmacyPollerInterval = setInterval(async () => {
+    if (state.user?.role !== 'FARMACIA' || !state.user?.active) return;
+    try {
+      const data = await API.get('/pharmacy/offers');
+      if (data && data.orders) {
+        const ids = new Set(data.orders.map(o => o.id));
+        const prev = window.__farmayaSeenOffers;
+        if (prev) {
+          const fresh = data.orders.filter(o => !prev.has(o.id));
+          if (fresh.length) {
+            showFloatingOrderNotice(fresh);
+          }
+        }
+        window.__farmayaSeenOffers = ids;
+      }
+    } catch (_) {}
+  }, 4000);
+
   return h('div', { class: 'stack pharmacy-root' },
     pharmacyHeaderCard(user),
     !user.verified && notice('warn', 'Tu farmacia está pendiente de verificación sanitaria', 'Un administrador revisará tu licencia y documentación INVIMA. Hasta entonces no verás solicitudes.'),
@@ -299,8 +429,10 @@ function pharmacyOffers(t) {
     }
     const ids = new Set(data.orders.map(o => o.id));
     const previousOffers = window.__farmayaSeenOffers;
-    const fresh = previousOffers ? [...ids].filter(id => !previousOffers.has(id)) : [];
-    if (fresh.length) { toast('Llegó una nueva solicitud'); beep(); }
+    const fresh = previousOffers ? data.orders.filter(o => !previousOffers.has(o.id)) : [];
+    if (fresh.length) {
+      showFloatingOrderNotice(fresh);
+    }
     window.__farmayaSeenOffers = ids;
     document.title = ids.size ? '(' + ids.size + ') FarmaYA' : 'FarmaYA';
 
@@ -341,20 +473,35 @@ function offerRow(o, isFresh) {
 function openPriceForm(order) {
   const rows = order.items.map(it => {
     const avail = h('input', { type: 'checkbox', checked: true, 'aria-label': 'Disponible: ' + it.name });
-    const qty = h('input', { type: 'number', min: 1, max: 99, step: 1, inputmode: 'numeric', required: true, value: it.quantity, 'aria-label': 'Cantidad de ' + it.name });
-    const price = h('input', { type: 'number', min: 0, step: 'any', inputmode: 'decimal', required: true, placeholder: '0', 'aria-label': 'Precio unitario de ' + it.name });
+    const fixedQty = it.quantity || 1;
+    const price = h('input', {
+      type: 'number',
+      min: 0,
+      step: 'any',
+      inputmode: 'decimal',
+      required: true,
+      placeholder: '0',
+      'aria-label': 'Precio unitario de ' + it.name,
+      style: 'height:38px; border-radius:8px; text-align:right; font-weight:700;'
+    });
     const sub = h('output', { class: 'subtotal' }, money(0));
-    return { it, avail, qty, price, sub, tr: null };
+    return { it, avail, fixedQty, price, sub, tr: null };
   });
   rows.forEach(r => {
     r.tr = h('tr', { class: 'quote-row' },
       h('td', { class: 'q-check', 'data-label': 'Tengo' }, r.avail),
       h('td', { class: 'q-name' },
-        h('span', { class: 'q-product' }, r.it.name),
+        h('strong', { class: 'q-product' }, r.it.name),
         r.it.note && h('small', { class: 'muted block-line' }, r.it.note)),
-      h('td', { class: 'q-qty', 'data-label': 'Cantidad' }, r.qty),
-      h('td', { class: 'q-price', 'data-label': 'Precio unitario' },
-        h('span', { class: 'money-field' }, h('span', { class: 'money-prefix', 'aria-hidden': 'true' }, '$'), r.price)),
+      h('td', { class: 'q-qty', 'data-label': 'Cantidad solicitada' },
+        h('span', { class: 'badge tone-go', style: 'font-weight:700; border-radius:6px; font-size:12px; padding:4px 9px;' },
+          r.fixedQty + (r.fixedQty === 1 ? ' unidad' : ' unidades')
+        )),
+      h('td', { class: 'q-price', 'data-label': 'Precio unitario (COP)' },
+        h('div', { class: 'money-field' },
+          h('span', { class: 'money-prefix', 'aria-hidden': 'true' }, '$'),
+          r.price
+        )),
       h('td', { class: 'q-sub', 'data-label': 'Subtotal' }, r.sub));
   });
 
@@ -367,10 +514,10 @@ function openPriceForm(order) {
     let count = 0;
     rows.forEach(r => {
       const on = r.avail.checked;
-      r.qty.disabled = r.price.disabled = !on;
-      r.qty.required = r.price.required = on;
+      r.price.disabled = !on;
+      r.price.required = on;
       r.tr.classList.toggle('is-off', !on);
-      const s = on ? (Number(r.qty.value) || 0) * (Number(r.price.value) || 0) : 0;
+      const s = on ? (r.fixedQty * (Number(r.price.value) || 0)) : 0;
       r.sub.textContent = on ? money(s) : 'No disponible';
       if (on) count++;
       total += s;
@@ -389,7 +536,7 @@ function openPriceForm(order) {
     oninput: recompute,
     onsubmit: async e => {
       e.preventDefault();
-      const items = rows.map(r => ({ name: r.it.name, available: r.avail.checked, quantity: Number(r.qty.value), unitPrice: Number(r.price.value) }));
+      const items = rows.map(r => ({ name: r.it.name, available: r.avail.checked, quantity: r.fixedQty, unitPrice: Number(r.price.value) }));
       const btn = form.querySelector('button[type=submit]');
       const ok = await act(btn, () => API.post('/pharmacy/orders/' + order.id + '/confirm', { items, prepMinutes: Number(prep.value), note: note.value }),
         'Precio enviado al cliente');

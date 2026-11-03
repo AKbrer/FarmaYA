@@ -27,6 +27,8 @@ public class MetaController {
         res.put("statuses", statuses);
         res.put("demo", props.seedDemo());
         res.put("googleClientId", props.googleClientId() != null ? props.googleClientId() : "");
+        res.put("wompiPublicKey", props.wompiPublicKey() != null && !props.wompiPublicKey().isBlank() ? props.wompiPublicKey() : "pub_test_X0zDA9xoKdePzhSGeVe9HAhes1ScGZqq");
+        res.put("wompiCurrency", props.wompiCurrency() != null && !props.wompiCurrency().isBlank() ? props.wompiCurrency() : "COP");
         return res;
     }
 }

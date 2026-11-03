@@ -1703,3 +1703,78 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
   box-sizing: border-box;
   resize: vertical;
 }
+
+/* Correccin de alineacin en cotizacin de farmacia (mvil y escritorio) */
+@media (max-width: 680px) {
+  .quote-sheet .table-wrap {
+    overflow: visible;
+    border: none;
+    background: transparent;
+  }
+  .quote-sheet table, .quote-sheet thead, .quote-sheet tbody, .quote-sheet tr, .quote-sheet td {
+    display: block;
+    width: 100%;
+  }
+  .quote-sheet thead {
+    display: none;
+  }
+  .quote-row {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    padding: 14px 16px !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 12px !important;
+    margin-bottom: 12px !important;
+    background: var(--surface) !important;
+    box-sizing: border-box;
+  }
+  .quote-sheet td {
+    padding: 0 !important;
+    border: none !important;
+  }
+  .quote-sheet td[data-label]::before {
+    display: none !important;
+  }
+  .quote-row .q-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .quote-row .q-qty {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0;
+  }
+  .quote-row .q-price {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .quote-row .q-price::before {
+    content: "Precio unitario (COP):";
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+  .quote-row .q-sub {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px !important;
+    border-top: 1px dashed var(--line) !important;
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+  .quote-row .q-sub::before {
+    content: "Subtotal:";
+    font-size: 12px;
+    color: var(--muted);
+  }
+}
+
+@keyframes slideDownAlert {
+  from { opacity: 0; transform: translate(-50%, -20px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
