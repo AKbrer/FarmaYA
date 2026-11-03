@@ -744,80 +744,59 @@ function loginSceneMarkup() {
 }
 
 function promptEmailOtpVerification({ email, role, onVerified }) {
-  let generatedCode = null;
-  let autoTimer = null;
-  let countdownInterval = null;
-
   const dialogContent = h('div', { class: 'sheet-body otp-modal-body', style: 'max-width: 480px; text-align: left;' },
     h('div', { class: 'otp-icon-header', style: 'margin-bottom: 12px;' }, icon('shield')),
     h('h2', { style: 'margin:0 0 6px 0; font-size: 1.35rem;' }, 'Verificación de Correo Electrónico'),
     h('p', { class: 'muted small', style: 'margin:0 0 14px 0;' },
-      'Enviamos un código oficial de 6 dígitos a tu bandeja para validar la cuenta.'
+      'Hemos enviado un código oficial de seguridad de 6 dígitos al correo registrado:'
     ),
     h('div', { class: 'otp-email-highlight', style: 'font-weight: 700; color: var(--primary); margin-bottom: 14px;' }, email),
 
     // Estado 1: Despachando al correo
     h('div', { id: 'otpLoadingState', style: 'text-align: center; padding: 22px 0;' },
       h('div', { class: 'spinner', style: 'margin: 0 auto 12px; width: 34px; height: 34px; border-width: 3px;' }),
-      h('strong', { class: 'block-line', style: 'font-size: 15px; color: var(--text);' }, 'Generando código y enviando a tu correo...'),
-      h('small', { class: 'muted block-line', style: 'margin-top: 4px;' }, 'Despachando notificación a ' + email)
+      h('strong', { class: 'block-line', style: 'font-size: 15px; color: var(--text);' }, 'Enviando código a tu correo...'),
+      h('small', { class: 'muted block-line', style: 'margin-top: 4px;' }, 'Despachando mensaje a ' + email)
     ),
 
-    // Estado 2: Código generado, enviado y autocompletado
+    // Estado 2: Esperando que el usuario ingrese el código que recibió en su correo (SIN autocompletar)
     h('div', { id: 'otpReadyState', style: 'display: none;' },
-      h('div', { class: 'notice success', style: 'margin-bottom: 14px; border-radius: 12px; padding: 12px 14px;' },
+      h('div', { class: 'notice success', style: 'margin-bottom: 16px; border-radius: 12px; padding: 12px 14px;' },
         h('div', { style: 'display: flex; align-items: center; gap: 8px; font-weight: 700; margin-bottom: 3px;' },
           icon('check'),
-          h('span', null, '¡Código enviado con éxito!')
+          h('span', null, 'Código enviado a tu bandeja')
         ),
         h('p', { class: 'small', style: 'margin: 0; line-height: 1.4;' },
-          'El código ya está en tu correo. ',
-          h('strong', null, 'Se ha autocompletado automáticamente abajo'),
-          ' para que no tengas que entrar a tu correo a copiarlo.'
+          'Revisa tu bandeja de entrada en ',
+          h('strong', null, email),
+          ' (y la carpeta de Spam o Notificaciones). Copia los 6 dígitos recibidos e ingrésalos a continuación:'
         )
       ),
 
-      h('div', { style: 'text-align: center; margin: 14px 0;' },
-        h('span', { class: 'eyebrow', style: 'margin-bottom: 4px; font-size: 11px;' }, 'CÓDIGO DE VERIFICACIÓN'),
-        h('div', {
-          id: 'otpCodeBigDisplay',
-          style: 'font-size: 30px; font-weight: 900; letter-spacing: 0.28em; color: var(--primary); font-family: monospace; background: rgba(22, 134, 93, 0.08); padding: 8px 18px; border-radius: 14px; display: inline-block; border: 2px dashed var(--primary);'
-        }, '------')
-      ),
-
-      h('div', { class: 'otp-input-wrap', style: 'margin-bottom: 12px;' },
+      h('div', { class: 'otp-input-wrap', style: 'margin: 18px 0 16px 0;' },
         h('input', {
           id: 'inputOtpCode',
           type: 'text',
           maxlength: '6',
           class: 'otp-input-field',
           placeholder: '000000',
-          autocomplete: 'one-time-code',
+          autocomplete: 'off',
           inputmode: 'numeric',
           pattern: '[0-9]*',
-          style: 'text-align: center; font-size: 22px; font-weight: 800; letter-spacing: 0.25em;'
+          value: '', // Vacío: el usuario debe ingresar el código que recibió en su correo
+          style: 'text-align: center; font-size: 24px; font-weight: 800; letter-spacing: 0.3em; width: 100%; box-sizing: border-box;'
         })
       ),
-
-      h('div', {
-        id: 'otpAutoVerifyCountdown',
-        style: 'text-align: center; margin-bottom: 14px; font-size: 12.5px; color: var(--primary); font-weight: 600;'
-      }, 'Validando automáticamente en 2 segundos...'),
 
       h('div', { class: 'actions', style: 'display:flex; justify-content:space-between; align-items:center; gap: 10px;' },
         h('button', {
           class: 'btn link small',
           type: 'button',
           onclick: async e => {
-            if (autoTimer) clearTimeout(autoTimer);
-            if (countdownInterval) clearInterval(countdownInterval);
             await act(e.currentTarget, async () => {
-              const res = await API.post('/auth/send-otp', { email, purpose: 'RESEND' });
-              generatedCode = res.code;
-              const big = d.querySelector('#otpCodeBigDisplay');
+              await API.post('/auth/send-otp', { email, purpose: 'RESEND' });
               const inp = d.querySelector('#inputOtpCode');
-              if (big) big.textContent = res.code;
-              if (inp) inp.value = res.code;
+              if (inp) { inp.value = ''; inp.focus(); }
             }, 'Nuevo código enviado al correo');
           }
         }, 'Reenviar código al correo'),
@@ -825,39 +804,28 @@ function promptEmailOtpVerification({ email, role, onVerified }) {
           h('button', {
             class: 'btn ghost small',
             type: 'button',
-            onclick: () => {
-              if (autoTimer) clearTimeout(autoTimer);
-              if (countdownInterval) clearInterval(countdownInterval);
-              d.close();
-            }
+            onclick: () => d.close()
           }, 'Cancelar'),
           h('button', {
             id: 'btnVerifyNow',
             class: 'btn primary',
             type: 'button',
-            style: 'min-height: 40px; font-weight: 700; padding: 0.5rem 1.1rem;',
+            style: 'min-height: 42px; font-weight: 700; padding: 0.5rem 1.25rem;',
             onclick: () => verifyAndProceed()
-          }, 'Confirmar y Entrar')
+          }, 'Verificar e Ingresar')
         )
       )
     )
   );
 
-  const d = openDialog(dialogContent, {
-    onClose: () => {
-      if (autoTimer) clearTimeout(autoTimer);
-      if (countdownInterval) clearInterval(countdownInterval);
-    }
-  });
+  const d = openDialog(dialogContent);
 
   async function verifyAndProceed() {
-    if (autoTimer) { clearTimeout(autoTimer); autoTimer = null; }
-    if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
-
     const input = d.querySelector('#inputOtpCode');
-    const codeVal = (input && input.value ? input.value : generatedCode || '').trim();
+    const codeVal = (input ? input.value : '').trim();
     if (codeVal.length !== 6) {
-      toast('Ingresa el código completo de 6 dígitos.', 'error');
+      toast('Por favor escribe el código de 6 dígitos que llegó a tu correo.', 'error');
+      if (input) input.focus();
       return;
     }
 
@@ -869,40 +837,20 @@ function promptEmailOtpVerification({ email, role, onVerified }) {
     }, 'Cuenta validada con éxito');
   }
 
-  // Despacha inmediatamente el envío del código al correo al abrir
+  // Despacha inmediatamente el código hacia el correo que se ingresó en el formulario
   (async () => {
     try {
-      const res = await API.post('/auth/send-otp', { email, purpose: 'AUTH' });
-      generatedCode = res.code;
-
+      await API.post('/auth/send-otp', { email, purpose: 'AUTH' });
       const loadingBox = d.querySelector('#otpLoadingState');
       const readyBox = d.querySelector('#otpReadyState');
       if (loadingBox) loadingBox.style.display = 'none';
-      if (readyBox) readyBox.style.display = 'block';
-
-      const bigDisplay = d.querySelector('#otpCodeBigDisplay');
-      if (bigDisplay && generatedCode) bigDisplay.textContent = generatedCode;
-
-      const input = d.querySelector('#inputOtpCode');
-      if (input && generatedCode) input.value = generatedCode;
-
-      let remaining = 2;
-      const countEl = d.querySelector('#otpAutoVerifyCountdown');
-      countdownInterval = setInterval(() => {
-        remaining--;
-        if (remaining <= 0) {
-          clearInterval(countdownInterval);
-        } else if (countEl) {
-          countEl.textContent = `Validando automáticamente en ${remaining} segundo...`;
-        }
-      }, 1000);
-
-      autoTimer = setTimeout(() => {
-        verifyAndProceed();
-      }, 2100);
-
+      if (readyBox) {
+        readyBox.style.display = 'block';
+        const input = d.querySelector('#inputOtpCode');
+        if (input) setTimeout(() => input.focus(), 150);
+      }
     } catch (err) {
-      toast(err.message || 'Error generando código de correo.', 'error');
+      toast(err.message || 'Error al enviar código al correo.', 'error');
       d.close();
     }
   })();
