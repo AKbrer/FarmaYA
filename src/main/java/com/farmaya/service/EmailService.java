@@ -154,8 +154,14 @@ public class EmailService {
 
             // Encabezados y contenido MIME
             String fromHeader = (from != null && from.contains("@")) ? from : ("FarmaYA <" + effUser.trim() + ">");
+            String rfcDate = java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC));
+            String msgId = "<" + java.util.UUID.randomUUID().toString() + "@gmail.com>";
+
             writer.write("From: " + fromHeader + "\r\n");
             writer.write("To: " + toEmail.trim() + "\r\n");
+            writer.write("Reply-To: " + effUser.trim() + "\r\n");
+            writer.write("Date: " + rfcDate + "\r\n");
+            writer.write("Message-ID: " + msgId + "\r\n");
             writer.write("Subject: =?UTF-8?B?" + Base64.getEncoder().encodeToString(subject.getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
             writer.write("MIME-Version: 1.0\r\n");
             writer.write("Content-Type: text/html; charset=UTF-8\r\n");
