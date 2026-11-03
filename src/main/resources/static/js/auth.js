@@ -411,7 +411,34 @@ function buildRegisterCard() {
   const step1Box = h('div', { id: 'regStep1', class: 'form-stack' },
     field('¿Cómo usarás FarmaYA?', roleSelect),
     field('Nombre completo', h('input', { id: 'regName', type: 'text', autocomplete: 'name', placeholder: 'Tu nombre y apellido', required: true })),
-    field('Correo electrónico', h('input', { id: 'regEmail', type: 'email', autocomplete: 'username', placeholder: 'tu@correo.com', required: true })),
+    field('Correo electrónico',
+      h('div', { style: 'display:flex; gap:8px; align-items:center;' },
+        h('input', { id: 'regEmail', type: 'email', autocomplete: 'username', placeholder: 'tu@correo.com', required: true, style: 'flex:1;' }),
+        h('button', {
+          id: 'btnSendEmailCodeNow',
+          type: 'button',
+          class: 'btn ghost small',
+          style: 'white-space:nowrap; padding: 0.5rem 0.85rem; font-size: 0.82rem; font-weight: 600;',
+          onclick: () => {
+            const emailInp = document.getElementById('regEmail');
+            const emailVal = emailInp ? emailInp.value.trim() : '';
+            if (!emailVal || !emailInp.checkValidity()) {
+              if (emailInp) emailInp.focus();
+              toast('Escribe un correo electrónico válido para enviar el código.', 'error');
+              return;
+            }
+            promptEmailOtpVerification({
+              email: emailVal,
+              role: roleSelect.value,
+              onVerified: async () => {
+                toast('Correo verificado exitosamente. Puedes continuar llenando tus datos.');
+              }
+            });
+          }
+        }, 'Enviar código al correo')
+      ),
+      'El código de 6 dígitos llegará a esta dirección (revisa también Spam/Promociones).'
+    ),
     field('Teléfono de contacto', h('input', { id: 'regPhone', type: 'tel', autocomplete: 'tel', placeholder: 'Ej. 300 123 4567', required: true })),
     field('Contraseña segura', h('input', { id: 'regPassword', type: 'password', autocomplete: 'new-password', placeholder: 'Mínimo 8 caracteres', required: true, minlength: 8 })),
     h('div', { id: 'step1Actions', class: 'actions' },
