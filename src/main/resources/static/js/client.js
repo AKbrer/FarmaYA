@@ -497,7 +497,7 @@ function renderClientDashboard() {
         }
         const hasCoverage = await checkCoverage();
         if (!hasCoverage) {
-          toast('No hay farmacia disponible cerca de tu zona (radio máximo 5 km)', 'error');
+          toast('No hay farmacias disponibles cerca de tu zona en este momento', 'error');
           return;
         }
         const payload = {

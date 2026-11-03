@@ -40,10 +40,54 @@ function pharmacyHeaderCard(user) {
     statusLabel
   );
 
+  const gpsBtn = h('button', {
+    class: 'btn secondary small pharmacy-header-gps-btn',
+    type: 'button',
+    style: 'display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:0.82rem; margin-top:6px; padding: 5px 12px; border-radius:6px;',
+    onclick: async () => {
+      const prev = gpsBtn.innerHTML;
+      gpsBtn.disabled = true;
+      gpsBtn.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px;"></span> Obteniendo GPS...';
+      try {
+        const pos = await farmayaGetPosition();
+        const geo = await reverseGeocode(pos);
+        const newAddress = (geo && geo.address) ? geo.address : (user.address || 'Barranquilla');
+        const updated = await API.put('/auth/profile', {
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          zone: user.zone || 'Cobertura General',
+          pharmacyName: user.pharmacyName || user.name,
+          address: newAddress,
+          latitude: pos.lat,
+          longitude: pos.lng,
+          openFrom: user.openFrom || '08:00',
+          openTo: user.openTo || '22:00'
+        });
+        Object.assign(state.user, updated);
+        toast('Ubicación GPS precisa guardada exitosamente en Barranquilla');
+        refreshAll();
+      } catch (err) {
+        toast(err.message || 'No se pudo obtener la ubicación GPS', 'error');
+      } finally {
+        gpsBtn.disabled = false;
+        gpsBtn.innerHTML = prev;
+      }
+    }
+  }, icon('my_location'), 'Calibrar ubicación GPS precisa');
+
+  const coordsInfo = (user.latitude != null && user.longitude != null)
+    ? h('small', { class: 'muted', style: 'display:block; font-size:0.8rem; margin-top:3px;' },
+        'Ubicación GPS: ' + Number(user.latitude).toFixed(5) + ', ' + Number(user.longitude).toFixed(5) + ' (Barranquilla)')
+    : h('small', { class: 'tone-wait', style: 'display:block; font-size:0.8rem; margin-top:3px; font-weight:600;' },
+        'Sin ubicación GPS precisa. Pulsa el botón para calibrarla.');
+
   return h('div', { class: 'pharmacy-header-card' },
     h('div', { class: 'pharmacy-header-info' },
       h('h1', { class: 'pharmacy-header-title' }, user.pharmacyName || user.name),
-      user.address && h('span', { class: 'pharmacy-header-address muted' }, user.address)
+      user.address && h('span', { class: 'pharmacy-header-address muted', style: 'display:block; font-size:0.9rem;' }, user.address),
+      coordsInfo,
+      gpsBtn
     ),
     activationBox
   );

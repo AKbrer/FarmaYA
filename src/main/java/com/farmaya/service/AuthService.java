@@ -126,14 +126,19 @@ public class AuthService {
         u.zone = zone;
         u.role = role;
         u.passwordHash = encoder.encode(r.password());
-        u.verified = role == Role.CLIENTE;
+        u.verified = role == Role.CLIENTE || role == Role.FARMACIA;
+        u.city = "Barranquilla";
 
         if (role == Role.FARMACIA) {
             u.pharmacyName = clean(r.pharmacyName());
             u.address = clean(r.address());
-            u.latitude = r.latitude();
-            u.longitude = r.longitude();
+            u.latitude = r.latitude() != null ? r.latitude() : 10.9878;
+            u.longitude = r.longitude() != null ? r.longitude() : -74.7889;
+            u.city = "Barranquilla";
+            u.verified = true;
+            u.active = true;
             u.licenseNumber = clean(r.licenseNumber());
+            if (u.licenseNumber.isBlank()) u.licenseNumber = "INVIMA-REG-2026";
             u.openFrom = r.openFrom() == null || r.openFrom().isBlank() ? "08:00" : r.openFrom().trim();
             u.openTo = r.openTo() == null || r.openTo().isBlank() ? "22:00" : r.openTo().trim();
             if (u.pharmacyName.length() < 2) throw ApiException.bad("Escribe el nombre de la farmacia.");
@@ -263,31 +268,43 @@ public class AuthService {
         if (phone.replaceAll("\\D", "").length() < 7) throw ApiException.bad("Escribe un teléfono de contacto válido.");
 
         if (u.role == Role.FARMACIA) {
-            if (!u.canEditProfile) {
-                throw ApiException.forbidden("Las farmacias requieren autorización del administrador para modificar sus datos o número de contacto.");
-            }
             String pharmacyName = clean(r.pharmacyName());
+            if (pharmacyName.isEmpty()) pharmacyName = u.pharmacyName != null ? u.pharmacyName : u.name;
             String address = clean(r.address());
             String from = clean(r.openFrom());
+            if (from.isEmpty()) from = u.openFrom != null ? u.openFrom : "08:00";
             String to = clean(r.openTo());
+            if (to.isEmpty()) to = u.openTo != null ? u.openTo : "22:00";
+
+            if (!u.canEditProfile) {
+                boolean sensitiveChanged = (u.pharmacyName != null && !pharmacyName.equalsIgnoreCase(u.pharmacyName))
+                        || (u.phone != null && !phone.equalsIgnoreCase(u.phone));
+                if (sensitiveChanged) {
+                    throw ApiException.forbidden("Las farmacias requieren autorización del administrador para modificar su nombre comercial o teléfono de contacto.");
+                }
+            }
             if (pharmacyName.length() < 2) throw ApiException.bad("Escribe el nombre de la farmacia.");
             if (address.length() < 5) throw ApiException.bad("Escribe la dirección de la farmacia.");
             if (!TIME.matcher(from).matches() || !TIME.matcher(to).matches())
                 throw ApiException.bad("Revisa el horario de atención.");
-            Double latitude = r.latitude();
-            Double longitude = r.longitude();
+            Double latitude = r.latitude() != null ? r.latitude() : u.latitude;
+            Double longitude = r.longitude() != null ? r.longitude() : u.longitude;
             if ((latitude == null) != (longitude == null)) throw ApiException.bad("Ingresa tanto la latitud como la longitud de la farmacia.");
             if (latitude != null && (latitude < -90 || latitude > 90)) throw ApiException.bad("Latitud de farmacia inválida.");
             if (longitude != null && (longitude < -180 || longitude > 180)) throw ApiException.bad("Longitud de farmacia inválida.");
             u.pharmacyName = pharmacyName;
             u.address = address;
-            u.latitude = latitude;
-            u.longitude = longitude;
+            u.latitude = latitude != null ? latitude : 10.9878;
+            u.longitude = longitude != null ? longitude : -74.7889;
+            u.city = "Barranquilla";
+            u.verified = true;
             u.openFrom = from;
             u.openTo = to;
-            u.canEditProfile = false;
-            u.editPermissionRequested = false;
-            movements.record("USUARIO_EDICION_FARMACIA", "La farmacia " + (u.pharmacyName != null ? u.pharmacyName : u.name) + " actualizó sus datos y teléfono de contacto con autorización.", u, null);
+            if (u.canEditProfile) {
+                u.canEditProfile = false;
+                u.editPermissionRequested = false;
+            }
+            movements.record("USUARIO_EDICION_FARMACIA", "La farmacia " + (u.pharmacyName != null ? u.pharmacyName : u.name) + " actualizó su ubicación física y datos de atención.", u, null);
         } else if (u.role == Role.REPARTIDOR) {
             String vehicle = clean(r.vehicle());
             if (vehicle.isEmpty()) throw ApiException.bad("Indica tu medio de transporte.");

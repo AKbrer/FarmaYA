@@ -122,17 +122,59 @@ function openProfile(initialView = 'menu') {
 
     if (isPharmacy) {
       f.pharmacyName = h('input', { name: 'pharmacyName', required: true, value: u.pharmacyName || '', disabled: !canEdit });
-      f.address = h('input', { name: 'address', required: true, minLength: 5, value: u.address || '', disabled: !canEdit });
-      f.latitude = h('input', { name: 'latitude', type: 'number', step: 'any', min: -90, max: 90, value: u.latitude ?? '', disabled: !canEdit, placeholder: 'Ej. 10.3997' });
-      f.longitude = h('input', { name: 'longitude', type: 'number', step: 'any', min: -180, max: 180, value: u.longitude ?? '', disabled: !canEdit, placeholder: 'Ej. -75.5000' });
-      f.openFrom = h('input', { name: 'openFrom', type: 'time', required: true, value: u.openFrom || '08:00', disabled: !canEdit });
-      f.openTo = h('input', { name: 'openTo', type: 'time', required: true, value: u.openTo || '22:00', disabled: !canEdit });
+      f.address = h('input', { name: 'address', required: true, minLength: 5, value: u.address || '', placeholder: 'Ej. Calle 72 #50-10, Barranquilla' });
+      f.latitude = h('input', { name: 'latitude', type: 'number', step: 'any', min: -90, max: 90, value: u.latitude ?? '10.9878', placeholder: 'Ej. 10.9878' });
+      f.longitude = h('input', { name: 'longitude', type: 'number', step: 'any', min: -180, max: 180, value: u.longitude ?? '-74.7889', placeholder: 'Ej. -74.7889' });
+      f.openFrom = h('input', { name: 'openFrom', type: 'time', required: true, value: u.openFrom || '08:00' });
+      f.openTo = h('input', { name: 'openTo', type: 'time', required: true, value: u.openTo || '22:00' });
+
+      const phGpsStatus = h('p', {
+        id: 'pharmacyProfileGpsStatus',
+        class: 'muted small',
+        style: 'margin: 6px 0 0;'
+      }, (u.latitude != null) ? ('Ubicación GPS calibrada: ' + Number(u.latitude).toFixed(5) + ', ' + Number(u.longitude).toFixed(5) + ' (Barranquilla)') : 'Sin ubicación GPS calibrada.');
+
+      const phGpsBtn = h('button', {
+        class: 'btn primary small',
+        type: 'button',
+        style: 'display:inline-flex; align-items:center; gap:6px; margin: 6px 0 10px; font-weight: 700;',
+        onclick: async () => {
+          const prev = phGpsBtn.innerHTML;
+          phGpsBtn.disabled = true;
+          phGpsBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Obteniendo ubicación GPS precisa...';
+          phGpsStatus.textContent = 'Solicitando satélites de alta precisión y calibrando ubicación...';
+          try {
+            const pos = await farmayaGetPosition();
+            f.latitude.value = String(pos.lat);
+            f.longitude.value = String(pos.lng);
+            const geo = await reverseGeocode(pos);
+            if (geo && geo.address) {
+              f.address.value = geo.address;
+              phGpsStatus.textContent = 'Ubicación fijada en Barranquilla: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
+            } else {
+              phGpsStatus.textContent = 'Coordenadas GPS fijadas en Barranquilla: ' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + ' (±' + Math.round(pos.accuracy || 10) + 'm).';
+            }
+            toast('Ubicación GPS de la farmacia obtenida con éxito');
+          } catch (err) {
+            phGpsStatus.textContent = err.message;
+            toast(err.message, 'error');
+          } finally {
+            phGpsBtn.disabled = false;
+            phGpsBtn.innerHTML = prev;
+          }
+        }
+      }, icon('my_location'), 'Usar ubicación actual precisa de la farmacia (GPS)');
 
       extra.push(
         field('Nombre comercial de la farmacia', f.pharmacyName),
-        field('Dirección física', f.address),
+        h('div', { class: 'field' },
+          h('span', { class: 'field-label' }, 'Dirección y ubicación en Barranquilla'),
+          f.address,
+          phGpsBtn,
+          phGpsStatus
+        ),
         h('div', { class: 'two' }, field('Latitud del establecimiento', f.latitude), field('Longitud del establecimiento', f.longitude)),
-        h('p', { class: 'muted small' }, 'Las coordenadas son necesarias para calcular la distancia estimada y las ganancias del repartidor. Puedes copiarlas desde el pin de la farmacia en el mapa. Déjalas ambas vacías si aún no las tienes.'),
+        h('p', { class: 'muted small' }, 'Las coordenadas precisas permiten a los clientes cercanos encontrar tu farmacia y calcular las rutas de entrega en Barranquilla.'),
         h('div', { class: 'two' }, field('Apertura', f.openFrom), field('Cierre', f.openTo)),
         h('p', { class: 'muted small' }, 'Número de licencia sanitaria (' + (u.licenseNumber || 'RS-0000') + '). Solo modificable por la entidad reguladora o administración.')
       );
@@ -244,10 +286,6 @@ function openProfile(initialView = 'menu') {
       class: 'form-stack',
       onsubmit: async e => {
         e.preventDefault();
-        if (isPharmacy && !u.canEditProfile) {
-          toast('Requieres autorización del administrador para guardar cambios.', 'error');
-          return;
-        }
         const payload = {};
         Object.entries(f).forEach(([k, el]) => { payload[k] = el.value; });
         if (f.latitude && f.latitude.value.trim() !== '') {
@@ -264,7 +302,7 @@ function openProfile(initialView = 'menu') {
           payload.address = f.address.value.trim();
         }
         payload.email = f.email.value.trim();
-        const saved = await act(form.querySelector('button[type=submit]'), () => API.put('/auth/profile', payload), 'Datos y número actualizados correctamente');
+        const saved = await act(form.querySelector('button[type=submit]'), () => API.put('/auth/profile', payload), 'Datos y ubicación guardados correctamente');
         if (!saved) return;
         Object.assign(state.user, saved);
         view = 'profile';
@@ -274,7 +312,7 @@ function openProfile(initialView = 'menu') {
         refreshAll();
       }
     },
-      h('h3', null, isPharmacy ? 'Datos de la farmacia y contacto' : 'Editar mis datos y número'),
+      h('h3', null, isPharmacy ? 'Datos de la farmacia y ubicación' : 'Editar mis datos y número'),
       permBanner,
       field('Nombre completo de contacto', f.name),
       h('div', { class: 'phone-highlight-field' },
@@ -286,8 +324,8 @@ function openProfile(initialView = 'menu') {
         h('button', {
           class: 'btn primary',
           type: 'submit',
-          disabled: !canEdit
-        }, canEdit ? 'Guardar cambios' : 'Requiere autorización')));
+          disabled: isPharmacy ? false : !canEdit
+        }, canEdit ? 'Guardar cambios' : 'Guardar ubicación y datos de atención')));
 
     return h('section', { class: 'profile-section' }, form);
   }

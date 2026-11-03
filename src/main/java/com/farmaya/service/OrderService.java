@@ -199,7 +199,7 @@ public class OrderService {
 
     /** Motivo por el que la farmacia no puede recibir pedidos ahora, o null si puede. */
     public String pharmacyBlockReason(User ph) {
-        if (!ph.verified) return "Tu farmacia aún no ha sido verificada por un administrador.";
+        if (!ph.enabled) return "Tu farmacia ha sido desactivada por la administración.";
         if (!ph.active) return "Estás en pausa. Activa «Recibiendo pedidos» para ver solicitudes.";
         if (!isOpenNow(ph)) return "Estás fuera de tu horario de atención (" + ph.openFrom + " a " + ph.openTo + ").";
         return null;
@@ -440,14 +440,14 @@ public class OrderService {
         Double dist = estimatedRoadDistanceKm(ph.latitude, ph.longitude, o.latitude, o.longitude);
         if (dist == null) return true;
 
-        // Límite máximo absoluto para farmacia: 5.0 km
-        if (dist > 5.0) {
+        // Límite metropolitano para farmacia: 20.0 km
+        if (dist > 20.0) {
             return false;
         }
 
         int round = o.searchRound <= 0 ? 1 : o.searchRound;
-        if (round == 1) return dist <= 2.5; // Primero farmacias más cercanas (<= 2.5 km)
-        return dist <= 5.0; // Ronda 2: radio ampliado hasta el máximo de 5.0 km
+        if (round == 1) return dist <= 8.0; // Ronda 1: farmacias cercanas (<= 8.0 km)
+        return dist <= 20.0; // Ronda 2+: cobertura de toda la ciudad
     }
 
     /**
@@ -482,11 +482,18 @@ public class OrderService {
     public static boolean sameCity(String city1, String city2, String zone2) {
         String c1 = normalizeCity(city1);
         String c2 = normalizeCity(city2);
+        String z2 = normalizeCity(zone2);
+
+        // Barranquilla y su área metropolitana son el ámbito principal de FarmaYA
+        boolean c1Bq = c1.isEmpty() || c1.contains("barranquilla") || c1.contains("atlantico");
+        boolean c2Bq = c2.isEmpty() || c2.contains("barranquilla") || c2.contains("atlantico");
+        boolean z2Bq = z2.isEmpty() || z2.contains("barranquilla") || z2.contains("atlantico") || z2.contains("norte") || z2.contains("sur") || z2.contains("centro") || z2.contains("cobertura");
+
+        if (c1Bq && (c2Bq || z2Bq)) return true;
         if (c1.isEmpty() && c2.isEmpty()) return true;
         if (!c1.isEmpty() && !c2.isEmpty()) {
             return c1.equalsIgnoreCase(c2) || c1.contains(c2) || c2.contains(c1);
         }
-        String z2 = normalizeCity(zone2);
         if (!c1.isEmpty() && !z2.isEmpty()) {
             return c1.equalsIgnoreCase(z2) || c1.contains(z2) || z2.contains(c1);
         }
@@ -505,27 +512,27 @@ public class OrderService {
      * Si no hay farmacias disponibles, se evita generar el pedido para no dejar al cliente desatendido.
      */
     public Dtos.AvailabilityResponse checkPharmacyAvailability(String city, Double latitude, Double longitude) {
-        String normCity = blank(city) ? "tu ciudad" : city.trim();
+        String normCity = blank(city) ? "Barranquilla" : city.trim();
         List<User> activePharmacies = users.findByRole(Role.FARMACIA).stream()
-                .filter(ph -> ph.enabled && ph.verified && ph.active)
+                .filter(ph -> ph.enabled && ph.active)
                 .filter(ph -> sameCity(normCity, ph.city, ph.zone))
                 .toList();
 
         if (activePharmacies.isEmpty()) {
             return new Dtos.AvailabilityResponse(false, 0,
-                    "No hay farmacias disponibles cerca de tu zona en este momento (en " + normCity + "). Por esta razón no es posible completar el pedido actualmente.");
+                    "No hay farmacias disponibles cerca de tu zona en este momento. Por esta razón no es posible completar el pedido actualmente.");
         }
 
         if (latitude != null && longitude != null) {
             long countNear = activePharmacies.stream().filter(ph -> {
                 if (ph.latitude == null || ph.longitude == null) return true;
                 Double d = estimatedRoadDistanceKm(ph.latitude, ph.longitude, latitude, longitude);
-                return d == null || d <= 5.0;
+                return d == null || d <= 20.0;
             }).count();
 
             if (countNear == 0) {
                 return new Dtos.AvailabilityResponse(false, 0,
-                        "No hay farmacias disponibles cerca de tu zona. Por esta razón no se puede completar el pedido actualmente.");
+                        "No hay farmacias disponibles cerca de tu zona en este momento. Por esta razón no es posible completar el pedido actualmente.");
             }
             return new Dtos.AvailabilityResponse(true, (int) countNear, "Hay " + countNear + " farmacia(s) disponible(s) en tu zona.");
         }
