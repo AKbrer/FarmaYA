@@ -292,6 +292,16 @@ public class AuthService {
             String vehicle = clean(r.vehicle());
             if (vehicle.isEmpty()) throw ApiException.bad("Indica tu medio de transporte.");
             u.vehicle = vehicle;
+        } else if (u.role == Role.CLIENTE) {
+            String address = clean(r.address());
+            if (!address.isBlank()) {
+                u.address = address;
+            }
+            if (r.latitude() != null && r.longitude() != null) {
+                u.latitude = r.latitude();
+                u.longitude = r.longitude();
+            }
+            u.city = "Barranquilla";
         }
         u.name = name;
         u.email = email;

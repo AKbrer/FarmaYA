@@ -399,10 +399,11 @@ function renderClientDashboard() {
   window.openMobileCartSheet = openCartPreviewOverlay;
 
   async function checkout() {
-    const address = h('input', { required: true, minlength: 5, maxlength: 200, placeholder: 'Barrio, calle, número, apto o casa...', value: user.address || '' });
-    const cityInput = h('input', { required: true, maxlength: 100, placeholder: 'Ciudad o municipio (ej. Barranquilla, Bogotá)', value: user.city || 'Barranquilla' });
-    const latInput = h('input', { type: 'hidden', value: '' });
-    const lngInput = h('input', { type: 'hidden', value: '' });
+    const address = h('input', { required: true, minlength: 5, maxlength: 200, placeholder: 'Calle, carrera, número, barrio...', value: user.address || '' });
+    const cityInput = h('input', { type: 'hidden', value: 'Barranquilla' });
+    const latInput = h('input', { type: 'hidden', value: (user.latitude != null) ? String(user.latitude) : '' });
+    const lngInput = h('input', { type: 'hidden', value: (user.longitude != null) ? String(user.longitude) : '' });
+    const cityBadge = h('div', { class: 'checkout-city-badge', style: 'display:inline-flex; align-items:center; gap:6px; background:rgba(22,134,93,0.08); color:var(--primary); font-weight:700; font-size:0.84rem; padding:5px 12px; border-radius:8px; border:1px solid rgba(22,134,93,0.2); margin: 4px 0 10px 0;' }, icon('location_on'), 'Ciudad: Barranquilla');
     const notes = h('textarea', { rows: 2, maxlength: 400, placeholder: 'Indicaciones de entrega (ej. timbre 201, portería, preguntar por...)' });
     const mapStatus = h('p', { class: 'muted small' }, 'Mapa georreferenciado de entrega. Haz clic en el mapa o arrastra el marcador para fijar la dirección exacta.');
     const mapNode = h('div', { class: 'farmaya-map', role: 'application', 'aria-label': 'Mapa para seleccionar la entrega' });
@@ -454,27 +455,37 @@ function renderClientDashboard() {
     });
 
     const locateBtn = h('button', {
-      class: 'btn secondary',
+      class: 'btn primary',
       type: 'button',
+      style: 'display:inline-flex; align-items:center; gap:8px; font-weight:700; width:100%; justify-content:center; padding: 0.65rem 1rem; margin-bottom: 8px;',
       onclick: async () => {
+        const prev = locateBtn.innerHTML;
+        locateBtn.disabled = true;
+        locateBtn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;"></span> Obteniendo ubicación GPS precisa...';
+        mapStatus.textContent = 'Solicitando permiso de GPS y buscando satélites de alta precisión...';
         try {
-          mapStatus.textContent = 'Obteniendo coordenadas GPS de tu dispositivo...';
           const pos = await farmayaGetPosition();
-          map.setView([pos.lat, pos.lng], 16);
+          map.setView([pos.lat, pos.lng], 17);
           selectPoint(pos);
-          reverseGeocode(pos).then(r => {
-            if (r) {
-              if (!address.value.trim()) address.value = r.address || '';
-              if (!cityInput.value.trim()) cityInput.value = r.city || '';
-              clearTimeout(coverageCheckTimer);
-              coverageCheckTimer = setTimeout(checkCoverage, 400);
-            }
-          });
+          const geo = await reverseGeocode(pos);
+          if (geo && geo.address) {
+            address.value = geo.address;
+            mapStatus.textContent = 'Ubicación fijada en Barranquilla: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
+          } else {
+            mapStatus.textContent = 'Coordenadas GPS fijadas en Barranquilla (' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + '). Precisión: ±' + Math.round(pos.accuracy || 10) + 'm.';
+          }
+          clearTimeout(coverageCheckTimer);
+          coverageCheckTimer = setTimeout(checkCoverage, 400);
+          toast('Ubicación GPS obtenida con éxito');
         } catch (err) {
           mapStatus.textContent = err.message;
+          toast(err.message, 'error');
+        } finally {
+          locateBtn.disabled = false;
+          locateBtn.innerHTML = prev;
         }
       }
-    }, 'Usar mi ubicación actual');
+    }, icon('my_location'), 'Usar mi ubicación actual exacta (GPS)');
 
     const form = h('form', {
       class: 'sheet-body narrow checkout-map-form',
@@ -521,10 +532,10 @@ function renderClientDashboard() {
     },
       h('h2', null, '¿Dónde entregamos tus medicamentos?'),
       h('p', { class: 'muted' }, 'Tu pedido se asignará a la farmacia con mejor cobertura térmica y tiempo de respuesta en tu sector.'),
-      field('Dirección de entrega', address),
-      field('Ciudad o municipio', cityInput),
-      mapNode,
+      field('Dirección de entrega', address, 'Escribe tu dirección o pulsa el botón para fijarla con el GPS de tu dispositivo.'),
+      cityBadge,
       locateBtn,
+      mapNode,
       mapStatus,
       latInput,
       lngInput,
@@ -546,8 +557,11 @@ function renderClientDashboard() {
     const d = openDialog(form);
     try {
       await loadLeaflet();
-      const fallback = [10.3997, -75.5000]; // Coordenadas predeterminadas
-      map = L.map(mapNode).setView(fallback, 12);
+      const fallback = (user.latitude && user.longitude)
+        ? [Number(user.latitude), Number(user.longitude)]
+        : [10.9878, -74.7889]; // Barranquilla (Plaza de la Paz)
+      const initialZoom = (user.latitude && user.longitude) ? 16 : 14;
+      map = L.map(mapNode).setView(fallback, initialZoom);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
       marker = L.marker(fallback, { draggable: true }).addTo(map);
       marker.on('dragend', () => { const p = marker.getLatLng(); selectPoint(p); });

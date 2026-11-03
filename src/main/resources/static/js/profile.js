@@ -83,6 +83,9 @@ function openProfile(initialView = 'menu') {
         item('Nombre', u.name),
         item('Teléfono de contacto', u.phone),
         item('Correo electrónico', u.email),
+        u.role === 'CLIENTE' && item('Dirección habitual', u.address ? (u.address + ', Barranquilla') : 'Sin dirección guardada'),
+        u.role === 'CLIENTE' && item('Ciudad de cobertura', 'Barranquilla'),
+        u.role === 'CLIENTE' && (u.latitude != null) && item('Ubicación GPS fijada', Number(u.latitude).toFixed(5) + ', ' + Number(u.longitude).toFixed(5)),
         u.role === 'FARMACIA' && item('Establecimiento', u.pharmacyName),
         u.role === 'FARMACIA' && item('Dirección', u.address),
         u.role === 'FARMACIA' && item('Horario de atención', u.openFrom === u.openTo ? 'Abierta las 24 horas' : u.openFrom + ' a ' + u.openTo),
@@ -178,6 +181,63 @@ function openProfile(initialView = 'menu') {
       f.vehicle = h('select', { name: 'vehicle', required: true },
         ['Moto', 'Bicicleta', 'Carro', 'A pie'].map(v => h('option', { value: v, selected: v === u.vehicle }, v)));
       extra.push(field('Medio de transporte', f.vehicle));
+    } else if (u.role === 'CLIENTE') {
+      f.address = h('input', {
+        name: 'address',
+        placeholder: 'Ej. Carrera 53 #76-12, Alto Prado, Barranquilla',
+        value: u.address || ''
+      });
+      f.latitude = h('input', { name: 'latitude', type: 'hidden', value: (u.latitude != null) ? String(u.latitude) : '' });
+      f.longitude = h('input', { name: 'longitude', type: 'hidden', value: (u.longitude != null) ? String(u.longitude) : '' });
+
+      const gpsStatus = h('p', {
+        id: 'profileGpsStatus',
+        class: 'muted small',
+        style: 'margin: 6px 0 0;'
+      }, (u.latitude != null) ? ('Ubicación GPS guardada: ' + Number(u.latitude).toFixed(5) + ', ' + Number(u.longitude).toFixed(5) + ' (Barranquilla)') : 'Sin coordenadas GPS guardadas.');
+
+      const gpsBtn = h('button', {
+        class: 'btn primary small',
+        type: 'button',
+        style: 'display:inline-flex; align-items:center; gap:6px; margin-top: 6px; font-weight: 700;',
+        onclick: async () => {
+          const prev = gpsBtn.innerHTML;
+          gpsBtn.disabled = true;
+          gpsBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Obteniendo ubicación GPS precisa...';
+          gpsStatus.textContent = 'Solicitando permiso de GPS y buscando satélites de alta precisión...';
+          try {
+            const pos = await farmayaGetPosition();
+            f.latitude.value = String(pos.lat);
+            f.longitude.value = String(pos.lng);
+            const geo = await reverseGeocode(pos);
+            if (geo && geo.address) {
+              f.address.value = geo.address;
+              gpsStatus.textContent = 'Ubicación fijada con precisión en Barranquilla: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
+            } else {
+              gpsStatus.textContent = 'Coordenadas fijadas en Barranquilla: ' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + ' (±' + Math.round(pos.accuracy || 10) + 'm).';
+            }
+            toast('Ubicación GPS obtenida con éxito');
+          } catch (err) {
+            gpsStatus.textContent = err.message;
+            toast(err.message, 'error');
+          } finally {
+            gpsBtn.disabled = false;
+            gpsBtn.innerHTML = prev;
+          }
+        }
+      }, icon('my_location'), 'Usar mi ubicación actual precisa (GPS)');
+
+      extra.push(
+        h('div', { class: 'field' },
+          h('span', { class: 'field-label' }, 'Dirección y ubicación en Barranquilla'),
+          f.address,
+          f.latitude,
+          f.longitude,
+          gpsBtn,
+          gpsStatus,
+          h('small', { class: 'muted' }, 'Tu ubicación se usará de forma predeterminada al pedir medicamentos a domicilio.')
+        )
+      );
     }
 
     const form = h('form', {
@@ -190,7 +250,19 @@ function openProfile(initialView = 'menu') {
         }
         const payload = {};
         Object.entries(f).forEach(([k, el]) => { payload[k] = el.value; });
-        if (isPharmacy) { payload.latitude = f.latitude.value.trim() === '' ? null : Number(f.latitude.value); payload.longitude = f.longitude.value.trim() === '' ? null : Number(f.longitude.value); }
+        if (f.latitude && f.latitude.value.trim() !== '') {
+          payload.latitude = Number(f.latitude.value);
+        } else if (f.latitude) {
+          payload.latitude = null;
+        }
+        if (f.longitude && f.longitude.value.trim() !== '') {
+          payload.longitude = Number(f.longitude.value);
+        } else if (f.longitude) {
+          payload.longitude = null;
+        }
+        if (f.address) {
+          payload.address = f.address.value.trim();
+        }
         payload.email = f.email.value.trim();
         const saved = await act(form.querySelector('button[type=submit]'), () => API.put('/auth/profile', payload), 'Datos y número actualizados correctamente');
         if (!saved) return;
