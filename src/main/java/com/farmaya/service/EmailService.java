@@ -94,7 +94,7 @@ public class EmailService {
         String effPass = getEffectivePassword();
         if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
             try {
-                return sendViaSmtpSsl(toEmail, subject, html, effUser, effPass);
+                return sendViaSmtpSsl(toEmail, subject, html, code, effUser, effPass);
             } catch (Exception e) {
                 log.error("Error enviando vía SMTP SSL Gmail a {}: {}", toEmail, e.getMessage(), e);
             }
@@ -115,7 +115,7 @@ public class EmailService {
     }
 
     /** Envío directo mediante socket SSL a smtp.gmail.com:465 sin librerías externas */
-    private EmailDispatchResult sendViaSmtpSsl(String toEmail, String subject, String htmlContent, String effUser, String effPass) throws Exception {
+    private EmailDispatchResult sendViaSmtpSsl(String toEmail, String subject, String htmlContent, String code, String effUser, String effPass) throws Exception {
         log.info("Iniciando envío de correo real vía {}:{} a {}...", host, port, toEmail);
         SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
@@ -123,10 +123,11 @@ public class EmailService {
              BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
              BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))) {
 
-            socket.setSoTimeout(15000);
+            socket.setTcpNoDelay(true);
+            socket.setSoTimeout(12000);
 
             readSmtpResponse(reader, "220"); // Saludo del servidor
-            sendSmtpCommand(writer, "EHLO localhost");
+            sendSmtpCommand(writer, "EHLO farmaya.com.co");
             readSmtpResponse(reader, "250");
 
             sendSmtpCommand(writer, "AUTH LOGIN");
@@ -152,10 +153,12 @@ public class EmailService {
             sendSmtpCommand(writer, "DATA");
             readSmtpResponse(reader, "354");
 
-            // Encabezados y contenido MIME
+            // Encabezados y contenido MIME optimizados para entrega inmediata (Instant Delivery RFC)
             String fromHeader = (from != null && from.contains("@")) ? from : ("FarmaYA <" + effUser.trim() + ">");
             String rfcDate = java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC));
             String msgId = "<" + java.util.UUID.randomUUID().toString() + "@gmail.com>";
+            String boundary = "----=_Part_FarmaYA_" + System.currentTimeMillis();
+            String plainText = "Tu código de verificación FarmaYA es: " + (code != null ? code : "") + "\r\nVálido por 10 minutos para validar tu cuenta en FarmaYA.\r\n";
 
             writer.write("From: " + fromHeader + "\r\n");
             writer.write("To: " + toEmail.trim() + "\r\n");
@@ -163,14 +166,33 @@ public class EmailService {
             writer.write("Date: " + rfcDate + "\r\n");
             writer.write("Message-ID: " + msgId + "\r\n");
             writer.write("Subject: =?UTF-8?B?" + Base64.getEncoder().encodeToString(subject.getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
+            writer.write("X-Priority: 1 (Highest)\r\n");
+            writer.write("Priority: urgent\r\n");
+            writer.write("Importance: high\r\n");
+            writer.write("Auto-Submitted: auto-generated\r\n");
+            writer.write("X-Mailer: FarmaYA FastOtp 1.0\r\n");
             writer.write("MIME-Version: 1.0\r\n");
+            writer.write("Content-Type: multipart/alternative; boundary=\"" + boundary + "\"\r\n");
+            writer.write("\r\n");
+
+            // 1. Plain text para escaneo antispam instantáneo sin retrasos
+            writer.write("--" + boundary + "\r\n");
+            writer.write("Content-Type: text/plain; charset=UTF-8\r\n");
+            writer.write("Content-Transfer-Encoding: base64\r\n");
+            writer.write("\r\n");
+            writer.write(Base64.getMimeEncoder().encodeToString(plainText.getBytes(StandardCharsets.UTF_8)));
+            writer.write("\r\n");
+
+            // 2. HTML enriquecido
+            writer.write("--" + boundary + "\r\n");
             writer.write("Content-Type: text/html; charset=UTF-8\r\n");
             writer.write("Content-Transfer-Encoding: base64\r\n");
             writer.write("\r\n");
+            writer.write(Base64.getMimeEncoder().encodeToString(htmlContent.getBytes(StandardCharsets.UTF_8)));
+            writer.write("\r\n");
 
-            // Cuerpo en Base64 para evitar problemas con caracteres especiales y saltos de línea
-            String bodyB64 = Base64.getMimeEncoder().encodeToString(htmlContent.getBytes(StandardCharsets.UTF_8));
-            writer.write(bodyB64);
+            // Cierre del multipart
+            writer.write("--" + boundary + "--\r\n");
             writer.write("\r\n.\r\n");
             writer.flush();
 

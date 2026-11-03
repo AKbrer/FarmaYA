@@ -47,9 +47,11 @@ public class AuthService {
         String code = String.format("%06d", RND.nextInt(1000000));
         otps.put(cleanEmail, new OtpRecord(code, Instant.now().plus(10, ChronoUnit.MINUTES), purpose));
         
-        try {
-            movements.record("ENVIO_CODIGO_OTP", "Código de verificación generado para el correo " + cleanEmail, null, null);
-        } catch (Exception ignored) {}
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                movements.record("ENVIO_CODIGO_OTP", "Código de verificación generado para el correo " + cleanEmail, null, null);
+            } catch (Exception ignored) {}
+        });
 
         EmailService.EmailDispatchResult dispatch = emailService.sendVerificationOtp(cleanEmail, code, null);
 
