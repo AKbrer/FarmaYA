@@ -51,7 +51,7 @@ function pharmacyHeaderCard(user) {
       try {
         const pos = await farmayaGetPosition();
         const geo = await reverseGeocode(pos);
-        const newAddress = (geo && geo.address) ? geo.address : (user.address || 'Barranquilla');
+        const newAddress = (geo && geo.address) ? geo.address : (user.address || '');
         const updated = await API.put('/auth/profile', {
           name: user.name,
           email: user.email,
@@ -65,7 +65,7 @@ function pharmacyHeaderCard(user) {
           openTo: user.openTo || '22:00'
         });
         Object.assign(state.user, updated);
-        toast('Ubicación GPS precisa guardada exitosamente en Barranquilla');
+        toast('Ubicación GPS precisa guardada exitosamente');
         refreshAll();
       } catch (err) {
         toast(err.message || 'No se pudo obtener la ubicación GPS', 'error');
@@ -78,7 +78,7 @@ function pharmacyHeaderCard(user) {
 
   const coordsInfo = (user.latitude != null && user.longitude != null)
     ? h('small', { class: 'muted', style: 'display:block; font-size:0.8rem; margin-top:3px;' },
-        'Ubicación GPS: ' + Number(user.latitude).toFixed(5) + ', ' + Number(user.longitude).toFixed(5) + ' (Barranquilla)')
+        'Ubicación GPS: ' + Number(user.latitude).toFixed(5) + ', ' + Number(user.longitude).toFixed(5))
     : h('small', { class: 'tone-wait', style: 'display:block; font-size:0.8rem; margin-top:3px; font-weight:600;' },
         'Sin ubicación GPS precisa. Pulsa el botón para calibrarla.');
 

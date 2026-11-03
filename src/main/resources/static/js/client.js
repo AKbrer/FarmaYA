@@ -400,10 +400,9 @@ function renderClientDashboard() {
 
   async function checkout() {
     const address = h('input', { required: true, minlength: 5, maxlength: 200, placeholder: 'Calle, carrera, número, barrio...', value: user.address || '' });
-    const cityInput = h('input', { type: 'hidden', value: 'Barranquilla' });
+    const cityInput = h('input', { placeholder: 'Ciudad o municipio', value: user.city || '' });
     const latInput = h('input', { type: 'hidden', value: (user.latitude != null) ? String(user.latitude) : '' });
     const lngInput = h('input', { type: 'hidden', value: (user.longitude != null) ? String(user.longitude) : '' });
-    const cityBadge = h('div', { class: 'checkout-city-badge', style: 'display:inline-flex; align-items:center; gap:6px; background:rgba(22,134,93,0.08); color:var(--primary); font-weight:700; font-size:0.84rem; padding:5px 12px; border-radius:8px; border:1px solid rgba(22,134,93,0.2); margin: 4px 0 10px 0;' }, icon('location_on'), 'Ciudad: Barranquilla');
     const notes = h('textarea', { rows: 2, maxlength: 400, placeholder: 'Indicaciones de entrega (ej. timbre 201, portería, preguntar por...)' });
     const mapStatus = h('p', { class: 'muted small' }, 'Mapa georreferenciado de entrega. Haz clic en el mapa o arrastra el marcador para fijar la dirección exacta.');
     const mapNode = h('div', { class: 'farmaya-map', role: 'application', 'aria-label': 'Mapa para seleccionar la entrega' });
@@ -416,7 +415,7 @@ function renderClientDashboard() {
     async function checkCoverage() {
       const lat = Number(latInput.value);
       const lng = Number(lngInput.value);
-      const city = cityInput.value.trim() || user.city || 'Barranquilla';
+      const city = cityInput.value.trim() || user.city || '';
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) return true;
       try {
         const res = await API.get('/orders/check-availability?city=' + encodeURIComponent(city) + '&lat=' + lat + '&lng=' + lng);
@@ -470,9 +469,10 @@ function renderClientDashboard() {
           const geo = await reverseGeocode(pos);
           if (geo && geo.address) {
             address.value = geo.address;
-            mapStatus.textContent = 'Ubicación fijada en Barranquilla: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
+            if (geo.city && !cityInput.value) cityInput.value = geo.city;
+            mapStatus.textContent = 'Ubicación fijada: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
           } else {
-            mapStatus.textContent = 'Coordenadas GPS fijadas en Barranquilla (' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + '). Precisión: ±' + Math.round(pos.accuracy || 10) + 'm.';
+            mapStatus.textContent = 'Coordenadas GPS fijadas (' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + '). Precisión: ±' + Math.round(pos.accuracy || 10) + 'm.';
           }
           clearTimeout(coverageCheckTimer);
           coverageCheckTimer = setTimeout(checkCoverage, 400);
@@ -504,7 +504,7 @@ function renderClientDashboard() {
           items: clientCart.map(i => ({ name: i.name, quantity: i.quantity, prescription: !!i.rx, note: '' })),
           address: address.value.trim(),
           zone: address.value.trim(),
-          city: cityInput.value.trim() || user.city || 'Barranquilla',
+          city: cityInput.value.trim() || user.city || '',
           latitude: Number(latInput.value),
           longitude: Number(lngInput.value),
           phone: user.phone || '',
@@ -533,7 +533,7 @@ function renderClientDashboard() {
       h('h2', null, '¿Dónde entregamos tus medicamentos?'),
       h('p', { class: 'muted' }, 'Tu pedido se asignará a la farmacia con mejor cobertura térmica y tiempo de respuesta en tu sector.'),
       field('Dirección de entrega', address, 'Escribe tu dirección o pulsa el botón para fijarla con el GPS de tu dispositivo.'),
-      cityBadge,
+      field('Ciudad o municipio', cityInput),
       locateBtn,
       mapNode,
       mapStatus,

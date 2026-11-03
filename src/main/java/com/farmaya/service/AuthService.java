@@ -127,14 +127,12 @@ public class AuthService {
         u.role = role;
         u.passwordHash = encoder.encode(r.password());
         u.verified = role == Role.CLIENTE || role == Role.FARMACIA;
-        u.city = "Barranquilla";
 
         if (role == Role.FARMACIA) {
             u.pharmacyName = clean(r.pharmacyName());
             u.address = clean(r.address());
-            u.latitude = r.latitude() != null ? r.latitude() : 10.9878;
-            u.longitude = r.longitude() != null ? r.longitude() : -74.7889;
-            u.city = "Barranquilla";
+            u.latitude = r.latitude();
+            u.longitude = r.longitude();
             u.verified = true;
             u.active = true;
             u.licenseNumber = clean(r.licenseNumber());
@@ -294,9 +292,8 @@ public class AuthService {
             if (longitude != null && (longitude < -180 || longitude > 180)) throw ApiException.bad("Longitud de farmacia inválida.");
             u.pharmacyName = pharmacyName;
             u.address = address;
-            u.latitude = latitude != null ? latitude : 10.9878;
-            u.longitude = longitude != null ? longitude : -74.7889;
-            u.city = "Barranquilla";
+            u.latitude = latitude;
+            u.longitude = longitude;
             u.verified = true;
             u.openFrom = from;
             u.openTo = to;
@@ -318,7 +315,6 @@ public class AuthService {
                 u.latitude = r.latitude();
                 u.longitude = r.longitude();
             }
-            u.city = "Barranquilla";
         }
         u.name = name;
         u.email = email;

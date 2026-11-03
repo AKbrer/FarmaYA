@@ -354,7 +354,7 @@ function adminOrders() {
     return h('div', { class: 'list' }, orders.map(o => {
       const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0);
       return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
-        h('span', { class: 'muted small' }, o.address || o.city || 'Barranquilla'),
+        h('span', { class: 'muted small' }, o.address || o.city || 'Cobertura general'),
         o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
       ));
     }));
@@ -545,7 +545,7 @@ function adminVerificationCenter() {
                   h('span', null, isPh ? 'Farmacia' : 'Repartidor')
                 )
               ),
-              h('span', { class: 'muted small block-line', style: 'margin-top:4px;' }, 'Registrado ' + relTime(u.createdAt) + ' · ' + (u.city || u.zone || 'Barranquilla'))
+              h('span', { class: 'muted small block-line', style: 'margin-top:4px;' }, 'Registrado ' + relTime(u.createdAt) + ' · ' + (u.city || u.zone || 'Cobertura general'))
             ),
             h('span', { class: 'badge tone-wait' }, 'Pendiente')
           ),

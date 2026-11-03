@@ -95,7 +95,7 @@ public class OrderService {
         String city = clean(r.city(), 100);
         if (blank(city)) city = clean(r.zone(), 100);
         if (blank(city) || city.equalsIgnoreCase("Zona General")) city = clean(client.city, 100);
-        if (blank(city)) city = "Barranquilla";
+        if (blank(city)) city = "Cobertura General";
 
         // Validar cobertura: si no hay farmacias activas cerca de la zona, NO generar el pedido
         Dtos.AvailabilityResponse avail = checkPharmacyAvailability(city, r.latitude(), r.longitude());
@@ -482,18 +482,11 @@ public class OrderService {
     public static boolean sameCity(String city1, String city2, String zone2) {
         String c1 = normalizeCity(city1);
         String c2 = normalizeCity(city2);
-        String z2 = normalizeCity(zone2);
-
-        // Barranquilla y su área metropolitana son el ámbito principal de FarmaYA
-        boolean c1Bq = c1.isEmpty() || c1.contains("barranquilla") || c1.contains("atlantico");
-        boolean c2Bq = c2.isEmpty() || c2.contains("barranquilla") || c2.contains("atlantico");
-        boolean z2Bq = z2.isEmpty() || z2.contains("barranquilla") || z2.contains("atlantico") || z2.contains("norte") || z2.contains("sur") || z2.contains("centro") || z2.contains("cobertura");
-
-        if (c1Bq && (c2Bq || z2Bq)) return true;
         if (c1.isEmpty() && c2.isEmpty()) return true;
         if (!c1.isEmpty() && !c2.isEmpty()) {
             return c1.equalsIgnoreCase(c2) || c1.contains(c2) || c2.contains(c1);
         }
+        String z2 = normalizeCity(zone2);
         if (!c1.isEmpty() && !z2.isEmpty()) {
             return c1.equalsIgnoreCase(z2) || c1.contains(z2) || z2.contains(c1);
         }
@@ -512,7 +505,7 @@ public class OrderService {
      * Si no hay farmacias disponibles, se evita generar el pedido para no dejar al cliente desatendido.
      */
     public Dtos.AvailabilityResponse checkPharmacyAvailability(String city, Double latitude, Double longitude) {
-        String normCity = blank(city) ? "Barranquilla" : city.trim();
+        String normCity = blank(city) ? "" : city.trim();
         List<User> activePharmacies = users.findByRole(Role.FARMACIA).stream()
                 .filter(ph -> ph.enabled && ph.active)
                 .filter(ph -> sameCity(normCity, ph.city, ph.zone))

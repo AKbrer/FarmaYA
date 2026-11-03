@@ -1,4 +1,4 @@
-/* Mapa gratuito Leaflet + OpenStreetMap con precisión GPS para Barranquilla, Colombia */
+/* Mapa gratuito Leaflet + OpenStreetMap con precisión GPS */
 let farmayaLeafletPromise;
 function loadLeaflet() {
   if (window.L?.map) return Promise.resolve(window.L);
@@ -132,7 +132,7 @@ function farmayaGetPosition() {
 }
 
 /**
- * Traduce coordenadas geográficas a una dirección legible y precisa en Barranquilla, Colombia.
+ * Traduce coordenadas geográficas a una dirección legible.
  */
 async function reverseGeocode(position) {
   try {
@@ -155,25 +155,25 @@ async function reverseGeocode(position) {
     const road = a.road || a.pedestrian || a.footway || a.street || '';
     const num = a.house_number ? (' #' + a.house_number) : '';
     const neighborhood = a.neighbourhood || a.suburb || a.residential || a.quarter || '';
-    const city = 'Barranquilla';
+    const city = a.city || a.town || a.municipality || a.village || a.county || '';
 
     let cleanAddress = '';
     if (road) {
       cleanAddress = road + num;
       if (neighborhood) cleanAddress += ', ' + neighborhood;
-      cleanAddress += ', ' + city;
+      if (city) cleanAddress += ', ' + city;
     } else if (neighborhood) {
-      cleanAddress = neighborhood + ', ' + city;
+      cleanAddress = neighborhood + (city ? (', ' + city) : '');
     } else if (data.display_name) {
       const parts = data.display_name.split(',').map(s => s.trim()).filter(Boolean);
-      cleanAddress = parts.slice(0, 3).join(', ') + ', Barranquilla';
+      cleanAddress = parts.slice(0, 3).join(', ');
     } else {
-      cleanAddress = 'Barranquilla, Atlántico';
+      cleanAddress = city || '';
     }
 
     return {
       address: cleanAddress,
-      city: 'Barranquilla',
+      city: city,
       neighborhood: neighborhood,
       accuracy: position.accuracy
     };
