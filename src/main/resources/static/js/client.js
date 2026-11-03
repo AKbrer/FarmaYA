@@ -252,120 +252,151 @@ function renderClientDashboard() {
     }
   }
 
-  function openMobileCartSheet() {
-    if (!clientCart.length) {
-      document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
-      toast('Tu canasta está vacía');
+  /* Vista preliminar/resumen flotante encimita con todas las funciones conectadas (sin scroll hacia arriba) */
+  function openCartPreviewOverlay() {
+    const existingCard = document.getElementById('fy_cart_preview_card');
+    const existingBackdrop = document.getElementById('fy_cart_preview_backdrop');
+    if (existingCard) {
+      existingCard.remove();
+      if (existingBackdrop) existingBackdrop.remove();
       return;
     }
-    const sheetBody = h('div', { class: 'sheet-body mobile-cart-modal-body' },
-      h('div', { class: 'mobile-sheet-drag-handle' }),
-      h('div', { class: 'mobile-cart-header-row' },
-        h('div', null,
-          h('span', { class: 'eyebrow' }, 'CANASTA DE ENTREGA'),
-          h('h3', { style: 'margin: 2px 0 0;' }, 'Tus medicamentos')
-        ),
-        h('button', { class: 'btn ghost small', type: 'button', onclick: () => cartDialog.close() }, 'Cerrar')
-      ),
-      h('div', { id: 'mobileSheetCartItemsContainer' })
-    );
 
-    function refreshSheet() {
-      const container = sheetBody.querySelector('#mobileSheetCartItemsContainer');
-      if (!container) return;
-      if (!clientCart.length) {
-        document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
-        try { cartDialog.close(); } catch(e) {}
-        drawCart();
-        drawProducts();
-        return;
-      }
+    const backdrop = h('div', {
+      id: 'fy_cart_preview_backdrop',
+      class: 'cart-preview-backdrop',
+      onclick: closeCartPreview
+    });
+
+    const card = h('aside', {
+      id: 'fy_cart_preview_card',
+      class: 'cart-preview-card',
+      role: 'dialog',
+      'aria-label': 'Resumen flotante de canasta FarmaYA'
+    });
+
+    function closeCartPreview() {
+      const c = document.getElementById('fy_cart_preview_card');
+      const b = document.getElementById('fy_cart_preview_backdrop');
+      if (c) c.remove();
+      if (b) b.remove();
+    }
+
+    function refreshPreview() {
       const qty = clientCart.reduce((n, i) => n + i.quantity, 0);
       const subtotal = clientCart.reduce((n, i) => n + i.quantity * i.price, 0);
-      const deliveryFee = 4500;
+      const deliveryFee = qty > 0 ? 4500 : 0;
       const total = subtotal + deliveryFee;
-      const hasRx = clientCart.some(i => i.rx);
 
-      container.replaceChildren(
-        h('div', { class: 'cart-items stitch-cart-items' },
+      const header = h('div', { class: 'cart-preview-header' },
+        h('div', { class: 'cart-preview-title-wrap' },
+          h('span', { class: 'cart-preview-eyebrow' }, 'TU CANASTA · VISTA RÁPIDA'),
+          h('h3', { class: 'cart-preview-title' },
+            'Resumen de Canasta',
+            h('span', { class: 'cart-preview-badge' }, qty + (qty === 1 ? ' artículo' : ' artículos'))
+          )
+        ),
+        h('button', {
+          type: 'button',
+          class: 'cart-preview-close-btn',
+          'aria-label': 'Cerrar resumen',
+          title: 'Cerrar',
+          onclick: closeCartPreview
+        }, '✕')
+      );
+
+      let bodyContent;
+      if (!clientCart.length) {
+        bodyContent = h('div', { class: 'cart-preview-empty' },
+          h('div', { style: 'font-size: 36px; margin-bottom: 8px;' }, '🧺'),
+          h('strong', { style: 'display: block; font-size: 15px; margin-bottom: 4px; color: var(--text);' }, 'Tu canasta está vacía'),
+          h('p', { class: 'muted small', style: 'margin: 0;' }, 'Explora el catálogo y agrega los medicamentos que requieras.')
+        );
+      } else {
+        bodyContent = h('div', { class: 'cart-preview-items' },
           clientCart.map(item =>
-            h('div', { class: 'cart-item stitch-cart-item' },
-              h('div', { class: 'cart-item-info' },
-                h('strong', { class: 'cart-item-name' }, item.name),
-                h('small', { class: 'muted block-line' }, money(item.price) + ' c/u · sugerido'),
-                h('div', { class: 'quantity-control' },
+            h('div', { class: 'cart-preview-item' },
+              h('div', { class: 'cart-preview-item-info' },
+                h('strong', { class: 'cart-preview-item-name', title: item.name }, item.name),
+                h('span', { class: 'cart-preview-item-price' }, money(item.price) + ' c/u · sugerido')
+              ),
+              h('div', { class: 'cart-preview-item-right' },
+                h('div', { class: 'cart-preview-qty-control' },
                   h('button', {
                     type: 'button',
-                    class: 'qty-btn',
+                    class: 'cart-preview-qty-btn',
                     'aria-label': 'Quitar uno',
-                    onclick: () => {
+                    onclick: (e) => {
+                      e.stopPropagation();
                       item.quantity--;
                       if (item.quantity <= 0) clientCart = clientCart.filter(x => x !== item);
-                      refreshSheet();
+                      refreshPreview();
                       drawCart();
                       drawProducts();
                     }
                   }, '−'),
-                  h('span', null, item.quantity),
+                  h('span', { class: 'cart-preview-qty-num' }, item.quantity),
                   h('button', {
                     type: 'button',
-                    class: 'qty-btn',
+                    class: 'cart-preview-qty-btn',
                     'aria-label': 'Agregar uno',
-                    onclick: () => {
+                    onclick: (e) => {
+                      e.stopPropagation();
                       item.quantity = Math.min(99, item.quantity + 1);
-                      refreshSheet();
+                      refreshPreview();
                       drawCart();
                       drawProducts();
                     }
                   }, '+')
-                )
-              ),
-              h('strong', { class: 'cart-item-subtotal' }, money(item.price * item.quantity))
+                ),
+                h('strong', { class: 'cart-preview-item-subtotal' }, money(item.price * item.quantity))
+              )
             )
           )
-        ),
-        h('div', { class: 'cart-breakdown', style: 'margin-top: 16px;' },
-          h('div', { class: 'breakdown-row' },
-            h('span', null, 'Subtotal:'),
+        );
+      }
+
+      const body = h('div', { class: 'cart-preview-body' }, bodyContent);
+
+      const footer = h('div', { class: 'cart-preview-footer' },
+        clientCart.length ? h('div', { class: 'cart-preview-breakdown' },
+          h('div', { class: 'cart-preview-row' },
+            h('span', null, 'Subtotal sugerido:'),
             h('strong', null, money(subtotal))
           ),
-          h('div', { class: 'breakdown-row' },
-            h('span', null, 'Envío seguro (<45 min):'),
+          h('div', { class: 'cart-preview-row' },
+            h('span', null, 'Envío farmacéutico seguro (<45 min):'),
             h('span', { class: 'delivery-fee-badge' }, money(deliveryFee))
           ),
-          h('div', { class: 'breakdown-row total-row' },
+          h('div', { class: 'cart-preview-row cart-preview-total-row' },
             h('span', null, 'Total aproximado:'),
-            h('strong', { class: 'cart-total-amount' }, money(total))
+            h('strong', { class: 'cart-preview-total-amount' }, money(total))
           ),
-          h('p', { class: 'muted small text-center mt-2' }, 'La farmacia asignada confirmará el inventario real y emitirá la factura.')
-        ),
+          h('p', { class: 'muted small text-center', style: 'margin: 6px 0 0; font-size: 11px;' },
+            'La farmacia aliada confirmará el inventario real y emitirá la factura oficial.'
+          )
+        ) : '',
         h('button', {
-          class: 'btn primary block stitch-checkout-btn',
           type: 'button',
-          style: 'margin-top: 16px; min-height: 48px; border-radius: 14px; font-weight: 700;',
+          class: 'btn primary block cart-preview-checkout-btn',
+          disabled: !clientCart.length,
           onclick: () => {
-            cartDialog.close();
+            closeCartPreview();
             checkout();
           }
         }, 'Solicitar despacho a farmacias')
       );
+
+      card.replaceChildren(header, body, footer);
     }
 
-    const cartDialog = openDialog(sheetBody, {
-      onClose: () => {
-        window.activeMobileCartDialog = null;
-        if (!clientCart.length) {
-          document.querySelectorAll('#fy_mobile_cart_bar, .mobile-cart-float-bar').forEach(el => el.remove());
-        }
-        drawCart();
-        drawProducts();
-      }
-    });
-    cartDialog.classList.add('mobile-cart-bottom-dialog');
-    window.activeMobileCartDialog = cartDialog;
-    refreshSheet();
+    refreshPreview();
+    document.body.appendChild(backdrop);
+    document.body.appendChild(card);
   }
-  window.openMobileCartSheet = openMobileCartSheet;
+
+  window.openCartPreviewOverlay = openCartPreviewOverlay;
+  window.openMobileCartSheet = openCartPreviewOverlay;
 
   async function checkout() {
     const address = h('input', { required: true, minlength: 5, maxlength: 200, placeholder: 'Barrio, calle, número, apto o casa...', value: user.address || '' });
