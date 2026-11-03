@@ -1609,3 +1609,97 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
   .quote-actions{margin:2px -18px 0;padding:14px 18px;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}
   .quote-actions .btn.link{grid-column:1/-1;justify-self:center;margin:0}
 }
+
+/* ==========================================================================
+   Ajustes de UI: formularios no acumulados y botones rectangulares uniformes
+   ========================================================================== */
+.btn {
+  border-radius: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.btn.primary, .btn.secondary, .btn.ghost {
+  height: 42px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn.small {
+  height: 34px !important;
+  padding: 0 12px !important;
+  font-size: 12px !important;
+  border-radius: 8px !important;
+}
+
+.actions .btn {
+  min-width: 140px;
+  height: 42px;
+  border-radius: 9px;
+}
+
+.sheet-body {
+  padding: 24px 28px !important;
+  gap: 16px !important;
+}
+
+.sheet-body.narrow {
+  max-width: 540px !important;
+  width: 100%;
+}
+
+.checkout-grid-two {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+@media (max-width: 580px) {
+  .checkout-grid-two {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.checkout-map-wrap {
+  margin: 4px 0;
+}
+
+.checkout-map-wrap .farmaya-map {
+  height: 220px !important;
+  min-height: 200px !important;
+  margin: 6px 0 !important;
+  border-radius: 12px;
+}
+
+.sheet-body .field {
+  margin-bottom: 0;
+}
+
+.sheet-body .field-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sheet-body input, .sheet-body select {
+  height: 40px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  box-sizing: border-box;
+}
+
+.sheet-body textarea {
+  min-height: 54px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  font-size: 13.5px;
+  box-sizing: border-box;
+  resize: vertical;
+}

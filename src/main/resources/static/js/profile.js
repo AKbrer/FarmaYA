@@ -135,14 +135,14 @@ function openProfile(initialView = 'menu') {
       }, (u.latitude != null) ? ('Ubicación GPS calibrada: ' + Number(u.latitude).toFixed(5) + ', ' + Number(u.longitude).toFixed(5)) : 'Sin ubicación GPS calibrada.');
 
       const phGpsBtn = h('button', {
-        class: 'btn primary small',
+        class: 'btn secondary small',
         type: 'button',
-        style: 'display:inline-flex; align-items:center; gap:6px; margin: 6px 0 10px; font-weight: 700;',
+        style: 'height:36px; padding:0 14px; border-radius:8px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; margin: 6px 0 10px;',
         onclick: async () => {
           const prev = phGpsBtn.innerHTML;
           phGpsBtn.disabled = true;
-          phGpsBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Obteniendo ubicación GPS precisa...';
-          phGpsStatus.textContent = 'Solicitando satélites de alta precisión y calibrando ubicación...';
+          phGpsBtn.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px;"></span> Calibrando...';
+          phGpsStatus.textContent = 'Buscando satélites de alta precisión...';
           try {
             const pos = await farmayaGetPosition();
             f.latitude.value = String(pos.lat);
@@ -152,9 +152,9 @@ function openProfile(initialView = 'menu') {
               f.address.value = geo.address;
               phGpsStatus.textContent = 'Ubicación fijada: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
             } else {
-              phGpsStatus.textContent = 'Coordenadas GPS fijadas: ' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + ' (±' + Math.round(pos.accuracy || 10) + 'm).';
+              phGpsStatus.textContent = 'Coordenadas fijadas: ' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + ' (±' + Math.round(pos.accuracy || 10) + 'm).';
             }
-            toast('Ubicación GPS de la farmacia obtenida con éxito');
+            toast('Ubicación GPS obtenida con éxito');
           } catch (err) {
             phGpsStatus.textContent = err.message;
             toast(err.message, 'error');
@@ -163,7 +163,7 @@ function openProfile(initialView = 'menu') {
             phGpsBtn.innerHTML = prev;
           }
         }
-      }, icon('my_location'), 'Usar ubicación actual precisa de la farmacia (GPS)');
+      }, icon('my_location'), 'Calibrar GPS');
 
       extra.push(
         field('Nombre comercial de la farmacia', f.pharmacyName),
@@ -239,14 +239,14 @@ function openProfile(initialView = 'menu') {
       }, (u.latitude != null) ? ('Ubicación GPS guardada: ' + Number(u.latitude).toFixed(5) + ', ' + Number(u.longitude).toFixed(5)) : 'Sin coordenadas GPS guardadas.');
 
       const gpsBtn = h('button', {
-        class: 'btn primary small',
+        class: 'btn secondary small',
         type: 'button',
-        style: 'display:inline-flex; align-items:center; gap:6px; margin-top: 6px; font-weight: 700;',
+        style: 'height:36px; padding:0 14px; border-radius:8px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:6px; margin-top: 6px;',
         onclick: async () => {
           const prev = gpsBtn.innerHTML;
           gpsBtn.disabled = true;
-          gpsBtn.innerHTML = '<span class="spinner" style="width:14px;height:14px;border-width:2px;"></span> Obteniendo ubicación GPS precisa...';
-          gpsStatus.textContent = 'Solicitando permiso de GPS y buscando satélites de alta precisión...';
+          gpsBtn.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px;"></span> Obteniendo GPS...';
+          gpsStatus.textContent = 'Buscando satélites de alta precisión...';
           try {
             const pos = await farmayaGetPosition();
             f.latitude.value = String(pos.lat);
@@ -254,7 +254,7 @@ function openProfile(initialView = 'menu') {
             const geo = await reverseGeocode(pos);
             if (geo && geo.address) {
               f.address.value = geo.address;
-              gpsStatus.textContent = 'Ubicación fijada con precisión: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
+              gpsStatus.textContent = 'Ubicación fijada: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
             } else {
               gpsStatus.textContent = 'Coordenadas fijadas: ' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + ' (±' + Math.round(pos.accuracy || 10) + 'm).';
             }
@@ -267,7 +267,7 @@ function openProfile(initialView = 'menu') {
             gpsBtn.innerHTML = prev;
           }
         }
-      }, icon('my_location'), 'Usar mi ubicación actual precisa (GPS)');
+      }, icon('my_location'), 'Fijar por GPS');
 
       extra.push(
         h('div', { class: 'field' },

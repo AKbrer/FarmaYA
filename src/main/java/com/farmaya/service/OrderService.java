@@ -428,26 +428,7 @@ public class OrderService {
     public boolean isPharmacyEligible(Order o, User ph) {
         if (o.status != BUSCANDO_FARMACIA) return false;
         if (o.rejectedPharmacies != null && o.rejectedPharmacies.contains(ph.id)) return false;
-
-        // 1. Límite estricto de ciudad: el pedido NO sale de su ciudad
-        if (!sameCity(o.city, ph.city, ph.zone)) {
-            return false;
-        }
-
-        if (ph.latitude == null || ph.longitude == null || o.latitude == null || o.longitude == null) {
-            return true; // Fallback si no hay geolocalización
-        }
-        Double dist = estimatedRoadDistanceKm(ph.latitude, ph.longitude, o.latitude, o.longitude);
-        if (dist == null) return true;
-
-        // Límite metropolitano para farmacia: 20.0 km
-        if (dist > 20.0) {
-            return false;
-        }
-
-        int round = o.searchRound <= 0 ? 1 : o.searchRound;
-        if (round == 1) return dist <= 8.0; // Ronda 1: farmacias cercanas (<= 8.0 km)
-        return dist <= 20.0; // Ronda 2+: cobertura de toda la ciudad
+        return true;
     }
 
     /**
@@ -460,23 +441,7 @@ public class OrderService {
     public boolean isCourierEligible(Order o, User c) {
         if (o.status != BUSCANDO_REPARTIDOR) return false;
         if (o.rejectedCouriers != null && o.rejectedCouriers.contains(c.id)) return false;
-
-        // 1. Límite estricto de ciudad: el repartidor debe pertenecer a la misma ciudad
-        if (!sameCity(o.city, c.city, c.zone)) {
-            return false;
-        }
-
-        Double dist = estimatedRoadDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude,
-                c.latitude != null ? c.latitude : o.latitude,
-                c.longitude != null ? c.longitude : o.longitude);
-        if (dist == null) return true;
-
-        // Límite máximo absoluto para repartidor: 5.0 km
-        if (dist > 5.0) return false;
-
-        int round = o.courierRound <= 0 ? 1 : o.courierRound;
-        if (round == 1) return dist <= 3.0; // Primero los más cercanos a la farmacia (<= 3.0 km)
-        return dist <= 5.0; // Ronda 2: un poco más alejados hasta máximo 5.0 km
+        return true;
     }
 
     public static boolean sameCity(String city1, String city2, String zone2) {
@@ -505,32 +470,17 @@ public class OrderService {
      * Si no hay farmacias disponibles, se evita generar el pedido para no dejar al cliente desatendido.
      */
     public Dtos.AvailabilityResponse checkPharmacyAvailability(String city, Double latitude, Double longitude) {
-        String normCity = blank(city) ? "" : city.trim();
         List<User> activePharmacies = users.findByRole(Role.FARMACIA).stream()
                 .filter(ph -> ph.enabled && ph.active)
-                .filter(ph -> sameCity(normCity, ph.city, ph.zone))
                 .toList();
 
         if (activePharmacies.isEmpty()) {
             return new Dtos.AvailabilityResponse(false, 0,
-                    "No hay farmacias disponibles cerca de tu zona en este momento. Por esta razón no es posible completar el pedido actualmente.");
+                    "No hay farmacias disponibles en este momento. Por favor intenta más tarde.");
         }
 
-        if (latitude != null && longitude != null) {
-            long countNear = activePharmacies.stream().filter(ph -> {
-                if (ph.latitude == null || ph.longitude == null) return true;
-                Double d = estimatedRoadDistanceKm(ph.latitude, ph.longitude, latitude, longitude);
-                return d == null || d <= 20.0;
-            }).count();
-
-            if (countNear == 0) {
-                return new Dtos.AvailabilityResponse(false, 0,
-                        "No hay farmacias disponibles cerca de tu zona en este momento. Por esta razón no es posible completar el pedido actualmente.");
-            }
-            return new Dtos.AvailabilityResponse(true, (int) countNear, "Hay " + countNear + " farmacia(s) disponible(s) en tu zona.");
-        }
-
-        return new Dtos.AvailabilityResponse(true, activePharmacies.size(), "Hay farmacias disponibles en tu zona.");
+        int count = activePharmacies.size();
+        return new Dtos.AvailabilityResponse(true, count, "Hay " + count + " farmacia(s) disponible(s) en tu zona.");
     }
 
     // =====================================================================

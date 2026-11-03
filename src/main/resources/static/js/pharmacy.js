@@ -43,11 +43,11 @@ function pharmacyHeaderCard(user) {
   const gpsBtn = h('button', {
     class: 'btn secondary small pharmacy-header-gps-btn',
     type: 'button',
-    style: 'display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:0.82rem; margin-top:6px; padding: 5px 12px; border-radius:6px;',
+    style: 'display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:0.82rem; margin-top:6px; height:34px; padding:0 12px; border-radius:8px;',
     onclick: async () => {
       const prev = gpsBtn.innerHTML;
       gpsBtn.disabled = true;
-      gpsBtn.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px;"></span> Obteniendo GPS...';
+      gpsBtn.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px;"></span> GPS...';
       try {
         const pos = await farmayaGetPosition();
         const geo = await reverseGeocode(pos);
@@ -65,7 +65,7 @@ function pharmacyHeaderCard(user) {
           openTo: user.openTo || '22:00'
         });
         Object.assign(state.user, updated);
-        toast('Ubicación GPS precisa guardada exitosamente');
+        toast('Ubicación GPS guardada exitosamente');
         refreshAll();
       } catch (err) {
         toast(err.message || 'No se pudo obtener la ubicación GPS', 'error');
@@ -74,7 +74,7 @@ function pharmacyHeaderCard(user) {
         gpsBtn.innerHTML = prev;
       }
     }
-  }, icon('my_location'), 'Calibrar ubicación GPS precisa');
+  }, icon('my_location'), 'Calibrar GPS');
 
   const coordsInfo = (user.latitude != null && user.longitude != null)
     ? h('small', { class: 'muted', style: 'display:block; font-size:0.8rem; margin-top:3px;' },

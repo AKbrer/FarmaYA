@@ -403,13 +403,13 @@ function renderClientDashboard() {
     const cityInput = h('input', { placeholder: 'Ciudad o municipio', value: user.city || '' });
     const latInput = h('input', { type: 'hidden', value: (user.latitude != null) ? String(user.latitude) : '' });
     const lngInput = h('input', { type: 'hidden', value: (user.longitude != null) ? String(user.longitude) : '' });
-    const notes = h('textarea', { rows: 2, maxlength: 400, placeholder: 'Indicaciones de entrega (ej. timbre 201, portería, preguntar por...)' });
+    const notes = h('input', { maxlength: 400, placeholder: 'Ej. Torre 2 apto 401, portería, llamar al llegar...', value: '' });
     const mapStatus = h('p', { class: 'muted small' }, 'Mapa georreferenciado de entrega. Haz clic en el mapa o arrastra el marcador para fijar la dirección exacta.');
-    const mapNode = h('div', { class: 'farmaya-map', role: 'application', 'aria-label': 'Mapa para seleccionar la entrega' });
+    const mapNode = h('div', { class: 'farmaya-map', role: 'application', 'aria-label': 'Mapa para seleccionar la entrega', style: 'height:220px; min-height:200px; margin: 6px 0; border-radius:12px;' });
 
     let map, marker;
     const coverageNoticeBox = h('div', { class: 'checkout-coverage-notice', style: 'margin: 12px 0;' });
-    const submitBtn = h('button', { class: 'btn primary', type: 'submit' }, 'Confirmar y solicitar');
+    const submitBtn = h('button', { class: 'btn primary', type: 'submit' }, 'Confirmar pedido');
     let coverageCheckTimer = null;
 
     async function checkCoverage() {
@@ -424,12 +424,12 @@ function renderClientDashboard() {
             notice('warn', 'Sin farmacia cerca de tu zona', res.message || 'No hay farmacias disponibles en tu zona en este momento.')
           );
           submitBtn.disabled = true;
-          submitBtn.textContent = 'Sin farmacia en tu zona';
+          submitBtn.textContent = 'Sin cobertura';
           return false;
         } else {
           coverageNoticeBox.replaceChildren();
           submitBtn.disabled = false;
-          submitBtn.textContent = 'Confirmar y solicitar';
+          submitBtn.textContent = 'Confirmar pedido';
           return true;
         }
       } catch (e) {
@@ -454,14 +454,14 @@ function renderClientDashboard() {
     });
 
     const locateBtn = h('button', {
-      class: 'btn primary',
+      class: 'btn secondary small',
       type: 'button',
-      style: 'display:inline-flex; align-items:center; gap:8px; font-weight:700; width:100%; justify-content:center; padding: 0.65rem 1rem; margin-bottom: 8px;',
+      style: 'height:36px; padding:0 12px; border-radius:8px; font-weight:600; white-space:nowrap; display:inline-flex; align-items:center; gap:6px;',
       onclick: async () => {
         const prev = locateBtn.innerHTML;
         locateBtn.disabled = true;
-        locateBtn.innerHTML = '<span class="spinner" style="width:16px;height:16px;border-width:2px;"></span> Obteniendo ubicación GPS precisa...';
-        mapStatus.textContent = 'Solicitando permiso de GPS y buscando satélites de alta precisión...';
+        locateBtn.innerHTML = '<span class="spinner" style="width:13px;height:13px;border-width:2px;"></span> GPS...';
+        mapStatus.textContent = 'Obteniendo satélites de alta precisión...';
         try {
           const pos = await farmayaGetPosition();
           map.setView([pos.lat, pos.lng], 17);
@@ -472,7 +472,7 @@ function renderClientDashboard() {
             if (geo.city && !cityInput.value) cityInput.value = geo.city;
             mapStatus.textContent = 'Ubicación fijada: ' + geo.address + ' (GPS: ±' + Math.round(pos.accuracy || 10) + 'm).';
           } else {
-            mapStatus.textContent = 'Coordenadas GPS fijadas (' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + '). Precisión: ±' + Math.round(pos.accuracy || 10) + 'm.';
+            mapStatus.textContent = 'Coordenadas fijadas (' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + '). Precisión: ±' + Math.round(pos.accuracy || 10) + 'm.';
           }
           clearTimeout(coverageCheckTimer);
           coverageCheckTimer = setTimeout(checkCoverage, 400);
@@ -485,7 +485,7 @@ function renderClientDashboard() {
           locateBtn.innerHTML = prev;
         }
       }
-    }, icon('my_location'), 'Usar mi ubicación actual exacta (GPS)');
+    }, icon('my_location'), 'Detectar GPS');
 
     const form = h('form', {
       class: 'sheet-body narrow checkout-map-form',
@@ -525,30 +525,37 @@ function renderClientDashboard() {
             notice('warn', 'Sin farmacia cerca de tu zona', err.message || 'No hay farmacias disponibles en tu zona en este momento. El pedido no se ha generado.')
           );
           submitBtn.disabled = true;
-          submitBtn.textContent = 'Sin farmacia en tu zona';
+          submitBtn.textContent = 'Sin cobertura';
           toast(err.message, 'error');
         }
       }
     },
-      h('h2', null, '¿Dónde entregamos tus medicamentos?'),
-      h('p', { class: 'muted' }, 'Tu pedido se asignará a la farmacia con mejor cobertura térmica y tiempo de respuesta en tu sector.'),
-      field('Dirección de entrega', address, 'Escribe tu dirección o pulsa el botón para fijarla con el GPS de tu dispositivo.'),
-      field('Ciudad o municipio', cityInput),
-      locateBtn,
-      mapNode,
-      mapStatus,
+      h('h2', null, 'Punto de entrega'),
+      h('p', { class: 'muted', style: 'font-size:12.5px; margin-bottom: 4px;' }, 'Ingresa tu dirección o detecta tu ubicación satelital con el botón GPS.'),
+      h('div', { class: 'checkout-location-bar', style: 'display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:2px;' },
+        h('strong', { style: 'font-size:13px; color:var(--text);' }, 'Datos de dirección'),
+        locateBtn
+      ),
+      h('div', { class: 'checkout-grid-two' },
+        field('Dirección de entrega', address),
+        field('Ciudad o municipio', cityInput)
+      ),
+      h('div', { class: 'checkout-map-wrap' },
+        mapNode,
+        mapStatus
+      ),
       latInput,
       lngInput,
       field('Indicaciones adicionales (opcional)', notes),
-      h('div', { class: 'delivery-fee-callout', style: 'margin: 14px 0;' },
+      h('div', { class: 'delivery-fee-callout', style: 'margin: 8px 0; padding: 10px 14px; border-radius: 10px;' },
         h('span', { class: 'callout-ico' }, '!'),
         h('div', null,
-          h('strong', null, 'INFORMACIÓN IMPORTANTE SOBRE EL PAGO'),
-          h('p', null, 'El valor del domicilio se le debe pagar directamente al repartidor al momento de llegar a tu dirección.')
+          h('strong', { style: 'font-size:11.5px; display:block; margin-bottom:2px;' }, 'PAGO DEL DOMICILIO'),
+          h('p', { style: 'margin:0; font-size:11.5px;' }, 'El costo de envío se cancela directamente al domiciliario al recibir el pedido.')
         )
       ),
       coverageNoticeBox,
-      h('div', { class: 'actions' },
+      h('div', { class: 'actions', style: 'margin-top:10px;' },
         h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Volver al catálogo'),
         submitBtn
       )
