@@ -583,14 +583,122 @@ function fyDemandLineChartSvg(chartData, selectedMed) {
       // Texto de valor encima del punto
       g += `<text x="${px}" y="${(py - 9).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="${line.color}">${v}</text>`;
 
-      // Circulo de datos
-      g += `<g class="fy-pt-group">
-        <circle cx="${px}" cy="${py}" r="${isProj ? '6' : '4.5'}" fill="${isProj ? line.color : '#ffffff'}" stroke="${line.color}" stroke-width="2.5"/>
-        ${isProj ? `<circle cx="${px}" cy="${py}" r="9" fill="none" stroke="${line.color}" stroke-width="1.5" opacity="0.45"/>` : ''}
-        <title>${fyEsc(tip)}</title>
+      // Circulo de datos interactivo estilizado con FarmaYA Tooltip
+      g += `<g class="fy-pt-group" tabindex="0" role="button" aria-label="${fyEsc(tip)}"
+              data-name="${fyEsc(line.name)}"
+              data-label="${fyEsc(labels[i])}"
+              data-val="${v}"
+              data-isproj="${isProj ? '1' : '0'}"
+              data-color="${line.color}">
+        <circle cx="${px}" cy="${py}" r="${isProj ? '6' : '4.5'}" class="fy-pt-circle" fill="${isProj ? line.color : '#ffffff'}" stroke="${line.color}" stroke-width="2.5"/>
+        ${isProj ? `<circle cx="${px}" cy="${py}" r="9" fill="none" stroke="${line.color}" stroke-width="1.5" opacity="0.45" class="fy-pt-pulse"/>` : ''}
       </g>`;
     });
   });
 
   return `<svg class="fy-chart" viewBox="0 0 ${W} ${H}" style="width: 100%; height: auto; display: block; overflow: visible;" role="img" aria-label="Tendencia y Proyeccion de Demanda">${g}</svg>`;
 }
+
+
+// ==========================================================================
+// SISTEMA DE TOOLTIP MODERNO FARMAYA PARA GRÁFICOS (SIN RECUADRO NEGRO DEL NAVEGADOR)
+// ==========================================================================
+(function initFarmaYaChartTooltip() {
+  if (typeof window === 'undefined') return;
+  if (window.__fyChartTooltipInitialized) return;
+  window.__fyChartTooltipInitialized = true;
+
+  let tooltipEl = null;
+
+  function ensureTooltip() {
+    if (!tooltipEl || !document.body.contains(tooltipEl)) {
+      tooltipEl = document.createElement('div');
+      tooltipEl.id = 'fy_chart_custom_tooltip';
+      tooltipEl.className = 'fy-chart-tooltip';
+      document.body.appendChild(tooltipEl);
+    }
+    return tooltipEl;
+  }
+
+  function hideTooltip() {
+    if (tooltipEl) {
+      tooltipEl.classList.remove('is-visible');
+    }
+    const banners = document.querySelectorAll('.fy-chart-detail-banner');
+    banners.forEach(b => {
+      const orig = b.getAttribute('data-original-text');
+      if (orig) {
+        b.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg><span>${orig}</span>`;
+      }
+    });
+  }
+
+  function showPoint(pt) {
+    const name = pt.getAttribute('data-name') || 'Medicamento';
+    const label = pt.getAttribute('data-label') || 'Periodo';
+    const val = pt.getAttribute('data-val') || '0';
+    const isProj = pt.getAttribute('data-isproj') === '1';
+    const color = pt.getAttribute('data-color') || '#16865d';
+
+    const tt = ensureTooltip();
+    tt.innerHTML = `
+      <div class="fy-tt-card">
+        <div class="fy-tt-header">
+          <span class="fy-tt-dot" style="background: ${color}; box-shadow: 0 0 8px ${color}80;"></span>
+          <strong class="fy-tt-title">${name}</strong>
+        </div>
+        <div class="fy-tt-meta">
+          <span class="fy-tt-month">${label}</span>
+          <span class="fy-tt-tag ${isProj ? 'proj' : 'hist'}">${isProj ? 'Proyección IA' : 'Histórico Real'}</span>
+        </div>
+        <div class="fy-tt-stat-row">
+          <span class="fy-tt-stat-num" style="color: ${color};">${val}</span>
+          <span class="fy-tt-stat-lbl">solicitudes estimadas</span>
+        </div>
+        <div class="fy-tt-footer">
+          ${isProj ? 'Pronóstico validado con Random Forest Classifier' : 'Consolidado real en órdenes de MongoDB'}
+        </div>
+      </div>
+    `;
+
+    const rect = pt.getBoundingClientRect();
+    const tooltipWidth = 270;
+    const tooltipHeight = 120;
+    let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+    let top = rect.top - tooltipHeight - 12;
+
+    if (top < 10) top = rect.bottom + 12;
+    if (left < 10) left = 10;
+    if (left + tooltipWidth > window.innerWidth - 10) left = window.innerWidth - tooltipWidth - 10;
+
+    tt.style.left = `${left + window.scrollX}px`;
+    tt.style.top = `${top + window.scrollY}px`;
+    tt.classList.add('is-visible');
+
+    const card = pt.closest('.card, .block, .forecast-chart-card');
+    const banner = card ? card.querySelector('.fy-chart-detail-banner') : null;
+    if (banner) {
+      banner.innerHTML = `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${color}; margin-right:4px;"></span><strong style="color: ${color};">${name}</strong> (${label}): <strong>${val} solicitudes</strong> ${isProj ? '· <span style="color: var(--primary); font-weight:700;">Proyección IA (Random Forest)</span>' : '· Histórico real'}`;
+    }
+  }
+
+  document.addEventListener('mouseover', e => {
+    const pt = e.target.closest('.fy-pt-group');
+    if (pt) showPoint(pt);
+  });
+
+  document.addEventListener('mouseout', e => {
+    const pt = e.target.closest('.fy-pt-group');
+    if (pt) hideTooltip();
+  });
+
+  document.addEventListener('focusin', e => {
+    const pt = e.target.closest('.fy-pt-group');
+    if (pt) showPoint(pt);
+  });
+
+  document.addEventListener('focusout', e => {
+    const pt = e.target.closest('.fy-pt-group');
+    if (pt) hideTooltip();
+  });
+})();

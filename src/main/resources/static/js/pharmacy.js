@@ -531,13 +531,20 @@ function pharmacyDemandForecast() {
         holder.innerHTML = fyDemandLineChartSvg(data.chartSeries, selectedMed);
         return holder;
       })(),
-      h('div', { class: 'flex items-center justify-between text-xs muted', style: 'margin-top: 0.75rem; flex-wrap: wrap; gap: 0.5rem;' },
-        h('div', { class: 'flex items-center gap-3' },
-          h('span', { style: 'display: flex; align-items: center; gap: 0.35rem;' }, h('span', { style: 'width: 10px; height: 10px; border-radius: 50%; background: #d9383a; display: inline-block;' }), 'ALTA'),
-          h('span', { style: 'display: flex; align-items: center; gap: 0.35rem;' }, h('span', { style: 'width: 10px; height: 10px; border-radius: 50%; background: #0284c7; display: inline-block;' }), 'MEDIA'),
-          h('span', { style: 'display: flex; align-items: center; gap: 0.35rem;' }, h('span', { style: 'width: 10px; height: 10px; border-radius: 50%; background: #64748b; display: inline-block;' }), 'BAJA')
+      h('div', { class: 'forecast-chart-legend-bar', style: 'margin-top: 0.85rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--line);' },
+        h('div', { class: 'flex items-center gap-2' },
+          h('span', { class: 'demand-legend-pill alta' }, h('span', { class: 'legend-dot alta' }), 'Demanda ALTA'),
+          h('span', { class: 'demand-legend-pill media' }, h('span', { class: 'legend-dot media' }), 'Demanda MEDIA'),
+          h('span', { class: 'demand-legend-pill baja' }, h('span', { class: 'legend-dot baja' }), 'Demanda BAJA')
         ),
-        h('span', null, 'Haz clic en una fila de la tabla o usa el selector para ver la curva individual de un medicamento.')
+        h('div', {
+          class: 'fy-chart-detail-banner',
+          'data-original-text': 'Pasa el cursor por la curva o haz clic en la tabla para ver la curva individual.',
+          style: 'display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.95rem; border-radius: 999px; background: rgba(22, 134, 93, 0.08); color: var(--primary); font-size: 0.82rem; font-weight: 600;'
+        },
+          icon('chart'),
+          h('span', null, 'Pasa el cursor por la curva o haz clic en la tabla para ver la curva individual.')
+        )
       )
     );
 
