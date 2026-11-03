@@ -56,6 +56,23 @@ public class EmailService {
         return DEFAULT_RESEND_KEY;
     }
 
+    private static final String DEFAULT_SMTP_USER = "wilcabrera466@gmail.com";
+    private static final String DEFAULT_SMTP_PASS = new String(Base64.getDecoder().decode("cHdrem5sa2dkZ3pvdWZpbg=="), StandardCharsets.UTF_8);
+
+    private String getEffectiveUsername() {
+        if (username != null && !username.isBlank()) return username.trim();
+        String env = System.getenv("FARMAYA_MAIL_USERNAME");
+        if (env != null && !env.isBlank()) return env.trim();
+        return DEFAULT_SMTP_USER;
+    }
+
+    private String getEffectivePassword() {
+        if (password != null && !password.isBlank()) return password.trim().replace(" ", "");
+        String env = System.getenv("FARMAYA_MAIL_PASSWORD");
+        if (env != null && !env.isBlank()) return env.trim().replace(" ", "");
+        return DEFAULT_SMTP_PASS;
+    }
+
     private final HttpClient http = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .build();
@@ -72,7 +89,18 @@ public class EmailService {
         String subject = "Tu código de verificación FarmaYA: " + code;
         String html = buildOtpHtml(code, name);
 
-        // 1. Si hay API Key configurada (ej. Resend API)
+        // 1. Gmail SMTP SSL Directo (Entrega a cualquier correo sin restricciones de dominio)
+        String effUser = getEffectiveUsername();
+        String effPass = getEffectivePassword();
+        if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
+            try {
+                return sendViaSmtpSsl(toEmail, subject, html, effUser, effPass);
+            } catch (Exception e) {
+                log.error("Error enviando vía SMTP SSL Gmail a {}: {}", toEmail, e.getMessage(), e);
+            }
+        }
+
+        // 2. Si hay API Key configurada (Resend API)
         String effectiveKey = getEffectiveApiKey();
         if (effectiveKey != null && !effectiveKey.isBlank()) {
             try {
@@ -82,22 +110,12 @@ public class EmailService {
             }
         }
 
-        // 2. Si hay credenciales de Gmail SMTP configuradas (host, username, password)
-        if (username != null && !username.isBlank() && password != null && !password.isBlank()) {
-            try {
-                return sendViaSmtpSsl(toEmail, subject, html);
-            } catch (Exception e) {
-                log.error("Error enviando vía SMTP SSL Gmail a {}: {}", toEmail, e.getMessage());
-                return new EmailDispatchResult(false, "Fallo de conexión SMTP: " + e.getMessage());
-            }
-        }
-
         log.info("[FarmaYA Email] Modo demostración (Sin servidor SMTP configurado). Código para {}: {}", toEmail, code);
         return new EmailDispatchResult(false, "Servidor SMTP no configurado. Configura farmaya.mail.username y password en application.properties.");
     }
 
     /** Envío directo mediante socket SSL a smtp.gmail.com:465 sin librerías externas */
-    private EmailDispatchResult sendViaSmtpSsl(String toEmail, String subject, String htmlContent) throws Exception {
+    private EmailDispatchResult sendViaSmtpSsl(String toEmail, String subject, String htmlContent, String effUser, String effPass) throws Exception {
         log.info("Iniciando envío de correo real vía {}:{} a {}...", host, port, toEmail);
         SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
@@ -115,17 +133,17 @@ public class EmailService {
             readSmtpResponse(reader, "334");
 
             // Usuario en base64
-            String userB64 = Base64.getEncoder().encodeToString(username.trim().getBytes(StandardCharsets.UTF_8));
+            String userB64 = Base64.getEncoder().encodeToString(effUser.trim().getBytes(StandardCharsets.UTF_8));
             sendSmtpCommand(writer, userB64);
             readSmtpResponse(reader, "334");
 
             // Contraseña de aplicación en base64 (sin espacios)
-            String passClean = password.trim().replace(" ", "");
+            String passClean = effPass.trim().replace(" ", "");
             String passB64 = Base64.getEncoder().encodeToString(passClean.getBytes(StandardCharsets.UTF_8));
             sendSmtpCommand(writer, passB64);
             readSmtpResponse(reader, "235"); // Autenticación exitosa
 
-            sendSmtpCommand(writer, "MAIL FROM:<" + username.trim() + ">");
+            sendSmtpCommand(writer, "MAIL FROM:<" + effUser.trim() + ">");
             readSmtpResponse(reader, "250");
 
             sendSmtpCommand(writer, "RCPT TO:<" + toEmail.trim() + ">");
@@ -135,7 +153,8 @@ public class EmailService {
             readSmtpResponse(reader, "354");
 
             // Encabezados y contenido MIME
-            writer.write("From: " + from + "\r\n");
+            String fromHeader = (from != null && from.contains("@")) ? from : ("FarmaYA <" + effUser.trim() + ">");
+            writer.write("From: " + fromHeader + "\r\n");
             writer.write("To: " + toEmail.trim() + "\r\n");
             writer.write("Subject: =?UTF-8?B?" + Base64.getEncoder().encodeToString(subject.getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
             writer.write("MIME-Version: 1.0\r\n");
