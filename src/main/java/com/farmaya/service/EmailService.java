@@ -56,8 +56,8 @@ public class EmailService {
         return DEFAULT_RESEND_KEY;
     }
 
-    private static final String DEFAULT_SMTP_USER = "wilcabrera466@gmail.com";
-    private static final String DEFAULT_SMTP_PASS = new String(Base64.getDecoder().decode("cHdrem5sa2dkZ3pvdWZpbg=="), StandardCharsets.UTF_8);
+    private static final String DEFAULT_SMTP_USER = "farmaya031@gmail.com";
+    private static final String DEFAULT_SMTP_PASS = new String(Base64.getDecoder().decode("cW5peWxrY3FmZXhuY3Bidg=="), StandardCharsets.UTF_8);
 
     private String getEffectiveUsername() {
         if (username != null && !username.isBlank()) return username.trim();
