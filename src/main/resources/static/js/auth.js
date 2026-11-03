@@ -785,6 +785,12 @@ function promptEmailOtpVerification({ email, role, onVerified }) {
           pattern: '[0-9]*',
           value: '', // Vacío: el usuario debe ingresar el código que recibió en su correo
           style: 'text-align: center; font-size: 24px; font-weight: 800; letter-spacing: 0.3em; width: 100%; box-sizing: border-box;',
+          oninput: e => {
+            const val = e.target.value.replace(/\D/g, '');
+            if (val.length === 6) {
+              verifyAndProceed();
+            }
+          },
           onkeydown: e => {
             if (e.key === 'Enter') {
               e.preventDefault();
@@ -826,9 +832,12 @@ function promptEmailOtpVerification({ email, role, onVerified }) {
 
   const d = openDialog(dialogContent);
 
+  let isVerifying = false;
   async function verifyAndProceed() {
+    if (isVerifying) return;
     const input = d.querySelector('#inputOtpCode');
-    const codeVal = (input ? input.value : '').trim();
+    const raw = (input ? input.value : '').trim();
+    const codeVal = raw.replace(/\D/g, '');
     if (codeVal.length !== 6) {
       toast('Por favor escribe el código de 6 dígitos que llegó a tu correo.', 'error');
       if (input) input.focus();
@@ -836,11 +845,13 @@ function promptEmailOtpVerification({ email, role, onVerified }) {
     }
 
     const btn = d.querySelector('#btnVerifyNow');
+    isVerifying = true;
     await act(btn, async () => {
       await API.post('/auth/verify-otp', { email, code: codeVal });
-      d.close();
       await onVerified();
+      d.close();
     }, 'Cuenta validada con éxito');
+    isVerifying = false;
   }
 
   // Despacha inmediatamente el código hacia el correo que se ingresó en el formulario
@@ -938,21 +949,13 @@ async function handleRegisterSubmit(event) {
     email,
     role,
     onVerified: async () => {
-      await act(btn, async () => {
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || 'No pudimos crear la cuenta. Revisa los datos.');
-        API.setToken(data.token);
-        state.user = data.user;
-        toast(role === 'CLIENTE' ? 'Cuenta creada y correo verificado. ¡Bienvenido a FarmaYa!' : 'Cuenta creada y correo verificado. Quedará pendiente de verificación.');
-        location.hash = routeForRole(data.user.role);
-        renderApp();
-        return data;
-      });
+      const data = await API.post('/auth/register', body);
+      API.setToken(data.token);
+      state.user = data.user;
+      toast(role === 'CLIENTE' ? 'Cuenta creada y correo verificado. ¡Bienvenido a FarmaYa!' : 'Cuenta creada y correo verificado. Quedará pendiente de verificación.');
+      location.hash = routeForRole(data.user.role);
+      renderApp();
+      return data;
     }
   });
 }
