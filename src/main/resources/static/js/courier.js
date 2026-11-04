@@ -331,7 +331,7 @@ function courierCard(o) {
   } else if (o.status === 'PEDIDO_RECOGIDO') {
     actions = step('Iniciar ruta hacia el paciente', 'on-the-way', 'En camino al domicilio');
   } else if (o.status === 'EN_CAMINO') {
-    actions = h('button', { class: 'btn primary stitch-pin-btn', onclick: () => openDeliverDialog(o) }, 'Validar entrega con PIN');
+    actions = h('button', { class: 'btn primary stitch-pin-btn', onclick: () => openDeliverDialog(o) }, 'Validar PIN');
   }
 
   return h('article', { class: 'offer tone-' + statusTone(o.status) + ' stitch-courier-card' },
@@ -372,7 +372,7 @@ function courierCard(o) {
     ),
     h('div', { class: 'actions left' },
       actions,
-      h('button', { class: 'btn ghost', onclick: () => openOrderDetail(o.id) }, 'Ver detalle clínico')
+      h('button', { class: 'btn ghost', onclick: () => openOrderDetail(o.id) }, 'Ver detalle')
     )
   );
 }

@@ -226,7 +226,7 @@ function renderClientDashboard() {
         type: 'button',
         disabled: !clientCart.length,
         onclick: checkout
-      }, 'Solicitar despacho a farmacias')
+      }, 'Pedir a farmacias')
     );
 
     // Actualización de canasta en la barra fija superior (site-header)
@@ -384,7 +384,7 @@ function renderClientDashboard() {
             closeCartPreview();
             checkout();
           }
-        }, 'Solicitar despacho a farmacias')
+        }, 'Pedir a farmacias')
       );
 
       card.replaceChildren(header, body, footer);

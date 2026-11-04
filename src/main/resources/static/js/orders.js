@@ -241,9 +241,13 @@ function orderDetail(o, viewer) {
     itemsBlock,
     delivery,
     detailActions(o, viewer),
-    block('Historial', h('ol', { class: 'timeline' }, (o.history || []).map(e => h('li', null,
-      h('time', null, clock(e.at)),
-      h('div', null, h('strong', null, statusLabel(e.status)), e.note && h('span', null, e.note), h('small', { class: 'muted' }, e.actorName)))))));
+    block('Historial y Novedades del Pedido', h('ol', { class: 'timeline' }, (o.history || []).map(e => h('li', { class: 'timeline-item' },
+      h('div', { class: 'timeline-header' },
+        h('strong', { class: 'timeline-status' }, statusLabel(e.status)),
+        h('time', { class: 'timeline-time' }, clock(e.at))
+      ),
+      e.note && h('p', { class: 'timeline-note' }, e.note),
+      e.actorName && h('small', { class: 'timeline-actor' }, 'Por: ' + e.actorName)))));
 }
 
 function detailActions(o, viewer) {
@@ -257,11 +261,11 @@ function detailActions(o, viewer) {
       btns.push(h('button', {
         class: 'btn primary',
         onclick: () => openPaymentGatewayDialog(o)
-      }, 'Pagar ' + money(o.total) + ' por PSE / Nequi'));
+      }, 'Pagar ' + money(o.total)));
       btns.push(h('button', { class: 'btn ghost', onclick: async e => {
         if (await confirmBox({ title: '¿Buscar otra farmacia?', message: 'No continuaremos con esta farmacia. Enviaremos tu pedido a las demás.', ok: 'Buscar otra' }))
           post('/orders/' + o.id + '/decline-price', 'Buscando otra farmacia')(e.target);
-      } }, 'No acepto, buscar otra farmacia'));
+      } }, 'Buscar otra farmacia'));
     }
     if (CLIENT_CAN_CANCEL.includes(o.status)) {
       btns.push(h('button', { class: 'btn danger-ghost', onclick: async e => {
@@ -273,7 +277,7 @@ function detailActions(o, viewer) {
 
   if (viewer.role === 'ADMIN') {
     if (o.status === 'CON_INCIDENCIA') {
-      btns.push(h('button', { class: 'btn primary', onclick: run(post('/admin/orders/' + o.id + '/resolve', 'Incidencia resuelta', { action: 'RESTAURAR' })) }, 'Continuar el pedido'));
+      btns.push(h('button', { class: 'btn primary', onclick: run(post('/admin/orders/' + o.id + '/resolve', 'Incidencia resuelta', { action: 'RESTAURAR' })) }, 'Continuar pedido'));
       btns.push(h('button', { class: 'btn danger-ghost', onclick: async e => {
         if (await confirmBox({ title: '¿Cancelar el pedido?', message: 'Se cerrará la incidencia y el pedido quedará cancelado.', ok: 'Cancelar pedido', cancel: 'Volver', danger: true }))
           post('/admin/orders/' + o.id + '/resolve', 'Pedido cancelado', { action: 'CANCELAR' })(e.target);

@@ -104,7 +104,7 @@ function openProfile(initialView = 'menu') {
           h('dd', null, h('span', { class: 'badge ' + (u.verified ? 'tone-done' : 'tone-wait') }, u.verified ? 'Cuenta verificada' : 'Verificación pendiente'))),
         u.createdAt && item('Registrado desde', new Date(u.createdAt).toLocaleDateString(CONFIG.locale, { day: 'numeric', month: 'long', year: 'numeric' }))),
       h('button', { class: 'btn primary block', type: 'button', onclick: go('edit') },
-        u.role === 'FARMACIA' && !u.canEditProfile ? 'Gestionar datos y permisos' : 'Editar mis datos / Cambiar número'));
+        u.role === 'FARMACIA' && !u.canEditProfile ? 'Gestionar datos' : 'Editar mis datos'));
   }
 
   function editForm() {
@@ -345,7 +345,7 @@ function openProfile(initialView = 'menu') {
           class: 'btn primary',
           type: 'submit',
           disabled: isPharmacy ? false : !canEdit
-        }, canEdit ? 'Guardar cambios' : 'Guardar ubicación y datos de atención')));
+        }, canEdit ? 'Guardar cambios' : 'Guardar datos')));
 
     return h('section', { class: 'profile-section' }, form);
   }

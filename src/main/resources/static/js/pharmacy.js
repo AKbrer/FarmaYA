@@ -508,7 +508,7 @@ function openPriceForm(order) {
   const totalEl = h('output', { class: 'quote-total-amount' }, money(0));
   const countEl = h('span', { class: 'quote-count' });
   const noneHint = h('p', { class: 'quote-hint', role: 'status', hidden: true }, 'Marca al menos un producto, o usa «No puedo surtir este pedido».');
-  const submit = h('button', { type: 'submit', class: 'btn primary' }, 'Enviar precio al cliente');
+  const submit = h('button', { type: 'submit', class: 'btn primary' }, 'Enviar cotización');
   const recompute = () => {
     let total = 0;
     let count = 0;
@@ -624,10 +624,10 @@ function pharmacyAction(o) {
     refreshAll();
   } }, label);
   switch (o.status) {
-    case 'FARMACIA_ASIGNADA': return h('button', { class: 'btn primary', onclick: () => openPriceForm(o) }, 'Confirmar precios');
+    case 'FARMACIA_ASIGNADA': return h('button', { class: 'btn primary', onclick: () => openPriceForm(o) }, 'Cotizar pedido');
     case 'PRECIO_POR_ACEPTAR': return h('span', { class: 'waiting' }, 'Esperando al cliente');
-    case 'PRECIO_CONFIRMADO': return step('Empezar preparación', 'start', 'Preparación iniciada');
-    case 'PEDIDO_EN_PREPARACION': return step('Marcar listo para recoger', 'ready', 'Pedido listo. Buscamos repartidor.');
+    case 'PRECIO_CONFIRMADO': return step('Preparar', 'start', 'Preparación iniciada');
+    case 'PEDIDO_EN_PREPARACION': return step('Listo para entrega', 'ready', 'Pedido listo. Buscamos repartidor.');
     case 'BUSCANDO_REPARTIDOR': return h('span', { class: 'waiting' }, 'Buscando repartidor');
     case 'REPARTIDOR_ASIGNADO': return h('span', { class: 'waiting' }, (o.courierName || 'El repartidor') + ' viene por el pedido');
     case 'CON_INCIDENCIA': return h('span', { class: 'tag', style: 'background: var(--warning-soft); color: var(--warning); font-weight: 700;' }, 'Sin repartidor en tu zona (5 km)');
