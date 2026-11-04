@@ -17,7 +17,7 @@ public class Order {
     @Indexed(unique = true) public String code;
 
     // Cliente y entrega
-    public String clientId, clientName, clientPhone, address, zone, city, notes;
+    public String clientId, clientName, clientPhone, clientEmail, address, zone, city, notes;
     public Double latitude, longitude;
     public List<Item> items = new ArrayList<>();
     public OrderStatus status;

@@ -74,13 +74,26 @@ public class OrderService {
     private final FarmaYaProperties props;
     private final MovementService movements;
     private final UserRepository users;
+    private final EmailService emailService;
 
-    public OrderService(MongoTemplate mongo, OrderRepository orders, FarmaYaProperties props, MovementService movements, UserRepository users) {
+    public OrderService(MongoTemplate mongo, OrderRepository orders, FarmaYaProperties props, MovementService movements, UserRepository users, EmailService emailService) {
         this.mongo = mongo;
         this.orders = orders;
         this.props = props;
         this.movements = movements;
         this.users = users;
+        this.emailService = emailService;
+    }
+
+    private void notifyOrderUpdate(Order o, int stage, String stageTitle, String stageNote) {
+        if (o == null || o.clientId == null) return;
+        String email = o.clientEmail;
+        if (email == null || email.isBlank()) {
+            email = users.findById(o.clientId).map(u -> u.email).orElse(null);
+        }
+        if (email != null && !email.isBlank() && email.contains("@")) {
+            emailService.sendOrderNotificationAsync(email, o, stage, stageTitle, stageNote);
+        }
     }
 
     // =====================================================================
@@ -139,6 +152,7 @@ public class OrderService {
         o.latitude = r.latitude();
         o.longitude = r.longitude();
         o.notes = clean(r.notes(), 400);
+        o.clientEmail = client.email;
         o.platformCommissionRate = 0.10; // 10% de ganancia para la empresa FarmaYA
         o.deliveryCode = String.format("%04d", RND.nextInt(10_000));
         o.status = BUSCANDO_FARMACIA;
@@ -305,7 +319,10 @@ public class OrderService {
                 .set("pharmacyNote", clean(r.note(), 300))
                 .set("priceAskedAt", Instant.now());
         Criteria c = where("id").is(id).and("pharmacyId").is(ph.id).and("status").is(FARMACIA_ASIGNADA);
-        return present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precios."), ph);
+        Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precios."), ph);
+        notifyOrderUpdate(res, 1, "Farmacia encontrada y cotización lista",
+                "La farmacia " + (res.pharmacyName != null ? res.pharmacyName : "") + " ha confirmado las existencias y cotizado tu pedido. Entra a FarmaYA para aceptar y pagar.");
+        return res;
     }
 
     public Order startPreparation(String id, User ph) {
@@ -386,8 +403,11 @@ public class OrderService {
 
     public Order onTheWay(String id, User c) {
         Criteria cr = where("id").is(id).and("courierId").is(c.id).and("status").is(PEDIDO_RECOGIDO);
-        return present(apply(cr, step(EN_CAMINO, c, "El repartidor va hacia la dirección del cliente"),
+        Order res = present(apply(cr, step(EN_CAMINO, c, "El repartidor va hacia la dirección del cliente"),
                 "Primero debes marcar el pedido como recogido."), c);
+        notifyOrderUpdate(res, 2, "Tu pedido va en camino a tu domicilio",
+                "El domiciliario " + (res.courierName != null ? res.courierName : "") + " ya tiene tus medicamentos y se dirige a tu ubicación. Dictale tu código PIN seguro al recibir el paquete.");
+        return res;
     }
 
     public Order deliver(String id, User c, String code) {
@@ -407,7 +427,10 @@ public class OrderService {
             u.set("deliveryDistanceKm", distanceKm)
              .set("courierEarnings", courierFee(distanceKm));
         }
-        return present(apply(cr, u, "Esta entrega ya fue completada."), c);
+        Order res = present(apply(cr, u, "La entrega ya fue registrada."), c);
+        notifyOrderUpdate(res, 3, "Pedido entregado exitosamente",
+                "Tu entrega ha sido confirmada y finalizada con tu código seguro. ¡Gracias por confiar en FarmaYA!");
+        return res;
     }
 
     /**

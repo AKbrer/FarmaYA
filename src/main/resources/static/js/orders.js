@@ -149,7 +149,12 @@ function orderRow(o, actions) {
   },
     h('span', { class: 'bar' }),
     h('div', { class: 'row-main' },
-      h('div', { class: 'row-top' }, h('strong', { class: 'code' }, o.code), badge(o.status)),
+      h('div', { class: 'row-top' },
+        h('strong', { class: 'code' }, o.code),
+        state.user?.role === 'CLIENTE' && o.deliveryCode && !['ENTREGADO', 'CANCELADO', 'VENCIDA', 'RECHAZADA'].includes(o.status)
+          ? h('span', { class: 'badge tone-done', style: 'font-weight: 800; letter-spacing: 0.5px;' }, 'PIN: ' + o.deliveryCode)
+          : null,
+        badge(o.status)),
       h('p', { class: 'row-items' }, itemsSummary(o)),
       h('p', { class: 'row-meta muted' }, rowMeta(o))),
     h('div', { class: 'row-side', onclick: e => e.stopPropagation(), onkeydown: e => e.stopPropagation() },
@@ -171,7 +176,7 @@ function block(title, ...kids) {
 
 function orderDetail(o, viewer) {
   const role = viewer.role;
-  const codeVisible = o.deliveryCode && ['REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO', 'EN_CAMINO'].includes(o.status);
+  const codeVisible = role === 'CLIENTE' && o.deliveryCode && !['ENTREGADO', 'CANCELADO', 'VENCIDA', 'RECHAZADA'].includes(o.status);
   const parts = [];
 
   if (o.pharmacyName) parts.push(h('div', null, h('strong', null, o.pharmacyName), o.pharmacyAddress && h('span', { class: 'muted block-line' }, o.pharmacyAddress)));
@@ -236,7 +241,7 @@ function orderDetail(o, viewer) {
     ),
     codeVisible && h('div', { class: 'code-card' },
       h('div', { class: 'digits', 'aria-label': 'Código de entrega ' + o.deliveryCode.split('').join(' ') }, o.deliveryCode.split('').map(d => h('span', null, d))),
-      h('p', null, 'Es tu código de entrega. Díctaselo al repartidor solo cuando tengas el pedido en la mano.')),
+      h('p', null, 'Es tu código PIN de entrega. Díctaselo a tu domiciliario cuando llegue con tu pedido para que pueda confirmar la entrega.')),
     (parts.length || courier) && block('Quiénes participan', parts, courier),
     itemsBlock,
     delivery,

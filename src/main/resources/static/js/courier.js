@@ -514,8 +514,8 @@ function openDeliverDialog(o) {
     ),
 
     h('div', { class: 'stitch-pin-section' },
-      h('label', { class: 'stitch-pin-label' }, 'Código PIN del Paciente (4 Dígitos)'),
-      h('p', { class: 'muted small mb-2' }, 'Pídele al paciente el código PIN que le aparece en su pantalla de FarmaYa o notificación.'),
+      h('label', { class: 'stitch-pin-label' }, 'Código PIN del Cliente (4 Dígitos)'),
+      h('p', { class: 'muted small mb-2' }, 'Pídele al cliente el código PIN de 4 dígitos que le aparece en su pantalla de FarmaYA o en su correo de seguimiento.'),
       h('div', { class: 'stitch-otp-container' }, otpInputs)
     ),
 
