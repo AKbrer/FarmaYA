@@ -60,6 +60,19 @@ function renderNavbar() {
         h('span', { class: 'header-cart-text desktop-only' }, 'Canasta'),
         h('span', { id: 'navHeaderCartCount', class: 'header-cart-badge' }, '0'),
         h('span', { id: 'navHeaderCartTotal', class: 'header-cart-total' }, '$0')
+      ),
+      h('button', {
+        id: 'navHeaderOrdersBtn',
+        class: 'btn ghost small nav-header-orders-btn',
+        type: 'button',
+        title: 'Ver mis pedidos y seguimiento',
+        'aria-label': 'Mis pedidos',
+        onclick: () => {
+          location.hash = '#orders';
+        }
+      },
+        icon('truck'),
+        h('span', { class: 'desktop-only' }, 'Mis Pedidos')
       )
     );
   }

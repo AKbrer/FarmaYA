@@ -4,8 +4,6 @@
 
    Conserva 100% de la funcionalidad reactiva (API, Carrito, Leaflet Maps, Perfil, Estados). */
 
-
-
 let clientCart = [];
 
 let clientCategory = '';
@@ -18,15 +16,11 @@ let clientRxFilter = 'all'; // 'all' | 'rx' | 'otc'
 
 let clientCategories = CATEGORIES.map(c => ({ id: c.id, label: c.label }));
 
-
-
 function renderClientDashboard() {
 
   const app = document.getElementById('app-container');
 
   const user = state.user;
-
-
 
   // Search input element
 
@@ -36,7 +30,7 @@ function renderClientDashboard() {
 
     class: 'search-input stitch-search-input',
 
-    placeholder: 'Buscar medicamentos',
+    placeholder: 'Buscar medicamentos o código de pedido (FY-...)',
 
     value: clientSearch,
 
@@ -48,21 +42,147 @@ function renderClientDashboard() {
 
       drawProducts();
 
+      if (typeof window.triggerActiveOrdersSearch === 'function') {
+
+        window.triggerActiveOrdersSearch();
+
+      }
+
     }
 
   });
-
-
 
   const productGrid = h('div', { class: 'products-grid stitch-products-grid' });
 
   const cartBox = h('section', { class: 'block cart-panel stitch-cart-panel' });
 
-
-
   // Red de farmacias cercanas verificadas
 
-  const pharmacyBox = h('section', { class: 'block stitch-pharmacies-block' },
+
+  // Bloque reactivo de pedidos activos y búsqueda de pedidos para el cliente
+  let cachedMyOrders = [];
+  const activeOrdersBox = h('section', { class: 'client-active-orders-section' });
+
+  function renderActiveOrdersCard(orders) {
+    cachedMyOrders = orders || [];
+    if (!orders || !orders.length) {
+      activeOrdersBox.replaceChildren();
+      return;
+    }
+
+    const activeOrders = orders.filter(o => !['ENTREGADA', 'CANCELADA', 'VENCIDA'].includes(o.status));
+    const q = (clientSearch || '').trim().toUpperCase();
+    const matchingOrders = q ? orders.filter(o => (o.code && o.code.toUpperCase().includes(q)) || (o.id && o.id.toUpperCase().includes(q))) : [];
+    const displayOrders = q && matchingOrders.length ? matchingOrders : activeOrders;
+
+    if (!displayOrders.length) {
+      if (q && (q.startsWith('FY') || q.startsWith('#FY') || q.includes('PEDIDO'))) {
+        activeOrdersBox.replaceChildren(
+          h('div', { class: 'active-orders-banner-card' },
+            h('div', { style: 'padding:14px; text-align:center;' },
+              h('p', { class: 'muted', style: 'margin:0;' }, 'No se encontró ningún pedido con el código: ' + q)
+            )
+          )
+        );
+        return;
+      }
+      activeOrdersBox.replaceChildren();
+      return;
+    }
+
+    const banner = h('div', { class: 'active-orders-banner-card' },
+      h('div', { class: 'active-orders-banner-header' },
+        h('div', { class: 'active-orders-live-badge' },
+          h('span', { class: 'pulse-dot' }),
+          h('span', null, displayOrders.length > 1 ? (displayOrders.length + ' PEDIDOS EN CURSO') : 'PEDIDO EN SEGUIMIENTO EN VIVO')
+        ),
+        h('span', { class: 'small muted desktop-only' }, 'Actualización en tiempo real')
+      ),
+      h('div', { class: 'active-orders-cards-list' },
+        displayOrders.map(o => {
+          const isQuoted = o.status === 'PRECIO_POR_ACEPTAR';
+          const isEnCamino = o.status === 'EN_CAMINO';
+          const isAssigned = o.status === 'FARMACIA_ASIGNADA';
+          const isPaid = o.status === 'PRECIO_CONFIRMADO';
+          const isSearching = o.status === 'BUSCANDO_FARMACIA';
+
+          let statusTitle = 'Buscando droguería de turno cercana...';
+          let statusColor = '#0284c7';
+          if (isAssigned) { statusTitle = 'Farmacia asignada · Verificando inventario'; statusColor = '#0d9488'; }
+          else if (isQuoted) { statusTitle = '¡Cotización lista! Esperando tu confirmación de pago'; statusColor = '#d97706'; }
+          else if (isPaid) { statusTitle = 'Pago confirmado · Droguería empaquetando'; statusColor = '#059669'; }
+          else if (isEnCamino) { statusTitle = '¡Tu pedido va en camino a tu dirección!'; statusColor = '#16865d'; }
+          else if (o.status === 'ENTREGADA') { statusTitle = 'Pedido Entregado con Éxito'; statusColor = '#10b981'; }
+
+          const step1 = true;
+          const step2 = isAssigned || isQuoted || isPaid || isEnCamino || o.status === 'ENTREGADA';
+          const step3 = isPaid || isEnCamino || o.status === 'ENTREGADA';
+          const step4 = isEnCamino || o.status === 'ENTREGADA';
+
+          return h('div', { class: 'active-order-item-card' },
+            h('div', { class: 'active-order-item-top' },
+              h('div', null,
+                h('span', { class: 'active-order-code' }, 'PEDIDO #' + (o.code || o.id.slice(-6))),
+                h('h4', { style: 'margin:2px 0 0 0; font-size:15px; font-weight:800; color:' + statusColor }, statusTitle),
+                h('p', { class: 'small muted', style: 'margin:3px 0 0 0;' }, o.address ? (o.address + (o.city ? (' · ' + o.city) : '')) : 'Dirección registrada')
+              ),
+              (isEnCamino || isPaid) && o.deliveryCode && h('div', { class: 'active-order-pin-pill' },
+                h('span', { class: 'pin-label' }, 'PIN ENTREGA'),
+                h('strong', { class: 'pin-value' }, o.deliveryCode)
+              )
+            ),
+            h('div', { class: 'active-order-stepper' },
+              h('div', { class: 'step-dot' + (step1 ? ' done' : '') }, h('span', null, '1'), h('small', null, 'Solicitado')),
+              h('div', { class: 'step-bar' + (step2 ? ' done' : '') }),
+              h('div', { class: 'step-dot' + (step2 ? ' done' : '') }, h('span', null, '2'), h('small', null, 'Cotizado')),
+              h('div', { class: 'step-bar' + (step3 ? ' done' : '') }),
+              h('div', { class: 'step-dot' + (step3 ? ' done' : '') }, h('span', null, '3'), h('small', null, 'Pagado')),
+              h('div', { class: 'step-bar' + (step4 ? ' done' : '') }),
+              h('div', { class: 'step-dot' + (step4 ? ' done' : '') }, h('span', null, '4'), h('small', null, 'En camino'))
+            ),
+            h('div', { class: 'active-order-actions-row' },
+              isQuoted && h('button', {
+                class: 'btn primary',
+                type: 'button',
+                style: 'font-weight:800; padding:10px 18px;',
+                onclick: () => {
+                  if (typeof openPaymentGatewayDialog === 'function') {
+                    openPaymentGatewayDialog(o);
+                  } else if (typeof window.openPaymentGatewayDialog === 'function') {
+                    window.openPaymentGatewayDialog(o);
+                  }
+                }
+              }, 'Pagar ' + money(o.total || 0) + ' con PSE / Nequi / Tarjeta'),
+              h('button', {
+                class: 'btn ' + (isQuoted ? 'secondary' : 'primary'),
+                type: 'button',
+                onclick: () => {
+                  if (typeof openOrderDetail === 'function') {
+                    openOrderDetail(o.id);
+                  } else if (typeof window.openOrderDetail === 'function') {
+                    window.openOrderDetail(o.id);
+                  }
+                }
+              }, isEnCamino ? 'Ver Repartidor en Mapa' : 'Ver Detalle y Seguimiento')
+            )
+          );
+        })
+      )
+    );
+    activeOrdersBox.replaceChildren(banner);
+  }
+
+  window.triggerActiveOrdersSearch = () => {
+    renderActiveOrdersCard(cachedMyOrders);
+  };
+
+  // Montar sondeo en vivo de mis pedidos
+  const activeOrdersWatcher = live(() => API.get('/orders/mine'), orders => {
+    renderActiveOrdersCard(orders);
+    return null;
+  }, 3500);
+
+    const pharmacyBox = h('section', { class: 'block stitch-pharmacies-block' },
 
     h('div', { class: 'section-heading' },
 
@@ -116,8 +236,6 @@ function renderClientDashboard() {
 
   );
 
-
-
   function drawProducts() {
 
     const q = norm(clientSearch);
@@ -133,8 +251,6 @@ function renderClientDashboard() {
       return haystack.includes(q);
 
     });
-
-
 
     const sorters = {
 
@@ -152,15 +268,11 @@ function renderClientDashboard() {
 
     items.sort(sorters[clientSort] || sorters.featured);
 
-
-
     productGrid.replaceChildren(...(items.length ? items.map(p => {
 
       const inCart = clientCart.find(i => i.name === p.name);
 
       const count = inCart ? inCart.quantity : 0;
-
-
 
       return h('article', { class: 'product-card stitch-card' },
 
@@ -308,8 +420,6 @@ function renderClientDashboard() {
 
   }
 
-
-
   function drawCart() {
 
     const qty = clientCart.reduce((n, i) => n + i.quantity, 0);
@@ -321,8 +431,6 @@ function renderClientDashboard() {
     const total = subtotal + deliveryFee;
 
     const hasRx = clientCart.some(i => i.rx);
-
-
 
     cartBox.replaceChildren(
 
@@ -458,8 +566,6 @@ function renderClientDashboard() {
 
     );
 
-
-
     // Actualización de canasta en la barra fija superior (site-header)
 
     const headerCount = document.getElementById('navHeaderCartCount');
@@ -486,8 +592,6 @@ function renderClientDashboard() {
 
     }
 
-
-
     // Desactivada la barra flotante de carrito: se mantiene fija en el recuadro superior
 
     const mobileBar = document.getElementById('fy_mobile_cart_bar');
@@ -503,8 +607,6 @@ function renderClientDashboard() {
     }
 
   }
-
-
 
   /* Vista preliminar/resumen flotante encimita con todas las funciones conectadas (sin scroll hacia arriba) */
 
@@ -524,8 +626,6 @@ function renderClientDashboard() {
 
     }
 
-
-
     const backdrop = h('div', {
 
       id: 'fy_cart_preview_backdrop',
@@ -535,8 +635,6 @@ function renderClientDashboard() {
       onclick: closeCartPreview
 
     });
-
-
 
     const card = h('aside', {
 
@@ -550,8 +648,6 @@ function renderClientDashboard() {
 
     });
 
-
-
     function closeCartPreview() {
 
       const c = document.getElementById('fy_cart_preview_card');
@@ -564,8 +660,6 @@ function renderClientDashboard() {
 
     }
 
-
-
     function refreshPreview() {
 
       const qty = clientCart.reduce((n, i) => n + i.quantity, 0);
@@ -575,8 +669,6 @@ function renderClientDashboard() {
       const deliveryFee = qty > 0 ? 4500 : 0;
 
       const total = subtotal + deliveryFee;
-
-
 
       const header = h('div', { class: 'cart-preview-header' },
 
@@ -609,8 +701,6 @@ function renderClientDashboard() {
         }, '✕')
 
       );
-
-
 
       let bodyContent;
 
@@ -712,11 +802,7 @@ function renderClientDashboard() {
 
       }
 
-
-
       const body = h('div', { class: 'cart-preview-body' }, bodyContent);
-
-
 
       const footer = h('div', { class: 'cart-preview-footer' },
 
@@ -774,13 +860,9 @@ function renderClientDashboard() {
 
       );
 
-
-
       card.replaceChildren(header, body, footer);
 
     }
-
-
 
     refreshPreview();
 
@@ -790,13 +872,9 @@ function renderClientDashboard() {
 
   }
 
-
-
   window.openCartPreviewOverlay = openCartPreviewOverlay;
 
   window.openMobileCartSheet = openCartPreviewOverlay;
-
-
 
   async function checkout() {
 
@@ -814,8 +892,6 @@ function renderClientDashboard() {
 
     const mapNode = h('div', { class: 'farmaya-map', role: 'application', 'aria-label': 'Mapa para seleccionar la entrega', style: 'height:220px; min-height:200px; margin: 6px 0; border-radius:12px;' });
 
-
-
     let map, marker;
 
     const coverageNoticeBox = h('div', { class: 'checkout-coverage-notice', style: 'margin: 12px 0;' });
@@ -823,8 +899,6 @@ function renderClientDashboard() {
     const submitBtn = h('button', { class: 'btn primary', type: 'submit' }, 'Confirmar pedido');
 
     let coverageCheckTimer = null;
-
-
 
     async function checkCoverage() {
 
@@ -874,8 +948,6 @@ function renderClientDashboard() {
 
     }
 
-
-
     function selectPoint(pos) {
 
       const lat = Number(pos.lat), lng = Number(pos.lng);
@@ -896,8 +968,6 @@ function renderClientDashboard() {
 
     }
 
-
-
     cityInput.addEventListener('change', () => {
 
       clearTimeout(coverageCheckTimer);
@@ -905,8 +975,6 @@ function renderClientDashboard() {
       coverageCheckTimer = setTimeout(checkCoverage, 400);
 
     });
-
-
 
     const locateBtn = h('button', {
 
@@ -974,8 +1042,6 @@ function renderClientDashboard() {
 
     }, icon('my_location'), 'Detectar GPS');
 
-
-
     let isOrderSubmitting = false;
 
     const form = h('form', {
@@ -988,8 +1054,6 @@ function renderClientDashboard() {
 
         if (isOrderSubmitting) return;
 
-
-
         if (!clientCart || !clientCart.length) {
 
           toast('Tu canasta está vacía. Agrega al menos un producto.', 'error');
@@ -997,8 +1061,6 @@ function renderClientDashboard() {
           return;
 
         }
-
-
 
         const cleanAddress = address.value.trim();
 
@@ -1014,8 +1076,6 @@ function renderClientDashboard() {
 
         }
 
-
-
         const latVal = Number(latInput.value);
 
         const lngVal = Number(lngInput.value);
@@ -1030,8 +1090,6 @@ function renderClientDashboard() {
 
         }
 
-
-
         const hasCoverage = await checkCoverage();
 
         if (!hasCoverage) {
@@ -1041,8 +1099,6 @@ function renderClientDashboard() {
           return;
 
         }
-
-
 
         isOrderSubmitting = true;
 
@@ -1184,8 +1240,6 @@ function renderClientDashboard() {
 
     );
 
-
-
     const d = openDialog(form);
 
     try {
@@ -1226,8 +1280,6 @@ function renderClientDashboard() {
 
   }
 
-
-
   // --- SECCIÓN 1: Barra Superior Destacada ---
 
   const institutionalBar = h('div', { class: 'stitch-assurance-bar elevated-top-banner' },
@@ -1239,8 +1291,6 @@ function renderClientDashboard() {
     )
 
   );
-
-
 
   // --- SECCIÓN 2: Hero Banner Clínico con buscador FarmaYA (Stitch Screen 8) ---
 
@@ -1388,8 +1438,6 @@ function renderClientDashboard() {
 
   window.openCatalogFiltersDrawer = openCatalogFiltersDrawer;
 
-
-
   const heroSection = h('section', { class: 'welcome-banner stitch-hero' },
 
     h('div', { class: 'stitch-hero-left' },
@@ -1440,8 +1488,6 @@ function renderClientDashboard() {
 
   );
 
-
-
   // --- SECCIÓN 3: 3 Sellos de Confianza Institucional (Stitch Screen 8) ---
 
   const trustSection = h('div', { class: 'stitch-trust-grid' },
@@ -1489,8 +1535,6 @@ function renderClientDashboard() {
     )
 
   );
-
-
 
   // --- SECCIÓN 4: Filtros de Categorías y Ordenamiento ---
 
@@ -1608,8 +1652,6 @@ function renderClientDashboard() {
 
   );
 
-
-
   // Armado del DOM del Dashboard de Cliente (diseño clínico limpio y canasta persistente)
 
   app.replaceChildren(
@@ -1619,6 +1661,10 @@ function renderClientDashboard() {
       institutionalBar,
 
       heroSection,
+
+      activeOrdersBox,
+
+      activeOrdersWatcher,
 
       h('div', { class: 'client-main-grid' },
 
@@ -1686,13 +1732,9 @@ function renderClientDashboard() {
 
   );
 
-
-
   drawProducts();
 
   drawCart();
-
-
 
   // Escuchar cambios de catálogo y fotos de medicamentos desde admin
 
@@ -1701,8 +1743,6 @@ function renderClientDashboard() {
   window.addEventListener('farmaya:catalog-synced', () => drawProducts(), { once: false });
 
   window.addEventListener('farmaya:catalog-refresh', () => drawProducts(), { once: false });
-
-
 
   // Sincronización con colección de categorías de la base de datos
 
@@ -1738,8 +1778,6 @@ function renderClientDashboard() {
 
 }
 
-
-
 function addClientProduct(p) {
 
   const existing = clientCart.find(i => i.name === p.name);
@@ -1755,8 +1793,6 @@ function addClientProduct(p) {
   }
 
 }
-
-
 
 function removeClientProduct(p) {
 
@@ -1776,8 +1812,6 @@ function removeClientProduct(p) {
 
 }
 
-
-
 /**
 
  * Modal Detalle del Producto (Stitch Screen 5: Detalle del Producto)
@@ -1794,11 +1828,7 @@ function openProductModal(p) {
 
   if (inCart) modalQty = inCart.quantity;
 
-
-
   const qtyDisplay = h('span', { class: 'stitch-modal-qty' }, modalQty);
-
-
 
   const content = h('div', { class: 'stitch-product-detail-modal' },
 
@@ -1821,8 +1851,6 @@ function openProductModal(p) {
       h('button', { class: 'close-btn', type: 'button', onclick: () => d.close() }, '×')
 
     ),
-
-
 
     // Cuerpo en 2 columnas estilo Stitch
 
@@ -1850,8 +1878,6 @@ function openProductModal(p) {
 
       ),
 
-
-
       // Columna derecha: Datos clínicos y compra
 
       h('div', { class: 'stitch-modal-info-col' },
@@ -1861,8 +1887,6 @@ function openProductModal(p) {
         h('h2', { class: 'stitch-modal-title' }, p.name),
 
         h('p', { class: 'stitch-modal-pres' }, p.presentation || 'Presentación oficial'),
-
-
 
         h('div', { class: 'stitch-modal-pill-info' },
 
@@ -1883,8 +1907,6 @@ function openProductModal(p) {
           )
 
         ),
-
-
 
         // Precio y compra
 
@@ -1942,8 +1964,6 @@ function openProductModal(p) {
 
         ),
 
-
-
         // Botones de acción
 
         h('div', { class: 'stitch-modal-actions' },
@@ -1985,8 +2005,6 @@ function openProductModal(p) {
     )
 
   );
-
-
 
   const d = openDialog(content, { wide: true });
 
