@@ -23,6 +23,13 @@ public class User {
     /** Validación de correo mediante código OTP. */
     public boolean emailVerified = true;
 
+    // Datos Bancarios para Desembolsos / Liquidación de Ventas (Farmacia y Repartidor)
+    public String bankName;
+    public String accountType;
+    public String accountNumber;
+    public String accountHolder;
+    public String accountDocNumber;
+
     // Farmacia
     public String pharmacyName;
     public String address;

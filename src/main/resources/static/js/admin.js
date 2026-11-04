@@ -562,7 +562,12 @@ function adminVerificationCenter() {
               h('strong', null, u.address || 'Sin dirección física'),
               h('span', { class: 'small muted block-line' }, 'Registro Sanitario: ' + (u.licenseNumber || 'No registrada')),
               h('span', { class: 'small muted block-line' }, 'Horario: ' + (u.openFrom || '08:00') + ' a ' + (u.openTo || '22:00')),
-              u.latitude && u.longitude ? h('span', { class: 'small text-success block-line' }, 'Ubicación en OpenStreetMap (' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + ')') : null
+              u.latitude && u.longitude ? h('span', { class: 'small text-success block-line' }, 'Ubicación en OpenStreetMap (' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + ')') : null,
+              u.bankName ? h('div', { style: 'margin-top:6px; padding:6px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;' },
+                h('strong', { style: 'font-size:11px; color:#166534; display:block;' }, 'Cuenta para Pagos FarmaYA:'),
+                h('span', { style: 'font-size:12px; font-weight:700;' }, u.bankName + ' · ' + (u.accountType || 'Ahorros') + ' · ' + (u.accountNumber || '-')),
+                h('small', { class: 'muted block-line', style: 'font-size:10.5px;' }, 'Titular: ' + (u.accountHolder || u.name) + ' (NIT/C.C.: ' + (u.accountDocNumber || '-') + ')')
+              ) : null
             ) : h('div', null,
               h('span', { class: 'small muted block-line' }, 'Datos del Repartidor:'),
               h('strong', null, 'Vehículo: ' + (u.vehicle || 'Moto')),

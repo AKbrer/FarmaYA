@@ -88,6 +88,7 @@ function openProfile(initialView = 'menu') {
         u.role === 'CLIENTE' && (u.latitude != null) && item('Ubicación GPS fijada', Number(u.latitude).toFixed(5) + ', ' + Number(u.longitude).toFixed(5)),
         u.role === 'FARMACIA' && item('Establecimiento', u.pharmacyName),
         u.role === 'FARMACIA' && item('Dirección', u.address),
+        u.role === 'FARMACIA' && item('Cuenta Bancaria para Pagos', u.bankName ? (u.bankName + ' · ' + (u.accountType || 'Ahorros') + ' · ' + u.accountNumber + (u.accountHolder ? ' (' + u.accountHolder + ')' : '')) : 'Sin cuenta bancaria registrada'),
         u.role === 'FARMACIA' && item('Horario de atención', u.openFrom === u.openTo ? 'Abierta las 24 horas' : u.openFrom + ' a ' + u.openTo),
         u.role === 'FARMACIA' && item('Registro / Licencia', u.licenseNumber),
         u.role === 'FARMACIA' && h('div', null,
@@ -121,6 +122,12 @@ function openProfile(initialView = 'menu') {
     let permBanner = null;
 
     if (isPharmacy) {
+      const bankOptions = ['Bancolombia', 'Nequi', 'Daviplata', 'Davivienda', 'Banco de Bogotá', 'BBVA Colombia', 'Banco de Occidente', 'Scotiabank Colpatria', 'Banco Popular', 'Itaú Colombia', 'Dale!', 'Lulo Bank', 'Ualá', 'Otro Banco'];
+      f.bankName = h('select', { name: 'bankName' }, bankOptions.map(b => h('option', { value: b, selected: b === (u.bankName || 'Bancolombia') }, b)));
+      f.accountType = h('select', { name: 'accountType' }, ['Ahorros', 'Corriente', 'Depósito Electrónico (Nequi/Daviplata)'].map(t => h('option', { value: t, selected: t === (u.accountType || 'Ahorros') }, t)));
+      f.accountNumber = h('input', { name: 'accountNumber', placeholder: 'Ej. 031-892138-12 o Celular Nequi', value: u.accountNumber || '' });
+      f.accountHolder = h('input', { name: 'accountHolder', placeholder: 'Ej. Farmacia Droguería Central S.A.S.', value: u.accountHolder || '' });
+      f.accountDocNumber = h('input', { name: 'accountDocNumber', placeholder: 'Ej. NIT 900.123.456-7 o C.C.', value: u.accountDocNumber || '' });
       f.pharmacyName = h('input', { name: 'pharmacyName', required: true, value: u.pharmacyName || '', disabled: !canEdit });
       f.address = h('input', { name: 'address', required: true, minLength: 5, value: u.address || '', placeholder: 'Ej. Calle 72 #50-10' });
       f.latitude = h('input', { name: 'latitude', type: 'number', step: 'any', min: -90, max: 90, value: u.latitude ?? '10.9878', placeholder: 'Ej. 10.9878' });
@@ -167,6 +174,19 @@ function openProfile(initialView = 'menu') {
 
       extra.push(
         field('Nombre comercial de la farmacia', f.pharmacyName),
+        h('div', { class: 'field bank-account-section', style: 'margin: 12px 0; padding: 14px 16px; border: 1px solid #d5ebdd; border-radius: 12px; background: var(--surface-soft);' },
+          h('strong', { style: 'font-size: 13.5px; display: block; margin-bottom: 2px; color: var(--primary-dark);' }, 'Cuenta Bancaria para Recibir Pagos de Pedidos'),
+          h('p', { class: 'muted small', style: 'margin-bottom: 10px; font-size: 11.5px;' }, 'FarmaYA utiliza estos datos para transferir las ganancias correspondientes a los pedidos despachados.'),
+          h('div', { class: 'two-fields', style: 'gap: 10px; margin-bottom: 8px;' },
+            field('Entidad Financiera / Billetera', f.bankName),
+            field('Tipo de Cuenta', f.accountType)
+          ),
+          field('Número de Cuenta o Celular Nequi/Daviplata', f.accountNumber),
+          h('div', { class: 'two-fields', style: 'gap: 10px; margin-top: 8px;' },
+            field('Nombre o Razón Social del Titular', f.accountHolder),
+            field('Cédula o NIT del Titular', f.accountDocNumber)
+          )
+        ),
         h('div', { class: 'field' },
           h('span', { class: 'field-label' }, 'Dirección y ubicación'),
           f.address,

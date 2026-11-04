@@ -309,7 +309,7 @@ function openPaymentGatewayDialog(o) {
         currency: 'COP',
         amountInCents: amountInCents,
         reference: o.code + '-' + Date.now(),
-        publicKey: window.FARMAYA_WOMPI_KEY || 'pub_test_X0zDA9xoKdePzhSGeVe9HAhes1ScGZqq'
+        publicKey: state.meta?.wompiPublicKey || window.FARMAYA_WOMPI_KEY || 'pub_test_X0zDA9xoKdePzhSGeVe9HAhes1ScGZqq'
       });
       checkout.open(async result => {
         const tx = result?.transaction;

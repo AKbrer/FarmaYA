@@ -33,7 +33,8 @@ public final class Dtos {
     public record ResolveRequest(String action, String note) {}
 
     public record ProfileRequest(String name, String email, String phone, String zone, String pharmacyName,
-                                 String address, String openFrom, String openTo, String vehicle, Double latitude, Double longitude) {}
+                                 String address, String openFrom, String openTo, String vehicle, Double latitude, Double longitude,
+                                 String bankName, String accountType, String accountNumber, String accountHolder, String accountDocNumber) {}
 
     public record PasswordRequest(String current, String next) {}
     public record EditPermissionRequest(String reason) {}

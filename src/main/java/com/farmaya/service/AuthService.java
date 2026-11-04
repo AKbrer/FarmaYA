@@ -316,6 +316,12 @@ public class AuthService {
                 u.longitude = r.longitude();
             }
         }
+        if (r.bankName() != null) u.bankName = clean(r.bankName());
+        if (r.accountType() != null) u.accountType = clean(r.accountType());
+        if (r.accountNumber() != null) u.accountNumber = clean(r.accountNumber());
+        if (r.accountHolder() != null) u.accountHolder = clean(r.accountHolder());
+        if (r.accountDocNumber() != null) u.accountDocNumber = clean(r.accountDocNumber());
+
         u.name = name;
         u.email = email;
         u.phone = phone;
