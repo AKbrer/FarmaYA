@@ -7912,3 +7912,167 @@ ol.timeline small {
   border: 1.5px solid var(--line);
   color: var(--text);
 }
+
+/* ==========================================================================
+   TARJETAS MODERNAS DE PREDICCIÓN DE DEMANDA (IA FARMAYA)
+   ========================================================================== */
+
+.forecast-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+  width: 100%;
+}
+
+.forecast-kpi-card {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.forecast-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme="dark"] .forecast-kpi-card {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Bordes superiores de acento sutil */
+.forecast-kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+}
+
+.forecast-kpi-card.tone-period::before { background: linear-gradient(90deg, #16865d, #10b981); }
+.forecast-kpi-card.tone-alta::before   { background: linear-gradient(90deg, #e11d48, #f43f5e); }
+.forecast-kpi-card.tone-media::before  { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+.forecast-kpi-card.tone-baja::before   { background: linear-gradient(90deg, #64748b, #94a3b8); }
+
+.forecast-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.forecast-kpi-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.forecast-kpi-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.forecast-kpi-ico.tone-period { background: rgba(22, 134, 93, 0.12); color: #16865d; }
+.forecast-kpi-ico.tone-alta   { background: rgba(225, 29, 72, 0.12); color: #e11d48; }
+.forecast-kpi-ico.tone-media  { background: rgba(2, 132, 199, 0.12); color: #0284c7; }
+.forecast-kpi-ico.tone-baja   { background: rgba(100, 116, 139, 0.12); color: #64748b; }
+
+[data-theme="dark"] .forecast-kpi-ico.tone-period { background: rgba(22, 134, 93, 0.25); color: #34d399; }
+[data-theme="dark"] .forecast-kpi-ico.tone-alta   { background: rgba(225, 29, 72, 0.25); color: #fb7185; }
+[data-theme="dark"] .forecast-kpi-ico.tone-media  { background: rgba(2, 132, 199, 0.25); color: #38bdf8; }
+[data-theme="dark"] .forecast-kpi-ico.tone-baja   { background: rgba(100, 116, 139, 0.25); color: #94a3b8; }
+
+.forecast-kpi-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.forecast-kpi-badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badge-ai { background: rgba(22, 134, 93, 0.12); color: #16865d; }
+.badge-alta { background: rgba(225, 29, 72, 0.12); color: #e11d48; }
+.badge-media { background: rgba(2, 132, 199, 0.12); color: #0284c7; }
+.badge-baja { background: rgba(100, 116, 139, 0.12); color: #64748b; }
+
+[data-theme="dark"] .badge-ai { background: rgba(22, 134, 93, 0.25); color: #34d399; }
+[data-theme="dark"] .badge-alta { background: rgba(225, 29, 72, 0.25); color: #fb7185; }
+[data-theme="dark"] .badge-media { background: rgba(2, 132, 199, 0.25); color: #38bdf8; }
+[data-theme="dark"] .badge-baja { background: rgba(100, 116, 139, 0.25); color: #94a3b8; }
+
+.forecast-kpi-body {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 0 10px 0;
+}
+
+.forecast-kpi-value {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.forecast-kpi-value.tone-period { color: var(--primary); font-size: 20px; }
+.forecast-kpi-value.tone-alta   { color: #e11d48; }
+.forecast-kpi-value.tone-media  { color: #0284c7; }
+.forecast-kpi-value.tone-baja   { color: #64748b; }
+
+[data-theme="dark"] .forecast-kpi-value.tone-period { color: #34d399; }
+[data-theme="dark"] .forecast-kpi-value.tone-alta   { color: #fb7185; }
+[data-theme="dark"] .forecast-kpi-value.tone-media  { color: #38bdf8; }
+[data-theme="dark"] .forecast-kpi-value.tone-baja   { color: #94a3b8; }
+
+.forecast-kpi-unit {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.forecast-kpi-footer {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+  margin-top: auto;
+}
+
+.forecast-kpi-desc {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 500;
+  line-height: 1.35;
+  display: block;
+}
+
+/* Ícono lateral del menú en panel izquierdo */
+.side-nav-item .side-nav-icon svg {
+  display: inline-block;
+  vertical-align: middle;
+}
