@@ -68,11 +68,16 @@ function renderNavbar() {
         title: 'Ver mis pedidos y seguimiento',
         'aria-label': 'Mis pedidos',
         onclick: () => {
-          location.hash = '#orders';
+          if (location.hash === '#orders') {
+            renderApp();
+          } else {
+            location.hash = '#orders';
+          }
         }
       },
         icon('truck'),
-        h('span', { class: 'desktop-only' }, 'Mis Pedidos')
+        h('span', { class: 'nav-orders-text' }, 'Mis Pedidos'),
+        h('span', { id: 'navHeaderOrdersBadge', class: 'header-orders-badge', style: 'display:none;' }, '0')
       )
     );
   }

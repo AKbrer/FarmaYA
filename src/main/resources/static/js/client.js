@@ -59,130 +59,20 @@ function renderClientDashboard() {
   // Red de farmacias cercanas verificadas
 
 
-  // Bloque reactivo de pedidos activos y búsqueda de pedidos para el cliente
-  let cachedMyOrders = [];
-  const activeOrdersBox = h('section', { class: 'client-active-orders-section' });
-
-  function renderActiveOrdersCard(orders) {
-    cachedMyOrders = orders || [];
-    if (!orders || !orders.length) {
-      activeOrdersBox.replaceChildren();
-      return;
-    }
-
-    const activeOrders = orders.filter(o => !['ENTREGADA', 'CANCELADA', 'VENCIDA'].includes(o.status));
-    const q = (clientSearch || '').trim().toUpperCase();
-    const matchingOrders = q ? orders.filter(o => (o.code && o.code.toUpperCase().includes(q)) || (o.id && o.id.toUpperCase().includes(q))) : [];
-    const displayOrders = q && matchingOrders.length ? matchingOrders : activeOrders;
-
-    if (!displayOrders.length) {
-      if (q && (q.startsWith('FY') || q.startsWith('#FY') || q.includes('PEDIDO'))) {
-        activeOrdersBox.replaceChildren(
-          h('div', { class: 'active-orders-banner-card' },
-            h('div', { style: 'padding:14px; text-align:center;' },
-              h('p', { class: 'muted', style: 'margin:0;' }, 'No se encontró ningún pedido con el código: ' + q)
-            )
-          )
-        );
-        return;
-      }
-      activeOrdersBox.replaceChildren();
-      return;
-    }
-
-    const banner = h('div', { class: 'active-orders-banner-card' },
-      h('div', { class: 'active-orders-banner-header' },
-        h('div', { class: 'active-orders-live-badge' },
-          h('span', { class: 'pulse-dot' }),
-          h('span', null, displayOrders.length > 1 ? (displayOrders.length + ' PEDIDOS EN CURSO') : 'PEDIDO EN SEGUIMIENTO EN VIVO')
-        ),
-        h('span', { class: 'small muted desktop-only' }, 'Actualización en tiempo real')
-      ),
-      h('div', { class: 'active-orders-cards-list' },
-        displayOrders.map(o => {
-          const isQuoted = o.status === 'PRECIO_POR_ACEPTAR';
-          const isEnCamino = o.status === 'EN_CAMINO';
-          const isAssigned = o.status === 'FARMACIA_ASIGNADA';
-          const isPaid = o.status === 'PRECIO_CONFIRMADO';
-          const isSearching = o.status === 'BUSCANDO_FARMACIA';
-
-          let statusTitle = 'Buscando droguería de turno cercana...';
-          let statusColor = '#0284c7';
-          if (isAssigned) { statusTitle = 'Farmacia asignada · Verificando inventario'; statusColor = '#0d9488'; }
-          else if (isQuoted) { statusTitle = '¡Cotización lista! Esperando tu confirmación de pago'; statusColor = '#d97706'; }
-          else if (isPaid) { statusTitle = 'Pago confirmado · Droguería empaquetando'; statusColor = '#059669'; }
-          else if (isEnCamino) { statusTitle = '¡Tu pedido va en camino a tu dirección!'; statusColor = '#16865d'; }
-          else if (o.status === 'ENTREGADA') { statusTitle = 'Pedido Entregado con Éxito'; statusColor = '#10b981'; }
-
-          const step1 = true;
-          const step2 = isAssigned || isQuoted || isPaid || isEnCamino || o.status === 'ENTREGADA';
-          const step3 = isPaid || isEnCamino || o.status === 'ENTREGADA';
-          const step4 = isEnCamino || o.status === 'ENTREGADA';
-
-          return h('div', { class: 'active-order-item-card' },
-            h('div', { class: 'active-order-item-top' },
-              h('div', null,
-                h('span', { class: 'active-order-code' }, 'PEDIDO #' + (o.code || o.id.slice(-6))),
-                h('h4', { style: 'margin:2px 0 0 0; font-size:15px; font-weight:800; color:' + statusColor }, statusTitle),
-                h('p', { class: 'small muted', style: 'margin:3px 0 0 0;' }, o.address ? (o.address + (o.city ? (' · ' + o.city) : '')) : 'Dirección registrada')
-              ),
-              (isEnCamino || isPaid) && o.deliveryCode && h('div', { class: 'active-order-pin-pill' },
-                h('span', { class: 'pin-label' }, 'PIN ENTREGA'),
-                h('strong', { class: 'pin-value' }, o.deliveryCode)
-              )
-            ),
-            h('div', { class: 'active-order-stepper' },
-              h('div', { class: 'step-dot' + (step1 ? ' done' : '') }, h('span', null, '1'), h('small', null, 'Solicitado')),
-              h('div', { class: 'step-bar' + (step2 ? ' done' : '') }),
-              h('div', { class: 'step-dot' + (step2 ? ' done' : '') }, h('span', null, '2'), h('small', null, 'Cotizado')),
-              h('div', { class: 'step-bar' + (step3 ? ' done' : '') }),
-              h('div', { class: 'step-dot' + (step3 ? ' done' : '') }, h('span', null, '3'), h('small', null, 'Pagado')),
-              h('div', { class: 'step-bar' + (step4 ? ' done' : '') }),
-              h('div', { class: 'step-dot' + (step4 ? ' done' : '') }, h('span', null, '4'), h('small', null, 'En camino'))
-            ),
-            h('div', { class: 'active-order-actions-row' },
-              isQuoted && h('button', {
-                class: 'btn primary',
-                type: 'button',
-                style: 'font-weight:800; padding:10px 18px;',
-                onclick: () => {
-                  if (typeof openPaymentGatewayDialog === 'function') {
-                    openPaymentGatewayDialog(o);
-                  } else if (typeof window.openPaymentGatewayDialog === 'function') {
-                    window.openPaymentGatewayDialog(o);
-                  }
-                }
-              }, 'Pagar ' + money(o.total || 0) + ' con PSE / Nequi / Tarjeta'),
-              h('button', {
-                class: 'btn ' + (isQuoted ? 'secondary' : 'primary'),
-                type: 'button',
-                onclick: () => {
-                  if (typeof openOrderDetail === 'function') {
-                    openOrderDetail(o.id);
-                  } else if (typeof window.openOrderDetail === 'function') {
-                    window.openOrderDetail(o.id);
-                  }
-                }
-              }, isEnCamino ? 'Ver Repartidor en Mapa' : 'Ver Detalle y Seguimiento')
-            )
-          );
-        })
-      )
-    );
-    activeOrdersBox.replaceChildren(banner);
-  }
-
-  window.triggerActiveOrdersSearch = () => {
-    renderActiveOrdersCard(cachedMyOrders);
-  };
-
-  // Montar sondeo en vivo de mis pedidos
+  // Sincronización en segundo plano de insignia de pedidos activos en la cabecera
   const activeOrdersWatcher = live(() => API.get('/orders/mine'), orders => {
-    renderActiveOrdersCard(orders);
+    if (orders && Array.isArray(orders)) {
+      const activeCount = orders.filter(o => !['ENTREGADA', 'ENTREGADO', 'CANCELADA', 'CANCELADO', 'VENCIDA', 'RECHAZADA'].includes(o.status)).length;
+      const badge = document.getElementById('navHeaderOrdersBadge');
+      if (badge) {
+        badge.textContent = String(activeCount);
+        badge.style.display = activeCount > 0 ? 'inline-flex' : 'none';
+      }
+    }
     return null;
-  }, 3500);
+  }, 5000);
 
-    const pharmacyBox = h('section', { class: 'block stitch-pharmacies-block' },
+  const pharmacyBox = h('section', { class: 'block stitch-pharmacies-block' },
 
     h('div', { class: 'section-heading' },
 
@@ -1661,10 +1551,6 @@ function renderClientDashboard() {
       institutionalBar,
 
       heroSection,
-
-      activeOrdersBox,
-
-      activeOrdersWatcher,
 
       h('div', { class: 'client-main-grid' },
 

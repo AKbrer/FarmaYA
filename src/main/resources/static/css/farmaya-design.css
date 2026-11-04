@@ -8076,3 +8076,56 @@ ol.timeline small {
   display: inline-block;
   vertical-align: middle;
 }
+
+/* ==========================================================================
+   ESTILOS DE MIS PEDIDOS Y BOTÓN CON INSIGNIA
+   ========================================================================== */
+
+.nav-header-orders-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.nav-header-orders-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(22, 134, 93, 0.08);
+}
+
+.header-orders-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #16865d;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+[data-theme="dark"] .header-orders-badge {
+  background: #10b981;
+  color: #0f172a;
+}
+
+@media (max-width: 640px) {
+  .nav-header-orders-btn {
+    padding: 6px 9px;
+    font-size: 12px;
+  }
+}
