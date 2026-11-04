@@ -603,7 +603,7 @@ public class OrderService {
                 .and("searchStartedAt").lt(now.minusSeconds(props.searchTimeoutSeconds())));
         for (Order o : mongo.find(q1, Order.class)) {
             Criteria same = where("id").is(o.id).and("status").is(BUSCANDO_FARMACIA).and("searchRound").is(o.searchRound);
-            if (o.searchRound < 2) {
+            if (o.searchRound < props.maxSearchRounds()) {
                 Update u = step(BUSCANDO_FARMACIA, null, "Ampliamos el radio de búsqueda hasta 5 km dentro de tu ciudad.")
                         .set("searchRound", o.searchRound + 1).set("searchStartedAt", now);
                 recordScheduledUpdate(mongo.findAndModify(new Query(same), u, Order.class), o.history.size());

@@ -26,6 +26,7 @@ public class OrderController {
         this.orders = orders;
     }
 
+    @Public
     @GetMapping("/check-availability")
     public Dtos.AvailabilityResponse checkAvailability(
             @RequestParam(value = "city", required = false) String city,
