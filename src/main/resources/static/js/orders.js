@@ -258,7 +258,7 @@ function rowMeta(o) {
 
 function orderRow(o, actions) {
 
-  const open = () => openOrderDetail(o.id);
+  const open = () => (window.openOrderDetail || openOrderDetail)(o.id);
 
   return h('article', {
 
@@ -311,6 +311,9 @@ function openOrderDetail(id) {
     body), { wide: true });
 
 }
+
+window.openOrderDetail = openOrderDetail;
+window.__openOrderDetailImpl = openOrderDetail;
 
 function block(title, ...kids) {
 
@@ -571,35 +574,47 @@ function openPaymentGatewayDialog(o) {
   const generalTotal = subtotal + deliveryFee;
   let selectedMethod = 'PSE';
 
-  const launchWompi = () => {
-    if (window.WidgetCheckout) {
-      const amountInCents = Math.round(subtotal * 100);
+  const launchWompi = async () => {
+    if (!window.WidgetCheckout) {
+      toast('Cargando pasarela Wompi en línea...', 'info');
+      return false;
+    }
+    try {
+      // Obtener firma de integridad oficial SHA-256 generada por el servidor
+      const sigData = await API.get('/orders/' + o.id + '/wompi-signature');
       const checkout = new WidgetCheckout({
-        currency: 'COP',
-        amountInCents: amountInCents,
-        reference: o.code + '-' + Date.now(),
-        publicKey: state.meta?.wompiPublicKey || window.FARMAYA_WOMPI_KEY || 'pub_test_X0zDA9xoKdePzhSGeVe9HAhes1ScGZqq'
+        currency: sigData.currency || 'COP',
+        amountInCents: sigData.amountInCents,
+        reference: sigData.reference,
+        publicKey: sigData.publicKey || state.meta?.wompiPublicKey || 'pub_prod_cIy9KVT5NEFNWKWDb1jrsipNG2oGdQMY',
+        signature: {
+          integrity: sigData.signature
+        }
       });
       checkout.open(async result => {
         const tx = result?.transaction;
         if (tx && (tx.status === 'APPROVED' || tx.status === 'PENDING')) {
           await API.post('/orders/' + o.id + '/accept-price', {
             method: tx.payment_method_type || 'WOMPI',
-            bank: tx.payment_method?.extra?.institution_name || 'Bancolombia',
+            bank: tx.payment_method?.extra?.institution_name || 'Bancolombia Wompi',
             docNumber: tx.id,
             amount: subtotal
           });
           toast('Pago procesado y verificado en Wompi Bancolombia.');
           d.close();
           refreshAll();
-          if (typeof openOrderDetail === 'function') openOrderDetail(o.id);
+          const viewFn = window.openOrderDetail || (typeof openOrderDetail === 'function' ? openOrderDetail : null);
+          if (viewFn) viewFn(o.id);
         } else if (tx) {
-          toast('Estado de transacción: ' + (tx.status || 'Cancelada'), 'warn');
+          toast('Estado de transacción Wompi: ' + (tx.status || 'Cancelada'), 'warn');
         }
       });
       return true;
+    } catch (err) {
+      console.error('Error al inicializar Wompi:', err);
+      toast('Error al conectar con Wompi: ' + (err.message || 'Verifica llaves de producción'), 'error');
+      return false;
     }
-    return false;
   };
 
   const bankSelect = h('select', { class: 'input block' },

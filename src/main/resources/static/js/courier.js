@@ -372,7 +372,7 @@ function courierCard(o) {
     ),
     h('div', { class: 'actions left' },
       actions,
-      h('button', { class: 'btn ghost', onclick: () => openOrderDetail(o.id) }, 'Ver detalle')
+      h('button', { class: 'btn ghost', onclick: () => (window.openOrderDetail || openOrderDetail)(o.id) }, 'Ver detalle')
     )
   );
 }

@@ -541,3 +541,11 @@ function farmayaSupportFooter() {
     )
   );
 }
+
+// Fallback de inicialización para visualización de órdenes
+window.openOrderDetail = function(id) {
+  if (typeof window.__openOrderDetailImpl === 'function') {
+    return window.__openOrderDetailImpl(id);
+  }
+  console.warn('Detalle de pedido invocado antes de que el módulo esté listo:', id);
+};

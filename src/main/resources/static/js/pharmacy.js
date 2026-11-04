@@ -654,75 +654,90 @@ function pharmacyDemandForecast() {
     const period = data.period || 'Proximo Mes';
 
     // Barra de KPI cards de Predicción de Demanda (IA FarmaYA)
-    const kpis = h('div', { class: 'forecast-kpis-grid' },
+    const kpis = h('div', {
+      class: 'forecast-kpis-grid',
+      style: 'display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-bottom: 22px; width: 100%;'
+    },
       // Card 1: Periodo Proyectado
-      h('div', { class: 'forecast-kpi-card tone-period' },
-        h('div', { class: 'forecast-kpi-top' },
-          h('div', { class: 'forecast-kpi-title-wrap' },
+      h('div', {
+        class: 'forecast-kpi-card tone-period',
+        style: 'min-height: 140px; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between;'
+      },
+        h('div', { class: 'forecast-kpi-top', style: 'display: flex; align-items: center; justify-content: space-between; gap: 8px;' },
+          h('div', { class: 'forecast-kpi-title-wrap', style: 'display: flex; align-items: center; gap: 8px;' },
             icon('calendar', 'forecast-kpi-ico tone-period'),
-            h('span', { class: 'forecast-kpi-label' }, 'Periodo Proyectado')
+            h('span', { class: 'forecast-kpi-label', style: 'font-weight: 700; font-size: 13.5px;' }, 'Periodo Proyectado')
           ),
           h('span', { class: 'forecast-kpi-badge badge-ai' }, 'IA FarmaYA')
         ),
-        h('div', { class: 'forecast-kpi-body' },
-          h('strong', { class: 'forecast-kpi-value tone-period' }, period)
+        h('div', { class: 'forecast-kpi-body', style: 'display: flex; align-items: baseline; gap: 8px; margin: 10px 0;' },
+          h('strong', { class: 'forecast-kpi-value tone-period', style: 'font-size: 24px; font-weight: 800;' }, period)
         ),
-        h('div', { class: 'forecast-kpi-footer' },
-          h('span', { class: 'forecast-kpi-desc' }, 'Modelo Predictivo de ML FarmaYA')
+        h('div', { class: 'forecast-kpi-footer', style: 'border-top: 1px solid var(--line); padding-top: 10px; margin-top: auto;' },
+          h('span', { class: 'forecast-kpi-desc', style: 'font-size: 12px; color: var(--muted);' }, 'Modelo Predictivo de ML FarmaYA')
         )
       ),
 
       // Card 2: Demanda ALTA
-      h('div', { class: 'forecast-kpi-card tone-alta' },
-        h('div', { class: 'forecast-kpi-top' },
-          h('div', { class: 'forecast-kpi-title-wrap' },
+      h('div', {
+        class: 'forecast-kpi-card tone-alta',
+        style: 'min-height: 140px; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between;'
+      },
+        h('div', { class: 'forecast-kpi-top', style: 'display: flex; align-items: center; justify-content: space-between; gap: 8px;' },
+          h('div', { class: 'forecast-kpi-title-wrap', style: 'display: flex; align-items: center; gap: 8px;' },
             icon('alert-triangle', 'forecast-kpi-ico tone-alta'),
-            h('span', { class: 'forecast-kpi-label' }, 'Demanda ALTA (Riesgo Quiebre)')
+            h('span', { class: 'forecast-kpi-label', style: 'font-weight: 700; font-size: 13.5px;' }, 'Demanda ALTA (Riesgo Quiebre)')
           ),
           h('span', { class: 'forecast-kpi-badge badge-alta' }, 'Prioridad')
         ),
-        h('div', { class: 'forecast-kpi-body' },
-          h('strong', { class: 'forecast-kpi-value tone-alta' }, String(summary.alta || 0)),
-          h('span', { class: 'forecast-kpi-unit' }, 'medicamentos')
+        h('div', { class: 'forecast-kpi-body', style: 'display: flex; align-items: baseline; gap: 8px; margin: 10px 0;' },
+          h('strong', { class: 'forecast-kpi-value tone-alta', style: 'font-size: 28px; font-weight: 800; color: #e11d48;' }, String(summary.alta || 0)),
+          h('span', { class: 'forecast-kpi-unit', style: 'font-size: 13px; color: var(--muted);' }, 'medicamentos')
         ),
-        h('div', { class: 'forecast-kpi-footer' },
-          h('span', { class: 'forecast-kpi-desc' }, 'Alta rotación · Mayor stock (+35%)')
+        h('div', { class: 'forecast-kpi-footer', style: 'border-top: 1px solid var(--line); padding-top: 10px; margin-top: auto;' },
+          h('span', { class: 'forecast-kpi-desc', style: 'font-size: 12px; color: var(--muted);' }, 'Alta rotación · Mayor stock (+35%)')
         )
       ),
 
       // Card 3: Demanda MEDIA
-      h('div', { class: 'forecast-kpi-card tone-media' },
-        h('div', { class: 'forecast-kpi-top' },
-          h('div', { class: 'forecast-kpi-title-wrap' },
+      h('div', {
+        class: 'forecast-kpi-card tone-media',
+        style: 'min-height: 140px; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between;'
+      },
+        h('div', { class: 'forecast-kpi-top', style: 'display: flex; align-items: center; justify-content: space-between; gap: 8px;' },
+          h('div', { class: 'forecast-kpi-title-wrap', style: 'display: flex; align-items: center; gap: 8px;' },
             icon('trending-up', 'forecast-kpi-ico tone-media'),
-            h('span', { class: 'forecast-kpi-label' }, 'Demanda MEDIA (Rotación Regular)')
+            h('span', { class: 'forecast-kpi-label', style: 'font-weight: 700; font-size: 13.5px;' }, 'Demanda MEDIA (Rotación Regular)')
           ),
           h('span', { class: 'forecast-kpi-badge badge-media' }, 'Estable')
         ),
-        h('div', { class: 'forecast-kpi-body' },
-          h('strong', { class: 'forecast-kpi-value tone-media' }, String(summary.media || 0)),
-          h('span', { class: 'forecast-kpi-unit' }, 'medicamentos')
+        h('div', { class: 'forecast-kpi-body', style: 'display: flex; align-items: baseline; gap: 8px; margin: 10px 0;' },
+          h('strong', { class: 'forecast-kpi-value tone-media', style: 'font-size: 28px; font-weight: 800; color: #0284c7;' }, String(summary.media || 0)),
+          h('span', { class: 'forecast-kpi-unit', style: 'font-size: 13px; color: var(--muted);' }, 'medicamentos')
         ),
-        h('div', { class: 'forecast-kpi-footer' },
-          h('span', { class: 'forecast-kpi-desc' }, 'Consumo estándar predecible')
+        h('div', { class: 'forecast-kpi-footer', style: 'border-top: 1px solid var(--line); padding-top: 10px; margin-top: auto;' },
+          h('span', { class: 'forecast-kpi-desc', style: 'font-size: 12px; color: var(--muted);' }, 'Consumo estándar predecible')
         )
       ),
 
       // Card 4: Demanda BAJA
-      h('div', { class: 'forecast-kpi-card tone-baja' },
-        h('div', { class: 'forecast-kpi-top' },
-          h('div', { class: 'forecast-kpi-title-wrap' },
+      h('div', {
+        class: 'forecast-kpi-card tone-baja',
+        style: 'min-height: 140px; padding: 20px; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between;'
+      },
+        h('div', { class: 'forecast-kpi-top', style: 'display: flex; align-items: center; justify-content: space-between; gap: 8px;' },
+          h('div', { class: 'forecast-kpi-title-wrap', style: 'display: flex; align-items: center; gap: 8px;' },
             icon('package', 'forecast-kpi-ico tone-baja'),
-            h('span', { class: 'forecast-kpi-label' }, 'Demanda BAJA (Poco Movimiento)')
+            h('span', { class: 'forecast-kpi-label', style: 'font-weight: 700; font-size: 13.5px;' }, 'Demanda BAJA (Poco Movimiento)')
           ),
           h('span', { class: 'forecast-kpi-badge badge-baja' }, 'Mínimo')
         ),
-        h('div', { class: 'forecast-kpi-body' },
-          h('strong', { class: 'forecast-kpi-value tone-baja' }, String(summary.baja || 0)),
-          h('span', { class: 'forecast-kpi-unit' }, 'medicamentos')
+        h('div', { class: 'forecast-kpi-body', style: 'display: flex; align-items: baseline; gap: 8px; margin: 10px 0;' },
+          h('strong', { class: 'forecast-kpi-value tone-baja', style: 'font-size: 28px; font-weight: 800; color: #64748b;' }, String(summary.baja || 0)),
+          h('span', { class: 'forecast-kpi-unit', style: 'font-size: 13px; color: var(--muted);' }, 'medicamentos')
         ),
-        h('div', { class: 'forecast-kpi-footer' },
-          h('span', { class: 'forecast-kpi-desc' }, 'Stock mínimo bajo demanda')
+        h('div', { class: 'forecast-kpi-footer', style: 'border-top: 1px solid var(--line); padding-top: 10px; margin-top: auto;' },
+          h('span', { class: 'forecast-kpi-desc', style: 'font-size: 12px; color: var(--muted);' }, 'Stock mínimo bajo demanda')
         )
       )
     );
