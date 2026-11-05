@@ -87,6 +87,7 @@ function adminPowerBiDashboard() {
       const totalOrdersCount = filtered.length;
       const avgTicket = totalOrdersCount > 0 ? Math.round(totalGross / totalOrdersCount) : 0;
       const avgCommission = totalOrdersCount > 0 ? Math.round(totalEarnings / totalOrdersCount) : 0;
+      const avgEarnings = avgCommission;
 
       // Banner superior Power BI
       const headerBanner = h('div', { class: 'powerbi-banner' },
