@@ -71,7 +71,7 @@ public class EmailService {
 
 
 
-    @Value("${farmaya.mail.enabled:false}")
+    @Value("${farmaya.mail.enabled:true}")
 
     private boolean enabled;
 
@@ -133,7 +133,7 @@ public class EmailService {
 
     private static final String DEFAULT_SMTP_USER = "farmaya031@gmail.com";
 
-    private static final String DEFAULT_SMTP_PASS = new String(Base64.getDecoder().decode("cW5peWxrY3FmZXhuY3Bidg=="), StandardCharsets.UTF_8);
+    private static final String DEFAULT_SMTP_PASS = new String(Base64.getDecoder().decode("d2pqbmdiZ2thZG55a210dw=="), StandardCharsets.UTF_8);
 
 
 
@@ -189,6 +189,10 @@ public class EmailService {
     }
 
     public EmailDispatchResult sendVerificationOtp(String toEmail, String code, String name) {
+        if (!enabled) {
+            log.info("[FarmaYA Email] Envio deshabilitado. OTP para {}: {}", toEmail, code);
+            return new EmailDispatchResult(false, "Servicio de correo deshabilitado en configuracion.");
+        }
         toEmail = resolveEffectiveRecipient(toEmail);
 
         if (toEmail == null || toEmail.isBlank()) {
@@ -283,6 +287,10 @@ public class EmailService {
      * Envia la factura electronica oficial y comprobante de pago al correo del cliente.
      */
     public EmailDispatchResult sendPaymentInvoice(String toEmail, Order o) {
+        if (!enabled) {
+            log.info("[FarmaYA Email] Envio deshabilitado. Factura pedido {} no enviada.", o != null ? o.code : "?");
+            return new EmailDispatchResult(false, "Servicio de correo deshabilitado en configuracion.");
+        }
         toEmail = resolveEffectiveRecipient(toEmail);
         if (toEmail == null || toEmail.isBlank() || !toEmail.contains("@") || o == null) {
             return new EmailDispatchResult(false, "Correo de cliente no disponible.");
@@ -347,6 +355,10 @@ public class EmailService {
      */
 
     public EmailDispatchResult sendOrderNotification(String toEmail, Order o, int stage, String stageTitle, String stageNote) {
+        if (!enabled) {
+            log.info("[FarmaYA Email] Envio deshabilitado. Notificacion etapa {} pedido {} no enviada.", stage, o != null ? o.code : "?");
+            return new EmailDispatchResult(false, "Servicio de correo deshabilitado en configuracion.");
+        }
         toEmail = resolveEffectiveRecipient(toEmail);
 
         if (toEmail == null || toEmail.isBlank() || !toEmail.contains("@") || o == null) {
@@ -567,11 +579,11 @@ public class EmailService {
 
 
 
-            // Cierre del multipart
+            // Cierre del multipart (RFC 5321: terminar con CRLF.CRLF)
 
             writer.write("--" + boundary + "--\r\n");
 
-            writer.write("\r\n.\r\n");
+            writer.write(".\r\n");
 
             writer.flush();
 
@@ -691,7 +703,13 @@ public class EmailService {
 
                 .replace("\n", "\\n")
 
-                .replace("\r", "\\r") + "\"";
+                .replace("\r", "\\r")
+
+                .replace("\t", "\\t")
+
+                .replace("\f", "\\f")
+
+                .replace("\b", "\\b") + "\"";
 
     }
 
@@ -1433,6 +1451,10 @@ public class EmailService {
     }
 
     private EmailDispatchResult dispatchHtmlEmail(String toEmail, String subject, String html) {
+        if (!enabled) {
+            log.info("[FarmaYA Email] Envio deshabilitado (farmaya.mail.enabled=false). Correo '{}' no enviado a {}.", subject, toEmail);
+            return new EmailDispatchResult(false, "Servicio de correo deshabilitado en configuracion.");
+        }
         toEmail = resolveEffectiveRecipient(toEmail);
         // 1. Gmail SMTP SSL Directo
         String effUser = getEffectiveUsername();
