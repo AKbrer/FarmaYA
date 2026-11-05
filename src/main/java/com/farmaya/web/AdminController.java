@@ -63,7 +63,7 @@ public class AdminController {
 
     @PostMapping("/users/{id}/enabled")
     public User enabled(@PathVariable("id") String id, @RequestBody FlagRequest f, @RequestAttribute("user") User me) {
-        return admin.setEnabled(id, f.value(), me);
+        return admin.setEnabled(id, f.value(), f.reason(), me);
     }
 
     @PostMapping("/users/{id}/active")

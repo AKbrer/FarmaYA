@@ -16,6 +16,9 @@ public class User {
 
     /** El administrador puede deshabilitar cuentas. */
     public boolean enabled = true;
+    /** Motivo y fecha cuando un administrador deshabilita la cuenta. */
+    public String disabledReason;
+    public Instant disabledAt;
     /** Farmacias y repartidores deben ser verificados por un administrador. */
     public boolean verified;
     /** Farmacia: recibiendo pedidos. Repartidor: disponible. */

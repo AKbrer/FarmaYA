@@ -173,7 +173,15 @@ public class AuthService {
         if (u == null || password == null || !encoder.matches(password, u.passwordHash)) {
             throw ApiException.unauthorized("Correo o contraseña incorrectos.");
         }
-        if (!u.enabled) throw ApiException.forbidden("Tu cuenta está deshabilitada. Contacta al administrador.");
+        if (!u.enabled) {
+            String msg = "Tu cuenta esta deshabilitada.";
+            if (u.disabledReason != null && !u.disabledReason.isBlank()) {
+                msg += " Motivo: " + u.disabledReason.trim();
+            } else {
+                msg += " Contacta al administrador.";
+            }
+            throw ApiException.forbidden(msg);
+        }
         return new AuthResponse(openSession(u), u);
     }
 
@@ -216,8 +224,14 @@ public class AuthService {
         User u = users.findByEmailIgnoreCase(email).orElse(null);
         if (u != null) {
             if (!u.enabled) {
-                throw ApiException.forbidden("Tu cuenta está deshabilitada. Contacta al administrador.");
+            String msg = "Tu cuenta esta deshabilitada.";
+            if (u.disabledReason != null && !u.disabledReason.isBlank()) {
+                msg += " Motivo: " + u.disabledReason.trim();
+            } else {
+                msg += " Contacta al administrador.";
             }
+            throw ApiException.forbidden(msg);
+        }
             boolean changed = false;
             if (googleId != null && !googleId.isBlank() && (u.googleId == null || u.googleId.isBlank())) {
                 u.googleId = googleId;

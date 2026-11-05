@@ -23,12 +23,14 @@ public class AdminService {
     private final MongoTemplate mongo;
     private final UserRepository users;
     private final MovementService movements;
+    private final EmailService emailService;
     private final org.springframework.security.crypto.password.PasswordEncoder encoder = new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
 
-    public AdminService(MongoTemplate mongo, UserRepository users, MovementService movements) {
+    public AdminService(MongoTemplate mongo, UserRepository users, MovementService movements, EmailService emailService) {
         this.mongo = mongo;
         this.users = users;
         this.movements = movements;
+        this.emailService = emailService;
     }
 
     public User createAdmin(com.farmaya.model.Dtos.CreateAdminRequest req, User currentAdmin) {
@@ -85,7 +87,7 @@ public class AdminService {
                 .limit(500).toList();
     }
 
-    public User setVerified(String id, boolean value, User admin) {
+        public User setVerified(String id, boolean value, User admin) {
         User u = find(id);
         if (u.role == Role.CLIENTE || u.role == Role.ADMIN) throw ApiException.bad("Solo se verifican farmacias y repartidores.");
         Update up = new Update().set("verified", value);
@@ -95,22 +97,38 @@ public class AdminService {
         User changed = update(id, up);
         movements.record("USUARIO_VERIFICACION", (value ? "Verificó " : "Retiró verificación a ") + displayName(changed), admin, null);
         if (value && changed.email != null && !changed.email.isBlank()) {
+            emailService.sendAccountVerifiedAsync(changed);
             movements.record("NOTIFICACION_CORREO", "Notificación oficial de aprobación y activación de cuenta enviada a " + changed.email, admin, null);
         }
         return changed;
     }
 
     public User setEnabled(String id, boolean value, User admin) {
+        return setEnabled(id, value, null, admin);
+    }
+
+    public User setEnabled(String id, boolean value, String reason, User admin) {
         User u = find(id);
         if (u.id.equals(admin.id)) throw ApiException.bad("No puedes deshabilitar tu propia cuenta.");
         Update up = new Update().set("enabled", value);
         if (value) {
-            up.set("active", true);
+            up.set("active", true).unset("disabledReason").unset("disabledAt");
         } else {
             up.set("active", false);
+            if (reason != null && !reason.isBlank()) {
+                up.set("disabledReason", reason.trim());
+            }
+            up.set("disabledAt", java.time.Instant.now());
         }
         User changed = update(id, up);
-        movements.record("USUARIO_ESTADO", (value ? "Habilitó " : "Deshabilitó ") + displayName(changed), admin, null);
+        String actionDesc = (value ? "Habilitó " : "Deshabilitó ") + displayName(changed)
+                + (!value && reason != null && !reason.isBlank() ? " | Motivo: " + reason.trim() : "");
+        movements.record("USUARIO_ESTADO", actionDesc, admin, null);
+
+        if (!value && changed.email != null && !changed.email.isBlank()) {
+            emailService.sendAccountDisabledAsync(changed, reason);
+            movements.record("NOTIFICACION_CORREO", "Notificación de deshabilitación enviada a " + changed.email + (reason != null && !reason.isBlank() ? " con motivo: " + reason.trim() : ""), admin, null);
+        }
         return changed;
     }
 

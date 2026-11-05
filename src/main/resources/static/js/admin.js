@@ -805,6 +805,25 @@ function adminOrders() {
   return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, select), holder);
 }
 
+/** Modal interactivo para solicitar el motivo de deshabilitacion y enviarlo por correo */
+async function promptDisableUser(user) {
+  const name = user.pharmacyName || user.name || 'este usuario';
+  const roleLabel = user.role === 'FARMACIA'
+    ? 'la farmacia'
+    : (user.role === 'REPARTIDOR' ? 'el repartidor' : (user.role === 'ADMIN' ? 'el administrador' : 'la cuenta'));
+
+  const reason = await promptBox({
+    title: 'Deshabilitar cuenta de ' + name,
+    message: 'Esta accion suspendera el acceso a la plataforma para ' + roleLabel + ' (' + user.email + '). El motivo que escribas a continuacion se enviara automaticamente por correo electronico de notificacion al usuario.',
+    label: 'Motivo de la deshabilitacion (requerido)',
+    placeholder: 'Ej: Documentacion vencida o incompleta, inconsistencias en pedidos, reporte de irregularidades...',
+    ok: 'Deshabilitar y Enviar Correo',
+    minLength: 5,
+    multiline: true
+  });
+  return reason;
+}
+
 function adminUsers(role) {
   const titles = { FARMACIA: 'farmacias', REPARTIDOR: 'repartidores', CLIENTE: 'clientes' };
   let query = '';
@@ -822,11 +841,17 @@ function adminUsers(role) {
     if (!shown.length) return empty('Sin resultados', 'No encontramos ' + titles[role] + ' que coincidan con la búsqueda.');
     const needsVerify = role !== 'CLIENTE';
     const toggle = (u, kind, value, ok) => async e => {
-      const updated = await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value }), ok);
+      let reason = null;
+      if (kind === 'enabled' && value === false) {
+        reason = await promptDisableUser(u);
+        if (!reason) return;
+      }
+      const updated = await act(e.currentTarget, () => API.post('/admin/users/' + u.id + '/' + kind, { value, reason }), ok);
       if (updated) {
         Object.assign(u, updated);
       } else {
         u[kind] = value;
+        if (reason) u.disabledReason = reason;
       }
       refreshAll();
     };
@@ -843,7 +868,10 @@ function adminUsers(role) {
         h('td', null, u.email, h('small', { class: 'block-line muted' }, u.phone || 'Sin teléfono')),
         h('td', null, u.address || u.city || 'Ciudad completa'),
         h('td', null,
-          !u.enabled ? h('span', { class: 'badge tone-bad' }, 'Deshabilitada')
+          !u.enabled ? h('div', { class: 'disabled-account-cell' },
+              h('span', { class: 'badge tone-bad' }, 'Deshabilitada'),
+              u.disabledReason ? h('small', { class: 'block-line text-danger', style: 'margin-top:4px; max-width:240px; font-size:11px; line-height:1.3; font-weight:600;' }, 'Motivo: ' + u.disabledReason) : null
+            )
             : [
                 needsVerify ? h('span', { class: 'badge ' + (u.verified ? 'tone-done' : 'tone-wait') }, u.verified ? 'Verificada' : 'Por verificar') : null,
                 u.active === false
@@ -962,19 +990,21 @@ function adminVerificationCenter() {
         const isPh = u.role === 'FARMACIA';
         const docs = u.verificationDocuments || [];
 
-        const actVerify = async (val) => {
+                const actVerify = async (val) => {
           await act(null, () => API.post('/admin/users/' + u.id + '/verified', { value: val }),
-            val ? 'Cuenta verificada y autorizada para operar' : 'Verificación rechazada');
+            val ? 'Cuenta verificada y notificada por correo al usuario' : 'Verificacion retirada');
           u.verified = val;
           refreshAll();
         };
 
         const actDisable = async () => {
-          if (await confirmBox({ title: '¿Rechazar esta solicitud?', message: 'La cuenta quedará deshabilitada y no podrá operar.', ok: 'Rechazar y Deshabilitar', danger: true })) {
-            await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false }), 'Cuenta deshabilitada');
-            u.enabled = false;
-            refreshAll();
-          }
+          const reason = await promptDisableUser(u);
+          if (!reason) return;
+          await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false, reason }),
+            'Cuenta deshabilitada y motivo notificado por correo');
+          u.enabled = false;
+          u.disabledReason = reason;
+          refreshAll();
         };
 
         return h('article', { class: 'block verification-item-card' },

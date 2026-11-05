@@ -28,7 +28,11 @@ public final class Dtos {
 
     public record NoteRequest(String note) {}
 
-    public record FlagRequest(boolean value) {}
+    public record FlagRequest(boolean value, String reason) {
+        public FlagRequest(boolean value) {
+            this(value, null);
+        }
+    }
 
     public record ResolveRequest(String action, String note) {}
 

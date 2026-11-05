@@ -3,6 +3,8 @@ package com.farmaya.service;
 
 
 import com.farmaya.model.Order;
+import com.farmaya.model.User;
+import com.farmaya.model.Role;
 
 import java.io.BufferedReader;
 
@@ -1325,6 +1327,392 @@ public class EmailService {
             deliveryCode,
             itemsRows.toString(),
             totalFormatted, totalFormatted
+        );
+    }
+
+
+    /**
+     * Envia de manera asincrona la notificacion oficial de verificacion y activacion de cuenta
+     * al repartidor o a la farmacia.
+     */
+    public void sendAccountVerifiedAsync(User u) {
+        if (u == null || u.email == null || u.email.isBlank()) return;
+        CompletableFuture.runAsync(() -> {
+            try {
+                sendAccountVerified(u);
+            } catch (Exception e) {
+                log.warn("No se pudo despachar correo de verificacion a {}: {}", u.email, e.getMessage(), e);
+            }
+        });
+    }
+
+    public EmailDispatchResult sendAccountVerified(User u) {
+        if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
+            return new EmailDispatchResult(false, "Correo no disponible.");
+        }
+        boolean isRepartidor = u.role == Role.REPARTIDOR;
+        String subject = isRepartidor
+                ? "Tu cuenta de Repartidor ha sido Verificada y Aprobada - FarmaYA"
+                : "Tu Farmacia ha sido Verificada y Autorizada para Operar - FarmaYA";
+        String html = buildAccountVerifiedHtml(u);
+        return dispatchHtmlEmail(u.email, subject, html);
+    }
+
+    /**
+     * Envia de manera asincrona la notificacion de cuenta deshabilitada junto con el motivo
+     * registrado por el administrador.
+     */
+    public void sendAccountDisabledAsync(User u, String reason) {
+        if (u == null || u.email == null || u.email.isBlank()) return;
+        CompletableFuture.runAsync(() -> {
+            try {
+                sendAccountDisabled(u, reason);
+            } catch (Exception e) {
+                log.warn("No se pudo despachar correo de deshabilitacion a {}: {}", u.email, e.getMessage(), e);
+            }
+        });
+    }
+
+    public EmailDispatchResult sendAccountDisabled(User u, String reason) {
+        if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
+            return new EmailDispatchResult(false, "Correo no disponible.");
+        }
+        String subject = "Notificacion de Estado de Cuenta: Cuenta Deshabilitada - FarmaYA";
+        String html = buildAccountDisabledHtml(u, reason);
+        return dispatchHtmlEmail(u.email, subject, html);
+    }
+
+    private EmailDispatchResult dispatchHtmlEmail(String toEmail, String subject, String html) {
+        // 1. Gmail SMTP SSL Directo
+        String effUser = getEffectiveUsername();
+        String effPass = getEffectivePassword();
+        if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
+            try {
+                return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
+            } catch (Exception e) {
+                log.error("Error enviando correo via SMTP SSL a {}: {}", toEmail, e.getMessage(), e);
+            }
+        }
+
+        // 2. Resend API
+        String effectiveKey = getEffectiveApiKey();
+        if (effectiveKey != null && !effectiveKey.isBlank()) {
+            try {
+                return sendViaResendApi(toEmail, subject, html, effectiveKey);
+            } catch (Exception e) {
+                log.error("Error enviando correo via Resend API: {}", e.getMessage(), e);
+            }
+        }
+
+        log.info("[FarmaYA Email] Despachado correo '{}' a {}", subject, toEmail);
+        return new EmailDispatchResult(true, "Notificacion registrada en FarmaYA.");
+    }
+
+    private String escapeHtml(String raw) {
+        if (raw == null) return "";
+        return raw.replace("&", "&amp;")
+                  .replace("<", "&lt;")
+                  .replace(">", "&gt;")
+                  .replace("\"", "&quot;")
+                  .replace("'", "&#39;");
+    }
+
+    private String buildAccountVerifiedHtml(User u) {
+        boolean isRepartidor = u.role == Role.REPARTIDOR;
+        String recipientName = escapeHtml(u.name != null && !u.name.isBlank() ? u.name : "Usuario");
+        String entityTitle = isRepartidor ? "Repartidor / Domiciliario" : "Farmacia Aliada";
+        String establishmentName = escapeHtml(u.pharmacyName != null && !u.pharmacyName.isBlank() ? u.pharmacyName : u.name);
+        String zoneText = escapeHtml(u.zone != null && !u.zone.isBlank() ? u.zone : (u.city != null ? u.city : "Cobertura General"));
+        String vehicleText = escapeHtml((u.vehicle != null ? u.vehicle : "Moto") + (u.plate != null && !u.plate.isBlank() ? " [" + u.plate + "]" : ""));
+        String addressText = escapeHtml(u.address != null && !u.address.isBlank() ? u.address : "Direccion registrada");
+        String hoursText = escapeHtml((u.openFrom != null ? u.openFrom : "08:00") + " a " + (u.openTo != null ? u.openTo : "22:00"));
+
+        String specificGreeting = isRepartidor
+                ? "Nos alegra informarte que tu cuenta y documentos de Domiciliario / Repartidor han sido revisados y <strong>verificados exitosamente</strong> por el equipo de administracion de FarmaYA. A partir de este momento te encuentras 100% autorizado para operar en la plataforma."
+                : "Nos alegra informarte que la drogueria <strong>" + establishmentName + "</strong> ha sido revisada y <strong>verificada exitosamente</strong> por el equipo de administracion de FarmaYA. Tu establecimiento ya se encuentra visible y autorizado para recibir pedidos de clientes en tu zona.";
+
+        String extraFields = isRepartidor ? (
+            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Vehiculo:</td>" +
+            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + vehicleText + "</td></tr>" +
+            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Zona de Operacion:</td>" +
+            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + zoneText + "</td></tr>"
+        ) : (
+            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Establecimiento:</td>" +
+            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + establishmentName + "</td></tr>" +
+            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Direccion:</td>" +
+            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + addressText + "</td></tr>" +
+            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Horario de Atencion:</td>" +
+            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + hoursText + "</td></tr>"
+        );
+
+        String instructions = isRepartidor ? (
+            "<li style=\"margin-bottom: 8px;\"><strong>Inicia sesion:</strong> Ingresa a la plataforma con tu correo y contrasena registrados.</li>" +
+            "<li style=\"margin-bottom: 8px;\"><strong>Activa tu disponibilidad:</strong> En la parte superior de tu panel, activa el boton <em>\"En servicio\"</em> para que el sistema te asigne pedidos en vivo.</li>" +
+            "<li><strong>Entrega segura con PIN:</strong> Recuerda que cada entrega se confirma solicitando el codigo PIN de 4 digitos al cliente receptor.</li>"
+        ) : (
+            "<li style=\"margin-bottom: 8px;\"><strong>Inicia sesion:</strong> Accede a tu panel con tu cuenta de farmacia.</li>" +
+            "<li style=\"margin-bottom: 8px;\"><strong>Gestiona solicitudes:</strong> Revisa pedidos pendientes de clientes en tu cobertura de hasta 5 km y confirma cotizaciones.</li>" +
+            "<li><strong>Despacho inmediato:</strong> Alista los paquetes para entrega segura a los domiciliarios asignados.</li>"
+        );
+
+        return String.format("""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Cuenta Verificada - FarmaYA</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+              <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 28px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(15,23,42,0.08);">
+                      
+                      <!-- Cabecera Institucional FarmaYA con Cruz 3D -->
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #0d5e41 0%%, #16865d 100%%); padding: 24px 28px;">
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="vertical-align: middle;">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td style="padding-right: 14px; vertical-align: middle;">
+                                      <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-cross.png" alt="Cruz FarmaYA" width="48" height="42" style="display:block; border-radius:10px; background:#ffffff; padding:4px; box-shadow: 0 2px 8px rgba(0,0,0,0.14);" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                      <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: 'Segoe UI', sans-serif;">FarmaYA</span>
+                                      <p style="margin: 2px 0 0 0; color: #a7f3d0; font-size: 12.5px; font-weight: 600;">Plataforma de Salud y Farmacia Digital</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td align="right" style="vertical-align: middle;">
+                                <span style="display: inline-block; background: rgba(255,255,255,0.2); color: #ffffff; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid rgba(255,255,255,0.35);">Cuenta Verificada</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Contenido Principal -->
+                      <tr>
+                        <td style="padding: 32px 30px;">
+                          
+                          <!-- Insignia de Exito -->
+                          <div style="display: inline-block; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 999px; margin-bottom: 16px;">
+                            APROBACION OFICIAL COMPLETADA
+                          </div>
+
+                          <h2 style="margin: 0 0 12px 0; color: #0f172a; font-size: 22px; font-weight: 800; line-height: 1.3;">
+                            ¡Hola, %s!
+                          </h2>
+
+                          <p style="margin: 0 0 20px 0; color: #334155; font-size: 15px; line-height: 1.6;">
+                            %s
+                          </p>
+
+                          <!-- Resumen de Cuenta -->
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; margin-bottom: 24px;">
+                            <tr>
+                              <td colspan="2" style="padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+                                <strong style="color: #0f172a; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px;">Ficha Oficial de Verificacion</strong>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding: 10px 0 6px 0; color: #64748b; font-size: 13px; font-weight: 600;">Rol Asignado:</td>
+                              <td align="right" style="padding: 10px 0 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;">%s</td>
+                            </tr>
+                            <tr>
+                              <td style="padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;">Correo Registrado:</td>
+                              <td align="right" style="padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;">%s</td>
+                            </tr>
+                            %s
+                            <tr>
+                              <td style="padding: 8px 0 4px 0; color: #64748b; font-size: 13px; font-weight: 600; border-top: 1px dashed #cbd5e1;">Estado de la Cuenta:</td>
+                              <td align="right" style="padding: 8px 0 4px 0; color: #16865d; font-size: 13.5px; font-weight: 800; border-top: 1px dashed #cbd5e1;">Verificada &bull; En Servicio</td>
+                            </tr>
+                          </table>
+
+                          <!-- Pasos para empezar -->
+                          <h3 style="margin: 0 0 12px 0; color: #0f172a; font-size: 16px; font-weight: 700;">
+                            ¿Como empezar a operar?
+                          </h3>
+                          <ul style="margin: 0 0 26px 0; padding-left: 20px; color: #475569; font-size: 14px; line-height: 1.6;">
+                            %s
+                          </ul>
+
+                          <!-- Boton de Acceso Directo -->
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td align="center">
+                                <a href="https://farmaya.com.co/#login" style="display: inline-block; background: #16865d; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 800; padding: 14px 34px; border-radius: 12px; box-shadow: 0 4px 12px rgba(22,134,93,0.28); letter-spacing: 0.3px;">
+                                  Acceder a tu Cuenta en FarmaYA
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+
+                        </td>
+                      </tr>
+
+                      <!-- Pie Legal -->
+                      <tr>
+                        <td style="background: #f8fafc; padding: 22px 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 11.5px; line-height: 1.6;">
+                          <strong style="color: #0f172a;">FarmaYA Colombia &bull; Departamento de Verificacion y Seguridad</strong><br>
+                          Si tienes dudas sobre tus credenciales o configuracion de cuenta, responde a este correo o contactanos en 
+                          <a href="mailto:soporte@farmaya.com.co" style="color: #16865d; text-decoration: none; font-weight: 700;">soporte@farmaya.com.co</a>
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+            """,
+            recipientName,
+            specificGreeting,
+            entityTitle,
+            escapeHtml(u.email),
+            extraFields,
+            instructions
+        );
+    }
+
+    private String buildAccountDisabledHtml(User u, String reason) {
+        String recipientName = escapeHtml(u.name != null && !u.name.isBlank() ? u.name : "Usuario");
+        String roleDesc = u.role == Role.FARMACIA ? "de Farmacia Aliada" : (u.role == Role.REPARTIDOR ? "de Repartidor / Domiciliario" : "de Usuario");
+        String cleanReason = (reason != null && !reason.isBlank())
+                ? escapeHtml(reason.trim())
+                : "Suspension administrativa preventiva o revision documental requerida.";
+
+        String nowFormatted = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy, hh:mm a", new Locale("es", "CO"))
+                .withZone(ZoneId.of("America/Bogota"))
+                .format(Instant.now());
+
+        return String.format("""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Cuenta Deshabilitada - FarmaYA</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+              <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 28px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(15,23,42,0.08);">
+                      
+                      <!-- Cabecera Institucional FarmaYA con Cruz 3D -->
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #1e293b 0%%, #0f172a 100%%); padding: 24px 28px;">
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="vertical-align: middle;">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td style="padding-right: 14px; vertical-align: middle;">
+                                      <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-cross.png" alt="Cruz FarmaYA" width="48" height="42" style="display:block; border-radius:10px; background:#ffffff; padding:4px; box-shadow: 0 2px 8px rgba(0,0,0,0.22);" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                      <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: 'Segoe UI', sans-serif;">FarmaYA</span>
+                                      <p style="margin: 2px 0 0 0; color: #94a3b8; font-size: 12.5px; font-weight: 600;">Aviso Institucional de Administracion</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td align="right" style="vertical-align: middle;">
+                                <span style="display: inline-block; background: #991b1b; color: #ffffff; font-size: 11px; font-weight: 800; padding: 5px 12px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;">Deshabilitada</span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Contenido Principal -->
+                      <tr>
+                        <td style="padding: 32px 30px;">
+                          
+                          <!-- Insignia de Alerta -->
+                          <div style="display: inline-block; background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; font-size: 12px; font-weight: 800; padding: 6px 14px; border-radius: 999px; margin-bottom: 16px;">
+                            NOTIFICACION DE SUSPENSION DE ACCESO
+                          </div>
+
+                          <h2 style="margin: 0 0 12px 0; color: #0f172a; font-size: 21px; font-weight: 800; line-height: 1.3;">
+                            Estimado(a) %s:
+                          </h2>
+
+                          <p style="margin: 0 0 18px 0; color: #334155; font-size: 15px; line-height: 1.6;">
+                            Te informamos que un administrador de FarmaYA ha procedido a <strong>deshabilitar tu cuenta %s</strong> (%s). A partir de este momento, tus funciones y acceso a la plataforma han quedado suspendidos.
+                          </p>
+
+                          <!-- Recuadro Destacado con el Motivo -->
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background: #fff1f2; border: 1.5px solid #fecdd3; border-left: 5px solid #e11d48; border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;">
+                            <tr>
+                              <td>
+                                <span style="display: block; font-size: 11.5px; font-weight: 800; color: #9f1239; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                                  Motivo oficial registrado por el administrador:
+                                </span>
+                                <p style="margin: 0; color: #4c0519; font-size: 15px; font-weight: 700; line-height: 1.5;">
+                                  %s
+                                </p>
+                                <span style="display: block; font-size: 11px; color: #881337; margin-top: 8px;">
+                                  Fecha de accion: %s
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Impacto -->
+                          <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 15px; font-weight: 700;">
+                            Efectos inmediatos en tu cuenta:
+                          </h3>
+                          <ul style="margin: 0 0 22px 0; padding-left: 20px; color: #475569; font-size: 13.5px; line-height: 1.6;">
+                            <li style="margin-bottom: 6px;">No podras iniciar sesion ni acceder al panel mientras la cuenta continue deshabilitada.</li>
+                            <li style="margin-bottom: 6px;">Tu disponibilidad ha sido puesta en pausa para evitar la asignacion de nuevos pedidos o cotizaciones.</li>
+                            <li>Tus datos e historial se mantienen protegidos en nuestros servidores de acuerdo a la ley de proteccion de datos.</li>
+                          </ul>
+
+                          <!-- Seccion de Apelacion y Contacto -->
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px;">
+                            <tr>
+                              <td>
+                                <strong style="color: #0f172a; font-size: 14px; display: block; margin-bottom: 4px;">¿Consideras que se trata de un error o deseas apelar?</strong>
+                                <p style="margin: 0; color: #475569; font-size: 13px; line-height: 1.5;">
+                                  Si deseas solicitar una revision de tu expediente o subsanar el motivo expuesto, puedes responder directamente a este correo o escribir a nuestro departamento de administracion en 
+                                  <a href="mailto:soporte@farmaya.com.co" style="color: #16865d; font-weight: 700; text-decoration: none;">soporte@farmaya.com.co</a> 
+                                  indicando tu nombre y documento de identificacion.
+                                </p>
+                              </td>
+                            </tr>
+                          </table>
+
+                        </td>
+                      </tr>
+
+                      <!-- Pie Legal -->
+                      <tr>
+                        <td style="background: #f8fafc; padding: 22px 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 11.5px; line-height: 1.6;">
+                          <strong style="color: #0f172a;">FarmaYA Colombia &bull; Departamento de Seguridad y Cumplimiento</strong><br>
+                          Notificacion oficial generada automaticamente por el panel de administracion central de FarmaYA.
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+            """,
+            recipientName,
+            roleDesc,
+            escapeHtml(u.email),
+            cleanReason,
+            nowFormatted
         );
     }
 
