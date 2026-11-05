@@ -44,6 +44,11 @@ public class AuthService {
             throw ApiException.bad("Escribe un correo electrónico válido.");
         }
         String cleanEmail = email.trim().toLowerCase(Locale.ROOT);
+        if ("AUTH".equalsIgnoreCase(purpose) || "REGISTER".equalsIgnoreCase(purpose)) {
+            if (users.findByEmailIgnoreCase(cleanEmail).isPresent()) {
+                throw ApiException.conflict("Ya existe una cuenta con ese correo (" + cleanEmail + "). Inicia sesion o utiliza otro correo.");
+            }
+        }
         String code = String.format("%06d", RND.nextInt(1000000));
         otps.put(cleanEmail, new OtpRecord(code, Instant.now().plus(10, ChronoUnit.MINUTES), purpose));
         

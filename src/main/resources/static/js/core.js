@@ -276,12 +276,16 @@ function confirmBox({ title, message, ok = 'Confirmar', cancel = 'Volver', dange
   });
 }
 
-function promptBox({ title, message, label, placeholder = '', ok = 'Enviar', minLength = 5, multiline = true }) {
+function promptBox({ title, message, label, placeholder = '', ok = 'Enviar', minLength = 0, multiline = true }) {
   return new Promise(resolve => {
     let result = null;
     const input = multiline
-      ? h('textarea', { rows: 4, required: true, minLength, maxLength: 500, placeholder })
-      : h('input', { required: true, minLength, placeholder });
+      ? h('textarea', { rows: 4, maxLength: 500, placeholder })
+      : h('input', { placeholder });
+    if (minLength > 0) {
+      input.required = true;
+      input.minLength = minLength;
+    }
     const form = h('form', {
       class: 'sheet-body narrow',
       onsubmit: e => { e.preventDefault(); result = input.value.trim(); d.close(); }

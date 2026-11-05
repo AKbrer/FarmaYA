@@ -815,14 +815,15 @@ async function promptDisableUser(user) {
 
   const reason = await promptBox({
     title: 'Deshabilitar cuenta de ' + name,
-    message: 'Esta accion suspendera el acceso a la plataforma para ' + roleLabel + ' (' + user.email + '). El motivo que escribas a continuacion se enviara automaticamente por correo electronico de notificacion al usuario.',
-    label: 'Motivo de la deshabilitacion (requerido)',
-    placeholder: 'Ej: Documentacion vencida o incompleta, inconsistencias en pedidos, reporte de irregularidades...',
+    message: 'Esta accion suspendera el acceso a la plataforma para ' + roleLabel + ' (' + user.email + '). El motivo se enviara de inmediato por correo electronico al usuario.',
+    label: 'Motivo de la deshabilitacion',
+    placeholder: 'Ej: Suspension preventiva, documentacion pendiente, irregularidades...',
     ok: 'Deshabilitar y Enviar Correo',
-    minLength: 5,
+    minLength: 0,
     multiline: true
   });
-  return reason;
+  if (reason === null) return null;
+  return reason.trim() || 'Suspension preventiva administrativa FarmaYA';
 }
 
 function adminUsers(role) {

@@ -289,8 +289,6 @@ public class EmailService {
         }
 
         String subject = "Factura Electronica y Comprobante de Pago - Pedido #" + o.code + " - FarmaYA";
-        String threadRootId = null;
-        String invoiceMsgId = "<order-" + o.code + "-invoice-" + System.currentTimeMillis() + "@gmail.com>";
         String html = buildPaymentInvoiceHtml(o, toEmail);
 
 
@@ -299,7 +297,7 @@ public class EmailService {
         String effPass = getEffectivePassword();
         if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
             try {
-                return sendViaSmtpSsl(toEmail, subject, html, threadRootId, invoiceMsgId, effUser, effPass);
+                return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
             } catch (Exception e) {
                 log.error("Error enviando factura de pago via SMTP SSL a {}: {}", toEmail, e.getMessage(), e);
             }
@@ -361,8 +359,6 @@ public class EmailService {
 
         String subject = "Pedido #" + o.code + " - " + stageTitle + " - FarmaYA";
         String html = buildOrderUpdateHtml(o, stage, stageTitle, stageNote);
-        String threadRootId = "<order-" + o.code + "-thread@farmaya.com.co>";
-        String stageMsgId = "<order-" + o.code + "-stage-" + stage + "@farmaya.com.co>";
 
 
 
@@ -376,7 +372,7 @@ public class EmailService {
 
             try {
 
-                return sendViaSmtpSsl(toEmail, subject, html, threadRootId, stageMsgId, effUser, effPass);
+                return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
 
             } catch (Exception e) {
 
