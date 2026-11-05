@@ -102,12 +102,19 @@ public class OrderService {
         String email = o.clientEmail;
         if (email == null || email.isBlank()) {
             if (client != null && client.email != null && !client.email.isBlank()) {
-                email = client.email;
+                email = client.email.trim();
             } else if (o.clientId != null) {
-                email = users.findById(o.clientId).map(u -> u.email).orElse(null);
+                email = users.findById(o.clientId).map(u -> u.email != null ? u.email.trim() : null).orElse(null);
+            }
+            if (email != null && !email.isBlank()) {
+                o.clientEmail = email;
+                try {
+                    mongo.updateFirst(new Query(Criteria.where("_id").is(o.id)), new Update().set("clientEmail", email), Order.class);
+                } catch (Exception ignored) {}
             }
         }
         if (email != null && !email.isBlank() && email.contains("@")) {
+            log.info("Despachando factura electronica para pedido {} a {}", o.code, email);
             emailService.sendPaymentInvoiceAsync(email, o);
         } else {
             log.warn("No se pudo enviar factura para el pedido {}: correo del cliente no disponible", o.code);
@@ -225,11 +232,10 @@ public class OrderService {
             double fee = Math.round(o.total * 0.10 * 100) / 100.0;
             u.set("platformEarnings", fee);
             try {
-                movements.record("RECAUDO_PASARELA", "Pago digital (" + o.total + " COP) recaudado vía pasarela en cuenta oficial FarmaYA. Retención comisión FarmaYA (10%): " + fee + " COP.", client, o);
+                movements.record("RECAUDO_PASARELA", "Pago digital de medicamentos (" + o.total + " COP) recaudado vía pasarela en cuenta oficial FarmaYA. Retención comisión FarmaYA (10%): " + fee + " COP. Domicilio (" + courierFee(o.deliveryDistanceKm != null ? o.deliveryDistanceKm : 2.5) + " COP) a pagar al repartidor a la entrega.", client, o);
             } catch (Exception ignored) {}
         }
         Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
-        sendInvoiceToClient(res, client);
         return res;
     }
 
@@ -239,7 +245,6 @@ public class OrderService {
         Criteria c = where("id").is(id).and("clientId").is(client.id).and("status").is(PRECIO_POR_ACEPTAR);
         Update u = backToSearch(step(BUSCANDO_FARMACIA, client, "El cliente no aceptó el precio. Buscamos otra farmacia."), o.pharmacyId);
         Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
-        sendInvoiceToClient(res, client);
         return res;
     }
 
@@ -482,7 +487,7 @@ public class OrderService {
     }
 
     public static double courierFee(double estimatedRoadKm) {
-        return Math.max(3000, 2000 + Math.ceil(estimatedRoadKm) * 1000);
+        return Math.max(5000, 4000 + Math.ceil(estimatedRoadKm) * 1000);
     }
 
     /**

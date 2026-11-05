@@ -150,7 +150,7 @@ function renderLandingPage() {
         h('div', { class: 'landing-step-num' }, '03'),
         h('h3', { class: 'landing-step-card-title' }, 'Pago seguro y factura a tu correo'),
         h('p', { class: 'landing-step-card-desc' },
-          'Acepta el precio y paga de forma 100% digital y segura a traves de Wompi (Mastercard, Visa, PSE de cualquier banco, Nequi, Bancolombia y Daviplata). Recibes tu factura electronica por correo.'
+          'Acepta el precio y paga los medicamentos de forma 100% digital a traves de Wompi (Mastercard, Visa, PSE, Nequi, Bancolombia y Daviplata). El valor del domicilio se cancela directamente al repartidor al recibir tu pedido. Recibes tu factura electronica por correo.'
         ),
         h('div', { class: 'landing-step-pill' }, 'Wompi & Factura Digital')
       ),
@@ -260,7 +260,7 @@ function renderLandingPage() {
     },
     {
       q: '¿Que metodos de pago puedo utilizar en FarmaYA?',
-      a: 'Aceptamos pagos electronicos 100% seguros mediante la pasarela Wompi Bancolombia (tarjetas Mastercard y Visa, PSE con cualquier banco colombiano, Nequi, Bancolombia y Daviplata). Por politicas de seguridad y verificacion digital, no manejamos pagos en efectivo ni contraentrega.'
+      a: 'Los medicamentos se pagan de forma 100% digital a traves de la pasarela Wompi Bancolombia (Mastercard, Visa, PSE de cualquier banco colombiano, Nequi, Bancolombia y Daviplata). La tarifa del domicilio se le paga directamente al repartidor al momento de llegar a tu puerta en efectivo o transferencia. Para completar la entrega de forma segura, el cliente le dicta su codigo PIN de 4 digitos al repartidor.'
     },
     {
       q: '¿Puedo solicitar medicamentos que requieran formula o receta medica?',

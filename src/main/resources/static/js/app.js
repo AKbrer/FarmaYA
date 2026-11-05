@@ -94,7 +94,7 @@ function renderNavbar() {
         onclick: () => openProfile('profile')
       },
         h('span', { class: 'user-avatar' }, (user.name || 'U').slice(0, 1).toUpperCase()),
-        h('span', null, h('strong', null, user.name), h('small', null, roleName))
+        h('span', { class: 'user-pill-info' }, h('strong', null, user.name), h('small', null, roleName))
       )
     );
   } else {
@@ -106,7 +106,7 @@ function renderNavbar() {
         onclick: () => openProfile('profile')
       },
         h('span', { class: 'user-avatar' }, (user.name || 'U').slice(0, 1).toUpperCase()),
-        h('span', null, h('strong', null, user.name), h('small', null, roleName))
+        h('span', { class: 'user-pill-info' }, h('strong', null, user.name), h('small', null, roleName))
       )
     );
   }

@@ -369,7 +369,7 @@ function orderDetail(o, viewer) {
 
       : null);
 
-  const deliveryFee = o.courierEarnings != null ? o.courierEarnings : Math.max(3000, 2000 + Math.ceil(o.deliveryDistanceKm || 2.5) * 1000);
+  const deliveryFee = o.courierEarnings != null ? o.courierEarnings : Math.max(5000, 4000 + Math.ceil(o.deliveryDistanceKm || 2.5) * 1000);
 
   const delivery = (o.address || o.city) && block('Entrega, Ruta & Tarifa de Domicilio',
 
@@ -405,12 +405,12 @@ function orderDetail(o, viewer) {
 
       ),
 
-      h('div', { class: 'delivery-fee-callout safe-digital-callout', style: 'margin: 10px 0 6px 0; padding: 10px 14px; background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25);' },
-        h('span', { class: 'callout-ico', style: 'width:22px; height:22px; font-size:13px; background: #10b981;' }, '✓'),
+      h('div', { class: 'delivery-fee-callout', style: 'margin: 10px 0 6px 0; padding: 12px 14px; background: rgba(10, 92, 168, 0.08); border-color: rgba(10, 92, 168, 0.25);' },
+        h('span', { class: 'callout-ico', style: 'width:22px; height:22px; font-size:13px; background: #0a5ca8;' }, '!'),
         h('div', null,
-          h('strong', { style: 'font-size:13px; color: #065f46;' }, 'PAGO 100% DIGITAL Y ENTREGA SEGURA CON PIN'),
-          h('p', { style: 'font-size:12.5px; margin:0; color: var(--text);' },
-            'FarmaYA no maneja pagos en efectivo ni contraentrega. La entrega del paquete se certifica dictando tu PIN de seguridad de 4 dígitos al repartidor.'
+          h('strong', { style: 'font-size:13.5px; color: #0a5ca8;' }, 'PAGO DEL DOMICILIO AL REPARTIDOR (' + money(deliveryFee) + ')'),
+          h('p', { style: 'font-size:12.5px; margin:0; color: var(--text); line-height: 1.4;' },
+            'Los medicamentos se pagan 100% en línea por la pasarela. La tarifa del domicilio (' + money(deliveryFee) + ') se le paga directamente al domiciliario al momento de llegar a tu puerta en efectivo o transferencia. La entrega se certifica dictando tu PIN de seguridad de 4 dígitos.'
           )
         )
       ),
@@ -626,7 +626,7 @@ async function renderPaymentPage(orderOrId) {
 
   const subtotalProducts = Number(o.total || 0);
   const deliveryDist = o.deliveryDistanceKm || 2.5;
-  const deliveryFee = o.courierEarnings || Math.max(3000, 2000 + Math.ceil(deliveryDist) * 1000);
+  const deliveryFee = o.courierEarnings || Math.max(5000, 4000 + Math.ceil(deliveryDist) * 1000);
   const platformFee = Math.round(subtotalProducts * 0.10);
 
   const METHODS = [
@@ -1012,12 +1012,12 @@ async function renderPaymentPage(orderOrId) {
           h('tr', null, h('td', null, 'Fecha y Hora:'), h('th', null, nowTime)),
           h('tr', null, h('td', null, 'Monto Total Medicamentos:'), h('th', { style: 'color: #065f46; font-size:17px; font-weight:800;' }, money(subtotalProducts)))
         ),
-        h('div', { class: 'payment-pin-card', style: 'margin-top:18px;' },
+        h('div', { class: 'payment-pin-card', style: 'margin-top:18px; background: rgba(10, 92, 168, 0.08); border-color: rgba(10, 92, 168, 0.25);' },
           icon('lock'),
           h('div', null,
-            h('strong', null, 'Factura electrónica emitida y PIN de entrega'),
+            h('strong', { style: 'color: #0a5ca8;' }, 'Factura electrónica emitida y Pago del Domicilio'),
             h('p', null,
-              'Tu factura electrónica fue emitida y enviada a ' + (state.user?.email || 'tu correo registrado') + '. Recuerda que no debes entregar dinero en efectivo. La entrega se completa dictando tu PIN personal al repartidor.'
+              'Tu factura electrónica fue emitida y enviada a ' + (state.user?.email || 'tu correo registrado') + '. Recuerda que el valor del domicilio (' + money(deliveryFee) + ') se le entrega directamente al repartidor al llegar en efectivo o transferencia. La entrega se certifica dictándole tu PIN de 4 dígitos.'
             )
           )
         ),
@@ -1092,29 +1092,34 @@ async function renderPaymentPage(orderOrId) {
 
     h('div', { class: 'payment-totals-card' },
       h('div', { class: 'payment-total-row' },
-        h('span', null, 'Subtotal Medicamentos:'),
+        h('span', null, 'Subtotal Medicamentos (Productos):'),
         h('strong', null, money(subtotalProducts))
       ),
       h('div', { class: 'payment-total-row' },
-        h('span', null, 'Tarifa de Domicilio (~' + deliveryDist + ' km):'),
-        h('strong', null, money(deliveryFee))
+        h('span', null, 'Tarifa de Domicilio (~' + deliveryDist + ' km, Base $5.000):'),
+        h('strong', null, money(deliveryFee) + ' (al repartidor)')
       ),
       h('div', { class: 'payment-total-row' },
         h('span', null, 'Garantía FarmaYA (10%):'),
         h('strong', { class: 'muted' }, money(platformFee) + ' (Incluido)')
       ),
       h('div', { class: 'payment-total-row grand-total' },
-        h('span', null, 'Total a Pagar por Pasarela:'),
+        h('span', null, 'Total a Pagar en Pasarela Ahora:'),
         h('strong', null, money(subtotalProducts))
+      ),
+      h('p', { class: 'small muted', style: 'margin:8px 0 0 0; font-size:12px; line-height:1.35;' },
+        '* Los medicamentos se pagan ahora por pasarela digital. La tarifa de domicilio (' + money(deliveryFee) + ') se le cancela directamente al repartidor al llegar a tu puerta en efectivo o transferencia.'
       )
     ),
 
-    h('div', { class: 'payment-pin-card' },
+    h('div', { class: 'payment-pin-card', style: 'background: rgba(10, 92, 168, 0.08); border-color: rgba(10, 92, 168, 0.25);' },
       icon('shield'),
       h('div', null,
-        h('strong', null, 'Entrega 100% Digital y Segura con Código PIN'),
-        h('p', { style: 'margin:0;' },
-          'No se admiten pagos en efectivo ni contraentrega por seguridad. Dicta tu PIN personal de 4 dígitos al repartidor cuando recibas tu paquete sellado.'
+        h('strong', { style: 'color: #0a5ca8;' }, 'Reglas de Pago y Entrega Segura con PIN'),
+        h('p', { style: 'margin:0; font-size: 12.5px; line-height: 1.45;' },
+          '1. Los medicamentos se pagan ahora mismo 100% en línea por la pasarela seleccionada.\n' +
+          '2. La tarifa del domicilio (' + money(deliveryFee) + ') se le paga directamente al repartidor al momento de llegar a tu dirección en efectivo o transferencia.\n' +
+          '3. La entrega queda certificada cuando le dictas tu código PIN de 4 dígitos al repartidor.'
         )
       )
     )

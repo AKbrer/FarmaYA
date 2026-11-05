@@ -10133,6 +10133,23 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 }
 
 /* Todos los botones de la barra superior con exactamente la misma medida y estilo */
+.site-header {
+  min-height: 64px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px clamp(16px, 4vw, 48px) !important;
+}
+
+.nav-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* Todos los botones de la barra superior con exactamente la misma medida de 42px y estilo pill */
 .nav-header-pill,
 .header-cart-pill,
 .nav-header-orders-btn,
@@ -10142,13 +10159,14 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   min-height: 42px !important;
   max-height: 42px !important;
   border-radius: 999px !important;
-  border: 1.5px solid var(--line) !important;
-  background: var(--surface) !important;
-  color: var(--text) !important;
-  font-family: var(--font-body) !important;
+  border: 1.5px solid var(--line, #e2eae5) !important;
+  background: var(--surface, #ffffff) !important;
+  color: var(--text, #18352b) !important;
+  font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif) !important;
   font-size: 13px !important;
   font-weight: 700 !important;
   display: inline-flex !important;
+  flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
   padding: 0 16px !important;
@@ -10160,6 +10178,7 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
   vertical-align: middle !important;
   white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 
 /* Hover unificado para todos los botones */
@@ -10167,19 +10186,20 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 .header-cart-pill:hover,
 .nav-header-orders-btn:hover,
 .user-pill-btn:hover,
-.header-auth-btn:hover {
-  border-color: var(--primary) !important;
-  background: rgba(22, 134, 93, 0.08) !important;
-  color: var(--primary) !important;
+.header-auth-btn:hover,
+.hamburger-btn:hover {
+  border-color: var(--primary, #16865d) !important;
+  background: rgba(22, 134, 93, 0.06) !important;
+  color: var(--primary, #16865d) !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(22, 134, 93, 0.16) !important;
+  box-shadow: 0 4px 12px rgba(22, 134, 93, 0.14) !important;
 }
 
 /* Active auth state */
 .header-auth-btn.is-active {
-  background: var(--primary) !important;
+  background: var(--primary, #16865d) !important;
   color: #ffffff !important;
-  border-color: var(--primary) !important;
+  border-color: var(--primary, #16865d) !important;
 }
 
 .header-auth-btn.is-active:hover {
@@ -10196,10 +10216,10 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   max-width: 42px !important;
   min-height: 42px !important;
   max-height: 42px !important;
-  border-radius: 999px !important;
-  border: 1.5px solid var(--line) !important;
-  background: var(--surface) !important;
-  color: var(--text) !important;
+  border-radius: 50% !important;
+  border: 1.5px solid var(--line, #e2eae5) !important;
+  background: var(--surface, #ffffff) !important;
+  color: var(--text, #18352b) !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -10209,21 +10229,14 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
   vertical-align: middle !important;
-}
-
-.nav-header-btn.hamburger-btn:hover,
-.hamburger-btn:hover {
-  border-color: var(--primary) !important;
-  background: rgba(22, 134, 93, 0.08) !important;
-  color: var(--primary) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(22, 134, 93, 0.16) !important;
+  flex-shrink: 0 !important;
 }
 
 .hamburger-btn svg,
 .hamburger-btn .ico svg {
   width: 20px !important;
   height: 20px !important;
+  stroke: currentColor !important;
 }
 
 /* Iconos de Canasta y Mis Pedidos */
@@ -10237,16 +10250,17 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   width: 18px !important;
   height: 18px !important;
   flex-shrink: 0 !important;
+  color: var(--primary, #16865d) !important;
 }
 
-/* Insignias circulares uniformes (Badges) */
+/* Insignias circulares uniformes (Badges de Canasta y Pedidos) */
 .header-cart-badge,
 .header-orders-badge {
   min-width: 20px !important;
   height: 20px !important;
   padding: 0 6px !important;
   border-radius: 999px !important;
-  background: #0b8457 !important;
+  background: var(--primary, #16865d) !important;
   color: #ffffff !important;
   font-size: 11px !important;
   font-weight: 800 !important;
@@ -10265,45 +10279,83 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   margin-left: 2px !important;
 }
 
-/* Usuario tipo pastilla uniforme */
+/* Usuario tipo pastilla uniforme — NUNCA circular gigante */
 .user-pill-btn {
-  padding: 0 16px 0 6px !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  padding: 0 16px 0 5px !important;
   gap: 10px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid var(--line, #e2eae5) !important;
+  background: var(--surface, #ffffff) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
+  flex-shrink: 0 !important;
+  width: auto !important;
+  max-width: 260px !important;
 }
 
 .user-pill-btn .user-avatar {
-  width: 30px !important;
-  height: 30px !important;
-  min-width: 30px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
   border-radius: 50% !important;
   background: var(--primary-soft, #e0f5e9) !important;
   color: var(--primary, #0b8457) !important;
-  font-size: 12.5px !important;
+  font-size: 13px !important;
   font-weight: 800 !important;
-  display: grid !important;
-  place-items: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.user-pill-btn .user-pill-info,
+.user-pill-btn > span:not(.user-avatar) {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+  line-height: 1.15 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .user-pill-btn strong {
   font-size: 12.5px !important;
   font-weight: 800 !important;
-  color: var(--text) !important;
+  color: var(--text, #18352b) !important;
   max-width: 130px !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   display: block !important;
   line-height: 1.2 !important;
+  margin: 0 !important;
 }
 
 .user-pill-btn small {
   font-size: 10px !important;
-  font-weight: 600 !important;
-  color: var(--muted) !important;
+  font-weight: 700 !important;
+  color: var(--primary, #16865d) !important;
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
   display: block !important;
   line-height: 1 !important;
+  margin: 1px 0 0 0 !important;
 }
 
 /* Modo Oscuro Unificado */

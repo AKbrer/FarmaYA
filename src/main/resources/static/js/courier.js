@@ -252,7 +252,7 @@ function courierOffers() {
     if (!data.orders.length) return empty('No hay entregas pendientes en tu rango de cobertura', 'Esta pantalla se actualiza automáticamente cuando una droguería prepare un pedido dentro de tu radio de entrega.');
     return h('div', { class: 'list' }, data.orders.map(o => {
       const distKm = o.deliveryDistanceKm != null ? o.deliveryDistanceKm : (o.pharmacyLatitude && o.latitude ? Math.round(farmayaDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude, o.latitude, o.longitude) * 1.3 * 10) / 10 : 2.5);
-      const fee = o.courierEarnings != null ? o.courierEarnings : Math.max(3000, 2000 + Math.ceil(distKm) * 1000);
+      const fee = o.courierEarnings != null ? o.courierEarnings : Math.max(5000, 4000 + Math.ceil(distKm) * 1000);
 
       const card = h('article', { class: 'offer stitch-offer' + (fresh.includes(o.id) ? ' fresh' : '') },
         h('div', { class: 'offer-head' },

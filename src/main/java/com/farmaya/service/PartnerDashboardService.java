@@ -223,7 +223,7 @@ public class PartnerDashboardService {
         User pharmacy = pharmacies.get(order.pharmacyId);
         if (pharmacy == null || pharmacy.latitude == null || pharmacy.longitude == null || order.latitude == null || order.longitude == null) return null;
         double km = estimatedRoadDistanceKm(pharmacy.latitude, pharmacy.longitude, order.latitude, order.longitude);
-        return Math.max(3000, 2000 + Math.ceil(km) * 1000);
+        return Math.max(5000, 4000 + Math.ceil(km) * 1000);
     }
 
     private static double estimatedRoadDistanceKm(double fromLat, double fromLon, double toLat, double toLon) {

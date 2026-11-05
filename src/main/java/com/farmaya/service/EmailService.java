@@ -258,11 +258,13 @@ public class EmailService {
      * Envia de manera asincrona la factura electronica y comprobante de pago al cliente.
      */
     public void sendPaymentInvoiceAsync(String toEmail, Order o) {
+        log.info("Encolando envio asincrono de factura para pedido {} hacia {}", o != null ? o.code : "?", toEmail);
         CompletableFuture.runAsync(() -> {
             try {
-                sendPaymentInvoice(toEmail, o);
+                EmailDispatchResult res = sendPaymentInvoice(toEmail, o);
+                log.info("Resultado envio de factura para pedido {}: exito={}, mensaje={}", o != null ? o.code : "?", res.success(), res.message());
             } catch (Exception e) {
-                log.warn("No se pudo despachar factura para el pedido {}: {}", o != null ? o.code : "?", e.getMessage(), e);
+                log.error("No se pudo despachar factura para el pedido {}: {}", o != null ? o.code : "?", e.getMessage(), e);
             }
         });
     }
@@ -275,10 +277,11 @@ public class EmailService {
             return new EmailDispatchResult(false, "Correo de cliente no disponible.");
         }
 
-        String subject = "Pedido #" + o.code + " - FarmaYA";
+        String subject = "Factura Electronica y Comprobante de Pago - Pedido #" + o.code + " - FarmaYA";
+        String threadRootId = null;
+        String invoiceMsgId = "<order-" + o.code + "-invoice-" + System.currentTimeMillis() + "@gmail.com>";
         String html = buildPaymentInvoiceHtml(o, toEmail);
-        String threadRootId = "<order-" + o.code + "-thread@farmaya.com.co>";
-        String invoiceMsgId = "<order-" + o.code + "-invoice-" + System.currentTimeMillis() + "@farmaya.com.co>";
+
 
         // 1. Gmail SMTP SSL Directo
         String effUser = getEffectiveUsername();
@@ -344,12 +347,9 @@ public class EmailService {
 
 
 
-        String subject = "Pedido #" + o.code + " - FarmaYA";
-
+        String subject = "Pedido #" + o.code + " - " + stageTitle + " - FarmaYA";
         String html = buildOrderUpdateHtml(o, stage, stageTitle, stageNote);
-
         String threadRootId = "<order-" + o.code + "-thread@farmaya.com.co>";
-
         String stageMsgId = "<order-" + o.code + "-stage-" + stage + "@farmaya.com.co>";
 
 
@@ -414,13 +414,13 @@ public class EmailService {
 
                                                String effUser, String effPass) throws Exception {
 
-        log.info("Iniciando envio de correo real via {}:{} a {}...", host, port, toEmail);
+        String targetHost = (host != null && !host.isBlank()) ? host.trim() : "smtp.gmail.com";
+        int targetPort = (port > 0) ? port : 465;
+        log.info("Iniciando envio de correo real via {}:{} a {}...", targetHost, targetPort, toEmail);
 
         SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
-
-
-        try (SSLSocket socket = (SSLSocket) factory.createSocket(host, port);
+        try (SSLSocket socket = (SSLSocket) factory.createSocket(targetHost, targetPort);
 
              BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 
