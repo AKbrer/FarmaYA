@@ -562,29 +562,54 @@ function clientOrdersView() {
                   ? o.items.map(i => (i.name || 'Medicamento') + ' ×' + (i.quantity || 1)).join(', ')
                   : (o.itemCount ? (o.itemCount + ' productos') : '');
 
-                return h('div', { class: 'active-order-item-card', style: 'border: 1.5px solid var(--line); border-radius: 14px; padding: 18px; background: var(--surface); box-shadow: 0 4px 16px rgba(0,0,0,0.04);' },
-                  h('div', { class: 'active-order-item-top', style: 'display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap;' },
-                    h('div', null,
-                      h('span', { class: 'active-order-code', style: 'font-size: 13px; font-weight: 800; color: var(--primary);' }, 'PEDIDO #' + (o.code || (o.id || '').slice(-6))),
-                      h('h4', { style: 'margin: 4px 0 0 0; font-size: 15px; font-weight: 800; color: ' + statusColor }, statusTitle),
-                      h('p', { class: 'small muted', style: 'margin: 4px 0 0 0;' }, o.address ? (o.address + (o.city ? (' · ' + o.city) : '')) : 'Dirección de entrega'),
-                      itemsText ? h('p', { class: 'small muted', style: 'margin: 4px 0 0 0;' }, 'Productos: ' + itemsText) : null
+                return h('div', { class: 'active-order-item-card' },
+                  h('div', { class: 'active-order-item-top' },
+                    h('div', { class: 'active-order-main-info' },
+                      h('span', { class: 'active-order-code' }, 'PEDIDO #' + (o.code || (o.id || '').slice(-6))),
+                      h('h4', { class: 'active-order-status-title', style: 'color: ' + statusColor }, statusTitle),
+                      h('p', { class: 'small muted', style: 'margin: 3px 0 0 0;' }, o.address ? (o.address + (o.city ? (' · ' + o.city) : '')) : 'Dirección de entrega'),
+                      itemsText ? h('p', { class: 'small muted', style: 'margin: 3px 0 0 0;' }, 'Productos: ' + itemsText) : null
                     ),
-                    (isEnCamino || isPaid) && o.deliveryCode ? h('div', { class: 'active-order-pin-pill', style: 'background: rgba(22, 134, 93, 0.1); border: 1.5px solid var(--primary); border-radius: 10px; padding: 6px 14px; text-align: center;' },
-                      h('span', { class: 'pin-label', style: 'display: block; font-size: 10px; font-weight: 700; color: var(--primary); letter-spacing: 0.5px;' }, 'PIN ENTREGA'),
-                      h('strong', { class: 'pin-value', style: 'font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: 1px;' }, o.deliveryCode)
+                    (isEnCamino || isPaid) && o.deliveryCode ? h('div', { class: 'active-order-pin-pill' },
+                      h('span', { class: 'pin-label' }, 'PIN ENTREGA'),
+                      h('strong', { class: 'pin-value' }, o.deliveryCode)
                     ) : null
                   ),
-                  h('div', { class: 'active-order-stepper', style: 'display: flex; align-items: center; gap: 8px; margin: 18px 0;' },
-                    h('div', { class: 'step-dot' + (step1 ? ' done' : '') }, h('span', null, '1'), h('small', null, 'Solicitado')),
-                    h('div', { class: 'step-bar' + (step2 ? ' done' : '') }),
-                    h('div', { class: 'step-dot' + (step2 ? ' done' : '') }, h('span', null, '2'), h('small', null, 'Cotizado')),
-                    h('div', { class: 'step-bar' + (step3 ? ' done' : '') }),
-                    h('div', { class: 'step-dot' + (step3 ? ' done' : '') }, h('span', null, '3'), h('small', null, 'Pagado')),
-                    h('div', { class: 'step-bar' + (step4 ? ' done' : '') }),
-                    h('div', { class: 'step-dot' + (step4 ? ' done' : '') }, h('span', null, '4'), h('small', null, 'En camino'))
+                  h('div', { class: 'active-order-stepper' },
+                    h('div', { class: 'stepper-col' + (step1 ? ' done' : '') },
+                      h('div', { class: 'stepper-node' },
+                        h('div', { class: 'stepper-spacer' }),
+                        h('div', { class: 'step-dot' }, '1'),
+                        h('div', { class: 'stepper-line' + (step2 ? ' done' : '') })
+                      ),
+                      h('span', { class: 'step-lbl' }, 'Solicitado')
+                    ),
+                    h('div', { class: 'stepper-col' + (step2 ? ' done' : '') },
+                      h('div', { class: 'stepper-node' },
+                        h('div', { class: 'stepper-line' + (step2 ? ' done' : '') }),
+                        h('div', { class: 'step-dot' }, '2'),
+                        h('div', { class: 'stepper-line' + (step3 ? ' done' : '') })
+                      ),
+                      h('span', { class: 'step-lbl' }, 'Cotizado')
+                    ),
+                    h('div', { class: 'stepper-col' + (step3 ? ' done' : '') },
+                      h('div', { class: 'stepper-node' },
+                        h('div', { class: 'stepper-line' + (step3 ? ' done' : '') }),
+                        h('div', { class: 'step-dot' }, '3'),
+                        h('div', { class: 'stepper-line' + (step4 ? ' done' : '') })
+                      ),
+                      h('span', { class: 'step-lbl' }, 'Pagado')
+                    ),
+                    h('div', { class: 'stepper-col' + (step4 ? ' done' : '') },
+                      h('div', { class: 'stepper-node' },
+                        h('div', { class: 'stepper-line' + (step4 ? ' done' : '') }),
+                        h('div', { class: 'step-dot' }, '4'),
+                        h('div', { class: 'stepper-spacer' })
+                      ),
+                      h('span', { class: 'step-lbl' }, 'En camino')
+                    )
                   ),
-                  h('div', { class: 'active-order-actions-row', style: 'display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px;' },
+                  h('div', { class: 'active-order-actions-row' },
                     isQuoted ? h('button', {
                       class: 'btn primary', type: 'button',
                       style: 'font-weight: 800; padding: 10px 18px;',

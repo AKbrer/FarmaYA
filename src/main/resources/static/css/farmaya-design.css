@@ -7842,63 +7842,185 @@ ol.timeline small {
   color: #34d399;
 }
 
+/* ==========================================================================
+   TARJETAS Y STEPPER DE PEDIDOS ACTIVOS (CLIENTE)
+   ========================================================================== */
+
+.active-order-item-card {
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 22px 24px;
+  background: var(--surface);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.active-order-item-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.active-order-main-info {
+  flex: 1 1 300px;
+  min-width: 0;
+}
+
+.active-order-code {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.5px;
+}
+
+.active-order-status-title {
+  margin: 4px 0 6px 0;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.active-order-pin-pill {
+  background: rgba(22, 134, 93, 0.08);
+  border: 1.5px solid rgba(22, 134, 93, 0.35);
+  border-radius: 12px;
+  padding: 8px 16px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(22, 134, 93, 0.05);
+  flex-shrink: 0;
+}
+
+.active-order-pin-pill .pin-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.active-order-pin-pill .pin-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  color: #16865d;
+  letter-spacing: 2px;
+  font-family: var(--font-mono, monospace);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+[data-theme="dark"] .active-order-pin-pill {
+  background: rgba(52, 211, 153, 0.12);
+  border-color: rgba(52, 211, 153, 0.4);
+}
+
+[data-theme="dark"] .active-order-pin-pill .pin-label,
+[data-theme="dark"] .active-order-pin-pill .pin-value {
+  color: #34d399;
+}
+
+/* Stepper simetrico de 4 columnas en flujo normal */
 .active-order-stepper {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  margin: 22px 0 16px 0;
+  box-sizing: border-box;
+}
+
+.stepper-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  min-width: 0;
+}
+
+.stepper-node {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin: 18px 4px 24px 4px;
+  width: 100%;
+  position: relative;
+}
+
+.stepper-spacer {
+  flex: 1;
+  height: 3px;
+  visibility: hidden;
+}
+
+.stepper-line {
+  flex: 1;
+  height: 3px;
+  background: var(--line);
+  transition: background 0.25s ease;
+}
+
+.stepper-line.done {
+  background: #16865d;
 }
 
 .step-dot {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  max-width: 28px;
   border-radius: 50%;
-  background: var(--line);
+  background: var(--surface);
+  border: 2px solid var(--line);
   color: var(--muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
-  position: relative;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+  box-sizing: border-box;
+  z-index: 2;
 }
 
-.step-dot.done {
+.stepper-col.done .step-dot {
   background: #16865d;
+  border-color: #16865d;
   color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(22, 134, 93, 0.18);
 }
 
-.step-dot small {
-  position: absolute;
-  top: 27px;
-  white-space: nowrap;
-  font-size: 10.5px;
+.step-lbl {
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.25;
   color: var(--muted);
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding: 0 2px;
 }
 
-.step-dot.done small {
+.stepper-col.done .step-lbl {
   color: var(--text);
-  font-weight: 700;
-}
-
-.step-bar {
-  flex: 1;
-  height: 3px;
-  background: var(--line);
-  margin: 0 4px;
-}
-
-.step-bar.done {
-  background: #16865d;
+  font-weight: 800;
 }
 
 .active-order-actions-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
-  margin-top: 14px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
 }
 
 .nav-header-orders-btn {
