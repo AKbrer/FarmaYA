@@ -8129,3 +8129,180 @@ ol.timeline small {
     font-size: 12px;
   }
 }
+
+
+/* ==========================================================================
+   FARMAYA · TARJETA DESTACADA DEL PIN DE ENTREGA (CLIENTE)
+   ========================================================================== */
+
+.delivery-pin-card {
+  margin: 18px 0;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, rgba(22, 134, 93, 0.08) 0%, rgba(13, 148, 136, 0.04) 100%);
+  border: 2px solid var(--primary, #16865d);
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(22, 134, 93, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.delivery-pin-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #16865d, #10b981, #0d9488);
+}
+
+[data-theme="dark"] .delivery-pin-card {
+  background: linear-gradient(135deg, rgba(22, 134, 93, 0.18) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border-color: rgba(34, 197, 94, 0.45);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.pin-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pin-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary, #16865d);
+}
+
+.pin-shield-ico svg {
+  width: 20px;
+  height: 20px;
+  stroke: var(--primary, #16865d);
+}
+
+.pin-badge-title {
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--primary, #16865d);
+}
+
+.pin-status-pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(22, 134, 93, 0.14);
+  color: var(--primary, #16865d);
+  border: 1px solid rgba(22, 134, 93, 0.3);
+}
+
+/* Casillas de los 4 dígitos */
+.pin-digits-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 6px 0;
+}
+
+.pin-digit-box {
+  width: 64px;
+  height: 72px;
+  background: var(--surface, #ffffff);
+  border: 2px solid var(--primary, #16865d);
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 16px rgba(22, 134, 93, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pin-digit-box:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(22, 134, 93, 0.22);
+}
+
+[data-theme="dark"] .pin-digit-box {
+  background: #1e293b;
+  border-color: #22c55e;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.pin-digit-box span {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--primary, #16865d);
+  line-height: 1;
+  letter-spacing: 0.5px;
+}
+
+[data-theme="dark"] .pin-digit-box span {
+  color: #4ade80;
+}
+
+/* Pie instructivo con botón de copiado */
+.pin-card-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(22, 134, 93, 0.25);
+  flex-wrap: wrap;
+}
+
+.pin-truck-ico svg {
+  width: 22px;
+  height: 22px;
+  stroke: var(--primary, #16865d);
+  flex-shrink: 0;
+}
+
+.pin-info-text {
+  flex: 1 1 240px;
+}
+
+.pin-info-text strong {
+  display: block;
+  font-size: 13.5px;
+  color: var(--text, #1e293b);
+  margin-bottom: 2px;
+}
+
+.pin-info-text p {
+  font-size: 12.5px;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pin-copy-action {
+  flex-shrink: 0;
+  font-weight: 700;
+  border-radius: 10px;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+@media (max-width: 480px) {
+  .pin-digits-wrap {
+    gap: 8px;
+  }
+  .pin-digit-box {
+    width: 52px;
+    height: 60px;
+  }
+  .pin-digit-box span {
+    font-size: 26px;
+  }
+}

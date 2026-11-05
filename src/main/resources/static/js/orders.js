@@ -443,11 +443,38 @@ function orderDetail(o, viewer) {
 
     ),
 
-    codeVisible && h('div', { class: 'code-card' },
-
-      h('div', { class: 'digits', 'aria-label': 'Código de entrega ' + o.deliveryCode.split('').join(' ') }, o.deliveryCode.split('').map(d => h('span', null, d))),
-
-      h('p', null, 'Es tu código PIN de entrega. Díctaselo a tu domiciliario cuando llegue con tu pedido para que pueda confirmar la entrega.')),
+    codeVisible && h('div', { class: 'delivery-pin-card' },
+      h('div', { class: 'pin-card-header' },
+        h('div', { class: 'pin-badge-wrap' },
+          icon('shield', 'pin-shield-ico'),
+          h('span', { class: 'pin-badge-title' }, 'CÓDIGO DE SEGURIDAD PARA ENTREGA')
+        ),
+        h('span', { class: 'pin-status-pill' }, 'Requerido para recibir')
+      ),
+      h('div', { class: 'pin-digits-wrap', 'aria-label': 'PIN de entrega: ' + String(o.deliveryCode).split('').join(' ') },
+        String(o.deliveryCode).split('').map(d => h('div', { class: 'pin-digit-box' }, h('span', null, d)))
+      ),
+      h('div', { class: 'pin-card-info' },
+        icon('truck', 'pin-truck-ico'),
+        h('div', { class: 'pin-info-text' },
+          h('strong', null, 'Díctaselo a tu domiciliario al recibir tu pedido.'),
+          h('p', null, 'El repartidor debe ingresar estos 4 dígitos en su aplicación para confirmar y finalizar la entrega de forma segura.')
+        ),
+        h('button', {
+          class: 'btn ghost small pin-copy-action',
+          type: 'button',
+          title: 'Copiar PIN al portapapeles',
+          onclick: () => {
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(String(o.deliveryCode));
+              toast('PIN ' + o.deliveryCode + ' copiado al portapapeles');
+            } else {
+              toast('PIN de entrega: ' + o.deliveryCode);
+            }
+          }
+        }, icon('copy'), h('span', null, 'Copiar PIN'))
+      )
+    ),
 
     (parts.length || courier) && block('Quiénes participan', parts, courier),
 
