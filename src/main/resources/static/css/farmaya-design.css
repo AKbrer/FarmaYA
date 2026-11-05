@@ -9299,3 +9299,824 @@ ol.timeline small {
   background: rgba(16, 185, 129, 0.2) !important;
   color: #34d399 !important;
 }
+
+
+/* ==========================================================================
+   FARMAYA LANDING PAGE · Tipografia Elegante, Scroll Reveal & Flutter Movil
+   ========================================================================== */
+
+/* Tipografia Global Elevada */
+:root {
+  --font-display: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body:    'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body, button, input, select, textarea {
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
+  font-family: var(--font-display);
+}
+
+/* Transiciones de Scroll Reveal Profesionales (GPU Composite Only) */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-on-scroll.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.delay-1 { transition-delay: 80ms; }
+.delay-2 { transition-delay: 160ms; }
+.delay-3 { transition-delay: 240ms; }
+.delay-4 { transition-delay: 320ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Contenedor Principal de la Landing */
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  gap: 60px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 0 40px;
+}
+
+/* 1. HERO SECTION */
+.landing-hero {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  align-items: center;
+  gap: 40px;
+  padding: 30px 0 20px;
+}
+
+.landing-hero-badge-row {
+  margin-bottom: 16px;
+}
+
+.landing-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--surface-soft, #eef7f2);
+  color: #0b8457;
+  border: 1px solid rgba(11, 132, 87, 0.2);
+}
+
+.landing-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: hero-pulse 2s infinite;
+}
+
+@keyframes hero-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.landing-hero-title {
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px 0;
+  color: var(--text);
+}
+
+.landing-hero-gradient-text {
+  background: linear-gradient(135deg, #0b8457 0%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-hero-description {
+  font-size: clamp(15px, 1.8vw, 17px);
+  line-height: 1.65;
+  color: var(--muted);
+  margin: 0 0 28px 0;
+  max-width: 580px;
+}
+
+.landing-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.landing-btn-cta {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  padding: 14px 26px !important;
+  border-radius: 14px !important;
+  background: var(--primary, #0b8457) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(11, 132, 87, 0.28) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.landing-btn-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(11, 132, 87, 0.35) !important;
+}
+
+.landing-btn-secondary {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  padding: 14px 22px !important;
+  border-radius: 14px !important;
+  border: 1px solid var(--line) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  transition: transform 0.2s ease, background-color 0.2s ease !important;
+}
+
+.landing-btn-secondary:hover {
+  transform: translateY(-2px);
+  background: var(--surface-soft) !important;
+}
+
+.landing-btn-ghost {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--muted) !important;
+  padding: 12px 18px !important;
+}
+
+.landing-trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.landing-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.landing-trust-ico {
+  color: #0b8457;
+  display: inline-flex;
+}
+
+/* Tarjeta Mock Visual del Hero */
+.landing-hero-visual {
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.landing-mock-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+}
+
+.landing-mock-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.landing-mock-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.landing-mock-cross {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.12));
+}
+
+.landing-mock-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.landing-mock-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 10px 0;
+}
+
+.landing-mock-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.step-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--surface-soft, #e2e8f0);
+  color: var(--muted);
+}
+
+.landing-mock-step.done .step-circle {
+  background: #0b8457;
+  color: #ffffff;
+}
+
+.landing-mock-step.active .step-circle {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.2);
+}
+
+.step-text {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.landing-mock-line {
+  flex: 1;
+  height: 2px;
+  background: var(--surface-soft, #e2e8f0);
+}
+
+.landing-mock-line.done {
+  background: #0b8457;
+}
+
+.landing-mock-line.active {
+  background: linear-gradient(90deg, #0b8457, #0284c7);
+}
+
+.landing-mock-pin-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(11, 132, 87, 0.08);
+  border: 1px solid rgba(11, 132, 87, 0.22);
+  border-radius: 12px;
+}
+
+.pin-box-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.pin-box-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #0b8457;
+}
+
+.pin-box-number {
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: #0b8457;
+  line-height: 1.1;
+}
+
+.pin-box-note {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.35;
+  max-width: 170px;
+  text-align: right;
+}
+
+.landing-mock-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  font-size: 12.5px;
+}
+
+.mock-item-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text);
+}
+
+.mock-item-row.total-row {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+/* 2. SECCIONES GENERALES */
+.landing-section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 20px 0;
+}
+
+.landing-section-head {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.landing-section-eyebrow {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0b8457;
+  margin-bottom: 8px;
+}
+
+.landing-section-title {
+  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  margin: 0 0 12px 0;
+  color: var(--text);
+}
+
+.landing-section-subtitle {
+  font-size: clamp(14px, 1.6vw, 16px);
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Pasos Como Funciona */
+.landing-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.landing-step-card {
+  padding: 26px 22px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.landing-step-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+}
+
+.landing-step-num {
+  font-family: var(--font-display);
+  font-size: 2.8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(11, 132, 87, 0.15);
+  margin-bottom: 12px;
+}
+
+.landing-step-card-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.landing-step-card-desc {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 0 0 16px 0;
+  flex-grow: 1;
+}
+
+.landing-step-pill {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 4px 10px;
+  background: var(--surface-soft);
+  color: #0b8457;
+  border-radius: 8px;
+}
+
+/* 3. ECOSISTEMA FARMAYA */
+.landing-eco-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.landing-eco-card {
+  padding: 28px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease;
+}
+
+.landing-eco-card:hover {
+  transform: translateY(-4px);
+}
+
+.landing-eco-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.eco-green { background: rgba(11, 132, 87, 0.12); color: #0b8457; }
+.eco-blue { background: rgba(2, 132, 199, 0.12); color: #0284c7; }
+.eco-purple { background: rgba(139, 92, 246, 0.12); color: #8b5cf6; }
+
+.landing-eco-title {
+  font-size: 19px;
+  font-weight: 800;
+  margin: 0 0 16px 0;
+  color: var(--text);
+}
+
+.landing-eco-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-grow: 1;
+}
+
+.landing-eco-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.check-ico {
+  color: #0b8457;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.eco-btn {
+  width: 100%;
+  text-align: center;
+  font-weight: 700;
+}
+
+/* 4. SEGURIDAD Y ESTANDARES */
+.landing-security-box {
+  padding: 40px;
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 60%, #047857 100%);
+  border-radius: 24px;
+  color: #ffffff;
+  box-shadow: 0 10px 30px rgba(6, 78, 59, 0.2);
+}
+
+.landing-security-header {
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 32px;
+}
+
+.landing-security-header .landing-section-eyebrow {
+  color: #34d399;
+}
+
+.landing-security-header .landing-section-title {
+  color: #ffffff;
+}
+
+.landing-security-header .landing-section-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.landing-security-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.landing-sec-item {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 22px 18px;
+}
+
+.landing-sec-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  color: #ffffff;
+}
+
+.landing-sec-item h4 {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+}
+
+.landing-sec-item p {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+
+/* 5. PREGUNTAS FRECUENTES (FAQ) */
+.landing-faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.landing-faq-item {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.landing-faq-item.is-open {
+  border-color: #0b8457;
+}
+
+.landing-faq-trigger {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 22px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+}
+
+.landing-faq-question {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.landing-faq-icon {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0b8457;
+  transition: transform 0.25s ease;
+}
+
+.landing-faq-item.is-open .landing-faq-icon {
+  transform: rotate(45deg);
+}
+
+.landing-faq-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.16, 1, 0.3, 1), padding 0.35s ease;
+  padding: 0 22px;
+}
+
+.landing-faq-item.is-open .landing-faq-body {
+  max-height: 300px;
+  padding: 0 22px 18px;
+}
+
+.landing-faq-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* 6. CTA BANNER FINAL */
+.landing-cta-section {
+  padding: 20px 0;
+}
+
+.landing-cta-card {
+  padding: 44px 30px;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-radius: 24px;
+  text-align: center;
+  color: #ffffff;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.15);
+}
+
+.landing-cta-content {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.landing-cta-title {
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -0.025em;
+  margin: 0 0 12px 0;
+  color: #ffffff;
+}
+
+.landing-cta-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #94a3b8;
+  margin: 0 0 28px 0;
+}
+
+.landing-cta-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+/* ==========================================================================
+   Modo Oscuro (Dark Theme) para Landing Page
+   ========================================================================== */
+[data-theme="dark"] .landing-hero-badge {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+[data-theme="dark"] .landing-mock-card,
+[data-theme="dark"] .landing-step-card,
+[data-theme="dark"] .landing-eco-card,
+[data-theme="dark"] .landing-faq-item {
+  background: var(--surface);
+  border-color: var(--line);
+}
+
+[data-theme="dark"] .landing-mock-pin-box {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+[data-theme="dark"] .pin-box-number,
+[data-theme="dark"] .pin-box-lbl {
+  color: #34d399;
+}
+
+[data-theme="dark"] .landing-step-num {
+  color: rgba(52, 211, 153, 0.2);
+}
+
+/* ==========================================================================
+   Optimizacion Movil Estilo Flutter (@media max-width: 640px)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .landing-page {
+    gap: 40px;
+  }
+
+  .landing-hero {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 10px 0;
+  }
+
+  .landing-hero-title {
+    font-size: 2.1rem;
+  }
+
+  .landing-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .landing-btn-cta,
+  .landing-btn-secondary {
+    width: 100% !important;
+    min-height: 48px !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  .landing-steps-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .landing-step-card {
+    border-radius: 16px !important;
+    padding: 20px 18px !important;
+  }
+
+  .landing-eco-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .landing-eco-card {
+    border-radius: 16px !important;
+    padding: 22px 18px !important;
+  }
+
+  .landing-security-box {
+    padding: 24px 18px !important;
+    border-radius: 20px !important;
+  }
+
+  .landing-security-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .landing-sec-item {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .landing-cta-card {
+    padding: 30px 18px !important;
+    border-radius: 20px !important;
+  }
+
+  .landing-cta-buttons {
+    flex-direction: column;
+  }
+}

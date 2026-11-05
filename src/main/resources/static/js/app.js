@@ -9,8 +9,9 @@ function renderNavbar() {
   const user = state.user;
   if (!user) {
     const isRegister = location.hash === '#register';
+    const isLogin = location.hash === '#login';
     nav.append(
-      h('a', { class: isRegister ? 'btn ghost small' : 'btn primary small', href: '#login' }, 'Iniciar sesión'),
+      h('a', { class: isLogin ? 'btn primary small' : 'btn ghost small', href: '#login' }, 'Iniciar sesión'),
       h('a', { class: isRegister ? 'btn primary small' : 'btn ghost small', href: '#register' }, 'Crear cuenta'),
       h('button', {
         class: 'icon-button hamburger-btn',
@@ -142,15 +143,25 @@ async function renderApp() {
     try { state.user = await API.get('/auth/me'); }
     catch (_) { API.setToken(null); state.user = null; }
   }
-  const hash = location.hash || (state.user ? routeForRole(state.user.role) : '#login');
-  if (state.user && ['#login', '#register', ''].includes(hash)) location.hash = routeForRole(state.user.role);
+  const hash = location.hash || (state.user ? routeForRole(state.user.role) : '#home');
+  if (state.user && ['#home', '#login', '#register', ''].includes(hash)) location.hash = routeForRole(state.user.role);
   const route = location.hash || hash;
   renderNavbar();
   if (!state.user || state.user.role !== 'CLIENTE') {
     document.getElementById('fy_mobile_cart_bar')?.remove();
   }
   if (!state.user) {
-    if (route === '#register') renderRegister(); else renderLogin();
+    if (route === '#register') {
+      renderRegister();
+    } else if (route === '#login') {
+      renderLogin();
+    } else {
+      if (typeof renderLandingPage === 'function') {
+        renderLandingPage();
+      } else {
+        renderLogin();
+      }
+    }
     mountGlobalFooter();
     return;
   }

@@ -296,7 +296,10 @@ function buildLoginCard() {
         class: 'btn link',
         type: 'button',
         onclick: () => switchAuthMode('register', true)
-      }, 'Crear cuenta')
+      }, 'Crear cuenta'),
+      h('div', { style: 'margin-top: 10px;' },
+        h('a', { class: 'muted small', href: '#home' }, 'Volver a la página de inicio')
+      )
     )
   );
 
@@ -656,7 +659,10 @@ function buildRegisterCard() {
         class: 'btn link',
         type: 'button',
         onclick: () => switchAuthMode('login', true)
-      }, 'Iniciar sesión')
+      }, 'Iniciar sesión'),
+      h('div', { style: 'margin-top: 10px;' },
+        h('a', { class: 'muted small', href: '#home' }, 'Volver a la página de inicio')
+      )
     )
   );
 
