@@ -98,7 +98,10 @@ public class AdminService {
         movements.record("USUARIO_VERIFICACION", (value ? "Verificó " : "Retiró verificación a ") + displayName(changed), admin, null);
         if (value && changed.email != null && !changed.email.isBlank()) {
             emailService.sendAccountVerifiedAsync(changed);
-            movements.record("NOTIFICACION_CORREO", "Notificación oficial de aprobación y activación de cuenta enviada a " + changed.email, admin, null);
+            movements.record("NOTIFICACION_CORREO", "Notificacion oficial de aprobacion y activacion de cuenta enviada a " + changed.email, admin, null);
+        } else if (!value && changed.email != null && !changed.email.isBlank()) {
+            emailService.sendAccountVerificationNeededAsync(changed);
+            movements.record("NOTIFICACION_CORREO", "Notificacion de verificacion requerida enviada a " + changed.email, admin, null);
         }
         return changed;
     }

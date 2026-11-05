@@ -1488,9 +1488,33 @@ public class EmailService {
         if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
             return new EmailDispatchResult(false, "Correo no disponible.");
         }
-        log.info("Despachando notificacion oficial de cuenta habilitada a {}", u.email);
-        String subject = "Tu cuenta en FarmaYA se encuentra habilitada para operar";
+        boolean needsVerification = (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR) && !u.verified;
+        log.info("Despachando notificacion de cuenta habilitada a {} (necesita verificacion previa: {})", u.email, needsVerification);
+        String subject = needsVerification
+                ? "Tu cuenta en FarmaYA ha sido habilitada pero necesita verificacion para operar"
+                : "Tu cuenta en FarmaYA se encuentra habilitada para operar";
         String html = buildAccountEnabledHtml(u);
+        return dispatchHtmlEmail(u.email, subject, html);
+    }
+
+    public void sendAccountVerificationNeededAsync(User u) {
+        if (u == null || u.email == null || u.email.isBlank()) return;
+        emailExecutor.submit(() -> {
+            try {
+                sendAccountVerificationNeeded(u);
+            } catch (Exception e) {
+                log.warn("No se pudo despachar correo de verificacion requerida a {}: {}", u.email, e.getMessage(), e);
+            }
+        });
+    }
+
+    public EmailDispatchResult sendAccountVerificationNeeded(User u) {
+        if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
+            return new EmailDispatchResult(false, "Correo no disponible.");
+        }
+        log.info("Despachando notificacion de verificacion de documentos requerida a {}", u.email);
+        String subject = "Tu cuenta en FarmaYA requiere verificacion de documentos para operar";
+        String html = buildAccountVerificationNeededHtml(u);
         return dispatchHtmlEmail(u.email, subject, html);
     }
 
@@ -1509,8 +1533,11 @@ public class EmailService {
         if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
             return new EmailDispatchResult(false, "Correo no disponible.");
         }
-        log.info("Despachando notificacion oficial de bienvenida y creacion de cuenta a {}", u.email);
-        String subject = "Bienvenido a FarmaYA - Tu cuenta ha sido creada exitosamente";
+        boolean needsVerification = (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR) && !u.verified;
+        log.info("Despachando notificacion oficial de creacion de cuenta a {} (necesita verificacion: {})", u.email, needsVerification);
+        String subject = needsVerification
+                ? "Tu cuenta de " + (u.role == Role.FARMACIA ? "Farmacia" : "Repartidor") + " ha sido registrada y necesita verificacion - FarmaYA"
+                : "Bienvenido a FarmaYA - Tu cuenta se encuentra habilitada y activa";
         String html = buildAccountCreatedHtml(u);
         return dispatchHtmlEmail(u.email, subject, html);
     }
@@ -1899,6 +1926,15 @@ public class EmailService {
                 .withZone(ZoneId.of("America/Bogota"))
                 .format(Instant.now());
 
+        boolean needsVerification = (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR) && !u.verified;
+        String badge = needsVerification ? "HABILITADA (VERIFICACION PENDIENTE)" : "CUENTA REACTIVADA";
+        String statusLabel = needsVerification ? "ESTADO: HABILITADA · REQUIERE VERIFICACION DOCUMENTAL" : "ESTADO: CUENTA HABILITADA Y ACTIVA";
+        String titleDesc = needsVerification ? "Tu cuenta ha sido habilitada (Verificacion Pendiente)" : "Tu cuenta ha sido habilitada";
+        String statusValue = needsVerification ? "Habilitada (Pendiente Aprobacion)" : "100% Habilitado para Operar";
+        String alertBox = needsVerification
+                ? "Tu cuenta ha sido reactivada en el sistema. Sin embargo, para comenzar a recibir solicitudes o entregas, recuerda que tu expediente debe ser aprobado por la administracion."
+                : "Puedes iniciar sesion inmediatamente con tus credenciales habituales y disfrutar de todas las funcionalidades activas en tu perfil.";
+
         return String.format("""
             <!DOCTYPE html>
             <html lang="es">
@@ -1933,7 +1969,7 @@ public class EmailService {
                               </td>
                               <td align="right" style="vertical-align: middle;">
                                 <span style="display: inline-block; background: rgba(255,255,255,0.22); color: #ffffff; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
-                                  CUENTA REACTIVADA
+                                  %s
                                 </span>
                               </td>
                             </tr>
@@ -1946,25 +1982,25 @@ public class EmailService {
                         <td style="padding: 32px 30px 20px 30px;">
                           
                           <div style="display: inline-block; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 8px 14px; margin-bottom: 18px;">
-                            <span style="font-size: 12px; font-weight: 800; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px;">ESTADO: CUENTA HABILITADA Y ACTIVA</span>
+                            <span style="font-size: 12px; font-weight: 800; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px;">%s</span>
                           </div>
 
                           <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 20px; font-weight: 800; line-height: 1.35;">
-                            Estimado(a) %s: Tu cuenta ha sido habilitada
+                            Estimado(a) %s: %s
                           </h1>
 
                           <p style="margin: 0 0 18px 0; color: #334155; font-size: 14px; line-height: 1.6;">
-                            Te informamos que tu cuenta <strong>%s</strong> vinculada al correo <strong>%s</strong> ha sido <strong style="color: #065f46;">habilitada y reactivada</strong> por el equipo de administracion central de FarmaYA.
+                            Te informamos que tu cuenta <strong>%s</strong> vinculada al correo <strong>%s</strong> ha sido <strong style="color: #065f46;">habilitada</strong> por el equipo de administracion central de FarmaYA.
                           </p>
 
                           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px;">
                             <table width="100%%" border="0" cellspacing="0" cellpadding="0">
                               <tr>
                                 <td style="padding-bottom: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Estado Operativo:</td>
-                                <td align="right" style="padding-bottom: 6px; font-size: 13px; font-weight: 800; color: #065f46;">100%% Habilitado</td>
+                                <td align="right" style="padding-bottom: 6px; font-size: 13px; font-weight: 800; color: #065f46;">%s</td>
                               </tr>
                               <tr>
-                                <td style="padding-top: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Fecha y Hora de Reactivacion:</td>
+                                <td style="padding-top: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Fecha y Hora de Accion:</td>
                                 <td align="right" style="padding-top: 6px; font-size: 12.5px; font-weight: 600; color: #0f172a;">%s</td>
                               </tr>
                             </table>
@@ -1972,7 +2008,7 @@ public class EmailService {
 
                           <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px; padding: 16px 18px; margin-bottom: 24px;">
                             <p style="margin: 0; font-size: 13px; color: #166534; line-height: 1.5; font-weight: 600;">
-                              Puedes iniciar sesion inmediatamente con tus credenciales habituales y disfrutar de todas las funcionalidades activas en tu perfil.
+                              %s
                             </p>
                           </div>
 
@@ -1994,9 +2030,130 @@ public class EmailService {
             </body>
             </html>
             """,
+            badge,
+            statusLabel,
+            recipientName,
+            titleDesc,
+            roleDesc,
+            escapeHtml(u.email),
+            statusValue,
+            nowFormatted,
+            alertBox
+        );
+    }
+
+    
+    private String buildAccountVerificationNeededHtml(User u) {
+        String recipientName = escapeHtml(u.name != null && !u.name.isBlank() ? u.name : "Usuario");
+        String roleDesc = u.role == Role.FARMACIA ? "de Farmacia Aliada" : (u.role == Role.REPARTIDOR ? "de Repartidor / Domiciliario" : (u.role == Role.ADMIN ? "de Administrador" : "de Cliente"));
+        String establishmentName = escapeHtml(u.pharmacyName != null && !u.pharmacyName.isBlank() ? u.pharmacyName : u.name);
+        String nowFormatted = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy, hh:mm a", new Locale("es", "CO"))
+                .withZone(ZoneId.of("America/Bogota"))
+                .format(Instant.now());
+
+        return String.format("""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Verificacion de Cuenta Requerida - FarmaYA</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+              <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 28px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(15,23,42,0.08);">
+                      
+                      <!-- Cabecera Institucional FarmaYA -->
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #b45309 0%%, #d97706 100%%); padding: 24px 28px;">
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="vertical-align: middle;">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td style="padding-right: 14px; vertical-align: middle;">
+                                      <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-cross.png" alt="Cruz FarmaYA" width="48" height="42" style="display:block; border-radius:10px; background:#ffffff; padding:4px; box-shadow: 0 2px 8px rgba(0,0,0,0.22);" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                      <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: 'Segoe UI', sans-serif;">FarmaYA</span>
+                                      <p style="margin: 2px 0 0 0; color: #fef3c7; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">Auditoria y Control Documental</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td align="right" style="vertical-align: middle;">
+                                <span style="display: inline-block; background: rgba(255,255,255,0.22); color: #ffffff; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
+                                  VERIFICACION PENDIENTE
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Cuerpo del Mensaje -->
+                      <tr>
+                        <td style="padding: 32px 30px 20px 30px;">
+                          
+                          <div style="display: inline-block; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 8px 14px; margin-bottom: 18px;">
+                            <span style="font-size: 12px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px;">ESTADO: REQUIERE VERIFICACION DE CUENTA</span>
+                          </div>
+
+                          <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 20px; font-weight: 800; line-height: 1.35;">
+                            Estimado(a) %s: Tu cuenta necesita verificacion de documentos
+                          </h1>
+
+                          <p style="margin: 0 0 18px 0; color: #334155; font-size: 14px; line-height: 1.6;">
+                            Te informamos que tu cuenta <strong>%s</strong> vinculada al correo <strong>%s</strong> requiere revision y aprobacion documental por parte del equipo de administracion de FarmaYA antes de ser habilitada para operar.
+                          </p>
+
+                          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px;">
+                            <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="padding-bottom: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Estado de Verificacion:</td>
+                                <td align="right" style="padding-bottom: 6px; font-size: 13px; font-weight: 800; color: #d97706;">Pendiente de Aprobacion</td>
+                              </tr>
+                              <tr>
+                                <td style="padding-bottom: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Establecimiento / Titular:</td>
+                                <td align="right" style="padding-bottom: 6px; font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
+                              </tr>
+                              <tr>
+                                <td style="padding-top: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Fecha de Notificacion:</td>
+                                <td align="right" style="padding-top: 6px; font-size: 12.5px; font-weight: 600; color: #0f172a;">%s</td>
+                              </tr>
+                            </table>
+                          </div>
+
+                          <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 14px; padding: 16px 18px; margin-bottom: 24px;">
+                            <p style="margin: 0; font-size: 13px; color: #92400e; line-height: 1.5; font-weight: 600;">
+                              Nuestro equipo administrativo se encuentra auditando tus documentos cargados (Registro INVIMA, RUT o datos del vehiculo). Una vez validado tu expediente, recibiras un correo de confirmacion y tu cuenta quedara 100%% habilitada para recibir pedidos.
+                            </p>
+                          </div>
+
+                        </td>
+                      </tr>
+
+                      <!-- Pie Legal -->
+                      <tr>
+                        <td style="background: #f8fafc; padding: 22px 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 11.5px; line-height: 1.6;">
+                          <strong style="color: #0f172a;">FarmaYA Colombia &bull; Departamento de Verificacion y Cumplimiento Normativo</strong><br>
+                          Notificacion oficial generada por la plataforma de salud FarmaYA.
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+            """,
             recipientName,
             roleDesc,
             escapeHtml(u.email),
+            establishmentName,
             nowFormatted
         );
     }
@@ -2007,9 +2164,24 @@ public class EmailService {
         String establishmentName = escapeHtml(u.pharmacyName != null && !u.pharmacyName.isBlank() ? u.pharmacyName : u.name);
         String zoneText = escapeHtml(u.zone != null && !u.zone.isBlank() ? u.zone : (u.city != null ? u.city : "Cobertura General"));
 
-        String nextSteps = (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR)
-                ? "Tu cuenta ha sido creada exitosamente y se encuentra en etapa de <strong>revision documental</strong>. Tan pronto nuestro equipo administrativo verifique tus datos, recibiras un correo oficial de aprobacion para comenzar a operar."
-                : "Tu cuenta ha sido creada y se encuentra <strong>100% activa</strong>. Ya puedes navegar el catalogo, cotizar con farmacias aliadas cercanas y ordenar tus medicamentos a domicilio.";
+        boolean needsVerification = (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR) && !u.verified;
+
+        String headerBadge = needsVerification ? "VERIFICACION PENDIENTE" : "CUENTA HABILITADA";
+        String statusBanner = needsVerification
+                ? "<div style=\"display: inline-block; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 8px 14px; margin-bottom: 18px;\"><span style=\"font-size: 12px; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.5px;\">ESTADO: REGISTRO RECIBIDO · REQUIERE VERIFICACION</span></div>"
+                : "<div style=\"display: inline-block; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 8px 14px; margin-bottom: 18px;\"><span style=\"font-size: 12px; font-weight: 800; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px;\">ESTADO: CUENTA HABILITADA Y ACTIVA</span></div>";
+
+        String title = needsVerification
+                ? "Estimado(a) " + recipientName + ": Tu registro necesita verificacion"
+                : "Estimado(a) " + recipientName + ": Tu cuenta esta habilitada y lista";
+
+        String statusLabelValue = needsVerification
+                ? "<span style=\"color: #b45309; font-weight: 800;\">Pendiente de Verificacion Documental</span>"
+                : "<span style=\"color: #065f46; font-weight: 800;\">100% Habilitada para Operar</span>";
+
+        String alertBox = needsVerification
+                ? "<div style=\"background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 16px 18px; margin-bottom: 24px;\"><p style=\"margin: 0; font-size: 13px; color: #92400e; line-height: 1.5; font-weight: 600;\">Tu registro se encuentra en proceso de validacion documental por la administracion de FarmaYA. Una vez aprobados tus antecedentes y certificaciones, recibiras un correo confirmando la activacion para operar.</p></div>"
+                : "<div style=\"background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px; padding: 16px 18px; margin-bottom: 24px;\"><p style=\"margin: 0; font-size: 13px; color: #166534; line-height: 1.5; font-weight: 600;\">Tu cuenta se encuentra habilitada y activa. Ya puedes iniciar sesion para explorar farmacias cercanas, cotizar formulas y pedir tus medicamentos con entrega prioritaria.</p></div>";
 
         return String.format("""
             <!DOCTYPE html>
@@ -2045,7 +2217,7 @@ public class EmailService {
                               </td>
                               <td align="right" style="vertical-align: middle;">
                                 <span style="display: inline-block; background: rgba(255,255,255,0.22); color: #ffffff; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
-                                  NUEVO REGISTRO
+                                  %s
                                 </span>
                               </td>
                             </tr>
@@ -2057,12 +2229,14 @@ public class EmailService {
                       <tr>
                         <td style="padding: 32px 30px 20px 30px;">
                           
+                          %s
+
                           <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 21px; font-weight: 800; line-height: 1.35;">
-                            ¡Hola %s, bienvenido(a) a FarmaYA!
+                            %s
                           </h1>
 
                           <p style="margin: 0 0 18px 0; color: #334155; font-size: 14px; line-height: 1.6;">
-                            Tu cuenta <strong>%s</strong> ha sido creada satisfactoriamente. Te presentamos a continuacion los datos de tu cuenta registrada:
+                            Tu cuenta <strong>%s</strong> ha sido registrada satisfactoriamente en FarmaYA. A continuacion encuentras los detalles iniciales de tu cuenta:
                           </p>
 
                           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px;">
@@ -2076,17 +2250,17 @@ public class EmailService {
                                 <td align="right" style="padding-bottom: 8px; font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
                               </tr>
                               <tr>
-                                <td style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Zona / Ciudad:</td>
-                                <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
+                                <td style="padding-bottom: 8px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Zona / Ciudad:</td>
+                                <td align="right" style="padding-bottom: 8px; font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
+                              </tr>
+                              <tr>
+                                <td style="padding-top: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; border-top: 1px dashed #e2e8f0;">Estado de Cuenta:</td>
+                                <td align="right" style="padding-top: 6px; font-size: 13px; border-top: 1px dashed #e2e8f0;">%s</td>
                               </tr>
                             </table>
                           </div>
 
-                          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 14px; padding: 16px 18px; margin-bottom: 24px;">
-                            <p style="margin: 0; font-size: 13px; color: #065f46; line-height: 1.5; font-weight: 600;">
-                              %s
-                            </p>
-                          </div>
+                          %s
 
                         </td>
                       </tr>
@@ -2106,12 +2280,15 @@ public class EmailService {
             </body>
             </html>
             """,
-            recipientName,
+            headerBadge,
+            statusBanner,
+            title,
             roleDesc,
             escapeHtml(u.email),
             recipientName,
             zoneText,
-            nextSteps
+            statusLabelValue,
+            alertBox
         );
     }
 
