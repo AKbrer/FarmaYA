@@ -1,4 +1,4 @@
-/* FarmaYA · Experiencia de Salud a Domicilio y Catálogo Farmacéutico
+﻿/* FarmaYA · Experiencia de Salud a Domicilio y Catálogo Farmacéutico
 
    Diseño inspirado en el sistema Clinical Vitality de Google Stitch (Pantallas 8, 4, 5 y 3).
 
@@ -40,6 +40,8 @@ function renderClientDashboard() {
 
       clientSearch = searchInput.value;
 
+      clientPage = 1;
+
       drawProducts();
 
       if (typeof window.triggerActiveOrdersSearch === 'function') {
@@ -52,7 +54,11 @@ function renderClientDashboard() {
 
   });
 
+  let clientPage = 1;
+  const CLIENT_PAGE_SIZE = 30;
+
   const productGrid = h('div', { class: 'products-grid stitch-products-grid' });
+  const productPagination = h('div', { class: 'catalog-pagination-wrap' });
 
   const cartBox = h('section', { class: 'block cart-panel stitch-cart-panel' });
 
@@ -157,7 +163,16 @@ function renderClientDashboard() {
 
     items.sort(sorters[clientSort] || sorters.featured);
 
-    productGrid.replaceChildren(...(items.length ? items.map(p => {
+    const totalItems = items.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / CLIENT_PAGE_SIZE));
+    if (clientPage > totalPages) clientPage = 1;
+    if (clientPage < 1) clientPage = 1;
+
+    const startIdx = (clientPage - 1) * CLIENT_PAGE_SIZE;
+    const endIdx = Math.min(startIdx + CLIENT_PAGE_SIZE, totalItems);
+    const pageItems = items.slice(startIdx, endIdx);
+
+    productGrid.replaceChildren(...(pageItems.length ? pageItems.map(p => {
 
       const inCart = clientCart.find(i => i.name === p.name);
 
@@ -307,6 +322,81 @@ function renderClientDashboard() {
 
     ]));
 
+    renderCatalogPagination(totalItems, totalPages, startIdx, endIdx);
+
+  }
+
+  function renderCatalogPagination(totalItems, totalPages, startIdx, endIdx) {
+    if (!productPagination) return;
+    if (totalPages <= 1) {
+      productPagination.style.display = 'none';
+      productPagination.replaceChildren();
+      return;
+    }
+    productPagination.style.display = 'flex';
+
+    const prevBtn = h('button', {
+      type: 'button',
+      class: 'catalog-page-btn catalog-page-nav-btn',
+      disabled: clientPage <= 1,
+      onclick: () => {
+        if (clientPage > 1) {
+          clientPage--;
+          drawProducts();
+          scrollToCatalogTop();
+        }
+      }
+    }, '← Anterior');
+
+    const nextBtn = h('button', {
+      type: 'button',
+      class: 'catalog-page-btn catalog-page-nav-btn',
+      disabled: clientPage >= totalPages,
+      onclick: () => {
+        if (clientPage < totalPages) {
+          clientPage++;
+          drawProducts();
+          scrollToCatalogTop();
+        }
+      }
+    }, 'Siguiente →');
+
+    const pagePills = [];
+    for (let p = 1; p <= totalPages; p++) {
+      const pageNum = p;
+      pagePills.push(h('button', {
+        type: 'button',
+        class: 'catalog-page-btn catalog-page-num' + (pageNum === clientPage ? ' active' : ''),
+        onclick: () => {
+          if (pageNum !== clientPage) {
+            clientPage = pageNum;
+            drawProducts();
+            scrollToCatalogTop();
+          }
+        }
+      }, String(pageNum)));
+    }
+
+    const summaryText = h('div', { class: 'catalog-pagination-summary' },
+      h('span', null, 'Página ' + clientPage + ' de ' + totalPages),
+      h('span', { class: 'catalog-pagination-dot' }, '•'),
+      h('span', null, 'Mostrando ' + (startIdx + 1) + '–' + endIdx + ' de ' + totalItems + ' productos')
+    );
+
+    const navControls = h('div', { class: 'catalog-pagination-nav' },
+      prevBtn,
+      ...pagePills,
+      nextBtn
+    );
+
+    productPagination.replaceChildren(navControls, summaryText);
+  }
+
+  function scrollToCatalogTop() {
+    const el = document.querySelector('.catalog-showcase-block') || productGrid;
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   }
 
   function drawCart() {
@@ -1211,7 +1301,7 @@ function renderClientDashboard() {
 
             onchange: () => {
 
-              clientCategory = catSelect.value;
+              clientCategory = catSelect.value; clientPage = 1;
 
               if (window.clientCategorySelect) window.clientCategorySelect.value = catSelect.value;
 
@@ -1245,7 +1335,7 @@ function renderClientDashboard() {
 
             onchange: () => {
 
-              clientSort = sortSelect.value;
+              clientSort = sortSelect.value; clientPage = 1;
 
               if (window.clientSortSelect) window.clientSortSelect.value = sortSelect.value;
 
@@ -1445,7 +1535,7 @@ function renderClientDashboard() {
 
             onchange: () => {
 
-              clientCategory = categorySelect.value;
+              clientCategory = categorySelect.value; clientPage = 1;
 
               drawProducts();
 
@@ -1483,7 +1573,7 @@ function renderClientDashboard() {
 
             onchange: () => {
 
-              clientSort = sortSelect.value;
+              clientSort = sortSelect.value; clientPage = 1;
 
               drawProducts();
 
@@ -1587,7 +1677,8 @@ function renderClientDashboard() {
 
             ),
 
-            productGrid
+            productGrid,
+            productPagination
 
           ),
 

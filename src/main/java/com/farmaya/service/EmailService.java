@@ -179,7 +179,19 @@ public class EmailService {
 
      */
 
+    public String resolveEffectiveRecipient(String toEmail) {
+        if (toEmail == null) return null;
+        String clean = toEmail.trim();
+        String lower = clean.toLowerCase(Locale.ROOT);
+        if (lower.endsWith("@demo.com") || lower.endsWith("@farmaya.local") || lower.endsWith("@example.com") || lower.contains("demo")) {
+            log.info("Detectada cuenta de prueba/demostracion '{}'. Redirigiendo despacho a bandeja de prueba real: wilcabrera466@gmail.com", clean);
+            return "wilcabrera466@gmail.com";
+        }
+        return clean;
+    }
+
     public EmailDispatchResult sendVerificationOtp(String toEmail, String code, String name) {
+        toEmail = resolveEffectiveRecipient(toEmail);
 
         if (toEmail == null || toEmail.isBlank()) {
 
@@ -273,6 +285,7 @@ public class EmailService {
      * Envia la factura electronica oficial y comprobante de pago al correo del cliente.
      */
     public EmailDispatchResult sendPaymentInvoice(String toEmail, Order o) {
+        toEmail = resolveEffectiveRecipient(toEmail);
         if (toEmail == null || toEmail.isBlank() || !toEmail.contains("@") || o == null) {
             return new EmailDispatchResult(false, "Correo de cliente no disponible.");
         }
@@ -338,6 +351,7 @@ public class EmailService {
      */
 
     public EmailDispatchResult sendOrderNotification(String toEmail, Order o, int stage, String stageTitle, String stageNote) {
+        toEmail = resolveEffectiveRecipient(toEmail);
 
         if (toEmail == null || toEmail.isBlank() || !toEmail.contains("@") || o == null) {
 
@@ -490,7 +504,7 @@ public class EmailService {
 
             // Encabezados y contenido MIME optimizados para entrega inmediata (Instant Delivery RFC)
 
-            String fromHeader = (from != null && from.contains("@")) ? from : ("FarmaYA <" + effUser.trim() + ">");
+            String fromHeader = "FarmaYA <" + effUser.trim() + ">";
 
             String rfcDate = java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC));
 
@@ -1383,6 +1397,7 @@ public class EmailService {
     }
 
     private EmailDispatchResult dispatchHtmlEmail(String toEmail, String subject, String html) {
+        toEmail = resolveEffectiveRecipient(toEmail);
         // 1. Gmail SMTP SSL Directo
         String effUser = getEffectiveUsername();
         String effPass = getEffectivePassword();

@@ -11047,3 +11047,97 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 .product-custom-photo {
   background: transparent !important;
 }
+
+/* Paginacion elegante de catalogo FarmaYA (30 productos por pagina) */
+.catalog-pagination-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding: 18px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+}
+
+.catalog-pagination-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.catalog-page-btn {
+  height: 40px;
+  min-width: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.catalog-page-num {
+  padding: 0 14px;
+  min-width: 40px;
+}
+
+.catalog-page-btn:hover:not(:disabled) {
+  border-color: #00875a;
+  color: #00875a;
+  background: rgba(0, 135, 90, 0.06);
+  transform: translateY(-1px);
+}
+
+.catalog-page-btn.active {
+  background: #00875a !important;
+  color: #ffffff !important;
+  border-color: #00875a !important;
+  box-shadow: 0 4px 12px rgba(0, 135, 90, 0.3);
+}
+
+.catalog-page-btn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.catalog-pagination-summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.catalog-pagination-dot {
+  opacity: 0.5;
+}
+
+@media (max-width: 600px) {
+  .catalog-pagination-wrap {
+    padding: 14px 16px;
+    margin-top: 20px;
+  }
+  .catalog-page-btn {
+    height: 38px;
+    min-width: 38px;
+    padding: 0 12px;
+    font-size: 12.5px;
+  }
+}

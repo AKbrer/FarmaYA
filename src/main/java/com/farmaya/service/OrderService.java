@@ -246,7 +246,6 @@ public class OrderService {
         Criteria c = where("id").is(id).and("clientId").is(client.id).and("status").is(PRECIO_POR_ACEPTAR);
         Update u = backToSearch(step(BUSCANDO_FARMACIA, client, "El cliente no aceptó el precio. Buscamos otra farmacia."), o.pharmacyId);
         Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
-        sendInvoiceToClient(res, client);
         return res;
     }
 
