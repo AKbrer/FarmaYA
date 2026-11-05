@@ -63,7 +63,7 @@ function renderNavbar() {
       ),
       h('button', {
         id: 'navHeaderOrdersBtn',
-        class: 'btn ghost small nav-header-orders-btn',
+        class: 'btn ghost small nav-header-orders-btn desktop-only',
         type: 'button',
         title: 'Ver mis pedidos y seguimiento',
         'aria-label': 'Mis pedidos',

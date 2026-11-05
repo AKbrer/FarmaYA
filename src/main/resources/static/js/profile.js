@@ -636,7 +636,7 @@ function clientOrdersView() {
                         const fn = window.openOrderDetail || openOrderDetail;
                         if (typeof fn === 'function') fn(o.id);
                       }
-                    }, isEnCamino ? 'Ver Repartidor en Mapa' : 'Ver Detalle y Seguimiento'),
+                    }, 'Ver Detalle y Seguimiento'),
                     (!isPaid && !isEnCamino && !isQuoted) ? h('button', {
                       class: 'btn ghost', type: 'button',
                       onclick: async e => {

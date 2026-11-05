@@ -273,9 +273,9 @@ public class EmailService {
             return new EmailDispatchResult(false, "Correo de cliente no disponible.");
         }
 
-        String subject = "Factura de Venta y Comprobante de Pago #" + o.code + " - FarmaYA";
+        String subject = "Pedido #" + o.code + " - FarmaYA";
         String html = buildPaymentInvoiceHtml(o, toEmail);
-        String threadRootId = "<order-" + o.code + "-root@farmaya.com.co>";
+        String threadRootId = "<order-" + o.code + "-thread@farmaya.com.co>";
         String invoiceMsgId = "<order-" + o.code + "-invoice-" + System.currentTimeMillis() + "@farmaya.com.co>";
 
         // 1. Gmail SMTP SSL Directo
@@ -342,11 +342,11 @@ public class EmailService {
 
 
 
-        String subject = "Actualizacion de tu Pedido #" + o.code + " - FarmaYA";
+        String subject = "Pedido #" + o.code + " - FarmaYA";
 
         String html = buildOrderUpdateHtml(o, stage, stageTitle, stageNote);
 
-        String threadRootId = "<order-" + o.code + "-root@farmaya.com.co>";
+        String threadRootId = "<order-" + o.code + "-thread@farmaya.com.co>";
 
         String stageMsgId = "<order-" + o.code + "-stage-" + stage + "@farmaya.com.co>";
 
@@ -875,415 +875,182 @@ public class EmailService {
      */
 
     private String buildOrderUpdateHtml(Order o, int stage, String stageTitle, String stageNote) {
-
-        String clientName = o.clientName != null && !o.clientName.isBlank() ? o.clientName : "Cliente";
-
-        String pharmacyName = o.pharmacyName != null && !o.pharmacyName.isBlank() ? o.pharmacyName : "Farmacia aliada asignada";
-
-        String pharmacyAddress = o.pharmacyAddress != null ? o.pharmacyAddress : "";
-
-        String courierName = o.courierName != null && !o.courierName.isBlank() ? o.courierName : "Repartidor asignado";
-
-        String totalFormatted = o.total != null ? String.format("$ %,.0f COP", o.total) : "En cotizacion";
-
+        String clientName = (o.clientName != null && !o.clientName.isBlank()) ? o.clientName : "Cliente";
+        String pharmacyName = (o.pharmacyName != null && !o.pharmacyName.isBlank()) ? o.pharmacyName : "Drogueria aliada asignada";
+        String pharmacyAddress = (o.pharmacyAddress != null && !o.pharmacyAddress.isBlank()) ? ("(" + o.pharmacyAddress + ")") : "";
+        String courierName = (o.courierName != null && !o.courierName.isBlank()) ? o.courierName : "Repartidor de turno";
+        String totalFormatted = o.total != null ? formatMoney(o.total) : "En cotizacion";
         String deliveryCode = o.deliveryCode != null ? o.deliveryCode : "----";
+        String address = o.address != null ? (o.address + (o.city != null ? ", " + o.city : "")) : "Direccion registrada";
 
-
-
-        // Estilos para las filas de progreso segun etapa actual
-
-        String r1Bg = stage >= 1 ? "#f0fdf4" : "#ffffff";
-
-        String r1Border = stage >= 1 ? "#86efac" : "#e2e8f0";
-
-        String r1Icon = stage >= 1 ? "&#10004;" : "1";
-
-        String r1IconBg = stage >= 1 ? "#16865d" : "#e2e8f0";
-
-        String r1IconColor = stage >= 1 ? "#ffffff" : "#64748b";
-
-
-
-        String r2Bg = stage == 2 ? "#ecfdf5" : (stage > 2 ? "#f0fdf4" : "#ffffff");
-
-        String r2Border = stage >= 2 ? "#86efac" : "#e2e8f0";
-
-        String r2Icon = stage > 2 ? "&#10004;" : (stage == 2 ? "&#10148;" : "2");
-
-        String r2IconBg = stage >= 2 ? "#16865d" : "#e2e8f0";
-
-        String r2IconColor = stage >= 2 ? "#ffffff" : "#64748b";
-
-
-
-        String r3Bg = stage == 3 ? "#f0fdf4" : "#ffffff";
-
-        String r3Border = stage == 3 ? "#86efac" : "#e2e8f0";
-
-        String r3Icon = stage == 3 ? "&#10004;" : "3";
-
-        String r3IconBg = stage == 3 ? "#16865d" : "#e2e8f0";
-
-        String r3IconColor = stage == 3 ? "#ffffff" : "#64748b";
-
-
-
-        // Resumen de productos
+        String stageBadgeText = "ACTUALIZACION";
+        String stageBadgeBg = "#ecfdf5";
+        String stageBadgeColor = "#065f46";
+        if (stage == 1) {
+            stageBadgeText = "COTIZACION CONFIRMADA";
+            stageBadgeBg = "#eff6ff";
+            stageBadgeColor = "#1e40af";
+        } else if (stage == 2) {
+            stageBadgeText = "EN CAMINO A TU DIRECCION";
+            stageBadgeBg = "#fef3c7";
+            stageBadgeColor = "#92400e";
+        } else if (stage == 3) {
+            stageBadgeText = "ENTREGA EXITOSA";
+            stageBadgeBg = "#ecfdf5";
+            stageBadgeColor = "#065f46";
+        }
 
         StringBuilder itemsList = new StringBuilder();
-
-        if (o.items != null && !o.items.isEmpty()) {
-
-            for (var it : o.items) {
-
-                itemsList.append("<li style=\"margin-bottom: 4px; color: #334155;\"><strong>")
-
-                         .append(it.quantity).append("x</strong> ")
-
-                         .append(it.name != null ? it.name : "Medicamento")
-
-                         .append("</li>");
-
+        if (o.confirmedItems != null && !o.confirmedItems.isEmpty()) {
+            for (var it : o.confirmedItems) {
+                if (!it.available) continue;
+                if (itemsList.length() > 0) itemsList.append(", ");
+                itemsList.append(it.name != null ? it.name : "Medicamento").append(" x").append(it.quantity);
             }
-
+        } else if (o.items != null && !o.items.isEmpty()) {
+            for (var it : o.items) {
+                if (itemsList.length() > 0) itemsList.append(", ");
+                itemsList.append(it.name != null ? it.name : "Medicamento").append(" x").append(it.quantity);
+            }
         } else {
-
-            itemsList.append("<li style=\"color: #64748b;\">Medicamentos recetados o solicitados</li>");
-
+            itemsList.append("Medicamentos solicitados");
         }
 
-
-
-        // Seccion del codigo de entrega destacado (solo visible cuando va en camino o posterior)
-
-        String deliveryCodeSection = "";
-
-        if (stage >= 2 && o.deliveryCode != null) {
-
-            deliveryCodeSection = """
-
-                <div style="background: #ffffff; border: 2px dashed #16865d; border-radius: 12px; padding: 16px 20px; text-align: center; margin: 14px 0 8px 0; box-shadow: 0 2px 8px rgba(22,134,93,0.06);">
-
-                  <span style="font-size: 11px; font-weight: 800; color: #16865d; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 4px;">CODIGO DE ENTREGA PARA TU DOMICILIARIO</span>
-
-                  <span style="font-family: 'Courier New', Courier, monospace; font-size: 34px; font-weight: 900; letter-spacing: 10px; color: #16865d; display: inline-block; padding-left: 10px;">%s</span>
-
-                  <p style="margin: 6px 0 0 0; font-size: 12.5px; color: #065f46; line-height: 1.4; font-weight: 600;">
-
-                    Dictale este codigo de 4 digitos a tu domiciliario al momento de recibir el pedido para que pueda confirmar la entrega.
-
-                  </p>
-
-                </div>
-
-                """.formatted(deliveryCode);
-
+        String deliveryPinBox = "";
+        if (stage >= 2 && o.deliveryCode != null && !o.deliveryCode.isBlank()) {
+            deliveryPinBox = String.format("""
+                <tr>
+                  <td style="padding: 0 26px 16px 26px;">
+                    <div style="background: #ffffff; border: 2px dashed #16865d; border-radius: 14px; padding: 16px 20px; text-align: center; box-shadow: 0 2px 8px rgba(22,134,93,0.06);">
+                      <span style="font-size: 10.5px; font-weight: 800; color: #16865d; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 4px;">PIN CONFIDENCIAL DE ENTREGA</span>
+                      <span style="font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 900; letter-spacing: 8px; color: #16865d; display: inline-block; padding-left: 8px;">%s</span>
+                      <p style="margin: 6px 0 0 0; font-size: 12px; color: #065f46; line-height: 1.4; font-weight: 600;">
+                        Dictaselo a tu domiciliario al recibir el paquete para verificar la entrega.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+                """, deliveryCode);
         }
 
-
-
-        return """
-
-                <!DOCTYPE html>
-
-                <html lang="es">
-
-                <head>
-
-                  <meta charset="utf-8">
-
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-                  <title>Actualizacion de Pedido FarmaYA</title>
-
-                </head>
-
-                <body style="margin:0; padding:0; background-color:#f1f5f9; font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased;">
-
-                  <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="padding: 30px 14px;">
-
-                    <tr>
-
-                      <td align="center">
-
-                        <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 30px rgba(15,23,42,0.06);">
-
-
-
-                          <!-- Cabecera -->
-
-                          <tr>
-
-                            <td style="background: linear-gradient(135deg, #0d5e41 0%%, #16865d 100%%); padding: 26px 30px; text-align: left;">
-
-                              <table width="100%%" border="0" cellspacing="0" cellpadding="0">
-
-                                <tr>
-
-                                  <td>
-
-                                    <table border="0" cellspacing="0" cellpadding="0">
-
-                                      <tr>
-
-                                        <td style="padding-right: 14px; vertical-align: middle;">
-
-                                          <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-logo.png" alt="Logo FarmaYA" width="44" height="44" style="display:block; border-radius:10px; background:#ffffff; padding:4px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
-
-                                        </td>
-
-                                        <td style="vertical-align: middle;">
-
-                                          <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: 'Segoe UI',sans-serif;">FarmaYA</span>
-
-                                          <p style="margin: 2px 0 0 0; color: #a7f3d0; font-size: 13px;">Seguimiento Asistencial en Vivo</p>
-
-                                        </td>
-
-                                      </tr>
-
-                                    </table>
-
-                                  </td>
-
-                                  <td align="right">
-
-                                    <span style="background: rgba(255,255,255,0.2); color: #ffffff; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px;">
-
-                                      Pedido #%s
-
-                                    </span>
-
-                                  </td>
-
-                                </tr>
-
-                              </table>
-
-                            </td>
-
-                          </tr>
-
-
-
-                          <!-- Estado Actual Destacado -->
-
-                          <tr>
-
-                            <td style="padding: 28px 30px 10px 30px;">
-
-                              <span style="font-size: 11px; font-weight: 800; color: #16865d; text-transform: uppercase; letter-spacing: 1px;">ACTUALIZACION DE ESTADO</span>
-
-                              <h2 style="margin: 4px 0 8px 0; color: #0f172a; font-size: 20px; font-weight: 800;">%s</h2>
-
-                              <p style="margin: 0 0 18px 0; color: #475569; font-size: 14.5px; line-height: 1.5;">
-
-                                Hola <strong>%s</strong>, %s
-
-                              </p>
-
-                            </td>
-
-                          </tr>
-
-
-
-                          <!-- TABLA DE PROGRESO POR FILAS / SUBNIVELES (3 ETAPAS) -->
-
-                          <tr>
-
-                            <td style="padding: 0 30px 20px 30px;">
-
-                              <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; background: #ffffff;">
-
-
-
-                                <!-- FILA 1: Farmacia y Cotizacion -->
-
-                                <tr style="background: %s; border-bottom: 1px solid %s;">
-
-                                  <td style="padding: 16px 14px; width: 38px; vertical-align: top; text-align: center;">
-
-                                    <div style="width: 28px; height: 28px; border-radius: 50%%; background: %s; color: %s; font-weight: 800; font-size: 13px; line-height: 28px; text-align: center; margin: 0 auto;">
-
-                                      %s
-
-                                    </div>
-
-                                  </td>
-
-                                  <td style="padding: 16px 18px 16px 0; vertical-align: top;">
-
-                                    <div style="font-size: 14.5px; font-weight: 700; color: #0f172a;">1. Farmacia encontrada y cotizacion de precios</div>
-
-                                    <div style="font-size: 13px; color: #475569; margin-top: 4px; line-height: 1.4;">
-
-                                      Establecimiento: <strong>%s</strong> %s<br>
-
-                                      Total cotizado: <strong style="color: #16865d; font-size: 14px;">%s</strong>
-
-                                    </div>
-
-                                  </td>
-
-                                </tr>
-
-
-
-                                <!-- FILA 2: En Camino y Codigo de Entrega -->
-
-                                <tr style="background: %s; border-bottom: 1px solid %s;">
-
-                                  <td style="padding: 16px 14px; width: 38px; vertical-align: top; text-align: center;">
-
-                                    <div style="width: 28px; height: 28px; border-radius: 50%%; background: %s; color: %s; font-weight: 800; font-size: 13px; line-height: 28px; text-align: center; margin: 0 auto;">
-
-                                      %s
-
-                                    </div>
-
-                                  </td>
-
-                                  <td style="padding: 16px 18px 16px 0; vertical-align: top;">
-
-                                    <div style="font-size: 14.5px; font-weight: 700; color: #0f172a;">2. Repartidor en camino a tu direccion</div>
-
-                                    <div style="font-size: 13px; color: #475569; margin-top: 4px; line-height: 1.4;">
-
-                                      Domiciliario: <strong>%s</strong><br>
-
-                                      Destino: %s
-
-                                    </div>
-
-                                    %s
-
-                                  </td>
-
-                                </tr>
-
-
-
-                                <!-- FILA 3: Entrega Exitosa -->
-
-                                <tr style="background: %s;">
-
-                                  <td style="padding: 16px 14px; width: 38px; vertical-align: top; text-align: center;">
-
-                                    <div style="width: 28px; height: 28px; border-radius: 50%%; background: %s; color: %s; font-weight: 800; font-size: 13px; line-height: 28px; text-align: center; margin: 0 auto;">
-
-                                      %s
-
-                                    </div>
-
-                                  </td>
-
-                                  <td style="padding: 16px 18px 16px 0; vertical-align: top;">
-
-                                    <div style="font-size: 14.5px; font-weight: 700; color: #0f172a;">3. Pedido entregado y finalizado</div>
-
-                                    <div style="font-size: 13px; color: #475569; margin-top: 4px; line-height: 1.4;">
-
-                                      %s
-
-                                    </div>
-
-                                  </td>
-
-                                </tr>
-
-
-
-                              </table>
-
-                            </td>
-
-                          </tr>
-
-
-
-                          <!-- Resumen de Productos -->
-
-                          <tr>
-
-                            <td style="padding: 0 30px 24px 30px;">
-
-                              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px;">
-
-                                <strong style="font-size: 13px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Medicamentos en esta orden:</strong>
-
-                                <ul style="margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.5;">
-
-                                  %s
-
-                                </ul>
-
-                              </div>
-
-                            </td>
-
-                          </tr>
-
-
-
-                          <!-- Pie de Pagina -->
-
-                          <tr>
-
-                            <td style="background: #f8fafc; padding: 20px 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 12px; line-height: 1.5;">
-
-                              <strong style="color: #0f172a;">FarmaYA Colombia</strong> &bull; Tu salud en la puerta de tu hogar<br>
-
-                              Este mensaje se actualiza automaticamente en el mismo hilo de conversacion.
-
-                            </td>
-
-                          </tr>
-
-
-
-                        </table>
-
-                      </td>
-
-                    </tr>
-
-                  </table>
-
-                </body>
-
-                </html>
-
-                """.formatted(
-
-                    o.code,
-
-                    stageTitle,
-
-                    clientName,
-
-                    stageNote,
-
-                    r1Bg, r1Border, r1IconBg, r1IconColor, r1Icon,
-
-                    pharmacyName, (pharmacyAddress.isBlank() ? "" : "(" + pharmacyAddress + ")"), totalFormatted,
-
-                    r2Bg, r2Border, r2IconBg, r2IconColor, r2Icon,
-
-                    courierName, (o.address != null ? o.address : "Direccion registrada"),
-
-                    deliveryCodeSection,
-
-                    r3Bg, r3IconBg, r3IconColor, r3Icon,
-
-                    stage == 3 ? "Entrega confirmada mediante tu codigo seguro de 4 digitos." : "Validacion en tu puerta con el codigo seguro.",
-
-                    itemsList.toString()
-
-                );
-
+        return String.format("""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Pedido FarmaYA</title>
+            </head>
+            <body style="margin:0; padding:0; background-color:#f1f5f9; font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased;">
+              <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="padding: 24px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 560px; background: #ffffff; border-radius: 18px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 8px 24px rgba(15,23,42,0.06);">
+
+                      <!-- Cabecera Institucional FarmaYA con la Cruz 3D que se aprecia bien -->
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #0d5e41 0%%, #16865d 100%%); padding: 20px 24px;">
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="vertical-align: middle;">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td style="padding-right: 12px; vertical-align: middle;">
+                                      <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-cross.png" alt="Cruz FarmaYA" width="48" height="42" style="display:block; object-fit:contain; border-radius:10px; background:#ffffff; padding:4px; box-shadow:0 2px 8px rgba(0,0,0,0.12);" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                      <span style="font-size: 22px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: 'Segoe UI',sans-serif;">FarmaYA</span>
+                                      <p style="margin: 2px 0 0 0; color: #a7f3d0; font-size: 12px; font-weight: 600;">Salud y Medicamentos a Domicilio</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td align="right" style="vertical-align: middle;">
+                                <span style="display: inline-block; background: rgba(255,255,255,0.22); color: #ffffff; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px;">
+                                  Pedido #%s
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Estado Actual Destacado (Sin cajas acumuladas) -->
+                      <tr>
+                        <td style="padding: 22px 24px 12px 24px;">
+                          <span style="display: inline-block; background: %s; color: %s; font-size: 10.5px; font-weight: 800; padding: 4px 10px; border-radius: 999px; letter-spacing: 0.5px; text-transform: uppercase;">%s</span>
+                          <h2 style="margin: 8px 0 6px 0; color: #0f172a; font-size: 18px; font-weight: 800; line-height: 1.3;">%s</h2>
+                          <p style="margin: 0; color: #475569; font-size: 13.5px; line-height: 1.5;">
+                            Hola <strong>%s</strong>, %s
+                          </p>
+                        </td>
+                      </tr>
+
+                      <!-- PIN de Entrega (Si aplica) -->
+                      %s
+
+                      <!-- Resumen Unico y Limpio del Pedido (Estilo Flutter Card) -->
+                      <tr>
+                        <td style="padding: 6px 24px 20px 24px;">
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px;">
+                            <tr>
+                              <td style="padding-bottom: 8px; font-size: 12.5px; color: #334155;">
+                                <span style="font-weight: 700; color: #64748b; font-size: 10px; text-transform: uppercase; display: block; letter-spacing: 0.5px;">Farmacia Asignada</span>
+                                <strong>%s</strong> <span style="color: #64748b; font-size: 11.5px;">%s</span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding-bottom: 8px; font-size: 12.5px; color: #334155;">
+                                <span style="font-weight: 700; color: #64748b; font-size: 10px; text-transform: uppercase; display: block; letter-spacing: 0.5px;">Direccion de Entrega</span>
+                                <span>%s</span>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td style="padding-bottom: 8px; font-size: 12.5px; color: #334155;">
+                                <span style="font-weight: 700; color: #64748b; font-size: 10px; text-transform: uppercase; display: block; letter-spacing: 0.5px;">Medicamentos</span>
+                                <span style="font-weight: 600;">%s</span>
+                              </td>
+                            </tr>
+                            <tr style="border-top: 1px dashed #cbd5e1;">
+                              <td style="padding-top: 10px;">
+                                <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td style="font-size: 12.5px; font-weight: 700; color: #0f172a;">Total de Productos:</td>
+                                    <td align="right" style="font-size: 15px; font-weight: 900; color: #16865d;">%s</td>
+                                  </tr>
+                                </table>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Pie de Pagina -->
+                      <tr>
+                        <td style="background: #f8fafc; padding: 16px 24px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 11px; line-height: 1.5;">
+                          <strong style="color: #0f172a;">FarmaYA Colombia</strong> &bull; Tu salud en la puerta de tu hogar<br>
+                          Tus notificaciones se actualizan en este mismo hilo de conversacion.
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+            """,
+            o.code != null ? o.code : "GEN",
+            stageBadgeBg, stageBadgeColor, stageBadgeText,
+            stageTitle,
+            clientName, stageNote,
+            deliveryPinBox,
+            pharmacyName, pharmacyAddress,
+            address,
+            itemsList.toString(),
+            totalFormatted
+        );
     }
-
 
 
     public record EmailDispatchResult(boolean success, String message) {}
@@ -1383,7 +1150,7 @@ public class EmailService {
                                 <table border="0" cellspacing="0" cellpadding="0">
                                   <tr>
                                     <td style="padding-right: 12px; vertical-align: middle;">
-                                      <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-logo.png" alt="Logo FarmaYA" width="46" height="46" style="display:block; border-radius:10px; background:#ffffff; padding:4px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
+                                      <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-cross.png" alt="Cruz FarmaYA" width="48" height="42" style="display:block; border-radius:10px; background:#ffffff; padding:4px; box-shadow: 0 2px 8px rgba(0,0,0,0.12);" />
                                     </td>
                                     <td style="vertical-align: middle;">
                                       <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: 'Segoe UI',sans-serif;">FarmaYA</span>
