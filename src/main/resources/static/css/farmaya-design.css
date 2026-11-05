@@ -10120,3 +10120,209 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
     flex-direction: column;
   }
 }
+
+
+/* ==========================================================================
+   CABECERA UNIFICADA · Misma medida (42px), mismo estilo y alineacion
+   ========================================================================== */
+
+.nav-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* Todos los botones de la barra superior con exactamente la misma medida y estilo */
+.nav-header-pill,
+.header-cart-pill,
+.nav-header-orders-btn,
+.user-pill-btn,
+.header-auth-btn {
+  height: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid var(--line) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  font-family: var(--font-body) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 16px !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+/* Hover unificado para todos los botones */
+.nav-header-pill:hover,
+.header-cart-pill:hover,
+.nav-header-orders-btn:hover,
+.user-pill-btn:hover,
+.header-auth-btn:hover {
+  border-color: var(--primary) !important;
+  background: rgba(22, 134, 93, 0.08) !important;
+  color: var(--primary) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(22, 134, 93, 0.16) !important;
+}
+
+/* Active auth state */
+.header-auth-btn.is-active {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  border-color: var(--primary) !important;
+}
+
+.header-auth-btn.is-active:hover {
+  background: var(--primary-dark, #0d6c49) !important;
+  color: #ffffff !important;
+}
+
+/* Boton Hamburguesa unificado a exactamente 42px circular */
+.nav-header-btn.hamburger-btn,
+.hamburger-btn {
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  max-width: 42px !important;
+  min-height: 42px !important;
+  max-height: 42px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid var(--line) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  vertical-align: middle !important;
+}
+
+.nav-header-btn.hamburger-btn:hover,
+.hamburger-btn:hover {
+  border-color: var(--primary) !important;
+  background: rgba(22, 134, 93, 0.08) !important;
+  color: var(--primary) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(22, 134, 93, 0.16) !important;
+}
+
+.hamburger-btn svg,
+.hamburger-btn .ico svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Iconos de Canasta y Mis Pedidos */
+.header-cart-icon,
+.nav-header-orders-btn .ico,
+.nav-header-orders-btn svg,
+.header-cart-icon svg {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Insignias circulares uniformes (Badges) */
+.header-cart-badge,
+.header-orders-badge {
+  min-width: 20px !important;
+  height: 20px !important;
+  padding: 0 6px !important;
+  border-radius: 999px !important;
+  background: #0b8457 !important;
+  color: #ffffff !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  box-sizing: border-box !important;
+  margin-left: 2px !important;
+}
+
+.header-cart-total {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: inherit !important;
+  margin-left: 2px !important;
+}
+
+/* Usuario tipo pastilla uniforme */
+.user-pill-btn {
+  padding: 0 16px 0 6px !important;
+  gap: 10px !important;
+}
+
+.user-pill-btn .user-avatar {
+  width: 30px !important;
+  height: 30px !important;
+  min-width: 30px !important;
+  border-radius: 50% !important;
+  background: var(--primary-soft, #e0f5e9) !important;
+  color: var(--primary, #0b8457) !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.user-pill-btn strong {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+  max-width: 130px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+  line-height: 1.2 !important;
+}
+
+.user-pill-btn small {
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  color: var(--muted) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  display: block !important;
+  line-height: 1 !important;
+}
+
+/* Modo Oscuro Unificado */
+[data-theme="dark"] .nav-header-pill,
+[data-theme="dark"] .header-cart-pill,
+[data-theme="dark"] .nav-header-orders-btn,
+[data-theme="dark"] .user-pill-btn,
+[data-theme="dark"] .hamburger-btn {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .nav-header-pill:hover,
+[data-theme="dark"] .header-cart-pill:hover,
+[data-theme="dark"] .nav-header-orders-btn:hover,
+[data-theme="dark"] .user-pill-btn:hover,
+[data-theme="dark"] .hamburger-btn:hover {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: #34d399 !important;
+  color: #34d399 !important;
+}

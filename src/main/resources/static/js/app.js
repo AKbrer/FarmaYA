@@ -11,10 +11,10 @@ function renderNavbar() {
     const isRegister = location.hash === '#register';
     const isLogin = location.hash === '#login';
     nav.append(
-      h('a', { class: isLogin ? 'btn primary small' : 'btn ghost small', href: '#login' }, 'Iniciar sesión'),
-      h('a', { class: isRegister ? 'btn primary small' : 'btn ghost small', href: '#register' }, 'Crear cuenta'),
+      h('a', { class: 'nav-header-pill header-auth-btn' + (isLogin ? ' is-active' : ''), href: '#login' }, 'Iniciar sesión'),
+      h('a', { class: 'nav-header-pill header-auth-btn' + (isRegister ? ' is-active' : ''), href: '#register' }, 'Crear cuenta'),
       h('button', {
-        class: 'icon-button hamburger-btn',
+        class: 'nav-header-btn hamburger-btn',
         type: 'button',
         title: 'Menú principal (3 líneas)',
         'aria-label': 'Abrir menú de opciones',
@@ -45,7 +45,7 @@ function renderNavbar() {
       ),
       h('button', {
         id: 'navHeaderCartPill',
-        class: 'header-cart-pill',
+        class: 'nav-header-pill header-cart-pill',
         type: 'button',
         title: 'Ver canasta de compras FarmaYA',
         'aria-label': 'Canasta de compras',
@@ -64,7 +64,7 @@ function renderNavbar() {
       ),
       h('button', {
         id: 'navHeaderOrdersBtn',
-        class: 'btn ghost small nav-header-orders-btn desktop-only',
+        class: 'nav-header-pill nav-header-orders-btn desktop-only',
         type: 'button',
         title: 'Ver mis pedidos y seguimiento',
         'aria-label': 'Mis pedidos',
@@ -88,7 +88,7 @@ function renderNavbar() {
     // El usuario aparece exclusivamente en el panel derecho desplegable (menú de 3 líneas)
     navItems.push(
       h('button', {
-        class: 'user-pill-btn desktop-only',
+        class: 'nav-header-pill user-pill-btn desktop-only',
         type: 'button',
         title: 'Ver perfil (' + user.name + ')',
         onclick: () => openProfile('profile')
@@ -100,7 +100,7 @@ function renderNavbar() {
   } else {
     navItems.push(
       h('button', {
-        class: 'user-pill-btn',
+        class: 'nav-header-pill user-pill-btn',
         type: 'button',
         title: 'Ver perfil (' + user.name + ')',
         onclick: () => openProfile('profile')
@@ -113,7 +113,7 @@ function renderNavbar() {
 
   navItems.push(
     h('button', {
-      class: 'icon-button hamburger-btn',
+      class: 'nav-header-btn hamburger-btn',
       type: 'button',
       title: 'Menú principal (3 líneas)',
       'aria-label': 'Abrir panel desplegable de opciones',
