@@ -579,19 +579,68 @@ function openPriceForm(order) {
 }
 
 function pharmacyOrders() {
-  return live(() => API.get('/pharmacy/orders'), orders => {
-    if (!orders || !orders.length) return empty('Todavía no tienes pedidos', 'Los pedidos que aceptes aparecerán aquí con el siguiente paso a realizar.');
+  return live(async () => {
+    const [orders, offersData] = await Promise.all([
+      API.get('/pharmacy/orders').catch(() => []),
+      API.get('/pharmacy/offers').catch(() => ({ orders: [] }))
+    ]);
+    return {
+      orders: orders || [],
+      offers: (offersData && offersData.orders) || []
+    };
+  }, data => {
+    const orders = data.orders || [];
+    const offers = data.offers || [];
     const active = orders.filter(o => !FINAL.includes(o.status));
     const past = orders.filter(o => FINAL.includes(o.status));
 
+    if (!active.length && !past.length && !offers.length) {
+      return empty('Todavía no tienes pedidos ni solicitudes', 'Los pedidos que aceptes aparecerán aquí con el siguiente paso a realizar.');
+    }
+
     const courierIncident = active.some(o => o.status === 'CON_INCIDENCIA' && ((o.incidentNote || '').toLowerCase().includes('repartidor') || (o.incidentNote || '').toLowerCase().includes('5 km') || (o.incidentNote || '').toLowerCase().includes('zona')));
+
+    // 1. Solicitudes entrantes por aceptar en la zona de la farmacia
+    const offersSection = offers.length ? h('section', {
+      class: 'block pharmacy-pending-offers-block',
+      style: 'border: 1.5px solid var(--primary); background: rgba(22, 134, 93, 0.05); border-radius: 16px; padding: 18px; margin-bottom: 22px;'
+    },
+      h('div', { class: 'flex items-center justify-between', style: 'flex-wrap: wrap; gap: 10px; margin-bottom: 14px;' },
+        h('div', { style: 'display: flex; align-items: center; gap: 10px;' },
+          h('span', { class: 'pulse-dot' }),
+          h('div', null,
+            h('strong', { style: 'color: var(--primary); font-size: 16px;' }, '¡Tienes ' + (offers.length === 1 ? '1 nueva solicitud' : offers.length + ' nuevas solicitudes') + ' en tu zona!'),
+            h('p', { class: 'small muted', style: 'margin: 2px 0 0 0;' }, 'Acepta la solicitud para cotizar existencias y enviar el precio al cliente.')
+          )
+        ),
+        h('span', { class: 'tag primary', style: 'font-weight: 800;' }, offers.length + ' por atender')
+      ),
+      h('div', { class: 'list' }, offers.map(o => offerRow(o, true)))
+    ) : null;
+
+    // 2. Pedidos en preparación y despacho
+    const activeSection = active.length ? h('div', { class: 'list' },
+      h('h3', { class: 'list-title' }, 'Pedidos en curso (' + active.length + ')'),
+      active.map(o => orderRow(o, pharmacyAction(o)))
+    ) : (!offers.length ? h('div', { class: 'card', style: 'background: var(--surface); padding: 22px; text-align: center; border: 1.5px dashed var(--line); border-radius: 16px; margin-bottom: 16px;' },
+      h('div', { style: 'margin-bottom: 8px;' }, icon('package-check', 'text-muted')),
+      h('h4', { style: 'margin: 0 0 4px 0; font-size: 16px; font-weight: 700;' }, 'No tienes pedidos en preparación activa'),
+      h('p', { class: 'muted small', style: 'margin: 0;' }, 'Cuando aceptes una solicitud de cliente o confirmes una cotización, la gestionarás aquí.')
+    ) : null);
+
+    // 3. Historial de pedidos anteriores
+    const pastSection = past.length ? h('div', { class: 'list', style: 'margin-top: 18px;' },
+      h('h3', { class: 'list-title' }, 'Historial de Pedidos Anteriores (' + past.length + ')'),
+      past.map(o => orderRow(o))
+    ) : null;
 
     return h('div', { class: 'stack' },
       courierIncident ? notice('warn', 'Alerta: Sin repartidores disponibles en tu zona', 'Actualmente no hay repartidores disponibles cerca de tu farmacia (radio máximo 5 km). Estamos buscando activamente para continuar con la entrega tan pronto haya un repartidor disponible.') : null,
-      active.length ? h('div', { class: 'list' }, h('h3', { class: 'list-title' }, 'En curso (' + active.length + ')'), active.map(o => orderRow(o, pharmacyAction(o)))) : null,
-      past.length ? h('div', { class: 'list' }, h('h3', { class: 'list-title' }, 'Anteriores (' + past.length + ')'), past.map(o => orderRow(o))) : null
+      offersSection,
+      activeSection,
+      pastSection
     );
-  });
+  }, 4000);
 }
 
 function pharmacyAction(o) {

@@ -503,7 +503,7 @@ function clientOrdersView() {
           class: 'btn primary',
           type: 'button',
           style: 'margin-top: 14px;',
-          onclick: () => { location.hash = '#catalog'; }
+          onclick: () => { location.hash = '#client'; }
         }, 'Ir al Catálogo de Medicamentos')
       );
     }
@@ -583,25 +583,32 @@ function clientOrdersView() {
                   type: 'button',
                   style: 'font-weight:800; padding:10px 18px;',
                   onclick: () => {
-                    if (typeof openPaymentGatewayDialog === 'function') {
-                      openPaymentGatewayDialog(o);
-                    } else if (typeof window.openPaymentGatewayDialog === 'function') {
-                      window.openPaymentGatewayDialog(o);
-                    }
+                    const fn = window.openPaymentGatewayDialog || openPaymentGatewayDialog;
+                    if (typeof fn === 'function') fn(o);
                   }
                 }, 'Pagar ' + money(o.total || 0) + ' con PSE / Nequi / Tarjeta'),
+                isQuoted && h('button', {
+                  class: 'btn ghost',
+                  type: 'button',
+                  onclick: async e => {
+                    if (confirm('¿Deseas rechazar esta cotización? Buscaremos otra droguería disponible para tu pedido.')) {
+                      await act(e.currentTarget, async () => {
+                        await API.post('/orders/' + o.id + '/decline-price', {});
+                        toast('Cotización rechazada. Buscando farmacia alternativa...');
+                        refreshAll();
+                      });
+                    }
+                  }
+                }, 'Rechazar precio'),
                 h('button', {
                   class: 'btn ' + (isQuoted ? 'secondary' : 'primary'),
                   type: 'button',
                   onclick: () => {
-                    if (typeof openOrderDetail === 'function') {
-                      openOrderDetail(o.id);
-                    } else if (typeof window.openOrderDetail === 'function') {
-                      window.openOrderDetail(o.id);
-                    }
+                    const fn = window.openOrderDetail || openOrderDetail;
+                    if (typeof fn === 'function') fn(o.id);
                   }
                 }, isEnCamino ? 'Ver Repartidor en Mapa' : 'Ver Detalle y Seguimiento'),
-                isSearching && h('button', {
+                (!isPaid && !isEnCamino && !isQuoted) && h('button', {
                   class: 'btn ghost',
                   type: 'button',
                   onclick: async e => {
@@ -629,7 +636,7 @@ function clientOrdersView() {
           h('button', {
             class: 'btn secondary small',
             type: 'button',
-            onclick: () => { location.hash = '#catalog'; }
+            onclick: () => { location.hash = '#client'; }
           }, 'Explorar Catálogo de Medicamentos')
         )
       );
@@ -660,7 +667,7 @@ function renderOrdersPage() {
   const role = state.user && state.user.role;
   const isClient = role === 'CLIENTE';
   const heading = isClient ? 'Mis Pedidos' : role === 'FARMACIA' ? 'Pedidos de mi farmacia' : role === 'REPARTIDOR' ? 'Mis entregas' : 'Todos los pedidos';
-  const back = h('button', { class: 'btn secondary', type: 'button', onclick: () => { location.hash = isClient ? '#catalog' : routeForRole(role); } }, '← Volver al catálogo');
+  const back = h('button', { class: 'btn secondary', type: 'button', onclick: () => { location.hash = isClient ? '#client' : routeForRole(role); } }, '← Volver al catálogo');
   const intro = h('section', { class: 'block orders-page-intro' },
     h('span', { class: 'eyebrow' }, 'FARMAYA · SEGUIMIENTO EN VIVO'),
     h('h1', { class: 'page-title' }, heading),

@@ -23,18 +23,18 @@ public record FarmaYaProperties(
         String wompiCurrency) {
 
     public int searchTimeoutSeconds() {
-        return searchTimeoutSeconds > 0 ? searchTimeoutSeconds : 180;
+        return searchTimeoutSeconds > 0 ? searchTimeoutSeconds : 86400;
     }
 
     public int pharmacyConfirmTimeoutSeconds() {
-        return pharmacyConfirmTimeoutSeconds > 0 ? pharmacyConfirmTimeoutSeconds : 300;
+        return pharmacyConfirmTimeoutSeconds > 0 ? pharmacyConfirmTimeoutSeconds : 86400;
     }
 
     public int priceAcceptTimeoutSeconds() {
-        return priceAcceptTimeoutSeconds > 0 ? priceAcceptTimeoutSeconds : 600;
+        return priceAcceptTimeoutSeconds > 0 ? priceAcceptTimeoutSeconds : 86400;
     }
 
     public int maxSearchRounds() {
-        return maxSearchRounds > 0 ? maxSearchRounds : 3;
+        return maxSearchRounds > 0 ? maxSearchRounds : 10;
     }
 }
