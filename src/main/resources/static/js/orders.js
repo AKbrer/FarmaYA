@@ -586,7 +586,7 @@ function openPaymentGatewayDialog(o) {
         currency: sigData.currency || 'COP',
         amountInCents: sigData.amountInCents,
         reference: sigData.reference,
-        publicKey: sigData.publicKey || state.meta?.wompiPublicKey || 'pub_prod_cIy9KVT5NEFNWKWDb1jrsipNG2oGdQMY',
+        publicKey: sigData.publicKey || state.meta?.wompiPublicKey || 'pub_test_tjFaTiEBqNnV6tjvh6QjeuEt2Jsa74bd',
         signature: {
           integrity: sigData.signature
         }

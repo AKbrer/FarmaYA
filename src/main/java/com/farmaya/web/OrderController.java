@@ -76,7 +76,7 @@ public class OrderController {
         res.put("reference", reference);
         res.put("amountInCents", amountInCents);
         res.put("currency", currency);
-        res.put("publicKey", props.wompiPublicKey() != null && !props.wompiPublicKey().isBlank() ? props.wompiPublicKey() : "pub_prod_cIy9KVT5NEFNWKWDb1jrsipNG2oGdQMY");
+        res.put("publicKey", props.wompiPublicKey() != null && !props.wompiPublicKey().isBlank() ? props.wompiPublicKey() : "pub_test_tjFaTiEBqNnV6tjvh6QjeuEt2Jsa74bd");
         res.put("signature", signature);
         return res;
     }
