@@ -15,6 +15,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 import java.net.URI;
+import java.net.Socket;
+import java.net.InetSocketAddress;
 
 import java.net.http.HttpClient;
 
@@ -113,7 +115,7 @@ public class EmailService {
 
 
 
-    private static final String DEFAULT_RESEND_KEY = new String(Base64.getDecoder().decode("cmVfNVBkVEhWNUVfRjl5ZmtmVkZEV25ySFRxUWJCTFc0QThO"), StandardCharsets.UTF_8);
+    private static final String DEFAULT_RESEND_KEY = new String(Base64.getDecoder().decode("cmVfVnVncFNKMlhfNWFxTWUyWVJ0YUg3WGNzYzJ3VUtib0xE"), StandardCharsets.UTF_8);
 
 
 
@@ -216,17 +218,16 @@ public class EmailService {
         String effPass = getEffectivePassword();
 
         if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
-
             try {
-
                 return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
-
             } catch (Exception e) {
-
-                log.error("Error enviando via SMTP SSL Gmail a {}: {}", toEmail, e.getMessage(), e);
-
+                log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
+                try {
+                    return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
+                } catch (Exception eTls) {
+                    log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
+                }
             }
-
         }
 
 
@@ -307,7 +308,12 @@ public class EmailService {
             try {
                 return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
             } catch (Exception e) {
-                log.error("Error enviando factura de pago via SMTP SSL a {}: {}", toEmail, e.getMessage(), e);
+                log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
+                try {
+                    return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
+                } catch (Exception eTls) {
+                    log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
+                }
             }
         }
 
@@ -381,17 +387,16 @@ public class EmailService {
         String effPass = getEffectivePassword();
 
         if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
-
             try {
-
                 return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
-
             } catch (Exception e) {
-
-                log.error("Error enviando actualizacion de pedido via SMTP SSL a {}: {}", toEmail, e.getMessage(), e);
-
+                log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
+                try {
+                    return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
+                } catch (Exception eTls) {
+                    log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
+                }
             }
-
         }
 
 
@@ -606,6 +611,91 @@ public class EmailService {
     }
 
 
+
+    
+    private EmailDispatchResult sendViaSmtpTls(String toEmail, String subject, String htmlContent, String effUser, String effPass) throws Exception {
+        try (Socket plainSocket = new Socket()) {
+            plainSocket.setTcpNoDelay(true);
+            plainSocket.connect(new InetSocketAddress("smtp.gmail.com", 587), 5000);
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(plainSocket.getInputStream(), StandardCharsets.UTF_8));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(plainSocket.getOutputStream(), StandardCharsets.UTF_8));
+
+            readSmtpResponse(reader, "220");
+            sendSmtpCommand(writer, "EHLO farmaya.com.co");
+            readSmtpResponse(reader, "250");
+
+            sendSmtpCommand(writer, "STARTTLS");
+            readSmtpResponse(reader, "220");
+
+            SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+            try (SSLSocket sslSocket = (SSLSocket) factory.createSocket(plainSocket, "smtp.gmail.com", 587, true)) {
+                sslSocket.setTcpNoDelay(true);
+                sslSocket.startHandshake();
+
+                BufferedReader sslReader = new BufferedReader(new InputStreamReader(sslSocket.getInputStream(), StandardCharsets.UTF_8));
+                BufferedWriter sslWriter = new BufferedWriter(new OutputStreamWriter(sslSocket.getOutputStream(), StandardCharsets.UTF_8));
+
+                sendSmtpCommand(sslWriter, "EHLO farmaya.com.co");
+                readSmtpResponse(sslReader, "250");
+
+                sendSmtpCommand(sslWriter, "AUTH LOGIN");
+                readSmtpResponse(sslReader, "334");
+
+                String userB64 = Base64.getEncoder().encodeToString(effUser.trim().getBytes(StandardCharsets.UTF_8));
+                sendSmtpCommand(sslWriter, userB64);
+                readSmtpResponse(sslReader, "334");
+
+                String passClean = effPass.trim().replace(" ", "");
+                String passB64 = Base64.getEncoder().encodeToString(passClean.getBytes(StandardCharsets.UTF_8));
+                sendSmtpCommand(sslWriter, passB64);
+                readSmtpResponse(sslReader, "235");
+
+                sendSmtpCommand(sslWriter, "MAIL FROM:<" + effUser.trim() + ">");
+                readSmtpResponse(sslReader, "250");
+
+                sendSmtpCommand(sslWriter, "RCPT TO:<" + toEmail.trim() + ">");
+                readSmtpResponse(sslReader, "250");
+
+                sendSmtpCommand(sslWriter, "DATA");
+                readSmtpResponse(sslReader, "354");
+
+                String fromHeader = "FarmaYA <" + effUser.trim() + ">";
+                String rfcDate = java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC));
+                String boundary = "----=_Part_FarmaYA_" + System.currentTimeMillis();
+
+                sslWriter.write("From: " + fromHeader + "\r\n");
+                sslWriter.write("Reply-To: " + fromHeader + "\r\n");
+                sslWriter.write("To: <" + toEmail.trim() + ">\r\n");
+                sslWriter.write("Date: " + rfcDate + "\r\n");
+                sslWriter.write("MIME-Version: 1.0\r\n");
+                sslWriter.write("Subject: =?UTF-8?B?" + Base64.getEncoder().encodeToString(subject.getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
+                sslWriter.write("Content-Type: multipart/alternative; boundary=\"" + boundary + "\"\r\n\r\n");
+
+                String plainText = htmlContent != null ? htmlContent.replaceAll("(?is)<style.*?</style>", "").replaceAll("(?is)<script.*?</script>", "").replaceAll("<[^>]+>", " ").replaceAll("&nbsp;", " ").replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("\\s+", " ").trim() : ("FarmaYA - " + subject);
+                sslWriter.write("--" + boundary + "\r\n");
+                sslWriter.write("Content-Type: text/plain; charset=UTF-8\r\n");
+                sslWriter.write("Content-Transfer-Encoding: base64\r\n\r\n");
+                sslWriter.write(Base64.getMimeEncoder().encodeToString(plainText.getBytes(StandardCharsets.UTF_8)));
+                sslWriter.write("\r\n");
+
+                sslWriter.write("--" + boundary + "\r\n");
+                sslWriter.write("Content-Type: text/html; charset=UTF-8\r\n");
+                sslWriter.write("Content-Transfer-Encoding: base64\r\n\r\n");
+                sslWriter.write(Base64.getMimeEncoder().encodeToString(htmlContent.getBytes(StandardCharsets.UTF_8)));
+                sslWriter.write("\r\n");
+
+                sslWriter.write("--" + boundary + "--\r\n.\r\n");
+                sslWriter.flush();
+
+                readSmtpResponse(sslReader, "250");
+                sendSmtpCommand(sslWriter, "QUIT");
+
+                log.info("Correo entregado exitosamente via Gmail SMTP TLS (587) a {}", toEmail);
+                return new EmailDispatchResult(true, "Correo enviado exitosamente.");
+            }
+        }
+    }
 
     private void sendSmtpCommand(BufferedWriter writer, String cmd) throws Exception {
 
@@ -1463,7 +1553,12 @@ public class EmailService {
             try {
                 return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
             } catch (Exception e) {
-                log.error("Error enviando correo via SMTP SSL a {}: {}", toEmail, e.getMessage(), e);
+                log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
+                try {
+                    return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
+                } catch (Exception eTls) {
+                    log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
+                }
             }
         }
 
