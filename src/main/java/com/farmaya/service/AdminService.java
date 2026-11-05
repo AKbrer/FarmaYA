@@ -158,6 +158,22 @@ public class AdminService {
 
         double platformEarnings = Math.round(revenue * 0.10 * 100) / 100.0;
 
+        List<OrderStatus> paidStatuses = List.of(
+            OrderStatus.PRECIO_CONFIRMADO, OrderStatus.PEDIDO_EN_PREPARACION,
+            OrderStatus.PEDIDO_LISTO, OrderStatus.BUSCANDO_REPARTIDOR,
+            OrderStatus.REPARTIDOR_ASIGNADO, OrderStatus.PEDIDO_RECOGIDO,
+            OrderStatus.EN_CAMINO, OrderStatus.ENTREGADO
+        );
+        double gmv = 0;
+        var gmvAgg = Aggregation.newAggregation(
+                Aggregation.match(where("status").in(paidStatuses)),
+                Aggregation.group().sum("total").as("sum"));
+        for (Document d : mongo.aggregate(gmvAgg, Order.class, Document.class)) {
+            Object v = d.get("sum");
+            if (v instanceof Number n) gmv = n.doubleValue();
+        }
+        double grossPlatformEarnings = Math.round(gmv * 0.10 * 100) / 100.0;
+
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("byStatus", byStatus);
         m.put("pharmacies", Map.of("verified", count(Role.FARMACIA, true), "pending", count(Role.FARMACIA, false)));
@@ -165,6 +181,8 @@ public class AdminService {
         m.put("clients", count(Role.CLIENTE, true));
         m.put("revenue", revenue);
         m.put("platformEarnings", platformEarnings);
+        m.put("gmv", gmv);
+        m.put("grossPlatformEarnings", grossPlatformEarnings);
         m.put("commissionRate", 0.10);
         return m;
     }

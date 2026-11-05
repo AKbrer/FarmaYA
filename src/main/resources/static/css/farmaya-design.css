@@ -8589,3 +8589,713 @@ ol.timeline small {
     box-sizing: border-box !important;
   }
 }
+
+
+/* ==========================================================================
+   Power BI Financial Dashboard & Flutter Mobile Optimization
+   ========================================================================== */
+
+.powerbi-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.powerbi-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 22px 26px;
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 60%, #047857 100%);
+  border-radius: 16px;
+  color: #ffffff;
+  box-shadow: 0 4px 20px rgba(6, 78, 59, 0.16);
+  position: relative;
+  overflow: hidden;
+}
+
+.powerbi-banner::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.powerbi-banner-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.powerbi-tag-bi {
+  background: #f2c811;
+  color: #1a1a1a;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.powerbi-tag-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.18);
+  padding: 3px 10px;
+  border-radius: 12px;
+  color: #ffffff;
+}
+
+.powerbi-live-dot {
+  width: 7px;
+  height: 7px;
+  background: #34d399;
+  border-radius: 50%;
+  animation: pbi-pulse 1.8s infinite;
+}
+
+@keyframes pbi-pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(52, 211, 153, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+
+.powerbi-banner-title {
+  margin: 0 0 4px 0;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.powerbi-banner-desc {
+  margin: 0;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.85);
+  max-width: 620px;
+  line-height: 1.45;
+}
+
+.powerbi-commission-callout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+  padding: 12px 20px;
+  border-radius: 14px;
+  min-width: 140px;
+  text-align: center;
+}
+
+.callout-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+  font-weight: 600;
+}
+
+.callout-rate {
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+.callout-sub {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+/* Slicers Bar (Filtros interactivos de Power BI) */
+.powerbi-slicers-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.powerbi-slicer-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.powerbi-slicer-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.powerbi-slicer-select {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-soft, #f8fafc);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.powerbi-slicer-select:focus {
+  border-color: var(--primary);
+}
+
+.powerbi-slicer-reset {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+/* 4 Power BI KPI Tiles */
+.powerbi-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.powerbi-kpi-card {
+  padding: 18px 20px;
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.powerbi-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.powerbi-kpi-card.accent-green::before { background: #0b8457; }
+.powerbi-kpi-card.accent-blue::before { background: #0284c7; }
+.powerbi-kpi-card.accent-purple::before { background: #8b5cf6; }
+.powerbi-kpi-card.accent-amber::before { background: #f59e0b; }
+
+.powerbi-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.powerbi-kpi-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.powerbi-kpi-chip {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.chip-green { background: rgba(11, 132, 87, 0.12); color: #087046; }
+.chip-blue { background: rgba(2, 132, 199, 0.12); color: #0369a1; }
+.chip-purple { background: rgba(139, 92, 246, 0.12); color: #6d28d9; }
+.chip-amber { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+
+.powerbi-kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.powerbi-kpi-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.powerbi-kpi-curr {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.powerbi-kpi-sub {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Power BI Visuals Grid */
+.powerbi-visuals-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 16px;
+}
+
+.powerbi-visual-card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.powerbi-visual-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 10px;
+}
+
+.powerbi-visual-title {
+  margin: 0 0 4px 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.powerbi-visual-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.powerbi-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.powerbi-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.powerbi-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+
+.dot-pharmacy { background: #94a3b8; }
+.dot-farmaya { background: #0b8457; }
+
+/* Visual Bars */
+.powerbi-bars-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.powerbi-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.powerbi-bar-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.powerbi-bar-label {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.powerbi-bar-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.powerbi-bar-commission-tag {
+  background: rgba(11, 132, 87, 0.12);
+  color: #087046;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-size: 11.5px;
+}
+
+.powerbi-bar-track {
+  width: 100%;
+  height: 10px;
+  background: var(--surface-soft, #e2e8f0);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.powerbi-bar-fill-pharmacy {
+  height: 100%;
+  background: #cbd5e1;
+  border-radius: 6px;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
+  transition: width 0.3s ease;
+}
+
+.powerbi-bar-fill-farmaya {
+  height: 100%;
+  background: #0b8457;
+  border-radius: 6px;
+}
+
+/* Channels container */
+.powerbi-channels-container {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.powerbi-channel-row {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.powerbi-channel-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+
+.powerbi-channel-name {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.powerbi-channel-amt {
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.powerbi-channel-track {
+  width: 100%;
+  height: 8px;
+  background: var(--surface-soft, #e2e8f0);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.powerbi-channel-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0284c7, #0b8457);
+  border-radius: 6px;
+}
+
+.powerbi-channel-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Power BI Matrix Card */
+.powerbi-matrix-card {
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.powerbi-matrix-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.powerbi-matrix-title {
+  margin: 0 0 4px 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.powerbi-matrix-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.powerbi-tag-mini {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  background: var(--surface-soft, #f1f5f9);
+  color: var(--muted);
+  border-radius: 6px;
+}
+
+.powerbi-table-wrap {
+  overflow-x: auto;
+}
+
+.powerbi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.powerbi-table th {
+  padding: 10px 14px;
+  background: var(--surface-soft, #f8fafc);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border-bottom: 2px solid var(--line);
+  white-space: nowrap;
+}
+
+.powerbi-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.powerbi-profit-pill {
+  display: inline-block;
+  background: rgba(11, 132, 87, 0.12);
+  color: #087046;
+  font-weight: 800;
+  font-size: 12.5px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(11, 132, 87, 0.25);
+  white-space: nowrap;
+}
+
+/* Flutter Mobile Cards */
+.powerbi-mobile-cards-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.powerbi-flutter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+}
+
+.powerbi-flutter-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.powerbi-flutter-card-code {
+  font-size: 13.5px;
+}
+
+.powerbi-flutter-card-mid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.powerbi-flutter-card-fin {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.powerbi-flutter-fin-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.powerbi-flutter-amt {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Responsive visibility */
+.mobile-only {
+  display: none !important;
+}
+
+.desktop-only {
+  display: block;
+}
+
+/* ==========================================================================
+   Mobile Flutter View Optimization (@media max-width: 640px)
+   ========================================================================== */
+@media (max-width: 640px) {
+  .mobile-only {
+    display: flex !important;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .powerbi-banner {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 16px 16px !important;
+    border-radius: 16px !important;
+  }
+
+  .powerbi-banner-right {
+    width: 100% !important;
+  }
+
+  .powerbi-commission-callout {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+  }
+
+  .callout-rate {
+    font-size: 1.6rem !important;
+  }
+
+  .powerbi-slicers-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 12px 14px !important;
+    border-radius: 16px !important;
+    gap: 10px !important;
+  }
+
+  .powerbi-slicer-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+  }
+
+  .powerbi-slicer-select {
+    width: 100% !important;
+    min-height: 42px !important;
+  }
+
+  .powerbi-slicer-reset {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .powerbi-kpis-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .powerbi-kpi-card {
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .powerbi-kpi-value {
+    font-size: 1.45rem !important;
+  }
+
+  .powerbi-visuals-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .powerbi-visual-card {
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+  }
+
+  .powerbi-matrix-card {
+    border-radius: 16px !important;
+    padding: 14px 16px !important;
+  }
+
+  .powerbi-bar-info-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+
+  .powerbi-bar-meta {
+    flex-wrap: wrap !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Power BI Dark Theme Adjustments */
+[data-theme="dark"] .powerbi-profit-pill {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border-color: rgba(52, 211, 153, 0.4) !important;
+}
+[data-theme="dark"] .powerbi-bar-track,
+[data-theme="dark"] .powerbi-channel-track {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] .powerbi-bar-fill-pharmacy {
+  background: #475569 !important;
+}
+[data-theme="dark"] .powerbi-tag-mini {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-secondary) !important;
+}
+[data-theme="dark"] .powerbi-bar-commission-tag {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+}

@@ -18,9 +18,451 @@ let adminDemandFilter = 'TODAS';
 let adminDemandSearch = '';
 let adminSelectedMedName = '';
 
+
+let powerBiPeriod = 'ALL';
+let powerBiPharmacy = 'ALL';
+let powerBiStatus = 'ALL_PAID';
+
+/**
+ * Dashboard Analitico Power BI con Ganancia FarmaYA (10% fijo).
+ * Disenado con estetica Power BI y optimizado para Flutter en vista movil.
+ */
+function adminPowerBiDashboard() {
+  const PAID_STATUSES = [
+    'PRECIO_CONFIRMADO', 'PEDIDO_EN_PREPARACION', 'PEDIDO_LISTO',
+    'BUSCANDO_REPARTIDOR', 'REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO',
+    'EN_CAMINO', 'ENTREGADO'
+  ];
+
+  return live(() => API.get('/admin/orders'), rawOrders => {
+    const ordersList = Array.isArray(rawOrders) ? rawOrders : [];
+    const wrapper = h('div', { class: 'powerbi-dashboard' });
+
+    function draw() {
+      wrapper.replaceChildren();
+
+      // Extraer lista unica de farmacias para el slicer
+      const pharmacyNames = Array.from(new Set(ordersList.map(o => o.pharmacyName).filter(Boolean))).sort();
+
+      // Fechas de referencia
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+      const d7 = new Date(now.getTime() - 7 * 86400000);
+      const d30 = new Date(now.getTime() - 30 * 86400000);
+
+      // Filtrar pedidos de acuerdo a los slicers
+      const filtered = ordersList.filter(o => {
+        // Estado
+        if (powerBiStatus === 'ALL_PAID' && !PAID_STATUSES.includes(o.status)) return false;
+        if (powerBiStatus === 'ENTREGADO' && o.status !== 'ENTREGADO') return false;
+        if (powerBiStatus === 'IN_PROGRESS' && (!PAID_STATUSES.includes(o.status) || o.status === 'ENTREGADO')) return false;
+
+        // Farmacia
+        if (powerBiPharmacy !== 'ALL' && o.pharmacyName !== powerBiPharmacy) return false;
+
+        // Periodo
+        if (powerBiPeriod !== 'ALL') {
+          const dt = new Date(o.createdAt || o.deliveredAt || Date.now());
+          if (powerBiPeriod === 'TODAY') {
+            if (dt.toISOString().slice(0, 10) !== todayStr) return false;
+          } else if (powerBiPeriod === '7D' && dt < d7) {
+            return false;
+          } else if (powerBiPeriod === '30D' && dt < d30) {
+            return false;
+          }
+        }
+        return true;
+      });
+
+      // Calculos financieros clave
+      let totalGross = 0;
+      let totalEarnings = 0;
+      filtered.forEach(o => {
+        const gross = Number(o.total) || 0;
+        totalGross += gross;
+        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        totalEarnings += earnings;
+      });
+      const totalPharmacyNet = Math.max(0, totalGross - totalEarnings);
+      const totalOrdersCount = filtered.length;
+      const avgTicket = totalOrdersCount > 0 ? Math.round(totalGross / totalOrdersCount) : 0;
+      const avgCommission = totalOrdersCount > 0 ? Math.round(totalEarnings / totalOrdersCount) : 0;
+
+      // Banner superior Power BI
+      const headerBanner = h('div', { class: 'powerbi-banner' },
+        h('div', { class: 'powerbi-banner-left' },
+          h('div', { class: 'powerbi-banner-title-row' },
+            h('span', { class: 'powerbi-tag-bi' }, 'POWER BI ANALYTICS'),
+            h('span', { class: 'powerbi-tag-live' },
+              h('span', { class: 'powerbi-live-dot' }),
+              'Datos en Vivo'
+            )
+          ),
+          h('h2', { class: 'powerbi-banner-title' }, 'Dashboard Financiero FarmaYA'),
+          h('p', { class: 'powerbi-banner-desc' },
+            'Monitoreo ejecutivo de ingresos brutos, liquidacion a farmacias aliadas y retencion del 10% de comision de plataforma.'
+          )
+        ),
+        h('div', { class: 'powerbi-banner-right' },
+          h('div', { class: 'powerbi-commission-callout' },
+            h('span', { class: 'callout-label' }, 'Comision FarmaYA'),
+            h('strong', { class: 'callout-rate' }, '10%'),
+            h('span', { class: 'callout-sub' }, 'Retencion por pedido')
+          )
+        )
+      );
+
+      // Slicers Bar (Filtros interactivos de Power BI)
+      const periodSelect = h('select', {
+        class: 'powerbi-slicer-select',
+        'aria-label': 'Filtro de Periodo',
+        onchange: e => { powerBiPeriod = e.target.value; draw(); }
+      },
+        h('option', { value: 'ALL', selected: powerBiPeriod === 'ALL' }, 'Historico Completo'),
+        h('option', { value: 'TODAY', selected: powerBiPeriod === 'TODAY' }, 'Hoy'),
+        h('option', { value: '7D', selected: powerBiPeriod === '7D' }, 'Ultimos 7 Dias'),
+        h('option', { value: '30D', selected: powerBiPeriod === '30D' }, 'Ultimos 30 Dias')
+      );
+
+      const pharmacySelect = h('select', {
+        class: 'powerbi-slicer-select',
+        'aria-label': 'Filtro por Farmacia',
+        onchange: e => { powerBiPharmacy = e.target.value; draw(); }
+      },
+        h('option', { value: 'ALL', selected: powerBiPharmacy === 'ALL' }, 'Todas las Farmacias Aliadas'),
+        pharmacyNames.map(name => h('option', { value: name, selected: powerBiPharmacy === name }, name))
+      );
+
+      const statusSelect = h('select', {
+        class: 'powerbi-slicer-select',
+        'aria-label': 'Filtro por Estado',
+        onchange: e => { powerBiStatus = e.target.value; draw(); }
+      },
+        h('option', { value: 'ALL_PAID', selected: powerBiStatus === 'ALL_PAID' }, 'Todos los Monetizados (Pagados)'),
+        h('option', { value: 'ENTREGADO', selected: powerBiStatus === 'ENTREGADO' }, 'Solo Entregados con Exito'),
+        h('option', { value: 'IN_PROGRESS', selected: powerBiStatus === 'IN_PROGRESS' }, 'En Curso (En preparacion / En camino)')
+      );
+
+      const resetBtn = (powerBiPeriod !== 'ALL' || powerBiPharmacy !== 'ALL' || powerBiStatus !== 'ALL_PAID')
+        ? h('button', {
+            class: 'btn btn-subtle powerbi-slicer-reset',
+            onclick: () => {
+              powerBiPeriod = 'ALL';
+              powerBiPharmacy = 'ALL';
+              powerBiStatus = 'ALL_PAID';
+              draw();
+            }
+          }, 'Limpiar Filtros')
+        : null;
+
+      const slicersBar = h('div', { class: 'powerbi-slicers-bar' },
+        h('div', { class: 'powerbi-slicer-group' },
+          h('span', { class: 'powerbi-slicer-label' }, 'Periodo:'),
+          periodSelect
+        ),
+        h('div', { class: 'powerbi-slicer-group' },
+          h('span', { class: 'powerbi-slicer-label' }, 'Farmacia:'),
+          pharmacySelect
+        ),
+        h('div', { class: 'powerbi-slicer-group' },
+          h('span', { class: 'powerbi-slicer-label' }, 'Estado:'),
+          statusSelect
+        ),
+        resetBtn
+      );
+
+      // 4 Power BI KPI Tiles
+      const kpisGrid = h('div', { class: 'powerbi-kpis-grid' },
+        // KPI 1: Ganancia Neta FarmaYA (10%)
+        h('div', { class: 'powerbi-kpi-card accent-green' },
+          h('div', { class: 'powerbi-kpi-top' },
+            h('span', { class: 'powerbi-kpi-title' }, 'Ganancia FarmaYA (10%)'),
+            h('span', { class: 'powerbi-kpi-chip chip-green' }, '10.0% Comision')
+          ),
+          h('div', { class: 'powerbi-kpi-value-row' },
+            h('strong', { class: 'powerbi-kpi-value text-green' }, money(totalEarnings)),
+            h('span', { class: 'powerbi-kpi-curr' }, 'COP')
+          ),
+          h('div', { class: 'powerbi-kpi-sub' },
+            h('span', null, 'Retencion neta sobre ' + money(totalGross) + ' en ventas brutas')
+          )
+        ),
+
+        // KPI 2: Ventas Totales GMV
+        h('div', { class: 'powerbi-kpi-card accent-blue' },
+          h('div', { class: 'powerbi-kpi-top' },
+            h('span', { class: 'powerbi-kpi-title' }, 'Ventas Totales (GMV)'),
+            h('span', { class: 'powerbi-kpi-chip chip-blue' }, '100% Bruto')
+          ),
+          h('div', { class: 'powerbi-kpi-value-row' },
+            h('strong', { class: 'powerbi-kpi-value text-blue' }, money(totalGross)),
+            h('span', { class: 'powerbi-kpi-curr' }, 'COP')
+          ),
+          h('div', { class: 'powerbi-kpi-sub' },
+            h('span', null, 'Volumen monetizado a traves de la plataforma FarmaYA')
+          )
+        ),
+
+        // KPI 3: Liquidacion Farmacias (90%)
+        h('div', { class: 'powerbi-kpi-card accent-purple' },
+          h('div', { class: 'powerbi-kpi-top' },
+            h('span', { class: 'powerbi-kpi-title' }, 'Liquidacion Aliados (90%)'),
+            h('span', { class: 'powerbi-kpi-chip chip-purple' }, '90.0% Droguerias')
+          ),
+          h('div', { class: 'powerbi-kpi-value-row' },
+            h('strong', { class: 'powerbi-kpi-value text-purple' }, money(totalPharmacyNet)),
+            h('span', { class: 'powerbi-kpi-curr' }, 'COP')
+          ),
+          h('div', { class: 'powerbi-kpi-sub' },
+            h('span', null, 'Monto neto transferido a las farmacias aliadas')
+          )
+        ),
+
+        // KPI 4: Pedidos y Ticket Promedio
+        h('div', { class: 'powerbi-kpi-card accent-amber' },
+          h('div', { class: 'powerbi-kpi-top' },
+            h('span', { class: 'powerbi-kpi-title' }, 'Pedidos Monetizados'),
+            h('span', { class: 'powerbi-kpi-chip chip-amber' }, 'Ticket Promedio')
+          ),
+          h('div', { class: 'powerbi-kpi-value-row' },
+            h('strong', { class: 'powerbi-kpi-value text-amber' }, String(totalOrdersCount)),
+            h('span', { class: 'powerbi-kpi-curr' }, 'pedidos')
+          ),
+          h('div', { class: 'powerbi-kpi-sub' },
+            h('span', null, 'Ticket: <strong>' + money(avgTicket) + '</strong> · Ganancia/ped: <strong>' + money(avgEarnings) + '</strong>')
+          )
+        )
+      );
+
+      // Visual A: Ranking de Farmacias y Ganancia FarmaYA 10%
+      const byPharmacy = {};
+      filtered.forEach(o => {
+        const pName = o.pharmacyName || 'Sin asignar / Cobertura general';
+        if (!byPharmacy[pName]) byPharmacy[pName] = { name: pName, gross: 0, earnings: 0, count: 0 };
+        const gross = Number(o.total) || 0;
+        byPharmacy[pName].gross += gross;
+        byPharmacy[pName].earnings += o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        byPharmacy[pName].count += 1;
+      });
+      const pharmacyRanking = Object.values(byPharmacy).sort((a, b) => b.gross - a.gross);
+      const maxPharmaGross = pharmacyRanking.length ? Math.max(...pharmacyRanking.map(p => p.gross), 1) : 1;
+
+      const pharmaBarsList = pharmacyRanking.length ? pharmacyRanking.map(item => {
+        const pctOfMax = Math.round((item.gross / maxPharmaGross) * 100);
+        return h('div', { class: 'powerbi-bar-item' },
+          h('div', { class: 'powerbi-bar-info-row' },
+            h('strong', { class: 'powerbi-bar-label' }, item.name),
+            h('span', { class: 'powerbi-bar-meta' },
+              h('span', { class: 'muted' }, item.count + (item.count === 1 ? ' pedido · ' : ' pedidos · ')),
+              h('span', { class: 'text-strong' }, 'Bruto: ' + money(item.gross)),
+              h('span', { class: 'powerbi-bar-commission-tag' }, 'FarmaYA 10%: ' + money(item.earnings))
+            )
+          ),
+          h('div', { class: 'powerbi-bar-track' },
+            h('div', {
+              class: 'powerbi-bar-fill-pharmacy',
+              style: 'width: ' + Math.max(pctOfMax, 6) + '%;'
+            },
+              h('div', {
+                class: 'powerbi-bar-fill-farmaya',
+                style: 'width: 10%;',
+                title: '10% FarmaYA: ' + money(item.earnings)
+              })
+            )
+          )
+        );
+      }) : [h('div', { class: 'muted small text-center p-4' }, 'No hay transacciones registradas para este filtro.')];
+
+      const visualFarmacias = h('div', { class: 'powerbi-visual-card' },
+        h('div', { class: 'powerbi-visual-header' },
+          h('div', null,
+            h('h3', { class: 'powerbi-visual-title' }, 'Rendimiento por Farmacia Aliada'),
+            h('p', { class: 'powerbi-visual-subtitle' }, 'Volumen de ventas brutas vs. Ganancia retenida por FarmaYA (10%)')
+          ),
+          h('div', { class: 'powerbi-legend-row' },
+            h('span', { class: 'powerbi-legend-item' },
+              h('span', { class: 'powerbi-dot dot-pharmacy' }),
+              '90% Aliado'
+            ),
+            h('span', { class: 'powerbi-legend-item' },
+              h('span', { class: 'powerbi-dot dot-farmaya' }),
+              '10% FarmaYA'
+            )
+          )
+        ),
+        h('div', { class: 'powerbi-bars-container' }, pharmaBarsList)
+      );
+
+      // Visual B: Canales de Pago & Conversión
+      const byPayment = {};
+      filtered.forEach(o => {
+        let pm = (o.paymentMethod || 'Wompi / Tarjeta').toUpperCase();
+        if (pm.includes('WOMPI') || pm.includes('CARD') || pm.includes('CREDIT') || pm.includes('DEBIT')) pm = 'Wompi (Bancolombia/Tarjetas)';
+        else if (pm.includes('PSE')) pm = 'PSE (Debito Bancario)';
+        else if (pm.includes('NEQUI')) pm = 'Nequi';
+        else if (pm.includes('EFECTIVO') || pm.includes('CASH')) pm = 'Contraentrega Efectivo';
+        if (!byPayment[pm]) byPayment[pm] = { label: pm, gross: 0, earnings: 0, count: 0 };
+        const gross = Number(o.total) || 0;
+        byPayment[pm].gross += gross;
+        byPayment[pm].earnings += o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        byPayment[pm].count += 1;
+      });
+      const paymentChannels = Object.values(byPayment).sort((a, b) => b.gross - a.gross);
+
+      const paymentBarsList = paymentChannels.length ? paymentChannels.map(pm => {
+        const sharePct = totalGross > 0 ? Math.round((pm.gross / totalGross) * 100) : 0;
+        return h('div', { class: 'powerbi-channel-row' },
+          h('div', { class: 'powerbi-channel-info' },
+            h('span', { class: 'powerbi-channel-name' }, pm.label),
+            h('span', { class: 'powerbi-channel-amt' }, money(pm.gross) + ' (' + sharePct + '%)')
+          ),
+          h('div', { class: 'powerbi-channel-track' },
+            h('div', { class: 'powerbi-channel-fill', style: 'width: ' + Math.max(sharePct, 6) + '%;' })
+          ),
+          h('div', { class: 'powerbi-channel-sub' },
+            h('span', { class: 'muted small' }, pm.count + (pm.count === 1 ? ' pedido' : ' pedidos')),
+            h('span', { class: 'text-green small font-bold' }, 'Comision 10%: ' + money(pm.earnings))
+          )
+        );
+      }) : [h('div', { class: 'muted small text-center p-4' }, 'No hay canales de pago registrados.')];
+
+      const visualCanales = h('div', { class: 'powerbi-visual-card' },
+        h('div', { class: 'powerbi-visual-header' },
+          h('div', null,
+            h('h3', { class: 'powerbi-visual-title' }, 'Canales de Pago & Facturacion'),
+            h('p', { class: 'powerbi-visual-subtitle' }, 'Participacion de pasarelas electronicas y comisiones')
+          ),
+          h('span', { class: 'powerbi-tag-mini' }, 'Wompi / Digital')
+        ),
+        h('div', { class: 'powerbi-channels-container' }, paymentBarsList)
+      );
+
+      const visualsGrid = h('div', { class: 'powerbi-visuals-grid' }, visualFarmacias, visualCanales);
+
+      // Data Matrix Table (Desktop & Flutter Mobile responsive)
+      const tableRows = filtered.slice(0, 50).map(o => {
+        const gross = Number(o.total) || 0;
+        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        const pharmaNet = Math.max(0, gross - earnings);
+        const code = o.code || ('#' + (o.id || '').slice(-6).toUpperCase());
+        const dt = new Date(o.createdAt || o.deliveredAt || Date.now());
+        const dtFmt = dt.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) + ' ' + dt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
+        return h('tr', null,
+          h('td', { class: 'powerbi-cell-code' },
+            h('strong', null, code),
+            h('small', { class: 'muted d-block' }, o.clientName || 'Cliente')
+          ),
+          h('td', null, o.pharmacyName || 'Sin asignar'),
+          h('td', { class: 'muted small' }, dtFmt),
+          h('td', { class: 'small' }, o.paymentMethod || 'Wompi / Digital'),
+          h('td', { class: 'text-right' },
+            h('strong', null, money(gross)),
+            h('small', { class: 'muted d-block' }, 'Aliado: ' + money(pharmaNet))
+          ),
+          h('td', { class: 'text-right' },
+            h('span', { class: 'powerbi-profit-pill' }, money(earnings))
+          ),
+          h('td', { class: 'text-center' },
+            h('span', { class: 'tag tone-teal' }, (state.meta.statuses && state.meta.statuses[o.status]) || o.status)
+          )
+        );
+      });
+
+      // Mobile Flutter Cards List
+      const mobileCardsList = filtered.slice(0, 30).map(o => {
+        const gross = Number(o.total) || 0;
+        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        const pharmaNet = Math.max(0, gross - earnings);
+        const code = o.code || ('#' + (o.id || '').slice(-6).toUpperCase());
+        const dt = new Date(o.createdAt || o.deliveredAt || Date.now());
+        const dtFmt = dt.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) + ' ' + dt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+
+        return h('div', { class: 'powerbi-flutter-card' },
+          h('div', { class: 'powerbi-flutter-card-top' },
+            h('div', { class: 'powerbi-flutter-card-code' },
+              h('strong', null, code),
+              h('span', { class: 'muted small ml-1' }, '· ' + dtFmt)
+            ),
+            h('span', { class: 'tag tone-teal small' }, (state.meta.statuses && state.meta.statuses[o.status]) || o.status)
+          ),
+          h('div', { class: 'powerbi-flutter-card-mid' },
+            h('div', { class: 'small' },
+              h('span', { class: 'muted' }, 'Farmacia: '),
+              h('strong', null, o.pharmacyName || 'Sin asignar')
+            ),
+            h('div', { class: 'small muted' },
+              h('span', null, 'Cliente: ' + (o.clientName || 'Cliente') + ' · ' + (o.paymentMethod || 'Wompi'))
+            )
+          ),
+          h('div', { class: 'powerbi-flutter-card-fin' },
+            h('div', { class: 'powerbi-flutter-fin-col' },
+              h('span', { class: 'kpi-sub-label' }, 'Venta Bruta'),
+              h('strong', { class: 'powerbi-flutter-amt' }, money(gross))
+            ),
+            h('div', { class: 'powerbi-flutter-fin-col' },
+              h('span', { class: 'kpi-sub-label' }, 'Aliado (90%)'),
+              h('strong', { class: 'powerbi-flutter-amt muted' }, money(pharmaNet))
+            ),
+            h('div', { class: 'powerbi-flutter-fin-col text-right' },
+              h('span', { class: 'kpi-sub-label text-green font-bold' }, 'FarmaYA (10%)'),
+              h('span', { class: 'powerbi-profit-pill' }, money(earnings))
+            )
+          )
+        );
+      });
+
+      const matrixSection = h('div', { class: 'powerbi-matrix-card' },
+        h('div', { class: 'powerbi-matrix-header' },
+          h('div', null,
+            h('h3', { class: 'powerbi-matrix-title' }, 'Matriz Detallada de Liquidacion (Comision 10% FarmaYA)'),
+            h('p', { class: 'powerbi-matrix-subtitle' },
+              filtered.length
+                ? 'Mostrando ' + Math.min(filtered.length, 50) + ' de ' + filtered.length + ' transacciones monetizadas.'
+                : 'No se encontraron transacciones con los filtros seleccionados.'
+            )
+          ),
+          h('span', { class: 'powerbi-tag-mini' }, 'Filtro Dinamico Activo')
+        ),
+        // Desktop table wrap
+        h('div', { class: 'powerbi-table-wrap desktop-only' },
+          h('table', { class: 'powerbi-table' },
+            h('thead', null,
+              h('tr', null,
+                h('th', null, 'Pedido / Cliente'),
+                h('th', null, 'Farmacia Aliada'),
+                h('th', null, 'Fecha'),
+                h('th', null, 'Medio de Pago'),
+                h('th', { class: 'text-right' }, 'Total Bruto'),
+                h('th', { class: 'text-right' }, 'FarmaYA (10%)'),
+                h('th', { class: 'text-center' }, 'Estado')
+              )
+            ),
+            h('tbody', null, tableRows.length ? tableRows : [
+              h('tr', null, h('td', { colspan: 7, class: 'text-center muted p-4' }, 'No hay registros para mostrar.'))
+            ])
+          )
+        ),
+        // Mobile Flutter Cards
+        h('div', { class: 'powerbi-mobile-cards-wrap mobile-only' },
+          mobileCardsList.length ? mobileCardsList : [
+            h('div', { class: 'text-center muted p-4' }, 'No hay registros para mostrar.')
+          ]
+        )
+      );
+
+      wrapper.append(headerBanner, slicersBar, kpisGrid, visualsGrid, matrixSection);
+    }
+
+    draw();
+    return wrapper;
+  }, 4000);
+}
+
 function adminView(user) {
   let root;
   root = h('div', { class: 'stack admin-root' }, adminHeaderCard(user), sideNavigation([
+    { label: 'Dashboard Power BI', icon: 'layout-dashboard', badge: '10%', render: adminPowerBiDashboard },
     { label: 'Predicción de Demanda', icon: 'ai-prediction', badge: 'IA', render: adminDemandForecast },
     { label: 'Pedidos', icon: 'package', render: adminOrders },
     { label: 'Verificaciones', icon: 'prescriptions', render: adminVerificationCenter },
