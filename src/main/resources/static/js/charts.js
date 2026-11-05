@@ -1,4 +1,4 @@
-﻿/* FarmaYA · gráficos SVG del dashboard y generador de PDF (sin librerías externas). */
+/* FarmaYA · gráficos SVG del dashboard y generador de PDF (sin librerías externas). */
 
 /* ---------- Utilidades ---------- */
 const FY_BOGOTA_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit' });

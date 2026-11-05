@@ -108,7 +108,7 @@ function showFloatingOrderNotice(freshOrders) {
   }, 25000);
 }
 
-﻿/* FarmaYA · panel de la farmacia */
+/* FarmaYA · panel de la farmacia */
 
 window.__farmayaSeenOffers = window.__farmayaSeenOffers || null;
 let pharmacyDashboardFrom = '';

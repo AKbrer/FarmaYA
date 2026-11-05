@@ -732,7 +732,7 @@ function openPaymentGatewayDialog(o) {
           h('strong', null, money(subtotal))
         ),
         h('div', { class: 'breakdown-row' },
-          h('span', null, Tarifa de Domicilio (~ km):),
+          h('span', null, 'Tarifa de Domicilio (~' + deliveryDist + ' km):'),
           h('strong', { class: 'muted' }, money(deliveryFee))
         ),
         h('div', { class: 'breakdown-row total-row' },
