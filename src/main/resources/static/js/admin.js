@@ -1,4 +1,4 @@
-﻿/* FarmaYA · panel de administración */
+/* FarmaYA · panel de administración */
 
 let adminFilter = '';
 
@@ -21,7 +21,7 @@ let adminSelectedMedName = '';
 function adminView(user) {
   let root;
   root = h('div', { class: 'stack admin-root' }, adminHeaderCard(user), sideNavigation([
-    { label: 'Prediccion de Demanda (IA)', icon: 'trending-up', render: adminDemandForecast },
+    { label: 'Predicción de Demanda', icon: 'ai-prediction', badge: 'IA', render: adminDemandForecast },
     { label: 'Pedidos', icon: 'package', render: adminOrders },
     { label: 'Verificaciones', icon: 'prescriptions', render: adminVerificationCenter },
     { label: 'Farmacias', icon: 'store', render: () => adminUsers('FARMACIA') },

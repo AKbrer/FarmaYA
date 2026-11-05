@@ -77,7 +77,8 @@ Object.assign(ICONS, {
   'alert-triangle': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
   'calendar': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
   'chart': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-  'sparkles': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>'
+  'sparkles': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>',
+  'ai-prediction': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m7 16 5-6 4 3 5-7"/><path d="M21 6h-4v4"/><path d="m19 2 1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" fill="currentColor"/></svg>'
 });
 
 function icon(name, cls = '') {
@@ -426,8 +427,24 @@ const hhmm = iso => new Date(iso).toLocaleTimeString(CONFIG.locale, { hour: '2-d
 /* Navegación lateral común para paneles internos. */
 function sideNavigation(items, start = 0) {
   const nav = h('aside', { class: 'side-nav', 'aria-label': 'Navegación del panel' });
-  const buttons = items.map((it, i) => h('button', { class: 'side-nav-item', type: 'button', 'aria-current': i === start ? 'page' : 'false', onclick: () => select(i) },
-    h('span', { class: 'side-nav-icon', 'aria-hidden': 'true' }, icon(it.icon || 'circle')), h('span', { class: 'side-nav-label' }, it.label)));
+  const buttons = items.map((it, i) => {
+    const ico = it.customIcon || icon(it.icon || 'circle');
+    const labelSpan = h('span', { class: 'side-nav-label' }, it.label);
+    const badgeSpan = it.badge ? h('span', {
+      class: 'side-nav-badge ' + (it.badgeClass || 'badge-ai'),
+      style: 'margin-left: auto; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; background: rgba(22, 134, 93, 0.15); color: var(--primary); border: 1px solid rgba(22, 134, 93, 0.3); text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex; align-items: center; justify-content: center;'
+    }, it.badge) : null;
+    return h('button', {
+      class: 'side-nav-item' + (it.itemClass ? ' ' + it.itemClass : ''),
+      type: 'button',
+      'aria-current': i === start ? 'page' : 'false',
+      onclick: () => select(i)
+    },
+      h('span', { class: 'side-nav-icon', 'aria-hidden': 'true' }, ico),
+      labelSpan,
+      badgeSpan
+    );
+  });
   const panel = h('section', { class: 'side-nav-content', 'aria-live': 'polite' });
   function select(i) {
     buttons.forEach((b, j) => { b.classList.toggle('active', i === j); b.setAttribute('aria-current', i === j ? 'page' : 'false'); });

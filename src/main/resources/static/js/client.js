@@ -59,18 +59,36 @@ function renderClientDashboard() {
   // Red de farmacias cercanas verificadas
 
 
-  // Sincronización en segundo plano de insignia de pedidos activos en la cabecera
+  // Sincronización en segundo plano y barra de aviso de pedidos activos
   const activeOrdersWatcher = live(() => API.get('/orders/mine'), orders => {
-    if (orders && Array.isArray(orders)) {
-      const activeCount = orders.filter(o => !['ENTREGADA', 'ENTREGADO', 'CANCELADA', 'CANCELADO', 'VENCIDA', 'RECHAZADA'].includes(o.status)).length;
-      const badge = document.getElementById('navHeaderOrdersBadge');
-      if (badge) {
-        badge.textContent = String(activeCount);
-        badge.style.display = activeCount > 0 ? 'inline-flex' : 'none';
-      }
+    const list = Array.isArray(orders) ? orders : [];
+    const active = list.filter(o => !['ENTREGADA', 'ENTREGADO', 'CANCELADA', 'CANCELADO', 'VENCIDA', 'RECHAZADA'].includes(o.status));
+    const badge = document.getElementById('navHeaderOrdersBadge');
+    if (badge) {
+      badge.textContent = String(active.length);
+      badge.style.display = active.length > 0 ? 'inline-flex' : 'none';
     }
-    return null;
-  }, 5000);
+    if (!active.length) return h('div', { style: 'display:none;' });
+    const topOrder = active[0];
+    return h('div', {
+      class: 'active-order-summary-alert',
+      style: 'margin: 14px 0 20px 0; padding: 14px 20px; border-radius: 16px; background: rgba(22, 134, 93, 0.08); border: 1.5px solid var(--primary); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;'
+    },
+      h('div', { style: 'display: flex; align-items: center; gap: 12px;' },
+        h('span', { class: 'pulse-dot' }),
+        h('div', null,
+          h('strong', { style: 'color: var(--primary); font-size: 15px;' }, 'Tienes ' + (active.length === 1 ? '1 pedido en curso' : active.length + ' pedidos en curso') + ' (' + topOrder.code + ')'),
+          h('p', { class: 'small muted', style: 'margin: 2px 0 0 0;' }, 'Estado actual: ' + statusLabel(topOrder.status) + (topOrder.address ? (' · ' + topOrder.address) : ''))
+        )
+      ),
+      h('button', {
+        class: 'btn primary small',
+        type: 'button',
+        style: 'font-weight: 700;',
+        onclick: () => { location.hash = '#orders'; }
+      }, 'Ver seguimiento en Mis Pedidos →')
+    );
+  }, 4000);
 
   const pharmacyBox = h('section', { class: 'block stitch-pharmacies-block' },
 
@@ -1034,11 +1052,9 @@ function renderClientDashboard() {
 
             drawProducts();
 
-            if (typeof openOrderDetail === 'function') {
-              openOrderDetail(result.id);
-            } else if (typeof window.openOrderDetail === 'function') {
-              window.openOrderDetail(result.id);
-            }
+            location.hash = '#orders';
+            const viewFn = window.openOrderDetail || (typeof openOrderDetail === 'function' ? openOrderDetail : null);
+            if (viewFn) viewFn(result.id);
 
             toast('Solicitud enviada a la red de farmacias');
 
@@ -1551,6 +1567,8 @@ function renderClientDashboard() {
       institutionalBar,
 
       heroSection,
+
+      activeOrdersWatcher,
 
       h('div', { class: 'client-main-grid' },
 

@@ -536,16 +536,18 @@ function clientOrdersView() {
         h('div', { class: 'active-orders-cards-list' },
           activeOrders.map(o => {
             const isQuoted = o.status === 'PRECIO_POR_ACEPTAR';
-            const isEnCamino = o.status === 'EN_CAMINO';
+            const isSearching = o.status === 'BUSCANDO_FARMACIA' || o.status === 'SOLICITUD_ENVIADA';
             const isAssigned = o.status === 'FARMACIA_ASIGNADA';
-            const isPaid = o.status === 'PRECIO_CONFIRMADO';
-            const isSearching = o.status === 'BUSCANDO_FARMACIA';
+            const isPaid = ['PRECIO_CONFIRMADO', 'PEDIDO_EN_PREPARACION', 'PEDIDO_LISTO', 'BUSCANDO_REPARTIDOR', 'REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO'].includes(o.status);
+            const isEnCamino = o.status === 'EN_CAMINO';
 
             let statusTitle = 'Buscando droguería de turno cercana...';
             let statusColor = '#0284c7';
             if (isAssigned) { statusTitle = 'Farmacia asignada · Verificando inventario'; statusColor = '#0d9488'; }
             else if (isQuoted) { statusTitle = '¡Cotización lista! Esperando tu confirmación de pago'; statusColor = '#d97706'; }
-            else if (isPaid) { statusTitle = 'Pago confirmado · Droguería empaquetando'; statusColor = '#059669'; }
+            else if (o.status === 'PRECIO_CONFIRMADO') { statusTitle = 'Pago confirmado · Droguería empaquetando'; statusColor = '#059669'; }
+            else if (o.status === 'PEDIDO_EN_PREPARACION') { statusTitle = 'Farmacia alistando tus medicamentos'; statusColor = '#059669'; }
+            else if (['PEDIDO_LISTO', 'BUSCANDO_REPARTIDOR', 'REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO'].includes(o.status)) { statusTitle = 'Repartidor recogiendo pedido en droguería'; statusColor = '#0284c7'; }
             else if (isEnCamino) { statusTitle = '¡Tu pedido va en camino a tu dirección!'; statusColor = '#16865d'; }
 
             const step1 = true;
