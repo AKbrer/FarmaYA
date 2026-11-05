@@ -59,6 +59,7 @@ import com.farmaya.web.ApiException;
  */
 @Service
 public class OrderService {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(OrderService.class);
     private static final SecureRandom RND = new SecureRandom();
     private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final FindAndModifyOptions NEW = FindAndModifyOptions.options().returnNew(true);
@@ -94,6 +95,33 @@ public class OrderService {
         if (email != null && !email.isBlank() && email.contains("@")) {
             emailService.sendOrderNotificationAsync(email, o, stage, stageTitle, stageNote);
         }
+    }
+
+    private void sendInvoiceToClient(Order o, User client) {
+        if (o == null) return;
+        String email = o.clientEmail;
+        if (email == null || email.isBlank()) {
+            if (client != null && client.email != null && !client.email.isBlank()) {
+                email = client.email;
+            } else if (o.clientId != null) {
+                email = users.findById(o.clientId).map(u -> u.email).orElse(null);
+            }
+        }
+        if (email != null && !email.isBlank() && email.contains("@")) {
+            emailService.sendPaymentInvoiceAsync(email, o);
+        } else {
+            log.warn("No se pudo enviar factura para el pedido {}: correo del cliente no disponible", o.code);
+        }
+    }
+
+    public void resendPaymentInvoice(String id, User client) {
+        Order o = (client.role == Role.ADMIN)
+                ? orders.findById(id).orElseThrow(() -> ApiException.notFound("Pedido no encontrado"))
+                : ownedByClient(id, client);
+        if (o.status == BUSCANDO_FARMACIA || o.status == FARMACIA_ASIGNADA || o.status == PRECIO_POR_ACEPTAR) {
+            throw ApiException.bad("Este pedido aun no ha sido pagado.");
+        }
+        sendInvoiceToClient(o, client);
     }
 
     // =====================================================================
@@ -200,7 +228,9 @@ public class OrderService {
                 movements.record("RECAUDO_PASARELA", "Pago de productos (" + o.total + " COP) recaudado en cuenta oficial FarmaYA. Retención comisión FarmaYA (10%): " + fee + " COP. Domicilio a pagar al repartidor a la entrega.", client, o);
             } catch (Exception ignored) {}
         }
-        return present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
+        Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
+        sendInvoiceToClient(res, client);
+        return res;
     }
 
     public Order declinePrice(String id, User client) {
@@ -208,7 +238,9 @@ public class OrderService {
         if (o.status != PRECIO_POR_ACEPTAR) throw ApiException.conflict("Este pedido ya no está esperando tu confirmación de precio.");
         Criteria c = where("id").is(id).and("clientId").is(client.id).and("status").is(PRECIO_POR_ACEPTAR);
         Update u = backToSearch(step(BUSCANDO_FARMACIA, client, "El cliente no aceptó el precio. Buscamos otra farmacia."), o.pharmacyId);
-        return present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
+        Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
+        sendInvoiceToClient(res, client);
+        return res;
     }
 
     public Order cancelByClient(String id, User client) {

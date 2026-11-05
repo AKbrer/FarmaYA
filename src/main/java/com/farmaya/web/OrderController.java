@@ -119,4 +119,11 @@ public class OrderController {
     public Order incident(@PathVariable String id, @RequestAttribute("user") User user, @RequestBody NoteRequest r) {
         return orders.reportIncident(id, user, r.note());
     }
+
+    @Roles({Role.CLIENTE, Role.ADMIN})
+    @PostMapping("/{id}/resend-invoice")
+    public java.util.Map<String, Object> resendInvoice(@PathVariable String id, @RequestAttribute("user") User user) {
+        orders.resendPaymentInvoice(id, user);
+        return java.util.Map.of("ok", true, "message", "Factura electrónica y comprobante de pago enviados a tu correo.");
+    }
 }

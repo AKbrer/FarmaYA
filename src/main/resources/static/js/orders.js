@@ -389,7 +389,19 @@ function orderDetail(o, viewer) {
 
         role === 'ADMIN' && o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, `Ganancia FarmaYA (10%): ${money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.10))}`) : null,
 
-        o.paymentStatus === 'PAGADO_FARMAYA' ? h('span', { class: 'badge tone-done', style: 'font-weight:700;' }, `Productos Pagados a FarmaYA (${o.paymentMethod || 'PSE/Nequi'})`) : null
+        o.paymentStatus === 'PAGADO_FARMAYA' ? h('span', { class: 'badge tone-done', style: 'font-weight:700;' }, `Productos Pagados a FarmaYA (${o.paymentMethod || 'PSE/Nequi'})`) : null,
+
+        (role === 'CLIENTE' && o.paymentStatus === 'PAGADO_FARMAYA') ? h('button', {
+          class: 'btn secondary small',
+          style: 'display: inline-flex; align-items: center; gap: 6px; font-weight: 700; margin-top: 4px;',
+          type: 'button',
+          onclick: async e => {
+            await act(e.currentTarget, async () => {
+              await API.post('/orders/' + o.id + '/resend-invoice', {});
+              toast('Factura enviada a tu correo electronico.');
+            });
+          }
+        }, icon('mail'), h('span', null, 'Reenviar Factura a mi Correo')) : null
 
       ),
 
@@ -627,7 +639,7 @@ function openPaymentGatewayDialog(o) {
             docNumber: tx.id,
             amount: subtotal
           });
-          toast('Pago procesado y verificado en Wompi Bancolombia.');
+          toast('Pago procesado y verificado. Factura enviada a tu correo electronico.');
           d.close();
           refreshAll();
           const viewFn = window.openOrderDetail || (typeof openOrderDetail === 'function' ? openOrderDetail : null);
@@ -874,7 +886,7 @@ function openPaymentGatewayDialog(o) {
         });
         d.close();
         refreshAll();
-        toast('¡Pago de medicamentos verificado con éxito!');
+        toast('Pago verificado con exito. Factura enviada a tu correo electronico.');
         if (typeof openOrderDetail === 'function') {
           openOrderDetail(o.id);
         } else if (typeof window.openOrderDetail === 'function') {
