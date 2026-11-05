@@ -34,6 +34,8 @@ import java.util.Locale;
 import java.util.Base64;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javax.net.ssl.SSLSocket;
 
@@ -163,6 +165,8 @@ public class EmailService {
 
 
 
+    private final ExecutorService emailExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
     private final HttpClient http = HttpClient.newBuilder()
 
             .connectTimeout(Duration.ofSeconds(10))
@@ -265,7 +269,7 @@ public class EmailService {
      */
     public void sendPaymentInvoiceAsync(String toEmail, Order o) {
         log.info("Encolando envio asincrono de factura para pedido {} hacia {}", o != null ? o.code : "?", toEmail);
-        CompletableFuture.runAsync(() -> {
+        emailExecutor.submit(() -> {
             try {
                 EmailDispatchResult res = sendPaymentInvoice(toEmail, o);
                 log.info("Resultado envio de factura para pedido {}: exito={}, mensaje={}", o != null ? o.code : "?", res.success(), res.message());
@@ -318,7 +322,7 @@ public class EmailService {
 
     public void sendOrderNotificationAsync(String toEmail, Order o, int stage, String stageTitle, String stageNote) {
 
-        CompletableFuture.runAsync(() -> {
+        emailExecutor.submit(() -> {
 
             try {
 
@@ -428,17 +432,14 @@ public class EmailService {
 
         SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
 
-        try (SSLSocket socket = (SSLSocket) factory.createSocket(targetHost, targetPort);
-
-             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
-
-             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))) {
-
-
-
+        try (SSLSocket socket = (SSLSocket) factory.createSocket()) {
+            socket.connect(new java.net.InetSocketAddress(targetHost, targetPort), 5000);
             socket.setTcpNoDelay(true);
+            socket.setSoTimeout(10000);
+            socket.startHandshake();
 
-            socket.setSoTimeout(12000);
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))) {
 
 
 
@@ -589,6 +590,8 @@ public class EmailService {
             log.info("Correo entregado exitosamente a {}", toEmail);
 
             return new EmailDispatchResult(true, "Correo enviado exitosamente.");
+
+            }
 
         }
 
@@ -1341,7 +1344,7 @@ public class EmailService {
      */
     public void sendAccountVerifiedAsync(User u) {
         if (u == null || u.email == null || u.email.isBlank()) return;
-        CompletableFuture.runAsync(() -> {
+        emailExecutor.submit(() -> {
             try {
                 sendAccountVerified(u);
             } catch (Exception e) {
@@ -1368,7 +1371,7 @@ public class EmailService {
 
     public void sendAccountEnabledAsync(User u) {
         if (u == null || u.email == null || u.email.isBlank()) return;
-        CompletableFuture.runAsync(() -> {
+        emailExecutor.submit(() -> {
             try {
                 sendAccountEnabled(u);
             } catch (Exception e) {
@@ -1389,7 +1392,7 @@ public class EmailService {
 
     public void sendAccountCreatedAsync(User u) {
         if (u == null || u.email == null || u.email.isBlank()) return;
-        CompletableFuture.runAsync(() -> {
+        emailExecutor.submit(() -> {
             try {
                 sendAccountCreated(u);
             } catch (Exception e) {
@@ -1414,7 +1417,7 @@ public class EmailService {
      */
     public void sendAccountDisabledAsync(User u, String reason) {
         if (u == null || u.email == null || u.email.isBlank()) return;
-        CompletableFuture.runAsync(() -> {
+        emailExecutor.submit(() -> {
             try {
                 sendAccountDisabled(u, reason);
             } catch (Exception e) {
