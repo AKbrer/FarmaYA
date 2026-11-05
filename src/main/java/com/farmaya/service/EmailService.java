@@ -502,20 +502,15 @@ public class EmailService {
 
             String rfcDate = java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME.format(java.time.ZonedDateTime.now(java.time.ZoneOffset.UTC));
 
-            String msgId = stageMsgId != null ? stageMsgId : ("<" + java.util.UUID.randomUUID().toString() + "@gmail.com>");
-
             String boundary = "----=_Part_FarmaYA_" + System.currentTimeMillis();
 
-
-
             writer.write("From: " + fromHeader + "\r\n");
-
             writer.write("Reply-To: " + fromHeader + "\r\n");
             writer.write("To: <" + toEmail.trim() + ">\r\n");
-
             writer.write("Date: " + rfcDate + "\r\n");
-
-            writer.write("Message-ID: " + msgId + "\r\n");
+            if (stageMsgId != null) {
+                writer.write("Message-ID: " + stageMsgId + "\r\n");
+            }
 
             if (threadRootId != null) {
 
@@ -1387,7 +1382,7 @@ public class EmailService {
             return new EmailDispatchResult(false, "Correo no disponible.");
         }
         log.info("Despachando notificacion oficial de cuenta habilitada a {}", u.email);
-        String subject = "Tu cuenta en FarmaYA ha sido Reactivada y Habilitada para Operar";
+        String subject = "Tu cuenta en FarmaYA se encuentra habilitada para operar";
         String html = buildAccountEnabledHtml(u);
         return dispatchHtmlEmail(u.email, subject, html);
     }
@@ -1433,7 +1428,7 @@ public class EmailService {
             return new EmailDispatchResult(false, "Correo no disponible.");
         }
         log.info("Despachando notificacion oficial de cuenta deshabilitada a {} con motivo: {}", u.email, reason);
-        String subject = "Notificacion de Estado de Cuenta: Cuenta Deshabilitada - FarmaYA";
+        String subject = "Notificacion sobre el estado de tu cuenta - FarmaYA";
         String html = buildAccountDisabledHtml(u, reason);
         return dispatchHtmlEmail(u.email, subject, html);
     }
