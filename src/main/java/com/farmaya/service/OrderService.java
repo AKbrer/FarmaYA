@@ -225,7 +225,7 @@ public class OrderService {
             double fee = Math.round(o.total * 0.10 * 100) / 100.0;
             u.set("platformEarnings", fee);
             try {
-                movements.record("RECAUDO_PASARELA", "Pago de productos (" + o.total + " COP) recaudado en cuenta oficial FarmaYA. Retención comisión FarmaYA (10%): " + fee + " COP. Domicilio a pagar al repartidor a la entrega.", client, o);
+                movements.record("RECAUDO_PASARELA", "Pago digital (" + o.total + " COP) recaudado vía pasarela en cuenta oficial FarmaYA. Retención comisión FarmaYA (10%): " + fee + " COP.", client, o);
             } catch (Exception ignored) {}
         }
         Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);

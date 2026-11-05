@@ -614,10 +614,10 @@ function clientOrdersView() {
                       class: 'btn primary', type: 'button',
                       style: 'font-weight: 800; padding: 10px 18px;',
                       onclick: () => {
-                        const fn = window.openPaymentGatewayDialog || openPaymentGatewayDialog;
+                        const fn = window.openPaymentPage || window.openPaymentGatewayDialog;
                         if (typeof fn === 'function') fn(o);
                       }
-                    }, 'Pagar ' + money(o.total || 0) + ' con PSE / Nequi / Tarjeta') : null,
+                    }, 'Pagar ' + money(o.total || 0) + ' con Pasarela Digital') : null,
                     isQuoted ? h('button', {
                       class: 'btn ghost', type: 'button',
                       onclick: async e => {

@@ -166,6 +166,20 @@ async function renderApp() {
     return;
   }
   const expected = routeForRole(state.user.role);
+  if (route.startsWith('#payment')) {
+    document.title = 'FarmaYa · Pasarela de Pago Seguro';
+    const params = new URLSearchParams(route.split('?')[1] || '');
+    const orderId = params.get('order') || route.split('/')[1] || null;
+    if (orderId && typeof renderPaymentPage === 'function') {
+      renderPaymentPage(orderId);
+      mountGlobalFooter();
+      renderNavbar();
+      return;
+    } else {
+      location.hash = '#orders';
+      return;
+    }
+  }
   if (route === '#orders') { document.title = 'FarmaYa · Pedidos'; renderOrdersPage(); mountGlobalFooter(); renderNavbar(); return; }
   if (route !== expected) { location.hash = expected; return; }
   document.title = 'FarmaYa · ' + (state.user.name || 'Inicio');

@@ -405,26 +405,14 @@ function orderDetail(o, viewer) {
 
       ),
 
-      h('div', { class: 'delivery-fee-callout', style: 'margin: 10px 0 6px 0; padding: 10px 14px;' },
-
-        h('span', { class: 'callout-ico', style: 'width:22px; height:22px; font-size:13px;' }, '!'),
-
+      h('div', { class: 'delivery-fee-callout safe-digital-callout', style: 'margin: 10px 0 6px 0; padding: 10px 14px; background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25);' },
+        h('span', { class: 'callout-ico', style: 'width:22px; height:22px; font-size:13px; background: #10b981;' }, '✓'),
         h('div', null,
-
-          h('strong', { style: 'font-size:13px;' }, 'PAGO DEL DOMICILIO AL REPARTIDOR'),
-
-          h('p', { style: 'font-size:12.5px; margin:0;' },
-
-            'El valor del domicilio (',
-
-            h('strong', null, money(deliveryFee)),
-
-            ') se le debe realizar directamente al domiciliario al momento de llegar en efectivo o transferencia.'
-
+          h('strong', { style: 'font-size:13px; color: #065f46;' }, 'PAGO 100% DIGITAL Y ENTREGA SEGURA CON PIN'),
+          h('p', { style: 'font-size:12.5px; margin:0; color: var(--text);' },
+            'FarmaYA no maneja pagos en efectivo ni contraentrega. La entrega del paquete se certifica dictando tu PIN de seguridad de 4 dígitos al repartidor.'
           )
-
         )
-
       ),
 
       o.clientPhone && h('span', { class: 'muted block-line' }, o.clientPhone),
@@ -534,7 +522,7 @@ function detailActions(o, viewer) {
 
         class: 'btn primary',
 
-        onclick: () => openPaymentGatewayDialog(o)
+        onclick: () => openPaymentPage(o)
 
       }, 'Pagar ' + money(o.total)));
 
@@ -606,12 +594,81 @@ function detailActions(o, viewer) {
 
 }
 
-function openPaymentGatewayDialog(o) {
-  const subtotal = o.total || 0;
+/* ---------- VISTA DEDICADA DE PAGO Y PASARELA DE PAGOS DIGITAL ---------- */
+
+async function renderPaymentPage(orderOrId) {
+  const app = document.getElementById('app-container');
+  if (!app) return;
+
+  let o = orderOrId;
+  const targetId = typeof orderOrId === 'object' ? orderOrId?.id : orderOrId;
+
+  if (!o || typeof o !== 'object' || !o.items || o.total == null) {
+    app.replaceChildren(
+      h('div', { class: 'initial-loading' },
+        h('span', { class: 'spinner' }),
+        h('p', null, 'Cargando información y pasarela de pago...')
+      )
+    );
+    try {
+      o = await API.get('/orders/' + targetId);
+    } catch (err) {
+      toast('No fue posible cargar el pedido: ' + err.message, 'error');
+      location.hash = '#orders';
+      return;
+    }
+  }
+
+  if (!location.hash.includes(o.id)) {
+    history.replaceState(null, '', '#payment?order=' + o.id);
+  }
+  document.title = 'FarmaYa · Pago Pedido #' + (o.code || o.id);
+
+  const subtotalProducts = Number(o.total || 0);
   const deliveryDist = o.deliveryDistanceKm || 2.5;
   const deliveryFee = o.courierEarnings || Math.max(3000, 2000 + Math.ceil(deliveryDist) * 1000);
-  const generalTotal = subtotal + deliveryFee;
-  let selectedMethod = 'PSE';
+  const platformFee = Math.round(subtotalProducts * 0.10);
+
+  const METHODS = [
+    {
+      id: 'MASTERCARD',
+      name: 'Mastercard',
+      desc: 'Débito y Crédito',
+      badgeHtml: '<svg width="34" height="22" viewBox="0 0 36 24"><circle cx="14" cy="12" r="10" fill="#EB001B"/><circle cx="22" cy="12" r="10" fill="#F79E1B" fill-opacity="0.85"/></svg>'
+    },
+    {
+      id: 'VISA',
+      name: 'Visa',
+      desc: 'Débito y Crédito',
+      badgeHtml: '<span style="font-weight:900; font-size:16px; font-style:italic; color:#1a1f71; letter-spacing:-0.5px;">VISA</span>'
+    },
+    {
+      id: 'PSE',
+      name: 'PSE',
+      desc: 'Todos los Bancos',
+      badgeHtml: '<span style="font-weight:900; font-size:13px; color:#0b3b60; background:#e2f0fb; padding:2px 6px; border-radius:4px; border:1px solid #0b3b60;">PSE</span>'
+    },
+    {
+      id: 'NEQUI',
+      name: 'Nequi',
+      desc: 'Notificación Push',
+      badgeHtml: '<span style="font-weight:900; font-size:12px; color:#200020; background:#f5e6f3; padding:2px 6px; border-radius:4px; border:1px solid #e6007e;">NEQUI</span>'
+    },
+    {
+      id: 'BANCOLOMBIA',
+      name: 'Bancolombia',
+      desc: 'Transferencia / QR',
+      badgeHtml: '<span style="font-weight:900; font-size:11px; color:#000; background:#fedd00; padding:2px 5px; border-radius:4px;">BANCO</span>'
+    },
+    {
+      id: 'DAVIPLATA',
+      name: 'Daviplata',
+      desc: 'Billetera Móvil',
+      badgeHtml: '<span style="font-weight:900; font-size:11px; color:#fff; background:#ed1c24; padding:2px 5px; border-radius:4px;">DAVI</span>'
+    }
+  ];
+
+  let currentMethod = 'MASTERCARD';
 
   const launchWompi = async () => {
     if (!window.WidgetCheckout) {
@@ -619,16 +676,13 @@ function openPaymentGatewayDialog(o) {
       return false;
     }
     try {
-      // Obtener firma de integridad oficial SHA-256 generada por el servidor
       const sigData = await API.get('/orders/' + o.id + '/wompi-signature');
       const checkout = new WidgetCheckout({
         currency: sigData.currency || 'COP',
         amountInCents: sigData.amountInCents,
         reference: sigData.reference,
         publicKey: sigData.publicKey || state.meta?.wompiPublicKey || 'pub_test_tjFaTiEBqNnV6tjvh6QjeuEt2Jsa74bd',
-        signature: {
-          integrity: sigData.signature
-        }
+        signature: { integrity: sigData.signature }
       });
       checkout.open(async result => {
         const tx = result?.transaction;
@@ -637,13 +691,10 @@ function openPaymentGatewayDialog(o) {
             method: tx.payment_method_type || 'WOMPI',
             bank: tx.payment_method?.extra?.institution_name || 'Bancolombia Wompi',
             docNumber: tx.id,
-            amount: subtotal
+            amount: subtotalProducts
           });
-          toast('Pago procesado y verificado. Factura enviada a tu correo electronico.');
-          d.close();
-          refreshAll();
-          const viewFn = window.openOrderDetail || (typeof openOrderDetail === 'function' ? openOrderDetail : null);
-          if (viewFn) viewFn(o.id);
+          toast('Pago procesado y verificado. Factura enviada a tu correo.');
+          renderApprovedReceipt(tx.payment_method_type || 'WOMPI', tx.payment_method?.extra?.institution_name || 'Wompi Bancolombia', tx.id);
         } else if (tx) {
           toast('Estado de transacción Wompi: ' + (tx.status || 'Cancelada'), 'warn');
         }
@@ -651,264 +702,480 @@ function openPaymentGatewayDialog(o) {
       return true;
     } catch (err) {
       console.error('Error al inicializar Wompi:', err);
-      toast('Error al conectar con Wompi: ' + (err.message || 'Verifica llaves de producción'), 'error');
+      toast('Error al conectar con Wompi: ' + (err.message || 'Error de pasarela'), 'error');
       return false;
     }
   };
 
-  const bankSelect = h('select', { class: 'input block' },
-    ['Bancolombia', 'Nequi', 'Davivienda', 'Banco de Bogotá', 'BBVA Colombia', 'Banco de Occidente', 'Scotiabank Colpatria', 'Banco Popular', 'Itaú Colombia', 'Dale!', 'Lulo Bank', 'Ualá'].map(b =>
+  const cardNumInput = h('input', { type: 'text', class: 'input block', placeholder: '4000 1234 5678 9010', maxlength: '19', value: '4532 8901 2345 6789' });
+  const cardHolderInput = h('input', { type: 'text', class: 'input block', placeholder: 'Nombre como figura en la tarjeta', value: (state.user?.name || 'Cliente FarmaYA') });
+  const cardExpInput = h('input', { type: 'text', class: 'input', placeholder: 'MM/AA', maxlength: '5', value: '12/28', style: 'max-width:110px;' });
+  const cardCvvInput = h('input', { type: 'password', class: 'input', placeholder: 'CVV', maxlength: '4', value: '789', style: 'max-width:90px;' });
+  const cardInstallments = h('select', { class: 'input', style: 'max-width:180px;' },
+    [
+      { v: '1', l: '1 cuota (Sin interés)' },
+      { v: '2', l: '2 cuotas' },
+      { v: '3', l: '3 cuotas' },
+      { v: '6', l: '6 cuotas' },
+      { v: '12', l: '12 cuotas' },
+      { v: '24', l: '24 cuotas' },
+      { v: '36', l: '36 cuotas' }
+    ].map(opt => h('option', { value: opt.v }, opt.l))
+  );
+
+  const pseBankSelect = h('select', { class: 'input block' },
+    ['Bancolombia', 'Banco de Bogotá', 'Davivienda', 'BBVA Colombia', 'Banco de Occidente', 'Scotiabank Colpatria', 'Banco Popular', 'Banco AV Villas', 'Itaú Colombia', 'Banco Caja Social', 'Nu Colombia', 'Lulo Bank', 'Dale!', 'Ualá', 'RappiPay'].map(b =>
       h('option', { value: b }, b)
     )
   );
-
-  const docTypeSelect = h('select', { class: 'input', style: 'max-width:120px;' },
+  const pseDocTypeSelect = h('select', { class: 'input', style: 'max-width:120px;' },
     [
       { id: 'CC', name: 'C.C.' },
       { id: 'CE', name: 'C.E.' },
       { id: 'NIT', name: 'NIT' },
-      { id: 'TI', name: 'T.I.' }
+      { id: 'TI', name: 'T.I.' },
+      { id: 'PP', name: 'Pasaporte' }
     ].map(t => h('option', { value: t.id }, t.name))
   );
-
-  const docNumberInput = h('input', { type: 'text', class: 'input block', placeholder: 'Ej. 1042389123', value: (state.user?.docNumber || '1042389123') });
+  const pseDocNumberInput = h('input', { type: 'text', class: 'input block', placeholder: 'Ej. 1042389123', value: (state.user?.docNumber || '1042389123') });
   const pseEmailInput = h('input', { type: 'email', class: 'input block', placeholder: 'correo@ejemplo.com', value: (state.user?.email || 'cliente@farmaya.co') });
+
   const nequiPhoneInput = h('input', { type: 'tel', maxlength: '10', class: 'input block', placeholder: '3001234567 (10 dígitos)', value: (state.user?.phone || '3001234567') });
+  const nequiDocInput = h('input', { type: 'text', class: 'input block', placeholder: 'Documento del titular', value: (state.user?.docNumber || '1042389123') });
 
-  const cardNumInput = h('input', { type: 'text', class: 'input block', placeholder: '4000 1234 5678 9010', value: '4532 8901 2345 6789' });
-  const cardExpInput = h('input', { type: 'text', class: 'input', placeholder: 'MM/AA', maxlength: '5', value: '12/28', style: 'max-width:110px;' });
-  const cardCvvInput = h('input', { type: 'password', class: 'input', placeholder: 'CVC', maxlength: '4', value: '789', style: 'max-width:90px;' });
-  const cardHolderInput = h('input', { type: 'text', class: 'input block', placeholder: 'Nombre como figura en tarjeta', value: (state.user?.name || 'Cliente FarmaYA') });
+  const bancolombiaAccountType = h('select', { class: 'input block' },
+    ['Cuenta de Ahorros Bancolombia', 'Cuenta Corriente Bancolombia', 'Bancolombia A La Mano'].map(t =>
+      h('option', { value: t }, t)
+    )
+  );
+  const bancolombiaDocInput = h('input', { type: 'text', class: 'input block', placeholder: 'Documento de identidad', value: (state.user?.docNumber || '1042389123') });
 
-  const psePane = h('div', { id: 'psePaymentPane', class: 'form-stack' },
-    field('Banco de débito (Red ACH Colombia)', bankSelect),
-    h('div', { style: 'display:grid; grid-template-columns: 120px 1fr; gap: 10px;' },
-      field('Tipo Doc.', docTypeSelect),
-      field('Número de Documento', docNumberInput)
-    ),
-    field('Correo registrado en PSE', pseEmailInput)
+  const daviplataPhoneInput = h('input', { type: 'tel', maxlength: '10', class: 'input block', placeholder: '3151234567 (10 dígitos)', value: (state.user?.phone || '3151234567') });
+  const daviplataDocInput = h('input', { type: 'text', class: 'input block', placeholder: 'Documento de identidad', value: (state.user?.docNumber || '1042389123') });
+
+  const dynamicFormNode = h('div', { class: 'payment-dynamic-form' });
+
+  function selectMethod(methodId) {
+    currentMethod = methodId;
+    methodCardNodes.forEach(c => {
+      const isSel = c.dataset.method === methodId;
+      c.classList.toggle('selected', isSel);
+      c.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+    });
+    renderDynamicForm();
+    updateSubmitBtn();
+  }
+
+  function renderDynamicForm() {
+    const m = METHODS.find(x => x.id === currentMethod);
+    if (currentMethod === 'MASTERCARD' || currentMethod === 'VISA') {
+      dynamicFormNode.replaceChildren(
+        h('div', { class: 'payment-form-header' },
+          h('h4', null, 'Datos de la Tarjeta ' + m.name),
+          h('p', null, 'Ingresa los datos impresos en tu tarjeta de débito o crédito.')
+        ),
+        field('Número de Tarjeta (16 dígitos)', cardNumInput),
+        field('Nombre del Titular de la Tarjeta', cardHolderInput),
+        h('div', { style: 'display:grid; grid-template-columns: 1fr 110px 90px; gap: 10px; align-items: end;' },
+          field('Cuotas', cardInstallments),
+          field('Expira', cardExpInput),
+          field('CVV', cardCvvInput)
+        ),
+        h('small', { class: 'muted', style: 'display:block; margin-top:8px;' },
+          'Transacción cifrada bajo estándar bancario internacional PCI-DSS.'
+        )
+      );
+    } else if (currentMethod === 'PSE') {
+      dynamicFormNode.replaceChildren(
+        h('div', { class: 'payment-form-header' },
+          h('h4', null, 'Pago en Línea PSE (Cuentas Corrientes y de Ahorros)'),
+          h('p', null, 'Débito seguro desde cualquier entidad bancaria en Colombia.')
+        ),
+        field('Banco de Débito (Red ACH Colombia)', pseBankSelect),
+        h('div', { style: 'display:grid; grid-template-columns: 120px 1fr; gap: 10px;' },
+          field('Tipo Doc.', pseDocTypeSelect),
+          field('Número de Documento', pseDocNumberInput)
+        ),
+        field('Correo Registrado en PSE', pseEmailInput),
+        h('small', { class: 'muted', style: 'display:block; margin-top:6px;' },
+          'Serás conectado a la pasarela financiera para autorizar con tu banco.'
+        )
+      );
+    } else if (currentMethod === 'NEQUI') {
+      dynamicFormNode.replaceChildren(
+        h('div', { class: 'payment-form-header' },
+          h('h4', null, 'Pago Inmediato con Nequi'),
+          h('p', null, 'Autorización por notificación Push directamente en tu celular.')
+        ),
+        field('Número de Celular Nequi (10 dígitos)', nequiPhoneInput),
+        field('Número de Documento del Titular', nequiDocInput),
+        h('div', { class: 'farmaya-bank-banner', style: 'margin-top:10px;' },
+          h('span', null, 'Notificación Push en Tiempo Real:'),
+          h('p', { style: 'margin:4px 0 0 0; font-size:13px; color:var(--text);' },
+            'Al pulsar Pagar, recibirás una solicitud inmediata en tu app Nequi por ' + money(subtotalProducts) + ' para confirmar con tu clave o biometría.'
+          )
+        )
+      );
+    } else if (currentMethod === 'BANCOLOMBIA') {
+      dynamicFormNode.replaceChildren(
+        h('div', { class: 'payment-form-header' },
+          h('h4', null, 'Transferencia / Botón Bancolombia'),
+          h('p', null, 'Canal directo para clientes Bancolombia y A La Mano.')
+        ),
+        field('Tipo de Cuenta o Producto', bancolombiaAccountType),
+        field('Número de Documento del Titular', bancolombiaDocInput),
+        h('div', { class: 'farmaya-bank-banner', style: 'margin-top:10px;' },
+          h('span', null, 'Bancolombia Seguro:'),
+          h('p', { style: 'margin:4px 0 0 0; font-size:13px; color:var(--text);' },
+            'Autorización ágil a través del Botón Bancolombia oficial sin sobrecostos.'
+          )
+        )
+      );
+    } else if (currentMethod === 'DAVIPLATA') {
+      dynamicFormNode.replaceChildren(
+        h('div', { class: 'payment-form-header' },
+          h('h4', null, 'Billetera Móvil Daviplata'),
+          h('p', null, 'Pago instantáneo con dinero disponible en tu Daviplata.')
+        ),
+        field('Número de Celular Daviplata (10 dígitos)', daviplataPhoneInput),
+        field('Número de Documento del Titular', daviplataDocInput),
+        h('div', { class: 'farmaya-bank-banner', style: 'margin-top:10px;' },
+          h('span', null, 'Confirmación Daviplata:'),
+          h('p', { style: 'margin:4px 0 0 0; font-size:13px; color:var(--text);' },
+            'Recibirás un código de aprobación de 6 dígitos vía SMS o en tu app Daviplata para finalizar la orden.'
+          )
+        )
+      );
+    }
+  }
+
+  const methodCardNodes = METHODS.map(m => {
+    const card = h('button', {
+      type: 'button',
+      class: 'payment-method-card' + (m.id === currentMethod ? ' selected' : ''),
+      'data-method': m.id,
+      'aria-pressed': m.id === currentMethod ? 'true' : 'false',
+      onclick: () => selectMethod(m.id)
+    },
+      h('div', { class: 'payment-method-badge' }, (() => {
+        const span = document.createElement('span');
+        span.innerHTML = m.badgeHtml;
+        return span;
+      })()),
+      h('span', { class: 'payment-method-name' }, m.name),
+      h('span', { class: 'payment-method-desc' }, m.desc),
+      h('span', { class: 'payment-method-check' }, '✓')
+    );
+    return card;
+  });
+
+  const methodsGrid = h('div', { class: 'payment-methods-grid' }, ...methodCardNodes);
+
+  const submitPayBtn = h('button', {
+    type: 'button',
+    class: 'btn-pay-primary',
+    onclick: () => processPayment()
+  });
+
+  function updateSubmitBtn() {
+    const m = METHODS.find(x => x.id === currentMethod);
+    submitPayBtn.replaceChildren(
+      icon('lock'),
+      h('span', null, `Pagar ${money(subtotalProducts)} con ${m ? m.name : 'Pasarela'} y Confirmar`)
+    );
+  }
+
+  const wompiOfficialBtn = h('button', {
+    type: 'button',
+    class: 'btn-wompi-official',
+    onclick: () => launchWompi()
+  },
+    icon('shield'),
+    h('span', null, 'Abrir Pasarela Completa Wompi (Oficial Bancolombia)')
   );
 
-  const nequiPane = h('div', { id: 'nequiPaymentPane', class: 'form-stack', style: 'display:none;' },
-    field('Número de celular registrado en Nequi / Daviplata', nequiPhoneInput),
-    h('div', { class: 'farmaya-bank-banner', style: 'margin-top:4px;' },
-      h('span', null, 'Notificación Push Instantánea:'),
-      h('p', { style: 'margin:4px 0 0 0; font-size:13px; color:var(--text);' }, 'Al presionar Pagar, se enviará una solicitud de autorización directa a tu aplicación Nequi por ' + money(subtotal) + '.')
+  const backNavBtn = h('button', {
+    type: 'button',
+    class: 'btn-pay-back',
+    onclick: () => {
+      location.hash = '#orders';
+    }
+  },
+    h('span', null, '← Volver a Mis Pedidos')
+  );
+
+  const actionsHubNode = h('div', { class: 'payment-actions-hub' },
+    submitPayBtn,
+    wompiOfficialBtn,
+    backNavBtn,
+    h('div', { style: 'text-align:center; margin-top:6px;' },
+      h('span', { class: 'small muted', style: 'font-size:12px;' },
+        'Tecnología Wompi Bancolombia · Cifrado bancario SSL 256-bit · Sin efectivo ni contraentrega'
+      )
     )
   );
 
-  const cardPane = h('div', { id: 'cardPaymentPane', class: 'form-stack', style: 'display:none;' },
-    field('Número de Tarjeta (Débito o Crédito)', cardNumInput),
-    h('div', { style: 'display:grid; grid-template-columns: 1fr 110px 90px; gap: 10px;' },
-      field('Titular de la Tarjeta', cardHolderInput),
-      field('Expira', cardExpInput),
-      field('CVV', cardCvvInput)
-    ),
-    h('small', { class: 'muted' }, 'Aceptamos Visa, Mastercard, American Express y tarjetas Débito con CVV emitidas en Colombia.')
-  );
-
-  const tabPse = h('button', {
-    type: 'button',
-    class: 'payment-tab-btn active',
-    onclick: () => switchTab('PSE')
-  }, icon('shield'), 'PSE Débito');
-
-  const tabNequi = h('button', {
-    type: 'button',
-    class: 'payment-tab-btn',
-    onclick: () => switchTab('NEQUI')
-  }, icon('phone'), 'Nequi');
-
-  const tabCard = h('button', {
-    type: 'button',
-    class: 'payment-tab-btn',
-    onclick: () => switchTab('TARJETA')
-  }, icon('package'), 'Tarjeta');
-
-  function switchTab(method) {
-    selectedMethod = method;
-    tabPse.classList.toggle('active', method === 'PSE');
-    tabNequi.classList.toggle('active', method === 'NEQUI');
-    tabCard.classList.toggle('active', method === 'TARJETA');
-    psePane.style.display = method === 'PSE' ? 'grid' : 'none';
-    nequiPane.style.display = method === 'NEQUI' ? 'grid' : 'none';
-    cardPane.style.display = method === 'TARJETA' ? 'grid' : 'none';
-    payBtn.textContent = 'Pagar ' + money(subtotal) + ' por ' + method + ' y Confirmar';
-  }
-
-  const payBtn = h('button', {
-    class: 'btn primary block',
-    type: 'button',
-    style: 'margin-top: 18px; font-size:16px; padding:14px; font-weight:800;'
-  }, 'Pagar ' + money(subtotal) + ' por PSE y Confirmar');
-
-  const btnWompiWidget = h('button', {
-    class: 'btn secondary block',
-    type: 'button',
-    style: 'margin-bottom: 14px; font-weight:700; border: 1.5px solid var(--primary); padding:10px 14px; font-size:14px;',
-    onclick: () => {
-      const opened = launchWompi();
-      if (!opened) {
-        toast('Cargando pasarela Wompi en línea...', 'info');
-      }
-    }
-  }, 'Pagar con Pasarela Wompi Oficial (Bancolombia)');
-
-  const bodyContainer = h('div', { class: 'sheet-body payment-modal-body' });
-
-  function renderInitialView() {
-    bodyContainer.replaceChildren(
-      h('div', { class: 'payment-header' },
-        h('span', { class: 'payment-gateway-ico' }, icon('shield')),
-        h('div', null,
-          h('h3', { style: 'margin:0; font-size:18px; font-weight:800;' }, 'Pasarela de Pagos FarmaYA (Colombia)'),
-          h('span', { class: 'small muted' }, 'Pago protegido y recaudo para el pedido ' + o.code)
-        )
-      ),
-      h('div', { class: 'payment-breakdown-card' },
-        h('div', { class: 'breakdown-row' },
-          h('span', null, 'Subtotal Medicamentos (Productos):'),
-          h('strong', null, money(subtotal))
-        ),
-        h('div', { class: 'breakdown-row' },
-          h('span', null, 'Tarifa de Domicilio (~' + deliveryDist + ' km):'),
-          h('strong', { class: 'muted' }, money(deliveryFee))
-        ),
-        h('div', { class: 'breakdown-row total-row' },
-          h('span', null, 'Total General del Pedido:'),
-          h('strong', { style: 'color:var(--primary);' }, money(generalTotal))
-        )
-      ),
-      h('div', { class: 'delivery-fee-callout' },
-        h('span', { class: 'callout-ico' }, '!'),
-        h('div', null,
-          h('strong', null, 'AVISO IMPORTANTE SOBRE EL PAGO DEL DOMICILIO'),
-          h('p', null,
-            'El valor de los medicamentos (',
-            h('strong', null, money(subtotal)),
-            ') se recauda y transfiere a la droguería aliada a través de FarmaYA. ',
-            h('strong', null, 'El valor del domicilio (' + money(deliveryFee) + ') SE LE ENTREGA DIRECTAMENTE AL DOMICILIARIO AL MOMENTO DE LLEGAR en efectivo o transferencia.')
-          )
-        )
-      ),
-      btnWompiWidget,
-      h('div', { class: 'payment-method-tabs' }, tabPse, tabNequi, tabCard),
-      psePane,
-      nequiPane,
-      cardPane,
-      payBtn,
-      h('button', {
-        class: 'btn ghost block',
-        type: 'button',
-        style: 'margin-top:10px;',
-        onclick: () => d.close()
-      }, 'Cerrar')
-    );
-  }
-
-  payBtn.addEventListener('click', async () => {
-    if (selectedMethod === 'NEQUI' && nequiPhoneInput.value.trim().length < 10) {
+  async function processPayment() {
+    if (currentMethod === 'NEQUI' && nequiPhoneInput.value.trim().length < 10) {
       toast('Ingresa un número de celular Nequi válido de 10 dígitos.', 'error');
       return;
     }
-    if (selectedMethod === 'PSE' && !docNumberInput.value.trim()) {
+    if (currentMethod === 'DAVIPLATA' && daviplataPhoneInput.value.trim().length < 10) {
+      toast('Ingresa un número de celular Daviplata válido de 10 dígitos.', 'error');
+      return;
+    }
+    if (currentMethod === 'PSE' && !pseDocNumberInput.value.trim()) {
       toast('Ingresa el número de documento de identidad para PSE.', 'error');
       return;
     }
+    if ((currentMethod === 'MASTERCARD' || currentMethod === 'VISA') && cardNumInput.value.trim().length < 15) {
+      toast('Ingresa un número de tarjeta válido.', 'error');
+      return;
+    }
 
-    const chosenBank = selectedMethod === 'PSE' ? bankSelect.value : (selectedMethod === 'NEQUI' ? 'Nequi Colombia' : 'Tarjeta Débito/Crédito');
+    const chosenBank = currentMethod === 'PSE' ? pseBankSelect.value
+      : (currentMethod === 'NEQUI' ? 'Nequi Colombia'
+      : (currentMethod === 'BANCOLOMBIA' ? 'Bancolombia'
+      : (currentMethod === 'DAVIPLATA' ? 'Daviplata Davivienda' : currentMethod + ' Crédito/Débito')));
+
     const authCode = 'AUT-' + Math.floor(100000 + Math.random() * 900000);
-    const txId = 'FARMAYA-' + (o.code || 'PEDIDO') + '-' + Math.floor(10000 + Math.random() * 90000);
-    const nowTime = new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+    const txId = 'FY-' + (o.code || 'PED') + '-' + Math.floor(10000 + Math.random() * 90000);
 
-    // PASO 1: Conexión con red financiera
-    bodyContainer.replaceChildren(
-      h('div', { style: 'text-align:center; padding: 34px 16px;' },
+    rightCol.replaceChildren(
+      h('div', { class: 'payment-card', style: 'text-align:center; padding: 44px 20px;' },
         h('div', { class: 'spinner', style: 'margin: 0 auto 20px auto; width: 48px; height: 48px;' }),
-        h('h3', { style: 'font-size:19px; font-weight:800; color:var(--text); margin-bottom:8px;' }, 'Conectando con ' + chosenBank),
-        h('p', { class: 'muted', style: 'font-size:14.5px; max-width:380px; margin:0 auto;' }, 'Estableciendo canal cifrado con la red financiera ACH Colombia / Redeban...')
-      )
-    );
-
-    await new Promise(r => setTimeout(r, 900));
-
-    // PASO 2: Validación de saldo y autorización
-    bodyContainer.replaceChildren(
-      h('div', { style: 'text-align:center; padding: 34px 16px;' },
-        h('div', { class: 'spinner', style: 'margin: 0 auto 20px auto; width: 48px; height: 48px; border-top-color: #059669;' }),
-        h('h3', { style: 'font-size:19px; font-weight:800; color:var(--text); margin-bottom:8px;' }, 'Validando autorización de débito'),
-        h('p', { class: 'muted', style: 'font-size:14.5px; max-width:380px; margin:0 auto;' }, 'Verificando disponibilidad de fondos por ' + money(subtotal) + ' y confirmando recaudo seguro.')
-      )
-    );
-
-    await new Promise(r => setTimeout(r, 900));
-
-    // PASO 3: Transacción Aprobada + Comprobante Digital
-    const receiptBox = h('div', { class: 'payment-receipt-card' },
-      h('div', { style: 'text-align:center; margin-bottom: 18px;' },
-        h('div', { class: 'receipt-check-circle' }, '✓'),
-        h('h3', { style: 'margin: 10px 0 4px 0; color: #065f46; font-size:20px; font-weight:900;' }, '¡Transacción Aprobada!'),
-        h('span', { class: 'receipt-approved-badge' }, 'APROBADA · CÓD: ' + authCode)
-      ),
-      h('table', { class: 'receipt-table' },
-        h('tr', null, h('td', null, 'Referencia:'), h('th', null, txId)),
-        h('tr', null, h('td', null, 'Pedido FarmaYA:'), h('th', null, '#' + (o.code || ''))),
-        h('tr', null, h('td', null, 'Medio de Pago:'), h('th', null, selectedMethod + ' (' + chosenBank + ')')),
-        h('tr', null, h('td', null, 'Fecha y Hora:'), h('th', null, nowTime)),
-        h('tr', null, h('td', null, 'Monto Medicamentos:'), h('th', { style: 'color: #065f46; font-size:16px;' }, money(subtotal))),
-        h('tr', null, h('td', null, 'Domicilio (en destino):'), h('th', { class: 'muted' }, money(deliveryFee) + ' (al repartidor)'))
-      ),
-      h('div', { class: 'delivery-fee-callout', style: 'margin-top:14px;' },
-        h('span', { class: 'callout-ico' }, '✓'),
-        h('div', null,
-          h('strong', null, 'Recaudo FarmaYA completado con éxito'),
-          h('p', null, 'La farmacia aliada ha sido notificada para comenzar el empaque inmediato de tus medicamentos. El domicilio se le cancela al repartidor al llegar.')
+        h('h3', { style: 'font-size:19px; font-weight:800; color:var(--text); margin-bottom:8px;' },
+          'Conectando de forma segura con ' + chosenBank
+        ),
+        h('p', { class: 'muted', style: 'font-size:14px; max-width:380px; margin:0 auto;' },
+          'Estableciendo canal cifrado SSL con la pasarela bancaria oficial...'
         )
       )
     );
 
-    const finishBtn = h('button', {
-      class: 'btn primary block',
+    await new Promise(r => setTimeout(r, 900));
+
+    rightCol.replaceChildren(
+      h('div', { class: 'payment-card', style: 'text-align:center; padding: 44px 20px;' },
+        h('div', { class: 'spinner', style: 'margin: 0 auto 20px auto; width: 48px; height: 48px; border-top-color: #059669;' }),
+        h('h3', { style: 'font-size:19px; font-weight:800; color:var(--text); margin-bottom:8px;' },
+          'Validando fondos y confirmando recaudo FarmaYA'
+        ),
+        h('p', { class: 'muted', style: 'font-size:14px; max-width:380px; margin:0 auto;' },
+          'Verificando aprobación electrónica por ' + money(subtotalProducts) + ' y asignando farmacéutico.'
+        )
+      )
+    );
+
+    await new Promise(r => setTimeout(r, 900));
+
+    try {
+      await API.post('/orders/' + o.id + '/accept-price', {
+        method: currentMethod,
+        bank: chosenBank,
+        docNumber: pseDocNumberInput.value.trim() || cardNumInput.value.trim(),
+        phone: nequiPhoneInput.value.trim() || daviplataPhoneInput.value.trim(),
+        amount: subtotalProducts
+      });
+      refreshAll();
+      toast('¡Pago exitoso! Factura y comprobante enviados a tu correo.');
+      renderApprovedReceipt(currentMethod, chosenBank, txId, authCode);
+    } catch (err) {
+      toast(err.message || 'Error al procesar el pago.', 'error');
+      rightCol.replaceChildren(
+        h('div', { style: 'margin-bottom:12px;' },
+          h('h3', { style: 'margin:0 0 6px 0; font-size:18px; font-weight:800; color:var(--text);' }, 'Selecciona tu Método de Pago Digital'),
+          h('p', { class: 'muted', style: 'margin:0; font-size:13.5px;' }, 'Todos los pagos son 100% electrónicos, seguros y respaldados por Wompi.')
+        ),
+        methodsGrid,
+        dynamicFormNode,
+        actionsHubNode
+      );
+    }
+  }
+
+  function renderApprovedReceipt(method, bank, txId, authCode) {
+    const codeAuth = authCode || ('AUT-' + Math.floor(100000 + Math.random() * 900000));
+    const nowTime = new Date().toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+
+    rightCol.replaceChildren(
+      h('div', { class: 'payment-receipt-card', style: 'padding: 26px;' },
+        h('div', { style: 'text-align:center; margin-bottom: 20px;' },
+          h('div', { class: 'receipt-check-circle', style: 'width:56px; height:56px; font-size:28px;' }, '✓'),
+          h('h3', { style: 'margin: 12px 0 4px 0; color: #065f46; font-size:22px; font-weight:900;' }, '¡Transacción Aprobada y Verificada!'),
+          h('span', { class: 'receipt-approved-badge' }, 'APROBADA · CÓDIGO: ' + codeAuth)
+        ),
+        h('table', { class: 'receipt-table' },
+          h('tr', null, h('td', null, 'Referencia Oficial:'), h('th', null, txId)),
+          h('tr', null, h('td', null, 'Pedido FarmaYA:'), h('th', null, '#' + (o.code || o.id))),
+          h('tr', null, h('td', null, 'Método de Pago:'), h('th', null, method + ' (' + bank + ')')),
+          h('tr', null, h('td', null, 'Fecha y Hora:'), h('th', null, nowTime)),
+          h('tr', null, h('td', null, 'Monto Total Medicamentos:'), h('th', { style: 'color: #065f46; font-size:17px; font-weight:800;' }, money(subtotalProducts)))
+        ),
+        h('div', { class: 'payment-pin-card', style: 'margin-top:18px;' },
+          icon('lock'),
+          h('div', null,
+            h('strong', null, 'Factura electrónica emitida y PIN de entrega'),
+            h('p', null,
+              'Tu factura electrónica fue emitida y enviada a ' + (state.user?.email || 'tu correo registrado') + '. Recuerda que no debes entregar dinero en efectivo. La entrega se completa dictando tu PIN personal al repartidor.'
+            )
+          )
+        ),
+        h('button', {
+          type: 'button',
+          class: 'btn-pay-primary',
+          style: 'margin-top: 20px;',
+          onclick: () => {
+            location.hash = '#orders';
+            const viewFn = window.openOrderDetail || (typeof openOrderDetail === 'function' ? openOrderDetail : null);
+            if (viewFn) viewFn(o.id);
+          }
+        },
+          icon('package-check'),
+          h('span', null, 'Ver Seguimiento de mi Pedido en Tiempo Real')
+        )
+      )
+    );
+  }
+
+  const itemsNodes = (o.items && o.items.length) ? o.items.map(it =>
+    h('div', { class: 'payment-product-item' },
+      h('div', { class: 'payment-prod-left' },
+        h('span', { class: 'payment-prod-qty' }, `${it.quantity || 1}x`),
+        h('div', null,
+          h('strong', null, it.name),
+          h('span', { class: 'muted', style: 'font-size:12px; display:block;' },
+            it.prescription ? 'Venta controlada' : 'Venta libre verificada'
+          )
+        )
+      ),
+      h('strong', { style: 'font-size:13.5px; color:var(--text);' },
+        money(it.subtotal || (it.unitPrice ? it.unitPrice * (it.quantity || 1) : subtotalProducts))
+      )
+    )
+  ) : [
+    h('div', { class: 'payment-product-item' },
+      h('span', null, 'Medicamentos solicitados en pedido'),
+      h('strong', null, money(subtotalProducts))
+    )
+  ];
+
+  const leftCol = h('div', { class: 'payment-summary-col' },
+    h('div', { class: 'payment-card' },
+      h('div', { class: 'payment-order-meta-box' },
+        h('span', { class: 'payment-order-code' }, 'Pedido #' + (o.code || o.id)),
+        badge(o.status || 'PRECIO_POR_ACEPTAR')
+      ),
+      h('div', { class: 'payment-info-row' },
+        h('div', { class: 'payment-info-icon' }, icon('store')),
+        h('div', { class: 'payment-info-content' },
+          h('strong', null, o.pharmacyName || 'Droguería Aliada Asignada'),
+          h('span', null, (o.pharmacyAddress ? o.pharmacyAddress + ' · ' : '') + 'Farmacia Habilitada y Certificada FarmaYA')
+        )
+      ),
+      h('div', { class: 'payment-info-row' },
+        h('div', { class: 'payment-info-icon' }, icon('home')),
+        h('div', { class: 'payment-info-content' },
+          h('strong', null, o.address || 'Dirección de Entrega'),
+          h('span', null, (o.city || 'Colombia') + (o.notes ? ' (' + o.notes + ')' : '') + ' · Tiempo est.: 25-45 min')
+        )
+      )
+    ),
+
+    h('div', { class: 'payment-card' },
+      h('h4', { class: 'payment-card-title' },
+        icon('package'),
+        h('span', null, 'Detalle de Productos')
+      ),
+      h('div', { class: 'payment-products-list' }, ...itemsNodes)
+    ),
+
+    h('div', { class: 'payment-totals-card' },
+      h('div', { class: 'payment-total-row' },
+        h('span', null, 'Subtotal Medicamentos:'),
+        h('strong', null, money(subtotalProducts))
+      ),
+      h('div', { class: 'payment-total-row' },
+        h('span', null, 'Tarifa de Domicilio (~' + deliveryDist + ' km):'),
+        h('strong', null, money(deliveryFee))
+      ),
+      h('div', { class: 'payment-total-row' },
+        h('span', null, 'Garantía FarmaYA (10%):'),
+        h('strong', { class: 'muted' }, money(platformFee) + ' (Incluido)')
+      ),
+      h('div', { class: 'payment-total-row grand-total' },
+        h('span', null, 'Total a Pagar por Pasarela:'),
+        h('strong', null, money(subtotalProducts))
+      )
+    ),
+
+    h('div', { class: 'payment-pin-card' },
+      icon('shield'),
+      h('div', null,
+        h('strong', null, 'Entrega 100% Digital y Segura con Código PIN'),
+        h('p', { style: 'margin:0;' },
+          'No se admiten pagos en efectivo ni contraentrega por seguridad. Dicta tu PIN personal de 4 dígitos al repartidor cuando recibas tu paquete sellado.'
+        )
+      )
+    )
+  );
+
+  const rightCol = h('div', { class: 'payment-hub-col' },
+    h('div', null,
+      h('h3', { style: 'margin:0 0 6px 0; font-size:18px; font-weight:800; color:var(--text);' }, 'Selecciona tu Método de Pago Digital'),
+      h('p', { class: 'muted', style: 'margin:0; font-size:13.5px;' },
+        'Todos los métodos se encuentran disponibles en recuadros elegantes de igual medida y con cobro 100% digital:'
+      )
+    ),
+    methodsGrid,
+    dynamicFormNode,
+    actionsHubNode
+  );
+
+  renderDynamicForm();
+  updateSubmitBtn();
+
+  const navBar = h('div', { class: 'payment-page-nav' },
+    h('button', {
       type: 'button',
-      style: 'margin-top: 18px; font-size:16px; padding:14px; font-weight:800;'
-    }, 'Aceptar y Ver Seguimiento de Pedido');
-
-    finishBtn.addEventListener('click', async () => {
-      finishBtn.disabled = true;
-      finishBtn.textContent = 'Actualizando pedido...';
-      try {
-        await API.post('/orders/' + o.id + '/accept-price', {
-          method: selectedMethod,
-          bank: chosenBank,
-          docNumber: docNumberInput.value.trim(),
-          phone: nequiPhoneInput.value.trim(),
-          amount: subtotal
-        });
-        d.close();
-        refreshAll();
-        toast('Pago verificado con exito. Factura enviada a tu correo electronico.');
-        if (typeof openOrderDetail === 'function') {
-          openOrderDetail(o.id);
-        } else if (typeof window.openOrderDetail === 'function') {
-          window.openOrderDetail(o.id);
-        }
-      } catch (err) {
-        toast(err.message || 'Error al confirmar el precio.', 'error');
-        finishBtn.disabled = false;
-        finishBtn.textContent = 'Reintentar confirmación';
+      class: 'payment-back-btn',
+      onclick: () => {
+        location.hash = '#orders';
       }
-    });
+    },
+      h('span', null, '← Volver a Mis Pedidos')
+    ),
+    h('div', { class: 'payment-security-chip' },
+      icon('shield'),
+      h('span', null, 'Cifrado SSL 256-bit · Wompi Bancolombia PCI-DSS Nivel 1 · Sin Efectivo')
+    )
+  );
 
-    bodyContainer.replaceChildren(receiptBox, finishBtn);
+  const pageContainer = h('div', { class: 'payment-page-container' },
+    navBar,
+    h('div', { class: 'payment-layout-grid' },
+      leftCol,
+      rightCol
+    )
+  );
+
+  app.replaceChildren(pageContainer);
+}
+
+function openPaymentPage(o) {
+  document.querySelectorAll('dialog[open]').forEach(d => {
+    try { d.close(); } catch (_) { d.remove(); }
   });
-
-  renderInitialView();
-  const d = openDialog(bodyContainer);
+  const orderId = typeof o === 'object' ? o.id : o;
+  location.hash = '#payment?order=' + orderId;
+  renderPaymentPage(o);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 window.openOrderDetail = openOrderDetail;
-window.openPaymentGatewayDialog = openPaymentGatewayDialog;
+window.openPaymentPage = openPaymentPage;
+window.openPaymentGatewayDialog = openPaymentPage;
+window.renderPaymentPage = renderPaymentPage;
 window.orderDetail = orderDetail;
 window.orderRow = orderRow;
 window.blister = blister;
-
