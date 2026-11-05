@@ -130,11 +130,11 @@ function renderLandingPage() {
       // Paso 1
       h('div', { class: 'landing-step-card reveal-on-scroll delay-1' },
         h('div', { class: 'landing-step-num' }, '01'),
-        h('h3', { class: 'landing-step-card-title' }, 'Solicita o sube tu prescripcion'),
+        h('h3', { class: 'landing-step-card-title' }, 'Explora y selecciona tus productos'),
         h('p', { class: 'landing-step-card-desc' },
-          'Explora nuestro catalogo de medicamentos o adjunta una fotografia o PDF de tu formula medica. Nuestro sistema clasifica los requerimientos de inmediato.'
+          'Encuentra medicamentos de venta libre, productos para el alivio de sintomas, primeros auxilios y cuidado de la salud en nuestro catalogo interactivo.'
         ),
-        h('div', { class: 'landing-step-pill' }, 'Catalogo & Formula')
+        h('div', { class: 'landing-step-pill' }, 'Catalogo Digital')
       ),
       // Paso 2
       h('div', { class: 'landing-step-card reveal-on-scroll delay-2' },
@@ -235,8 +235,8 @@ function renderLandingPage() {
         ),
         h('div', { class: 'landing-sec-item' },
           h('div', { class: 'landing-sec-ico' }, icon('lock')),
-          h('h4', null, 'Privacidad de Prescripciones'),
-          h('p', null, 'Tus formulas medicas se transmiten encriptadas y solo son visibles para la farmacia autorizada.')
+          h('h4', null, 'Seguridad y Farmacovigilancia'),
+          h('p', null, 'Operamos bajo estrictos estandares de salud publica y proteccion integral de datos personales.')
         ),
         h('div', { class: 'landing-sec-item' },
           h('div', { class: 'landing-sec-ico' }, icon('package')),
@@ -263,8 +263,8 @@ function renderLandingPage() {
       a: 'Aceptamos pagos electronicos inmediatos a traves de la pasarela Wompi Bancolombia (tarjetas de credito y debito Visa, Mastercard, cuentas de ahorros via PSE y Nequi), asi como la opcion de pago en efectivo contraentrega al recibir tus productos.'
     },
     {
-      q: '¿Puedo solicitar medicamentos que requieran formula medica?',
-      a: 'Si. Durante la creacion de tu solicitud puedes subir una foto o archivo de tu formula medica. El profesional farmaceutico de la farmacia asignada la validara antes de confirmar la cotizacion y preparar el medicamento.'
+      q: '¿Puedo solicitar medicamentos que requieran formula o receta medica?',
+      a: 'No. Por estrictas razones de seguridad del paciente, farmacovigilancia y cumplimiento de la normatividad sanitaria vigente en Colombia (INVIMA y Ministerio de Salud), FarmaYA no distribuye medicamentos que requieran formula medica retenida o de control especial a domicilio. Nuestra plataforma esta especializada exclusivamente en medicamentos de venta libre (OTC), productos de primeros auxilios, bienestar y cuidado personal, garantizando una dispensacion etica, responsable y 100% segura.'
     },
     {
       q: '¿Cual es el tiempo promedio de entrega?',

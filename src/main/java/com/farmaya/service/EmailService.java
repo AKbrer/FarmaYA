@@ -1124,7 +1124,7 @@ public class EmailService {
         } else {
             itemsRows.append("""
                 <tr style="border-bottom: 1px solid #f1f5f9;">
-                  <td colspan="4" style="padding: 14px; color: #64748b; font-size: 13px; text-align: center;">Medicamentos despachados bajo receta / orden medica.</td>
+                  <td colspan="4" style="padding: 14px; color: #64748b; font-size: 13px; text-align: center;">Medicamentos solicitados por el cliente.</td>
                 </tr>
                 """);
         }
