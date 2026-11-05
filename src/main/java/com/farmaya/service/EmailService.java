@@ -510,6 +510,7 @@ public class EmailService {
 
             writer.write("From: " + fromHeader + "\r\n");
 
+            writer.write("Reply-To: " + fromHeader + "\r\n");
             writer.write("To: <" + toEmail.trim() + ">\r\n");
 
             writer.write("Date: " + rfcDate + "\r\n");
@@ -530,11 +531,11 @@ public class EmailService {
 
             writer.write("Content-Type: multipart/alternative; boundary=\"" + boundary + "\"\r\n");
 
-            writer.write("X-Priority: 1\r\n");
 
-            writer.write("X-MSMail-Priority: High\r\n");
 
-            writer.write("Importance: High\r\n");
+
+
+
 
             writer.write("\r\n");
 
@@ -542,7 +543,7 @@ public class EmailService {
 
             // 1. Texto plano
 
-            String plainText = "FarmaYA - " + subject;
+            String plainText = htmlContent != null ? htmlContent.replaceAll("(?is)<style.*?</style>", "").replaceAll("(?is)<script.*?</script>", "").replaceAll("<[^>]+>", " ").replaceAll("&nbsp;", " ").replaceAll("&amp;", "&").replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("\\s+", " ").trim() : ("FarmaYA - " + subject);
 
             writer.write("--" + boundary + "\r\n");
 
@@ -1358,11 +1359,57 @@ public class EmailService {
         if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
             return new EmailDispatchResult(false, "Correo no disponible.");
         }
+        log.info("Despachando notificacion oficial de cuenta verificada a {}", u.email);
         boolean isRepartidor = u.role == Role.REPARTIDOR;
+        boolean isCliente = u.role == Role.CLIENTE;
         String subject = isRepartidor
                 ? "Tu cuenta de Repartidor ha sido Verificada y Aprobada - FarmaYA"
-                : "Tu Farmacia ha sido Verificada y Autorizada para Operar - FarmaYA";
+                : (isCliente
+                    ? "Tu cuenta de Cliente ha sido Verificada exitosamente - FarmaYA"
+                    : "Tu Farmacia ha sido Verificada y Autorizada para Operar - FarmaYA");
         String html = buildAccountVerifiedHtml(u);
+        return dispatchHtmlEmail(u.email, subject, html);
+    }
+
+    public void sendAccountEnabledAsync(User u) {
+        if (u == null || u.email == null || u.email.isBlank()) return;
+        CompletableFuture.runAsync(() -> {
+            try {
+                sendAccountEnabled(u);
+            } catch (Exception e) {
+                log.warn("No se pudo despachar correo de reactivacion a {}: {}", u.email, e.getMessage(), e);
+            }
+        });
+    }
+
+    public EmailDispatchResult sendAccountEnabled(User u) {
+        if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
+            return new EmailDispatchResult(false, "Correo no disponible.");
+        }
+        log.info("Despachando notificacion oficial de cuenta habilitada a {}", u.email);
+        String subject = "Tu cuenta en FarmaYA ha sido Reactivada y Habilitada para Operar";
+        String html = buildAccountEnabledHtml(u);
+        return dispatchHtmlEmail(u.email, subject, html);
+    }
+
+    public void sendAccountCreatedAsync(User u) {
+        if (u == null || u.email == null || u.email.isBlank()) return;
+        CompletableFuture.runAsync(() -> {
+            try {
+                sendAccountCreated(u);
+            } catch (Exception e) {
+                log.warn("No se pudo despachar correo de bienvenida y creacion a {}: {}", u.email, e.getMessage(), e);
+            }
+        });
+    }
+
+    public EmailDispatchResult sendAccountCreated(User u) {
+        if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
+            return new EmailDispatchResult(false, "Correo no disponible.");
+        }
+        log.info("Despachando notificacion oficial de bienvenida y creacion de cuenta a {}", u.email);
+        String subject = "Bienvenido a FarmaYA - Tu cuenta ha sido creada exitosamente";
+        String html = buildAccountCreatedHtml(u);
         return dispatchHtmlEmail(u.email, subject, html);
     }
 
@@ -1385,6 +1432,7 @@ public class EmailService {
         if (u == null || u.email == null || u.email.isBlank() || !u.email.contains("@")) {
             return new EmailDispatchResult(false, "Correo no disponible.");
         }
+        log.info("Despachando notificacion oficial de cuenta deshabilitada a {} con motivo: {}", u.email, reason);
         String subject = "Notificacion de Estado de Cuenta: Cuenta Deshabilitada - FarmaYA";
         String html = buildAccountDisabledHtml(u, reason);
         return dispatchHtmlEmail(u.email, subject, html);
@@ -1436,33 +1484,40 @@ public class EmailService {
         String addressText = escapeHtml(u.address != null && !u.address.isBlank() ? u.address : "Direccion registrada");
         String hoursText = escapeHtml((u.openFrom != null ? u.openFrom : "08:00") + " a " + (u.openTo != null ? u.openTo : "22:00"));
 
-        String specificGreeting = isRepartidor
-                ? "Nos alegra informarte que tu cuenta y documentos de Domiciliario / Repartidor han sido revisados y <strong>verificados exitosamente</strong> por el equipo de administracion de FarmaYA. A partir de este momento te encuentras 100% autorizado para operar en la plataforma."
-                : "Nos alegra informarte que la drogueria <strong>" + establishmentName + "</strong> ha sido revisada y <strong>verificada exitosamente</strong> por el equipo de administracion de FarmaYA. Tu establecimiento ya se encuentra visible y autorizado para recibir pedidos de clientes en tu zona.";
-
-        String extraFields = isRepartidor ? (
-            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Vehiculo:</td>" +
-            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + vehicleText + "</td></tr>" +
-            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Zona de Operacion:</td>" +
-            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + zoneText + "</td></tr>"
-        ) : (
-            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Establecimiento:</td>" +
-            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + establishmentName + "</td></tr>" +
-            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Direccion:</td>" +
-            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + addressText + "</td></tr>" +
-            "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Horario de Atencion:</td>" +
-            "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + hoursText + "</td></tr>"
-        );
-
-        String instructions = isRepartidor ? (
-            "<li style=\"margin-bottom: 8px;\"><strong>Inicia sesion:</strong> Ingresa a la plataforma con tu correo y contrasena registrados.</li>" +
-            "<li style=\"margin-bottom: 8px;\"><strong>Activa tu disponibilidad:</strong> En la parte superior de tu panel, activa el boton <em>\"En servicio\"</em> para que el sistema te asigne pedidos en vivo.</li>" +
-            "<li><strong>Entrega segura con PIN:</strong> Recuerda que cada entrega se confirma solicitando el codigo PIN de 4 digitos al cliente receptor.</li>"
-        ) : (
-            "<li style=\"margin-bottom: 8px;\"><strong>Inicia sesion:</strong> Accede a tu panel con tu cuenta de farmacia.</li>" +
-            "<li style=\"margin-bottom: 8px;\"><strong>Gestiona solicitudes:</strong> Revisa pedidos pendientes de clientes en tu cobertura de hasta 5 km y confirma cotizaciones.</li>" +
-            "<li><strong>Despacho inmediato:</strong> Alista los paquetes para entrega segura a los domiciliarios asignados.</li>"
-        );
+        boolean isCliente = u.role == Role.CLIENTE;
+        String specificGreeting;
+        String extraFields;
+        String instructions;
+        if (isRepartidor) {
+            specificGreeting = "Nos alegra informarte que tu cuenta y documentos de Domiciliario / Repartidor han sido revisados y <strong>verificados exitosamente</strong> por el equipo de administracion de FarmaYA. A partir de este momento te encuentras 100% autorizado para operar en la plataforma.";
+            extraFields = "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Vehiculo:</td>" +
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + vehicleText + "</td></tr>" +
+                "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Zona de Operacion:</td>" +
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + zoneText + "</td></tr>";
+            instructions = "<li style=\"margin-bottom: 8px;\"><strong>Inicia sesion:</strong> Ingresa a la plataforma con tu correo y contrasena registrados.</li>" +
+                "<li style=\"margin-bottom: 8px;\"><strong>Activa tu disponibilidad:</strong> En la parte superior de tu panel, activa el boton <em>\"En servicio\"</em> para que el sistema te asigne pedidos en vivo.</li>" +
+                "<li><strong>Entrega segura con PIN:</strong> Recuerda que cada entrega se confirma solicitando el codigo PIN de 4 digitos al cliente receptor.</li>";
+        } else if (isCliente) {
+            specificGreeting = "Nos complace confirmarte que tu cuenta de Cliente ha sido <strong>verificada satisfactoriamente</strong> por el equipo de FarmaYA. Tu cuenta cuenta con acceso prioritario y total para realizar pedidos a domicilio.";
+            extraFields = "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Correo:</td>" +
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + escapeHtml(u.email) + "</td></tr>" +
+                "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Cobertura:</td>" +
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + zoneText + "</td></tr>";
+            instructions = "<li style=\"margin-bottom: 8px;\"><strong>Explora el catalogo:</strong> Encuentra medicamentos con cotizacion inmediata.</li>" +
+                "<li style=\"margin-bottom: 8px;\"><strong>Paga 100% en linea:</strong> Metodos de pago digitales seguros via Wompi.</li>" +
+                "<li><strong>Entrega segura con PIN:</strong> Confirma la recepcion de tu paquete dictandole el codigo PIN a tu repartidor.</li>";
+        } else {
+            specificGreeting = "Nos alegra informarte que la drogueria <strong>" + establishmentName + "</strong> ha sido revisada y <strong>verificada exitosamente</strong> por el equipo de administracion de FarmaYA. Tu establecimiento ya se encuentra visible y autorizado para recibir pedidos de clientes en tu zona.";
+            extraFields = "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Establecimiento:</td>" +
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + establishmentName + "</td></tr>" +
+                "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Direccion:</td>" +
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + addressText + "</td></tr>" +
+                "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Horario de Atencion:</td>" +
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + hoursText + "</td></tr>";
+            instructions = "<li style=\"margin-bottom: 8px;\"><strong>Inicia sesion:</strong> Accede a tu panel con tu cuenta de farmacia.</li>" +
+                "<li style=\"margin-bottom: 8px;\"><strong>Gestiona solicitudes:</strong> Revisa pedidos pendientes de clientes en tu cobertura de hasta 5 km y confirma cotizaciones.</li>" +
+                "<li><strong>Despacho inmediato:</strong> Alista los paquetes para entrega segura a los domiciliarios asignados.</li>";
+        }
 
         return String.format("""
             <!DOCTYPE html>
@@ -1722,6 +1777,230 @@ public class EmailService {
             escapeHtml(u.email),
             cleanReason,
             nowFormatted
+        );
+    }
+
+
+    private String buildAccountEnabledHtml(User u) {
+        String recipientName = escapeHtml(u.name != null && !u.name.isBlank() ? u.name : "Usuario");
+        String roleDesc = u.role == Role.FARMACIA ? "de Farmacia Aliada" : (u.role == Role.REPARTIDOR ? "de Repartidor / Domiciliario" : (u.role == Role.ADMIN ? "de Administrador" : "de Cliente"));
+        String nowFormatted = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy, hh:mm a", new Locale("es", "CO"))
+                .withZone(ZoneId.of("America/Bogota"))
+                .format(Instant.now());
+
+        return String.format("""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Cuenta Habilitada - FarmaYA</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+              <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 28px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(15,23,42,0.08);">
+                      
+                      <!-- Cabecera Institucional FarmaYA con Cruz 3D -->
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #0d5e41 0%%, #16865d 100%%); padding: 24px 28px;">
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="vertical-align: middle;">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td style="padding-right: 14px; vertical-align: middle;">
+                                      <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-cross.png" alt="Cruz FarmaYA" width="48" height="42" style="display:block; border-radius:10px; background:#ffffff; padding:4px; box-shadow: 0 2px 8px rgba(0,0,0,0.22);" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                      <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: 'Segoe UI', sans-serif;">FarmaYA</span>
+                                      <p style="margin: 2px 0 0 0; color: #a7f3d0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">Control Central y Seguridad</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td align="right" style="vertical-align: middle;">
+                                <span style="display: inline-block; background: rgba(255,255,255,0.22); color: #ffffff; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
+                                  CUENTA REACTIVADA
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Cuerpo del Mensaje -->
+                      <tr>
+                        <td style="padding: 32px 30px 20px 30px;">
+                          
+                          <div style="display: inline-block; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 8px 14px; margin-bottom: 18px;">
+                            <span style="font-size: 12px; font-weight: 800; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px;">ESTADO: CUENTA HABILITADA Y ACTIVA</span>
+                          </div>
+
+                          <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 20px; font-weight: 800; line-height: 1.35;">
+                            Estimado(a) %s: Tu cuenta ha sido habilitada
+                          </h1>
+
+                          <p style="margin: 0 0 18px 0; color: #334155; font-size: 14px; line-height: 1.6;">
+                            Te informamos que tu cuenta <strong>%s</strong> vinculada al correo <strong>%s</strong> ha sido <strong style="color: #065f46;">habilitada y reactivada</strong> por el equipo de administracion central de FarmaYA.
+                          </p>
+
+                          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px;">
+                            <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="padding-bottom: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Estado Operativo:</td>
+                                <td align="right" style="padding-bottom: 6px; font-size: 13px; font-weight: 800; color: #065f46;">100%% Habilitado</td>
+                              </tr>
+                              <tr>
+                                <td style="padding-top: 6px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Fecha y Hora de Reactivacion:</td>
+                                <td align="right" style="padding-top: 6px; font-size: 12.5px; font-weight: 600; color: #0f172a;">%s</td>
+                              </tr>
+                            </table>
+                          </div>
+
+                          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px; padding: 16px 18px; margin-bottom: 24px;">
+                            <p style="margin: 0; font-size: 13px; color: #166534; line-height: 1.5; font-weight: 600;">
+                              Puedes iniciar sesion inmediatamente con tus credenciales habituales y disfrutar de todas las funcionalidades activas en tu perfil.
+                            </p>
+                          </div>
+
+                        </td>
+                      </tr>
+
+                      <!-- Pie Legal -->
+                      <tr>
+                        <td style="background: #f8fafc; padding: 22px 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 11.5px; line-height: 1.6;">
+                          <strong style="color: #0f172a;">FarmaYA Colombia &bull; Departamento de Seguridad y Cumplimiento</strong><br>
+                          Notificacion oficial generada automaticamente por el panel de administracion central de FarmaYA.
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+            """,
+            recipientName,
+            roleDesc,
+            escapeHtml(u.email),
+            nowFormatted
+        );
+    }
+
+    private String buildAccountCreatedHtml(User u) {
+        String recipientName = escapeHtml(u.name != null && !u.name.isBlank() ? u.name : "Usuario");
+        String roleDesc = u.role == Role.FARMACIA ? "de Farmacia Aliada" : (u.role == Role.REPARTIDOR ? "de Repartidor / Domiciliario" : (u.role == Role.ADMIN ? "de Administrador" : "de Cliente"));
+        String establishmentName = escapeHtml(u.pharmacyName != null && !u.pharmacyName.isBlank() ? u.pharmacyName : u.name);
+        String zoneText = escapeHtml(u.zone != null && !u.zone.isBlank() ? u.zone : (u.city != null ? u.city : "Cobertura General"));
+
+        String nextSteps = (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR)
+                ? "Tu cuenta ha sido creada exitosamente y se encuentra en etapa de <strong>revision documental</strong>. Tan pronto nuestro equipo administrativo verifique tus datos, recibiras un correo oficial de aprobacion para comenzar a operar."
+                : "Tu cuenta ha sido creada y se encuentra <strong>100% activa</strong>. Ya puedes navegar el catalogo, cotizar con farmacias aliadas cercanas y ordenar tus medicamentos a domicilio.";
+
+        return String.format("""
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Bienvenido a FarmaYA</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased;">
+              <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f1f5f9; padding: 28px 12px;">
+                <tr>
+                  <td align="center">
+                    <table width="100%%" border="0" cellspacing="0" cellpadding="0" style="max-width: 580px; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px rgba(15,23,42,0.08);">
+                      
+                      <!-- Cabecera Institucional FarmaYA con Cruz 3D -->
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #0d5e41 0%%, #16865d 100%%); padding: 24px 28px;">
+                          <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                            <tr>
+                              <td style="vertical-align: middle;">
+                                <table border="0" cellspacing="0" cellpadding="0">
+                                  <tr>
+                                    <td style="padding-right: 14px; vertical-align: middle;">
+                                      <img src="https://raw.githubusercontent.com/AKbrer/FarmaYA/main/src/main/resources/static/images/farmaya-cross.png" alt="Cruz FarmaYA" width="48" height="42" style="display:block; border-radius:10px; background:#ffffff; padding:4px; box-shadow: 0 2px 8px rgba(0,0,0,0.22);" />
+                                    </td>
+                                    <td style="vertical-align: middle;">
+                                      <span style="font-size: 24px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; font-family: 'Segoe UI', sans-serif;">FarmaYA</span>
+                                      <p style="margin: 2px 0 0 0; color: #a7f3d0; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;">Salud y Medicamentos a Domicilio</p>
+                                    </td>
+                                  </tr>
+                                </table>
+                              </td>
+                              <td align="right" style="vertical-align: middle;">
+                                <span style="display: inline-block; background: rgba(255,255,255,0.22); color: #ffffff; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;">
+                                  NUEVO REGISTRO
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- Cuerpo del Mensaje -->
+                      <tr>
+                        <td style="padding: 32px 30px 20px 30px;">
+                          
+                          <h1 style="margin: 0 0 12px 0; color: #0f172a; font-size: 21px; font-weight: 800; line-height: 1.35;">
+                            ¡Hola %s, bienvenido(a) a FarmaYA!
+                          </h1>
+
+                          <p style="margin: 0 0 18px 0; color: #334155; font-size: 14px; line-height: 1.6;">
+                            Tu cuenta <strong>%s</strong> ha sido creada satisfactoriamente. Te presentamos a continuacion los datos de tu cuenta registrada:
+                          </p>
+
+                          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 20px; margin-bottom: 22px;">
+                            <table width="100%%" border="0" cellspacing="0" cellpadding="0">
+                              <tr>
+                                <td style="padding-bottom: 8px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Correo registrado:</td>
+                                <td align="right" style="padding-bottom: 8px; font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
+                              </tr>
+                              <tr>
+                                <td style="padding-bottom: 8px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Nombre / Titular:</td>
+                                <td align="right" style="padding-bottom: 8px; font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
+                              </tr>
+                              <tr>
+                                <td style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Zona / Ciudad:</td>
+                                <td align="right" style="font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
+                              </tr>
+                            </table>
+                          </div>
+
+                          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 14px; padding: 16px 18px; margin-bottom: 24px;">
+                            <p style="margin: 0; font-size: 13px; color: #065f46; line-height: 1.5; font-weight: 600;">
+                              %s
+                            </p>
+                          </div>
+
+                        </td>
+                      </tr>
+
+                      <!-- Pie Legal -->
+                      <tr>
+                        <td style="background: #f8fafc; padding: 22px 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 11.5px; line-height: 1.6;">
+                          <strong style="color: #0f172a;">FarmaYA Colombia &bull; Servicio al Cliente y Seguridad</strong><br>
+                          Si no reconoces esta cuenta, por favor comunicate inmediatamente con soporte central.
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+            """,
+            recipientName,
+            roleDesc,
+            escapeHtml(u.email),
+            recipientName,
+            zoneText,
+            nextSteps
         );
     }
 

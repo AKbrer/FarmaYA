@@ -87,14 +87,28 @@ public class OrderService {
     }
 
     private void notifyOrderUpdate(Order o, int stage, String stageTitle, String stageNote) {
-        if (o == null || o.clientId == null) return;
+        if (o == null) return;
         String email = o.clientEmail;
         if (email == null || email.isBlank()) {
-            email = users.findById(o.clientId).map(u -> u.email).orElse(null);
+            if (o.clientId != null) {
+                email = users.findById(o.clientId).map(u -> u.email).orElse(null);
+            }
         }
-        if (email != null && !email.isBlank() && email.contains("@")) {
-            emailService.sendOrderNotificationAsync(email, o, stage, stageTitle, stageNote);
+        if (email == null || email.isBlank() || !email.contains("@")) {
+            log.warn("No se pudo notificar actualizacion de pedido {}: correo del cliente no disponible", o.code);
+            return;
         }
+
+        Order toSend = o;
+        if (o.deliveryCode == null && o.id != null) {
+            Order fresh = orders.findById(o.id).orElse(null);
+            if (fresh != null && fresh.deliveryCode != null) {
+                toSend = fresh;
+            }
+        }
+
+        log.info("Despachando notificacion etapa {} de pedido {} a {}", stage, toSend.code, email);
+        emailService.sendOrderNotificationAsync(email.trim(), toSend, stage, stageTitle, stageNote);
     }
 
     private void sendInvoiceToClient(Order o, User client) {
@@ -237,6 +251,8 @@ public class OrderService {
         }
         Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
         sendInvoiceToClient(res, client);
+        notifyOrderUpdate(res, 2, "Pago confirmado y pedido en proceso",
+                "Hemos recibido tu pago para el pedido #" + res.code + ". La farmacia " + (res.pharmacyName != null ? res.pharmacyName : "") + " está alistando tus medicamentos.");
         return res;
     }
 
@@ -253,8 +269,10 @@ public class OrderService {
         ownedByClient(id, client);
         Criteria c = where("id").is(id).and("clientId").is(client.id).and("status").in(CLIENT_CANCELABLE);
         Update u = step(CANCELADA, client, "Cancelado por el cliente");
-        return present(apply(c, u,
+        Order res = present(apply(c, u,
                 "Ya no puedes cancelar: la farmacia está preparando el pedido o ya va en camino. Si hay un problema, repórtalo."), client);
+        notifyOrderUpdate(res, 7, "Pedido cancelado", "Cancelaste tu pedido #" + res.code + ".");
+        return res;
     }
 
     // =====================================================================
@@ -365,8 +383,11 @@ public class OrderService {
 
     public Order startPreparation(String id, User ph) {
         Criteria c = where("id").is(id).and("pharmacyId").is(ph.id).and("status").is(PRECIO_CONFIRMADO);
-        return present(apply(c, step(PEDIDO_EN_PREPARACION, ph, "La farmacia empezó a preparar el pedido"),
+        Order res = present(apply(c, step(PEDIDO_EN_PREPARACION, ph, "La farmacia empezó a preparar el pedido"),
                 "El cliente aún no ha aceptado el precio."), ph);
+        notifyOrderUpdate(res, 2, "Pedido en preparación en la farmacia",
+                "La farmacia " + (res.pharmacyName != null ? res.pharmacyName : "") + " ha comenzado a alistar tus medicamentos.");
+        return res;
     }
 
     public Order markReady(String id, User ph) {
@@ -422,7 +443,10 @@ public class OrderService {
         }
         Update u = step(REPARTIDOR_ASIGNADO, c, "Repartidor asignado")
                 .set("courierId", c.id).set("courierName", c.name).set("courierPhone", c.phone);
-        return present(apply(courierOffers(c, id), u, "Otro repartidor ya tomó esta entrega o dejó de estar disponible."), c);
+        Order res = present(apply(courierOffers(c, id), u, "Otro repartidor ya tomó esta entrega o dejó de estar disponible."), c);
+        notifyOrderUpdate(res, 3, "Repartidor asignado a tu pedido",
+                "El repartidor " + (res.courierName != null ? res.courierName : "de turno") + " ha sido asignado y se dirige a la farmacia a recoger tu paquete.");
+        return res;
     }
 
     public Order releaseByCourier(String id, User c) {
@@ -436,7 +460,10 @@ public class OrderService {
 
     public Order pickup(String id, User c) {
         Criteria cr = where("id").is(id).and("courierId").is(c.id).and("status").is(REPARTIDOR_ASIGNADO);
-        return present(apply(cr, step(PEDIDO_RECOGIDO, c, "El repartidor recogió el pedido"), "Esta entrega no está lista para recoger."), c);
+        Order res = present(apply(cr, step(PEDIDO_RECOGIDO, c, "El repartidor recogió el pedido"), "Esta entrega no está lista para recoger."), c);
+        notifyOrderUpdate(res, 4, "Medicamentos recogidos por el repartidor",
+                "El repartidor " + (res.courierName != null ? res.courierName : "") + " ya tiene tus medicamentos y se prepara para el despacho.");
+        return res;
     }
 
     public Order onTheWay(String id, User c) {
@@ -599,7 +626,10 @@ public class OrderService {
     public Order cancelByAdmin(String id, User admin, String note) {
         Criteria c = where("id").is(id).and("status").nin(FINAL);
         String extra = blank(note) ? "" : " " + clean(note, 300);
-        return present(apply(c, step(CANCELADA, admin, "Cancelado por la administración." + extra), "Este pedido ya finalizó."), admin);
+        Order res = present(apply(c, step(CANCELADA, admin, "Cancelado por la administración." + extra), "Este pedido ya finalizó."), admin);
+        notifyOrderUpdate(res, 7, "Pedido cancelado por la administración",
+                "Tu pedido #" + res.code + " ha sido cancelado por el equipo administrativo." + extra);
+        return res;
     }
 
     public Order get(String id, User viewer) {

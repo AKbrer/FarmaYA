@@ -160,12 +160,14 @@ public class AuthService {
         }
 
         if (users.findByEmailIgnoreCase(email).isPresent()) throw ApiException.conflict("Ya existe una cuenta con ese correo.");
+        User saved;
         try {
-            users.save(u);
+            saved = users.save(u);
         } catch (DuplicateKeyException e) {
             throw ApiException.conflict("Ya existe una cuenta con ese correo.");
         }
-        return new AuthResponse(openSession(u), u);
+        emailService.sendAccountCreatedAsync(saved);
+        return new AuthResponse(openSession(saved), saved);
     }
 
     public AuthResponse login(String email, String password) {
@@ -262,6 +264,7 @@ public class AuthService {
         newUser.passwordHash = encoder.encode(UUID.randomUUID().toString());
 
         User saved = users.save(newUser);
+        emailService.sendAccountCreatedAsync(saved);
         return new AuthResponse(openSession(saved), saved);
     }
 

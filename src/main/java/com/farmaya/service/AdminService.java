@@ -61,6 +61,7 @@ public class AdminService {
         a.createdAt = java.time.Instant.now();
 
         User saved = users.save(a);
+        emailService.sendAccountCreatedAsync(saved);
         movements.record("USUARIO_CREACION_ADMIN", "Creó una nueva cuenta de administrador para " + saved.name + " (" + saved.email + ")", currentAdmin, null);
         return saved;
     }
@@ -87,9 +88,8 @@ public class AdminService {
                 .limit(500).toList();
     }
 
-        public User setVerified(String id, boolean value, User admin) {
+    public User setVerified(String id, boolean value, User admin) {
         User u = find(id);
-        if (u.role == Role.CLIENTE || u.role == Role.ADMIN) throw ApiException.bad("Solo se verifican farmacias y repartidores.");
         Update up = new Update().set("verified", value);
         if (value) {
             up.set("enabled", true).set("active", true);
@@ -128,6 +128,9 @@ public class AdminService {
         if (!value && changed.email != null && !changed.email.isBlank()) {
             emailService.sendAccountDisabledAsync(changed, reason);
             movements.record("NOTIFICACION_CORREO", "Notificación de deshabilitación enviada a " + changed.email + (reason != null && !reason.isBlank() ? " con motivo: " + reason.trim() : ""), admin, null);
+        } else if (value && changed.email != null && !changed.email.isBlank()) {
+            emailService.sendAccountEnabledAsync(changed);
+            movements.record("NOTIFICACION_CORREO", "Notificación de reactivación y habilitación enviada a " + changed.email, admin, null);
         }
         return changed;
     }
