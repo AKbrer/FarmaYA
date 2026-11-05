@@ -181,13 +181,7 @@ public class EmailService {
 
     public String resolveEffectiveRecipient(String toEmail) {
         if (toEmail == null) return null;
-        String clean = toEmail.trim();
-        String lower = clean.toLowerCase(Locale.ROOT);
-        if (lower.endsWith("@demo.com") || lower.endsWith("@farmaya.local") || lower.endsWith("@example.com") || lower.contains("demo")) {
-            log.info("Detectada cuenta de prueba/demostracion '{}'. Redirigiendo despacho a bandeja de prueba real: wilcabrera466@gmail.com", clean);
-            return "wilcabrera466@gmail.com";
-        }
-        return clean;
+        return toEmail.trim();
     }
 
     public EmailDispatchResult sendVerificationOtp(String toEmail, String code, String name) {
