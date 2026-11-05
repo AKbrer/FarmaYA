@@ -8,3 +8,7 @@ javac_args.txt
 temp_test.json
 cp_extracted.txt
 
+
+.env
+application-local.properties
+*.local.properties
