@@ -1283,7 +1283,7 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
   opacity: 1 !important;
   visibility: visible !important;
   transform-origin: 50% 88%;
-  animation: fyCourierActiveRide 1.25s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: none !important;
   filter: drop-shadow(0 18px 22px rgba(18, 67, 54, 0.22));
 }
 
@@ -1408,7 +1408,7 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
   object-fit: contain;
   object-position: center;
   transform-origin: 50% 88%;
-  animation: fyCourierActiveRide 1.25s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: none !important;
   filter: drop-shadow(0 18px 22px rgba(18, 67, 54, 0.22));
 }
 
@@ -1434,7 +1434,7 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
   border-radius: 50%;
   z-index: 1;
   pointer-events: none;
-  animation: fyCourierShadowPulse 1.25s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  animation: none !important;
 }
 
 @keyframes fyCourierShadowPulse {

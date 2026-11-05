@@ -10385,9 +10385,10 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 }
 
 /* ==========================================================================
-   53. ANIMACION ACTIVA DE CONDUCCION DEL REPARTIDOR (RUMBLE & DRIVING MOTION)
+   53. REPARTIDOR ESTATICO (SIN ANIMACION)
    ========================================================================== */
-.login-stage-courier img {
+.login-stage-courier img,
+.login-courier-only .login-stage-courier img {
   display: block !important;
   opacity: 1 !important;
   visibility: visible !important;
@@ -10397,25 +10398,11 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   max-height: 480px !important;
   margin: 0 auto !important;
   object-fit: contain !important;
-  transform-origin: 50% 86% !important;
-  animation: fyCourierActiveDriving 0.62s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite !important;
-  filter: drop-shadow(0 20px 26px rgba(18, 67, 54, 0.26)) !important;
-  will-change: transform !important;
+  filter: drop-shadow(0 18px 24px rgba(18, 67, 54, 0.20)) !important;
+  animation: none !important;
+  transform: none !important;
 }
 
-@keyframes fyCourierActiveDriving {
-  0%   { transform: translate3d(0, 0, 0) rotate(0deg); }
-  12%  { transform: translate3d(1.5px, -3.5px, 0) rotate(-1.6deg); } /* rueda delantera supera bache */
-  24%  { transform: translate3d(0, 1.2px, 0) rotate(-0.4deg); }       /* amortiguador delantero comprime */
-  38%  { transform: translate3d(2.5px, -6px, 0) rotate(-2.4deg); }     /* aceleracion e inclinacion de potencia */
-  50%  { transform: translate3d(-1px, 2.5px, 0) rotate(1.1deg); }      /* rueda trasera absorbe bache */
-  64%  { transform: translate3d(1.2px, -3px, 0) rotate(-0.8deg); }     /* crucero activo sobre asfalto */
-  78%  { transform: translate3d(-0.6px, 1.8px, 0) rotate(0.6deg); }    /* rebote de suspension trasera */
-  90%  { transform: translate3d(0.6px, -1px, 0) rotate(-0.3deg); }
-  100% { transform: translate3d(0, 0, 0) rotate(0deg); }
-}
-
-/* Sombra dinamica en asfalto sincronizada con la amortiguacion del vehiculo */
 .courier-ground-shadow {
   position: absolute !important;
   bottom: 8% !important;
@@ -10423,376 +10410,72 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   transform: translateX(-50%) !important;
   width: min(78%, 460px) !important;
   height: 22px !important;
-  background: radial-gradient(ellipse at center, rgba(14, 52, 42, 0.45) 0%, rgba(14, 52, 42, 0) 72%) !important;
+  background: radial-gradient(ellipse at center, rgba(14, 52, 42, 0.38) 0%, rgba(14, 52, 42, 0) 72%) !important;
   border-radius: 50% !important;
   z-index: 1 !important;
   pointer-events: none !important;
-  animation: fyCourierShadowDriving 0.62s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite !important;
-  will-change: transform, opacity !important;
+  animation: none !important;
 }
 
-@keyframes fyCourierShadowDriving {
-  0%, 100% { transform: translateX(-50%) scale(1, 1); opacity: 0.88; }
-  12%      { transform: translateX(-50%) scale(0.93, 0.84); opacity: 0.66; }
-  38%      { transform: translateX(-50%) scale(0.88, 0.76); opacity: 0.50; } /* moto en alto = sombra tenue */
-  50%      { transform: translateX(-50%) scale(1.06, 1.10); opacity: 0.98; } /* moto pegada al piso = sombra oscura */
-  64%      { transform: translateX(-50%) scale(0.94, 0.88); opacity: 0.72; }
-  78%      { transform: translateX(-50%) scale(1.03, 1.04); opacity: 0.92; }
-}
-
-/* Pista de asfalto con lineas viales moviendose a toda velocidad debajo de las ruedas */
-.courier-road-strip {
-  position: absolute !important;
-  bottom: 7.5% !important;
-  left: 0 !important;
-  right: 0 !important;
-  height: 5px !important;
-  background: repeating-linear-gradient(90deg,
-    rgba(22, 134, 93, 0.85) 0px,
-    rgba(22, 134, 93, 0.85) 26px,
-    transparent 26px,
-    transparent 48px
-  ) !important;
-  background-size: 48px 100% !important;
-  animation: fyRoadFastMove 0.32s linear infinite !important;
-  box-shadow: 0 0 14px rgba(46, 213, 115, 0.4) !important;
-  pointer-events: none !important;
-  z-index: 1 !important;
-}
-
-@keyframes fyRoadFastMove {
-  0% { background-position: 0 0; }
-  100% { background-position: -48px 0; }
-}
-
-/* Rafagas de viento y velocidad rapida */
-.login-motion-lines {
-  position: absolute !important;
-  inset: 6% 0 10% !important;
-  z-index: 1 !important;
-  overflow: hidden !important;
-  pointer-events: none !important;
-}
-
-.login-motion-lines i {
-  position: absolute !important;
-  right: -30% !important;
-  height: 3px !important;
-  border-radius: 999px !important;
-  background: linear-gradient(90deg, transparent, rgba(56, 157, 119, 0.2), rgba(46, 213, 115, 0.9), transparent) !important;
-  transform: skewX(-24deg) !important;
-  animation: fySpeedStreak 0.75s linear infinite !important;
-  box-shadow: 0 0 8px rgba(46, 213, 115, 0.35) !important;
-  will-change: transform, opacity !important;
-}
-
-.login-motion-lines i:nth-child(1) { top: 12%; width: 54%; animation-duration: 0.65s !important; animation-delay: -0.15s !important; }
-.login-motion-lines i:nth-child(2) { top: 24%; width: 36%; height: 2px !important; animation-duration: 0.52s !important; animation-delay: -0.40s !important; }
-.login-motion-lines i:nth-child(3) { top: 38%; width: 62%; animation-duration: 0.78s !important; animation-delay: -0.28s !important; }
-.login-motion-lines i:nth-child(4) { top: 52%; width: 44%; height: 2px !important; animation-duration: 0.60s !important; animation-delay: -0.55s !important; }
-.login-motion-lines i:nth-child(5) { top: 66%; width: 58%; animation-duration: 0.70s !important; animation-delay: -0.10s !important; }
-.login-motion-lines i:nth-child(6) { top: 78%; width: 42%; height: 2.5px !important; animation-duration: 0.56s !important; animation-delay: -0.35s !important; }
-.login-motion-lines i:nth-child(7) { top: 88%; width: 70%; height: 2px !important; animation-duration: 0.48s !important; animation-delay: -0.20s !important; }
-.login-motion-lines i:nth-child(8) { top: 60%; width: 28%; height: 2px !important; animation-duration: 0.44s !important; animation-delay: -0.65s !important; }
-
-@keyframes fySpeedStreak {
-  0%   { transform: translateX(0) skewX(-24deg); opacity: 0; }
-  15%  { opacity: 0.9; }
-  85%  { opacity: 0.75; }
-  100% { transform: translateX(-260%) skewX(-24deg); opacity: 0; }
-}
-
-/* Badge flotante en la escena del repartidor */
+.login-motion-lines,
+.courier-road-strip,
 .courier-live-pill {
-  position: absolute !important;
-  top: 14% !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  background: rgba(255, 255, 255, 0.92) !important;
-  backdrop-filter: blur(10px) !important;
-  -webkit-backdrop-filter: blur(10px) !important;
-  border: 1px solid rgba(22, 134, 93, 0.25) !important;
-  border-radius: 999px !important;
-  padding: 6px 14px !important;
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #16865d !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  box-shadow: 0 8px 22px rgba(18, 67, 54, 0.12) !important;
-  z-index: 3 !important;
-  white-space: nowrap !important;
-  animation: fyPillFloat 2.8s ease-in-out infinite !important;
-}
-
-@keyframes fyPillFloat {
-  0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-5px); }
-}
-
-.courier-pulse-dot {
-  width: 8px !important;
-  height: 8px !important;
-  border-radius: 50% !important;
-  background: #10b981 !important;
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7) !important;
-  animation: fyBeaconPulse 1.4s infinite !important;
-}
-
-@keyframes fyBeaconPulse {
-  0%   { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70%  { transform: scale(1); box-shadow: 0 0 0 7px rgba(16, 185, 129, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-/* Modo oscuro para la animacion de repartidor */
-[data-theme="dark"] .login-motion-lines i {
-  background: linear-gradient(90deg, transparent, rgba(46, 213, 115, 0.15), rgba(46, 213, 115, 0.7), transparent) !important;
-}
-[data-theme="dark"] .courier-road-strip {
-  background: repeating-linear-gradient(90deg,
-    rgba(46, 213, 115, 0.7) 0px,
-    rgba(46, 213, 115, 0.7) 26px,
-    transparent 26px,
-    transparent 48px
-  ) !important;
-  box-shadow: 0 0 16px rgba(46, 213, 115, 0.3) !important;
-}
-[data-theme="dark"] .courier-ground-shadow {
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0) 72%) !important;
-}
-[data-theme="dark"] .courier-live-pill {
-  background: rgba(24, 53, 43, 0.92) !important;
-  border-color: rgba(46, 213, 115, 0.3) !important;
-  color: #34d399 !important;
+  display: none !important;
+  animation: none !important;
 }
 
 /* ==========================================================================
-   54. PANTALLAS DE RECARGA CON MOVIMIENTO FLUIDO Y DINAMICO (FarmaYA Motion)
+   54. PANTALLAS DE RECARGA: SOLO EL CIRCULO DE CARGA DANDO VUELTA (SPINNER)
    ========================================================================== */
 .initial-loading {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  min-height: clamp(380px, 62vh, 600px) !important;
-  padding: 40px 20px !important;
+  min-height: clamp(260px, 55vh, 480px) !important;
+  width: 100% !important;
+  padding: 36px 16px !important;
+  margin: 0 auto !important;
   text-align: center !important;
-  animation: fyLoadingSceneFade 0.4s ease-out both !important;
+  gap: 14px !important;
 }
 
-@keyframes fyLoadingSceneFade {
-  0% { opacity: 0; transform: scale(0.97); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-.fy-loading-scene {
-  position: relative !important;
-  width: 120px !important;
-  height: 120px !important;
-  margin: 0 auto 24px !important;
-  display: grid !important;
-  place-items: center !important;
-}
-
-.fy-loading-rings {
-  position: absolute !important;
-  inset: 0 !important;
-  pointer-events: none !important;
-}
-
-.fy-ring {
-  position: absolute !important;
+.initial-loading .spinner,
+.loading .spinner,
+.spinner {
+  display: inline-block !important;
+  width: 38px !important;
+  height: 38px !important;
+  border: 3.5px solid rgba(22, 134, 93, 0.16) !important;
+  border-top-color: var(--primary, #16865d) !important;
   border-radius: 50% !important;
+  animation: fyCircleSpin 0.75s linear infinite !important;
   box-sizing: border-box !important;
 }
 
-.fy-ring-1 {
-  inset: 0 !important;
-  border: 2.5px solid rgba(22, 134, 93, 0.12) !important;
-  border-top-color: #16865d !important;
-  border-right-color: #2ed573 !important;
-  animation: fyOrbitalSpin 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
-  box-shadow: 0 0 16px rgba(46, 213, 115, 0.24) !important;
-}
-
-.fy-ring-2 {
-  inset: 12px !important;
-  border: 1.5px dashed rgba(22, 134, 93, 0.35) !important;
-  border-bottom-color: #2ed573 !important;
-  animation: fyOrbitalReverse 2.2s linear infinite !important;
-}
-
-.fy-ring-3 {
-  inset: 24px !important;
-  border: 1.5px solid rgba(46, 213, 115, 0.2) !important;
-  border-left-color: #16865d !important;
-  animation: fyOrbitalSpin 0.95s linear infinite !important;
-}
-
-@keyframes fyOrbitalSpin {
+@keyframes fyCircleSpin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
-@keyframes fyOrbitalReverse {
-  0% { transform: rotate(360deg); }
-  100% { transform: rotate(0deg); }
-}
-
-.fy-loading-centerpiece {
-  position: relative !important;
-  z-index: 2 !important;
-  display: grid !important;
-  place-items: center !important;
-}
-
-.fy-loading-cross {
-  width: 52px !important;
-  height: 52px !important;
-  object-fit: contain !important;
-  animation: fyCrossHeartbeat 1.6s ease-in-out infinite !important;
-  filter: drop-shadow(0 8px 18px rgba(22, 134, 93, 0.38)) !important;
-}
-
-@keyframes fyCrossHeartbeat {
-  0%, 100% { transform: scale(1); filter: drop-shadow(0 8px 18px rgba(22, 134, 93, 0.38)); }
-  14% { transform: scale(1.14); filter: drop-shadow(0 12px 24px rgba(46, 213, 115, 0.55)); }
-  28% { transform: scale(1.02); }
-  42% { transform: scale(1.10); filter: drop-shadow(0 10px 20px rgba(46, 213, 115, 0.45)); }
-  56% { transform: scale(1); }
-}
-
-.fy-cross-glow {
-  position: absolute !important;
-  inset: 8px !important;
-  border-radius: 50% !important;
-  background: radial-gradient(circle, rgba(46, 213, 115, 0.4) 0%, rgba(22, 134, 93, 0) 70%) !important;
-  animation: fyCrossGlowPulse 1.6s ease-in-out infinite !important;
-  pointer-events: none !important;
-  z-index: -1 !important;
-}
-
-@keyframes fyCrossGlowPulse {
-  0%, 100% { transform: scale(0.85); opacity: 0.4; }
-  25% { transform: scale(1.3); opacity: 0.85; }
-  50% { transform: scale(1); opacity: 0.5; }
-}
-
-.fy-loading-meter {
-  width: min(290px, 86vw) !important;
-  height: 6px !important;
-  border-radius: 999px !important;
-  background: rgba(22, 134, 93, 0.10) !important;
-  overflow: hidden !important;
-  margin: 0 auto 18px !important;
-  position: relative !important;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04) !important;
-}
-
-.fy-meter-fill {
-  height: 100% !important;
-  width: 42% !important;
-  border-radius: 999px !important;
-  background: linear-gradient(90deg, #16865d, #2ed573, #16865d) !important;
-  background-size: 200% 100% !important;
-  animation: fyMeterTravel 1.35s ease-in-out infinite !important;
-  box-shadow: 0 0 10px rgba(46, 213, 115, 0.5) !important;
-}
-
-@keyframes fyMeterTravel {
-  0% { transform: translateX(-110%); }
-  50% { transform: translateX(110%); }
-  100% { transform: translateX(250%); }
-}
-
-.fy-loading-title {
-  margin: 0 0 6px 0 !important;
-  font-family: 'Plus Jakarta Sans', var(--font-brand, sans-serif) !important;
-  font-size: 1.15rem !important;
-  font-weight: 700 !important;
-  color: #18352b !important;
-  letter-spacing: -0.01em !important;
-}
-
-.fy-loading-desc {
+.initial-loading p {
   margin: 0 !important;
-  font-size: 0.88rem !important;
-  color: #597366 !important;
-  max-width: 380px !important;
-  line-height: 1.45 !important;
+  font-size: 14px !important;
+  color: var(--muted, #597366) !important;
+  font-weight: 500 !important;
 }
 
-.fy-loading-dots {
-  display: inline-block !important;
-  width: 18px !important;
-  text-align: left !important;
+.fy-loading-scene,
+.fy-loading-rings,
+.fy-loading-meter,
+.fy-loading-meta {
+  display: none !important;
 }
 
-/* Skeletons con barrido continuo holografico */
-.skeleton {
-  position: relative !important;
-  overflow: hidden !important;
-  background: #eaf1ed !important;
-  border-radius: 14px !important;
-  border: 1px solid rgba(22, 134, 93, 0.06) !important;
-}
-
-.skeleton::after {
-  content: "" !important;
-  position: absolute !important;
-  inset: 0 !important;
-  transform: translateX(-100%) !important;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.75) 45%,
-    rgba(46, 213, 115, 0.16) 52%,
-    rgba(255, 255, 255, 0.75) 60%,
-    transparent 100%
-  ) !important;
-  animation: fySkeletonSweep 1.35s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
-}
-
-@keyframes fySkeletonSweep {
-  100% { transform: translateX(100%); }
-}
-
-/* Spinner elastico con doble acento y resplandor */
-.spinner {
-  width: 32px !important;
-  height: 32px !important;
-  border: 3.5px solid rgba(22, 134, 93, 0.14) !important;
-  border-top-color: #16865d !important;
-  border-right-color: #2ed573 !important;
-  border-radius: 50% !important;
-  animation: fySmoothSpin 0.72s cubic-bezier(0.5, 0.15, 0.5, 0.85) infinite !important;
-  box-shadow: 0 0 14px rgba(46, 213, 115, 0.22) !important;
-}
-
-@keyframes fySmoothSpin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Respeto estricto de accesibilidad */
+/* Accesibilidad */
 @media (prefers-reduced-motion: reduce) {
-  .login-stage-courier img,
-  .courier-ground-shadow,
-  .courier-road-strip,
-  .login-motion-lines i,
-  .courier-live-pill,
-  .courier-pulse-dot,
-  .fy-ring-1,
-  .fy-ring-2,
-  .fy-ring-3,
-  .fy-loading-cross,
-  .fy-cross-glow,
-  .fy-meter-fill,
-  .skeleton::after,
   .spinner,
-  .page-view-transition {
+  .initial-loading .spinner {
     animation: none !important;
-    transform: none !important;
   }
 }

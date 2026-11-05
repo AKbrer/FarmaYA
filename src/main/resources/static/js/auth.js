@@ -737,19 +737,11 @@ function updateRegMapPosition(lat, lng, pan) {
 
 function loginSceneMarkup() {
   return `
-    <div class="login-sequence login-courier-only" role="img" aria-label="Domiciliario de FarmaYa en su moto, con movimiento activo de conducción y líneas de velocidad en vivo.">
-      <div class="login-motion-lines" aria-hidden="true">
-        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-      </div>
+    <div class="login-sequence login-courier-only" role="img" aria-label="Domiciliario de FarmaYA">
       <div class="login-stage login-stage-courier" aria-hidden="true">
-        <div class="courier-live-pill" aria-hidden="true">
-          <span class="courier-pulse-dot"></span>
-          <span>Entrega prioritaria en camino</span>
-        </div>
         <img src="/images/login-stage-3.png?v=20261027loginrestore1" alt="Domiciliario de FarmaYA en moto">
         <div class="courier-ground-shadow" aria-hidden="true"></div>
       </div>
-      <div class="courier-road-strip" aria-hidden="true"></div>
     </div>`;
 }
 
