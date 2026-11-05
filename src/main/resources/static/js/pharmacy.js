@@ -589,10 +589,11 @@ function pharmacyOrders() {
       offers: (offersData && offersData.orders) || []
     };
   }, data => {
+    const FIN = ['ENTREGADA', 'ENTREGADO', 'CANCELADA', 'CANCELADO', 'VENCIDA', 'RECHAZADA'];
     const orders = data.orders || [];
     const offers = data.offers || [];
-    const active = orders.filter(o => !FINAL.includes(o.status));
-    const past = orders.filter(o => FINAL.includes(o.status));
+    const active = orders.filter(o => !FIN.includes(o.status));
+    const past = orders.filter(o => FIN.includes(o.status));
 
     if (!active.length && !past.length && !offers.length) {
       return empty('Todavía no tienes pedidos ni solicitudes', 'Los pedidos que aceptes aparecerán aquí con el siguiente paso a realizar.');

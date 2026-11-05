@@ -196,7 +196,7 @@ function clock(iso) {
   return d.toLocaleDateString(CONFIG.locale, { day: 'numeric', month: 'short' }) + ', ' + t;
 }
 
-const statusLabel = s => state.meta.statuses[s] || s;
+const statusLabel = s => (state.meta && state.meta.statuses && state.meta.statuses[s]) || s || '';
 
 function statusTone(s) {
   if (s === 'ENTREGADO') return 'done';
@@ -326,9 +326,19 @@ function live(fetcher, draw, every = 5000) {
     try {
       const data = await fetcher();
       const s = JSON.stringify(data);
-      if (force || s !== sig) { sig = s; box.replaceChildren(draw(data)); }
+      if (force || s !== sig) {
+        try {
+          const rendered = draw(data);
+          sig = s;
+          box.replaceChildren(rendered);
+        } catch (renderErr) {
+          console.error('[FarmaYA live draw error]', renderErr);
+          box.replaceChildren(notice('bad', 'Error visualizando informaci\u00f3n', renderErr.message || String(renderErr)));
+        }
+      }
     } catch (e) {
-      if (sig === null) box.replaceChildren(notice('bad', 'No pudimos cargar la información', e.message));
+      console.error('[FarmaYA live fetch error]', e);
+      if (sig === null) box.replaceChildren(notice('bad', 'No pudimos cargar la informaci\u00f3n', e.message || String(e)));
     } finally { busy = false; }
   };
   const onRefresh = () => tick(true);
@@ -340,7 +350,7 @@ function live(fetcher, draw, every = 5000) {
       document.removeEventListener('fy:refresh', onRefresh);
       return;
     }
-    if (!document.querySelector('dialog[open] form')) tick(false);
+    if (!document.hidden) tick(false);
   }, every);
   return box;
 }

@@ -494,8 +494,12 @@ function openProfile(initialView = 'menu') {
 
 /* Pantalla independiente de pedidos, accesible desde el menú de opciones o cabecera. */
 function clientOrdersView() {
+  const FINAL = ['ENTREGADA', 'ENTREGADO', 'CANCELADA', 'CANCELADO', 'VENCIDA', 'RECHAZADA'];
+
   return live(() => API.get('/orders/mine'), orders => {
-    if (!orders || !orders.length) {
+    const list = Array.isArray(orders) ? orders : [];
+
+    if (!list.length) {
       return empty(
         'Todavía no tienes pedidos',
         'Cuando solicites un domicilio en el catálogo, podrás consultar aquí su estado y seguimiento en tiempo real.',
@@ -508,127 +512,127 @@ function clientOrdersView() {
       );
     }
 
-    const isFinished = s => ['ENTREGADA', 'ENTREGADO', 'CANCELADA', 'CANCELADO', 'VENCIDA', 'RECHAZADA'].includes(s);
-    const activeOrders = orders.filter(o => !isFinished(o.status));
-    const pastOrders = orders.filter(o => isFinished(o.status));
+    const activeOrders = list.filter(o => !FINAL.includes(o.status));
+    const pastOrders = list.filter(o => FINAL.includes(o.status));
 
-    // Actualizar insignia en cabecera si existe
-    const badge = document.getElementById('navHeaderOrdersBadge');
-    if (badge) {
-      badge.textContent = String(activeOrders.length);
-      badge.style.display = activeOrders.length > 0 ? 'inline-flex' : 'none';
+    /* Actualizar insignia en cabecera */
+    const ordersBadgeEl = document.getElementById('navHeaderOrdersBadge');
+    if (ordersBadgeEl) {
+      ordersBadgeEl.textContent = String(activeOrders.length);
+      ordersBadgeEl.style.display = activeOrders.length > 0 ? 'inline-flex' : 'none';
     }
 
-    const container = h('div', { class: 'stack', style: 'gap: 22px;' });
+    const parts = [];
 
-    // 1. SECCIÓN DE PEDIDOS EN CURSO
-    const activeSection = h('section', { class: 'block client-active-orders-section', style: 'margin: 0; padding: 0; background: transparent; border: none; box-shadow: none;' });
-
+    /* 1. SECCIÓN DE PEDIDOS EN CURSO */
     if (activeOrders.length > 0) {
-      const banner = h('div', { class: 'active-orders-banner-card' },
-        h('div', { class: 'active-orders-banner-header' },
-          h('div', { class: 'active-orders-live-badge' },
-            h('span', { class: 'pulse-dot' }),
-            h('span', null, activeOrders.length > 1 ? (activeOrders.length + ' PEDIDOS EN CURSO') : 'PEDIDO EN SEGUIMIENTO EN VIVO')
-          ),
-          h('span', { class: 'small muted desktop-only' }, 'Actualización automática en vivo')
-        ),
-        h('div', { class: 'active-orders-cards-list' },
-          activeOrders.map(o => {
-            const isQuoted = o.status === 'PRECIO_POR_ACEPTAR';
-            const isSearching = o.status === 'BUSCANDO_FARMACIA' || o.status === 'SOLICITUD_ENVIADA';
-            const isAssigned = o.status === 'FARMACIA_ASIGNADA';
-            const isPaid = ['PRECIO_CONFIRMADO', 'PEDIDO_EN_PREPARACION', 'PEDIDO_LISTO', 'BUSCANDO_REPARTIDOR', 'REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO'].includes(o.status);
-            const isEnCamino = o.status === 'EN_CAMINO';
-
-            let statusTitle = 'Buscando droguería de turno cercana...';
-            let statusColor = '#0284c7';
-            if (isAssigned) { statusTitle = 'Farmacia asignada · Verificando inventario'; statusColor = '#0d9488'; }
-            else if (isQuoted) { statusTitle = '¡Cotización lista! Esperando tu confirmación de pago'; statusColor = '#d97706'; }
-            else if (o.status === 'PRECIO_CONFIRMADO') { statusTitle = 'Pago confirmado · Droguería empaquetando'; statusColor = '#059669'; }
-            else if (o.status === 'PEDIDO_EN_PREPARACION') { statusTitle = 'Farmacia alistando tus medicamentos'; statusColor = '#059669'; }
-            else if (['PEDIDO_LISTO', 'BUSCANDO_REPARTIDOR', 'REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO'].includes(o.status)) { statusTitle = 'Repartidor recogiendo pedido en droguería'; statusColor = '#0284c7'; }
-            else if (isEnCamino) { statusTitle = '¡Tu pedido va en camino a tu dirección!'; statusColor = '#16865d'; }
-
-            const step1 = true;
-            const step2 = isAssigned || isQuoted || isPaid || isEnCamino;
-            const step3 = isPaid || isEnCamino;
-            const step4 = isEnCamino;
-
-            return h('div', { class: 'active-order-item-card' },
-              h('div', { class: 'active-order-item-top' },
-                h('div', null,
-                  h('span', { class: 'active-order-code' }, 'PEDIDO #' + (o.code || o.id.slice(-6))),
-                  h('h4', { style: 'margin:2px 0 0 0; font-size:15px; font-weight:800; color:' + statusColor }, statusTitle),
-                  h('p', { class: 'small muted', style: 'margin:3px 0 0 0;' }, o.address ? (o.address + (o.city ? (' · ' + o.city) : '')) : 'Dirección de entrega'),
-                  o.items && o.items.length ? h('p', { class: 'small muted', style: 'margin:3px 0 0 0;' }, 'Productos: ' + o.items.map(i => i.name + ' ×' + i.quantity).join(', ')) : null
-                ),
-                (isEnCamino || isPaid) && o.deliveryCode && h('div', { class: 'active-order-pin-pill' },
-                  h('span', { class: 'pin-label' }, 'PIN ENTREGA'),
-                  h('strong', { class: 'pin-value' }, o.deliveryCode)
-                )
+      parts.push(
+        h('section', { class: 'block client-active-orders-section', style: 'padding: 0; background: transparent; border: none; box-shadow: none;' },
+          h('div', { class: 'active-orders-banner-card' },
+            h('div', { class: 'active-orders-banner-header' },
+              h('div', { class: 'active-orders-live-badge' },
+                h('span', { class: 'pulse-dot' }),
+                h('span', null, activeOrders.length > 1 ? (activeOrders.length + ' PEDIDOS EN CURSO') : 'PEDIDO EN SEGUIMIENTO EN VIVO')
               ),
-              h('div', { class: 'active-order-stepper' },
-                h('div', { class: 'step-dot' + (step1 ? ' done' : '') }, h('span', null, '1'), h('small', null, 'Solicitado')),
-                h('div', { class: 'step-bar' + (step2 ? ' done' : '') }),
-                h('div', { class: 'step-dot' + (step2 ? ' done' : '') }, h('span', null, '2'), h('small', null, 'Cotizado')),
-                h('div', { class: 'step-bar' + (step3 ? ' done' : '') }),
-                h('div', { class: 'step-dot' + (step3 ? ' done' : '') }, h('span', null, '3'), h('small', null, 'Pagado')),
-                h('div', { class: 'step-bar' + (step4 ? ' done' : '') }),
-                h('div', { class: 'step-dot' + (step4 ? ' done' : '') }, h('span', null, '4'), h('small', null, 'En camino'))
-              ),
-              h('div', { class: 'active-order-actions-row' },
-                isQuoted && h('button', {
-                  class: 'btn primary',
-                  type: 'button',
-                  style: 'font-weight:800; padding:10px 18px;',
-                  onclick: () => {
-                    const fn = window.openPaymentGatewayDialog || openPaymentGatewayDialog;
-                    if (typeof fn === 'function') fn(o);
-                  }
-                }, 'Pagar ' + money(o.total || 0) + ' con PSE / Nequi / Tarjeta'),
-                isQuoted && h('button', {
-                  class: 'btn ghost',
-                  type: 'button',
-                  onclick: async e => {
-                    if (confirm('¿Deseas rechazar esta cotización? Buscaremos otra droguería disponible para tu pedido.')) {
-                      await act(e.currentTarget, async () => {
-                        await API.post('/orders/' + o.id + '/decline-price', {});
-                        toast('Cotización rechazada. Buscando farmacia alternativa...');
-                        refreshAll();
-                      });
-                    }
-                  }
-                }, 'Rechazar precio'),
-                h('button', {
-                  class: 'btn ' + (isQuoted ? 'secondary' : 'primary'),
-                  type: 'button',
-                  onclick: () => {
-                    const fn = window.openOrderDetail || openOrderDetail;
-                    if (typeof fn === 'function') fn(o.id);
-                  }
-                }, isEnCamino ? 'Ver Repartidor en Mapa' : 'Ver Detalle y Seguimiento'),
-                (!isPaid && !isEnCamino && !isQuoted) && h('button', {
-                  class: 'btn ghost',
-                  type: 'button',
-                  onclick: async e => {
-                    if (confirm('¿Seguro que deseas cancelar esta solicitud de pedido?')) {
-                      await act(e.currentTarget, async () => {
-                        await API.post('/orders/' + o.id + '/cancel', {});
-                        toast('Pedido cancelado.');
-                        refreshAll();
-                      });
-                    }
-                  }
-                }, 'Cancelar Solicitud')
-              )
-            );
-          })
+              h('span', { class: 'small muted desktop-only' }, 'Actualización automática en vivo')
+            ),
+            h('div', { class: 'active-orders-cards-list', style: 'display: grid; gap: 16px;' },
+              activeOrders.map(o => {
+                const isQuoted = o.status === 'PRECIO_POR_ACEPTAR';
+                const isSearching = o.status === 'BUSCANDO_FARMACIA' || o.status === 'SOLICITUD_ENVIADA';
+                const isAssigned = o.status === 'FARMACIA_ASIGNADA';
+                const isPaid = ['PRECIO_CONFIRMADO', 'PEDIDO_EN_PREPARACION', 'PEDIDO_LISTO', 'BUSCANDO_REPARTIDOR', 'REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO'].includes(o.status);
+                const isEnCamino = o.status === 'EN_CAMINO';
+
+                let statusTitle = 'Buscando droguería de turno cercana...';
+                let statusColor = '#0284c7';
+                if (isAssigned) { statusTitle = 'Farmacia asignada · Verificando inventario'; statusColor = '#0d9488'; }
+                else if (isQuoted) { statusTitle = '¡Cotización lista! Esperando tu confirmación de pago'; statusColor = '#d97706'; }
+                else if (o.status === 'PRECIO_CONFIRMADO') { statusTitle = 'Pago confirmado · Droguería empaquetando'; statusColor = '#059669'; }
+                else if (o.status === 'PEDIDO_EN_PREPARACION') { statusTitle = 'Farmacia alistando tus medicamentos'; statusColor = '#059669'; }
+                else if (['PEDIDO_LISTO', 'BUSCANDO_REPARTIDOR', 'REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO'].includes(o.status)) { statusTitle = 'Repartidor recogiendo pedido en droguería'; statusColor = '#0284c7'; }
+                else if (isEnCamino) { statusTitle = '¡Tu pedido va en camino a tu dirección!'; statusColor = '#16865d'; }
+
+                const step1 = true;
+                const step2 = isAssigned || isQuoted || isPaid || isEnCamino;
+                const step3 = isPaid || isEnCamino;
+                const step4 = isEnCamino;
+
+                const itemsText = (o.items && o.items.length)
+                  ? o.items.map(i => (i.name || 'Medicamento') + ' ×' + (i.quantity || 1)).join(', ')
+                  : (o.itemCount ? (o.itemCount + ' productos') : '');
+
+                return h('div', { class: 'active-order-item-card', style: 'border: 1.5px solid var(--line); border-radius: 14px; padding: 18px; background: var(--surface); box-shadow: 0 4px 16px rgba(0,0,0,0.04);' },
+                  h('div', { class: 'active-order-item-top', style: 'display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap;' },
+                    h('div', null,
+                      h('span', { class: 'active-order-code', style: 'font-size: 13px; font-weight: 800; color: var(--primary);' }, 'PEDIDO #' + (o.code || (o.id || '').slice(-6))),
+                      h('h4', { style: 'margin: 4px 0 0 0; font-size: 15px; font-weight: 800; color: ' + statusColor }, statusTitle),
+                      h('p', { class: 'small muted', style: 'margin: 4px 0 0 0;' }, o.address ? (o.address + (o.city ? (' · ' + o.city) : '')) : 'Dirección de entrega'),
+                      itemsText ? h('p', { class: 'small muted', style: 'margin: 4px 0 0 0;' }, 'Productos: ' + itemsText) : null
+                    ),
+                    (isEnCamino || isPaid) && o.deliveryCode ? h('div', { class: 'active-order-pin-pill', style: 'background: rgba(22, 134, 93, 0.1); border: 1.5px solid var(--primary); border-radius: 10px; padding: 6px 14px; text-align: center;' },
+                      h('span', { class: 'pin-label', style: 'display: block; font-size: 10px; font-weight: 700; color: var(--primary); letter-spacing: 0.5px;' }, 'PIN ENTREGA'),
+                      h('strong', { class: 'pin-value', style: 'font-size: 18px; font-weight: 800; color: var(--primary); letter-spacing: 1px;' }, o.deliveryCode)
+                    ) : null
+                  ),
+                  h('div', { class: 'active-order-stepper', style: 'display: flex; align-items: center; gap: 8px; margin: 18px 0;' },
+                    h('div', { class: 'step-dot' + (step1 ? ' done' : '') }, h('span', null, '1'), h('small', null, 'Solicitado')),
+                    h('div', { class: 'step-bar' + (step2 ? ' done' : '') }),
+                    h('div', { class: 'step-dot' + (step2 ? ' done' : '') }, h('span', null, '2'), h('small', null, 'Cotizado')),
+                    h('div', { class: 'step-bar' + (step3 ? ' done' : '') }),
+                    h('div', { class: 'step-dot' + (step3 ? ' done' : '') }, h('span', null, '3'), h('small', null, 'Pagado')),
+                    h('div', { class: 'step-bar' + (step4 ? ' done' : '') }),
+                    h('div', { class: 'step-dot' + (step4 ? ' done' : '') }, h('span', null, '4'), h('small', null, 'En camino'))
+                  ),
+                  h('div', { class: 'active-order-actions-row', style: 'display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px;' },
+                    isQuoted ? h('button', {
+                      class: 'btn primary', type: 'button',
+                      style: 'font-weight: 800; padding: 10px 18px;',
+                      onclick: () => {
+                        const fn = window.openPaymentGatewayDialog || openPaymentGatewayDialog;
+                        if (typeof fn === 'function') fn(o);
+                      }
+                    }, 'Pagar ' + money(o.total || 0) + ' con PSE / Nequi / Tarjeta') : null,
+                    isQuoted ? h('button', {
+                      class: 'btn ghost', type: 'button',
+                      onclick: async e => {
+                        if (confirm('¿Deseas rechazar esta cotización? Buscaremos otra droguería disponible para tu pedido.')) {
+                          await act(e.currentTarget, async () => {
+                            await API.post('/orders/' + o.id + '/decline-price', {});
+                            toast('Cotización rechazada. Buscando farmacia alternativa...');
+                            refreshAll();
+                          });
+                        }
+                      }
+                    }, 'Rechazar precio') : null,
+                    h('button', {
+                      class: 'btn ' + (isQuoted ? 'secondary' : 'primary'), type: 'button',
+                      onclick: () => {
+                        const fn = window.openOrderDetail || openOrderDetail;
+                        if (typeof fn === 'function') fn(o.id);
+                      }
+                    }, isEnCamino ? 'Ver Repartidor en Mapa' : 'Ver Detalle y Seguimiento'),
+                    (!isPaid && !isEnCamino && !isQuoted) ? h('button', {
+                      class: 'btn ghost', type: 'button',
+                      onclick: async e => {
+                        if (confirm('¿Seguro que deseas cancelar esta solicitud de pedido?')) {
+                          await act(e.currentTarget, async () => {
+                            await API.post('/orders/' + o.id + '/cancel', {});
+                            toast('Pedido cancelado.');
+                            refreshAll();
+                          });
+                        }
+                      }
+                    }, 'Cancelar Solicitud') : null
+                  )
+                );
+              })
+            )
+          )
         )
       );
-      activeSection.replaceChildren(banner);
     } else {
-      activeSection.replaceChildren(
+      parts.push(
         h('div', { class: 'empty-active-orders-card', style: 'background: var(--surface); border: 1.5px dashed var(--line); border-radius: 16px; padding: 22px; text-align: center;' },
           h('div', { style: 'margin-bottom: 8px;' }, icon('package', 'text-muted')),
           h('h4', { style: 'margin: 0 0 4px 0; font-size: 16px; font-weight: 700; color: var(--text);' }, 'No tienes pedidos en curso en este momento'),
@@ -642,23 +646,22 @@ function clientOrdersView() {
       );
     }
 
-    container.append(activeSection);
-
-    // 2. SECCIÓN DE HISTORIAL DE PEDIDOS FINALIZADOS
+    /* 2. SECCIÓN DE HISTORIAL DE PEDIDOS FINALIZADOS */
     if (pastOrders.length > 0) {
-      const pastSection = h('section', { class: 'block past-orders-section', style: 'margin-top: 10px;' },
-        h('div', { class: 'section-heading', style: 'margin-bottom: 14px;' },
-          h('div', null,
-            h('span', { class: 'eyebrow' }, 'HISTORIAL DE COMPRAS'),
-            h('h3', { style: 'margin: 2px 0 0 0; font-size: 18px; font-weight: 800;' }, 'Pedidos Finalizados (' + pastOrders.length + ')')
-          )
-        ),
-        h('div', { class: 'list' }, pastOrders.map(o => orderRow(o, h('span', { class: 'muted small' }, o.city || o.address || ''))))
+      parts.push(
+        h('section', { class: 'block past-orders-section', style: 'margin-top: 14px;' },
+          h('div', { class: 'section-heading', style: 'margin-bottom: 14px;' },
+            h('div', null,
+              h('span', { class: 'eyebrow' }, 'HISTORIAL DE COMPRAS'),
+              h('h3', { style: 'margin: 2px 0 0 0; font-size: 18px; font-weight: 800;' }, 'Pedidos Finalizados (' + pastOrders.length + ')')
+            )
+          ),
+          h('div', { class: 'list' }, pastOrders.map(o => orderRow(o, h('span', { class: 'muted small' }, o.city || o.address || ''))))
+        )
       );
-      container.append(pastSection);
     }
 
-    return container;
+    return h('div', { class: 'stack', style: 'gap: 22px;' }, ...parts);
   }, 4000);
 }
 
