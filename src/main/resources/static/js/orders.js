@@ -1099,10 +1099,6 @@ async function renderPaymentPage(orderOrId) {
         h('span', null, 'Tarifa de Domicilio (~' + deliveryDist + ' km, Base $5.000):'),
         h('strong', null, money(deliveryFee) + ' (al repartidor)')
       ),
-      h('div', { class: 'payment-total-row' },
-        h('span', null, 'Garantía FarmaYA (10%):'),
-        h('strong', { class: 'muted' }, money(platformFee) + ' (Incluido)')
-      ),
       h('div', { class: 'payment-total-row grand-total' },
         h('span', null, 'Total a Pagar en Pasarela Ahora:'),
         h('strong', null, money(subtotalProducts))

@@ -890,7 +890,7 @@ a {
   min-height: 165px;
   border-radius: 14px;
   margin-bottom: 14px;
-  background: linear-gradient(145deg, #f0f7f3, #eaf2fb);
+  background: transparent !important;
   display: grid;
   place-items: center;
 }
@@ -971,7 +971,7 @@ a {
 }
 
 [data-theme="dark"] .product-art-wrap {
-  background: linear-gradient(145deg, #12201A, #182C24);
+  background: transparent !important;
 }
 
 /* ==========================================================================
@@ -11024,4 +11024,26 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
     height: 46px !important;
     font-size: 13px !important;
   }
+}
+
+/* Quitar fondo verde de los productos en catálogo */
+.product-art-wrap,
+.product-art-wrap.stitch-art,
+.product-card .product-art-wrap,
+.stitch-modal-art-frame {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .product-art-wrap,
+[data-theme="dark"] .product-art-wrap.stitch-art,
+[data-theme="dark"] .stitch-modal-art-frame {
+  background: transparent !important;
+}
+
+.p-art,
+.p-art-has-photo,
+.product-custom-photo {
+  background: transparent !important;
 }

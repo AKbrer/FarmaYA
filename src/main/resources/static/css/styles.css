@@ -1778,3 +1778,25 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
   from { opacity: 0; transform: translate(-50%, -20px); }
   to { opacity: 1; transform: translate(-50%, 0); }
 }
+
+/* Quitar fondo verde de los productos en catálogo */
+.product-art-wrap,
+.product-art-wrap.stitch-art,
+.product-card .product-art-wrap,
+.stitch-modal-art-frame {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .product-art-wrap,
+[data-theme="dark"] .product-art-wrap.stitch-art,
+[data-theme="dark"] .stitch-modal-art-frame {
+  background: transparent !important;
+}
+
+.p-art,
+.p-art-has-photo,
+.product-custom-photo {
+  background: transparent !important;
+}
