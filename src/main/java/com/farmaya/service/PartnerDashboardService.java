@@ -134,7 +134,7 @@ public class PartnerDashboardService {
         long priced = orders.stream().filter(o -> o.status == OrderStatus.ENTREGADO && o.deliveredAt != null && earningsFor(o, pharmacies) != null).count();
         result.put("earningsConfigured", delivered == 0 || priced > 0);
         result.put("deliveriesMissingCoordinates", Math.max(0, delivered - priced));
-        result.put("feeFormula", "COP $2.000 base + $1.000 por kilómetro iniciado (mínimo $3.000); distancia vial estimada como distancia geodésica × 1,3.");
+        result.put("feeFormula", "COP $4.000 base + $1.000 por kilómetro iniciado (mínimo $5.000); distancia vial estimada como distancia geodésica × 1,3.");
         return result;
     }
 
@@ -205,7 +205,7 @@ public class PartnerDashboardService {
         result.put("topZones", topZones);
         result.put("rows", rows);
         result.put("deliveriesMissingCoordinates", missing);
-        result.put("feeFormula", "COP $2.000 base + $1.000 por kilómetro iniciado (mínimo $3.000); distancia vial estimada como distancia geodésica × 1,3.");
+        result.put("feeFormula", "COP $4.000 base + $1.000 por kilómetro iniciado (mínimo $5.000); distancia vial estimada como distancia geodésica × 1,3.");
         return result;
     }
 

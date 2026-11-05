@@ -236,6 +236,7 @@ public class OrderService {
             } catch (Exception ignored) {}
         }
         Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
+        sendInvoiceToClient(res, client);
         return res;
     }
 
@@ -245,6 +246,7 @@ public class OrderService {
         Criteria c = where("id").is(id).and("clientId").is(client.id).and("status").is(PRECIO_POR_ACEPTAR);
         Update u = backToSearch(step(BUSCANDO_FARMACIA, client, "El cliente no aceptó el precio. Buscamos otra farmacia."), o.pharmacyId);
         Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
+        sendInvoiceToClient(res, client);
         return res;
     }
 
@@ -472,7 +474,7 @@ public class OrderService {
 
     /**
      * Estima distancia vial usando distancia geodésica * 1.3 (factor aproximado de desvío urbano).
-     * Tarifa: COP $2.000 de base + $1.000 por cada kilómetro iniciado; mínimo $3.000.
+     * Tarifa: COP $4.000 de base + $1.000 por cada kilómetro iniciado; mínimo $5.000.
      * La tarifa se congela en el pedido cuando la entrega queda confirmada.
      */
     public static Double estimatedRoadDistanceKm(Double fromLat, Double fromLon, Double toLat, Double toLon) {

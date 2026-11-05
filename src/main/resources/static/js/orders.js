@@ -910,7 +910,7 @@ async function renderPaymentPage(orderOrId) {
     backNavBtn,
     h('div', { style: 'text-align:center; margin-top:6px;' },
       h('span', { class: 'small muted', style: 'font-size:12px;' },
-        'Tecnología Wompi Bancolombia · Cifrado bancario SSL 256-bit · Sin efectivo ni contraentrega'
+        'Tecnología Wompi Bancolombia · Cifrado bancario SSL 256-bit · Medicamentos 100% digital'
       )
     )
   );
@@ -1152,7 +1152,7 @@ async function renderPaymentPage(orderOrId) {
     ),
     h('div', { class: 'payment-security-chip' },
       icon('shield'),
-      h('span', null, 'Cifrado SSL 256-bit · Wompi Bancolombia PCI-DSS Nivel 1 · Sin Efectivo')
+      h('span', null, 'Cifrado SSL 256-bit · Wompi Bancolombia PCI-DSS Nivel 1 · Pago digital seguro')
     )
   );
 
