@@ -103,7 +103,7 @@ function applyModeClasses(layout, mode) {
 function buildUnifiedAuthLayout(initialMode) {
   const layout = h('section', {
     id: 'authLayout',
-    class: 'auth-layout ' + (initialMode === 'register' ? 'mode-register' : 'mode-login')
+    class: 'auth-layout page-view-transition ' + (initialMode === 'register' ? 'mode-register' : 'mode-login')
   });
 
   // Panel de animación continua del domiciliario (lado izquierdo en Login, derecho en Register)
@@ -742,6 +742,10 @@ function loginSceneMarkup() {
         <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
       </div>
       <div class="login-stage login-stage-courier" aria-hidden="true">
+        <div class="courier-live-pill" aria-hidden="true">
+          <span class="courier-pulse-dot"></span>
+          <span>Entrega prioritaria en camino</span>
+        </div>
         <img src="/images/login-stage-3.png?v=20261027loginrestore1" alt="Domiciliario de FarmaYA en moto">
         <div class="courier-ground-shadow" aria-hidden="true"></div>
       </div>

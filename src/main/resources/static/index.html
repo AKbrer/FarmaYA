@@ -33,7 +33,26 @@
     <div id="navHeaderActions" class="nav-right"></div>
   </header>
   <main id="app-container" class="app-container" aria-live="polite">
-    <div class="initial-loading"><span class="spinner"></span><p>Preparando tu experiencia FarmaYa…</p></div>
+    <div class="initial-loading" role="status" aria-label="Cargando plataforma FarmaYA">
+      <div class="fy-loading-scene">
+        <div class="fy-loading-rings">
+          <div class="fy-ring fy-ring-1"></div>
+          <div class="fy-ring fy-ring-2"></div>
+          <div class="fy-ring fy-ring-3"></div>
+        </div>
+        <div class="fy-loading-centerpiece">
+          <img src="/images/farmaya-cross.png?v=1" alt="Cruz FarmaYA" class="fy-loading-cross">
+          <div class="fy-cross-glow"></div>
+        </div>
+      </div>
+      <div class="fy-loading-meter">
+        <div class="fy-meter-fill"></div>
+      </div>
+      <div class="fy-loading-meta">
+        <h3 class="fy-loading-title">Iniciando FarmaYA<span class="fy-loading-dots">...</span></h3>
+        <p class="fy-loading-desc">Conectando farmacias aliadas y red de domicilios en vivo</p>
+      </div>
+    </div>
   </main>
   <div id="fy_global_footer"></div>
   <div id="toasts" class="toasts" aria-live="polite" aria-atomic="true"></div>

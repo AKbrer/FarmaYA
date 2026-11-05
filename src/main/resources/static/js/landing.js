@@ -9,7 +9,7 @@ function renderLandingPage() {
   // Limpiar cualquier barra flotante
   document.getElementById('fy_mobile_cart_bar')?.remove();
 
-  const container = h('div', { class: 'landing-page' });
+  const container = h('div', { class: 'landing-page page-view-transition' });
 
   // 1. HERO SECTION
   const heroSection = h('section', { class: 'landing-hero reveal-on-scroll' },
