@@ -1019,7 +1019,7 @@ function adminVerificationCenter() {
                   h('span', null, isPh ? 'Farmacia' : 'Repartidor')
                 )
               ),
-              h('span', { class: 'muted small block-line', style: 'margin-top:4px;' }, 'Registrado ' + relTime(u.createdAt) + ' · ' + (u.city || u.zone || 'Cobertura general'))
+              h('span', { class: 'muted small block-line', style: 'margin-top:4px;' }, 'Registrado ' + relTime(u.createdAt) + ' · ' + (u.city || u.address || 'Cobertura general'))
             ),
             h('span', { class: 'badge tone-wait' }, 'Pendiente')
           ),
@@ -1036,7 +1036,7 @@ function adminVerificationCenter() {
               h('strong', null, u.address || 'Sin dirección física'),
               h('span', { class: 'small muted block-line' }, 'Registro Sanitario: ' + (u.licenseNumber || 'No registrada')),
               h('span', { class: 'small muted block-line' }, 'Horario: ' + (u.openFrom || '08:00') + ' a ' + (u.openTo || '22:00')),
-              u.latitude && u.longitude ? h('span', { class: 'small text-success block-line' }, 'Ubicación en OpenStreetMap (' + u.latitude.toFixed(4) + ', ' + u.longitude.toFixed(4) + ')') : null,
+              u.latitude && u.longitude ? h('span', { class: 'small text-success block-line' }, 'Ubicación en OpenStreetMap') : null,
               u.bankName ? h('div', { style: 'margin-top:6px; padding:6px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;' },
                 h('strong', { style: 'font-size:11px; color:#166534; display:block;' }, 'Cuenta para Pagos FarmaYA:'),
                 h('span', { style: 'font-size:12px; font-weight:700;' }, u.bankName + ' · ' + (u.accountType || 'Ahorros') + ' · ' + (u.accountNumber || '-')),

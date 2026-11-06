@@ -92,7 +92,7 @@ function icon(name, cls = '') {
 function zoneSelect(name, current) {
   const zones = (state.meta && state.meta.zones && state.meta.zones.length)
     ? state.meta.zones
-    : ['Zona Norte', 'Zona Centro', 'Zona Sur', 'Zona Oriente', 'Zona Occidente'];
+    : [];
   return h('select', { name, required: true },
     zones.map(z => h('option', { value: z, selected: z === current }, z))
   );
@@ -493,7 +493,7 @@ function partnerActivity(endpoint) {
     const rows = data.recentOrders || [];
     if (!rows.length) return empty('Aún no hay actividad', 'Cuando recibas y gestiones pedidos, verás aquí los movimientos recientes.');
     return h('div', { class: 'list' }, rows.map(o => h('article', { class: 'activity-row' },
-      h('div', null, h('strong', null, o.code), h('small', { class: 'block-line muted' }, formatMovementDate(o.createdAt)), o.zone ? h('small', { class: 'block-line muted' }, o.zone) : null),
+      h('div', null, h('strong', null, o.code), h('small', { class: 'block-line muted' }, formatMovementDate(o.createdAt)), null),
       h('div', { class: 'activity-right' }, badge(o.status), o.total != null ? h('strong', null, money(o.total)) : null))));
   });
 }

@@ -51,4 +51,9 @@ public final class Dtos {
         @com.fasterxml.jackson.annotation.JsonProperty("googleId") String googleId,
         @com.fasterxml.jackson.annotation.JsonProperty("avatarUrl") String avatarUrl
     ) {}
+
+    public record ChatMessage(String role, String text) {}
+    public record ChatRequest(String message, java.util.List<ChatMessage> history) {}
+    public record SuggestedProductDto(String id, String name, String cat, double price, String active, String indication, boolean rx, String presentation) {}
+    public record ChatResponse(String reply, java.util.List<SuggestedProductDto> suggestedProducts, String category, boolean rxWarning) {}
 }

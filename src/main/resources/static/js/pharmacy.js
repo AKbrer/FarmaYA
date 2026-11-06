@@ -188,7 +188,7 @@ function pharmacyHeaderCard(user) {
 
   const coordsInfo = (user.latitude != null && user.longitude != null)
     ? h('small', { class: 'muted', style: 'display:block; font-size:0.8rem; margin-top:3px;' },
-        'Ubicación GPS: ' + Number(user.latitude).toFixed(5) + ', ' + Number(user.longitude).toFixed(5))
+        'Ubicación calibrada en el mapa')
     : h('small', { class: 'tone-wait', style: 'display:block; font-size:0.8rem; margin-top:3px; font-weight:600;' },
         'Sin ubicación GPS precisa. Pulsa el botón para calibrarla.');
 

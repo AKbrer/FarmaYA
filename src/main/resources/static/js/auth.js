@@ -441,10 +441,7 @@ function buildRegisterCard() {
         gpsBtn
       ),
       mapContainer,
-      h('div', { style: 'display:flex; justify-content:space-between; align-items:center; margin-top:4px;' },
-        mapHelp,
-        coordsLabel
-      ),
+      h('div', { style: 'margin-top:4px;' }, mapHelp),
       latInput,
       lngInput
     ),

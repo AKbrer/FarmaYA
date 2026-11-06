@@ -113,7 +113,7 @@ function renderClientDashboard() {
 
             h('strong', null, p.name || 'Farmacia Aliada'),
 
-            h('p', null, p.address || p.zone),
+            h('p', null, p.address || p.city || 'Barranquilla'),
 
             h('small', { class: p.open ? 'text-success' : 'muted' }, p.open ? '● Recibiendo despachos' : '○ Fuera de turno'),
 
@@ -939,7 +939,7 @@ function renderClientDashboard() {
 
       if (marker) marker.setLatLng([lat, lng]);
 
-      mapStatus.textContent = 'Ubicación seleccionada (' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '). Puedes afinar arrastrando el marcador.';
+      mapStatus.textContent = 'Ubicación seleccionada en el mapa. Puedes afinar arrastrando el marcador.';
 
       clearTimeout(coverageCheckTimer);
 
@@ -993,7 +993,7 @@ function renderClientDashboard() {
 
           } else {
 
-            mapStatus.textContent = 'Coordenadas fijadas (' + pos.lat.toFixed(5) + ', ' + pos.lng.toFixed(5) + '). Precisión: ±' + Math.round(pos.accuracy || 10) + 'm.';
+            mapStatus.textContent = 'Ubicación fijada en el mapa. Precisión: ±' + Math.round(pos.accuracy || 10) + 'm.';
 
           }
 

@@ -25,7 +25,7 @@ farmaya:
   max-search-rounds: 3                  # rondas de búsqueda antes de vencer el pedido
   session-hours: 12
   max-active-deliveries: 2              # entregas simultáneas por repartidor
-  zones: Zona Norte,Zona Centro,Zona Sur,Zona Oriente,Zona Occidente
+  zones: Cobertura General
   timezone: ${FARMAYA_TZ:}              # vacío = zona horaria del servidor (ej. America/Bogota)
   admin-email: ${FARMAYA_ADMIN_EMAIL:admin@farmaya.local}
   admin-password: ${FARMAYA_ADMIN_PASSWORD:Admin123!}
