@@ -19,7 +19,8 @@ const CATEGORIES = [
   { id: 'baby', label: 'Bebé, Mamá e Infantil', icon: 'bottle' },
   { id: 'gastro', label: 'Gastroenterología', icon: 'capsule' },
   { id: 'derm', label: 'Dermatología', icon: 'cream' },
-  { id: 'vital', label: 'Vitaminas y Nutrición', icon: 'bottle' }
+  { id: 'vital', label: 'Vitaminas y Nutrición', icon: 'bottle' },
+  { id: 'sexual', label: 'Salud Sexual y Bienestar', icon: 'heart' }
 ];
 
 const CATALOG = [

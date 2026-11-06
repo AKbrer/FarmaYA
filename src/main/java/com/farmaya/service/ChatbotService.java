@@ -327,7 +327,44 @@ public class ChatbotService {
         List<SuggestedProductDto> suggestions = new ArrayList<>();
         StringBuilder reply = new StringBuilder();
 
-        if (text.contains("cabeza") || text.contains("migrana") || text.contains("cefalea")) {
+        if (text.contains("condon") || text.contains("condones") || text.contains("preservativo") || text.contains("preservativos") || text.contains("retardante") || text.contains("durex") || text.contains("prudence") || text.contains("trojan")) {
+            reply.append("Preservativos y Condones Certificados en FarmaYA:\n\n")
+                 .append("• Sensibilidad natural: Condones Durex Sensitivo Delgado o Today Ultra Delgado (látex extra fino para mayor sensación).\n")
+                 .append("• Estimulación y textura: Condones Today Triple Placer o Durex Máximo Placer (con estrías y relieves estimulantes).\n")
+                 .append("• Control masculino: Condones Duo Retardante (con benzocaína al 4.5% para prolongar el clímax).\n")
+                 .append("• Mayor confort: Trojan Magnum (tamaño grande extra ancho) o Prudence sabor fresa.\n\n")
+                 .append("Consejo: Almacénalos en lugar fresco y seco, lejos del calor para garantizar su máxima protección de barrera.");
+
+            findMatchingProducts(allProducts, Arrays.asList("durex sensitivo", "today triple", "duo retardante", "trojan magnum", "today ultra"), suggestions);
+
+        } else if (text.contains("lubricante") || text.contains("lubricantes") || text.contains("gel intimo") || text.contains("resequedad vaginal") || text.contains("lubricacion") || text.contains("k y") || text.contains("ky jelly")) {
+            reply.append("Geles y Lubricantes Íntimos en FarmaYA:\n\n")
+                 .append("• Base acuosa clásica: Gel K-Y Jelly 100 g o Durex Original Clásico (no manchan, sin grasa y 100% compatibles con látex).\n")
+                 .append("• Sensaciones sensoriales: Durex Play Fresa (dulce comestible), Today Warm (efecto calor) o Natural Silk (efecto frío).\n")
+                 .append("• Cuidado femenino: Lubricante Vagisil con Ácido Hialurónico (alivio inmediato de la sequedad vaginal imitando la humedad natural).\n")
+                 .append("• Estimulación intensa: Gel Estimulante Femenino Durex Intense (potencia la sensibilidad clitoriana).");
+
+            findMatchingProducts(allProducts, Arrays.asList("durex play", "k y jelly", "today warm", "durex intense", "vagisil"), suggestions);
+
+        } else if (text.contains("rendimiento") || text.contains("cama") || text.contains("vigor") || text.contains("potencia") || text.contains("potenciador") || text.contains("macho") || text.contains("maca") || text.contains("arginina") || text.contains("ereccion") || text.contains("sexual") || text.contains("tribulus")) {
+            reply.append("Suplementos y Vigorizantes Naturales para Rendimiento y Vitalidad:\n\n")
+                 .append("En FarmaYA disponemos de opciones fitoterapéuticas y nutricionales de venta libre autorizadas por el INVIMA para favorecer la energía física y el desempeño íntimo:\n\n")
+                 .append("• Vigorizantes naturales: Mero Macho Jarabe 500 ml (con Borojó, Chontaduro y Ginseng) y Maca Negra Andina Forte 500 mg.\n")
+                 .append("• Circulación y resistencia: L-Arginina 1000 mg + Zinc (aminoácido precursor de óxido nítrico para favorecer la vasodilatación y el vigor) y Ginseng Rojo Coreano Forte.\n")
+                 .append("• Energía física rápida: Vigor Total con Guaraná y Taurina o Tribulus Terrestris 750 mg.\n\n")
+                 .append("Nota sanitaria: Medicamentos farmacológicos sintéticos (como Sildenafil o Tadalafil) requieren fórmula médica oficial previa debido a su impacto sobre la presión arterial.");
+
+            findMatchingProducts(allProducts, Arrays.asList("mero macho", "maca negra", "l arginina", "ginseng rojo", "vigor total"), suggestions);
+
+        } else if (text.contains("embarazo") || text.contains("clearblue") || text.contains("gravitest")) {
+            reply.append("Pruebas de Embarazo en FarmaYA:\n\n")
+                 .append("• Clearblue Digital: Dispositivo de alta precisión (>99%) con pantalla digital que indica si estás embarazada y de cuántas semanas (1-2, 2-3, 3+ semanas).\n")
+                 .append("• Cassette Gravitest: Prueba rápida en orina con resultado confiable en 3 a 5 minutos.\n\n")
+                 .append("Recomendación de uso: Realizar preferiblemente con la primera orina de la mañana a partir del primer día de retraso menstrual.");
+
+            findMatchingProducts(allProducts, Arrays.asList("clearblue", "gravitest"), suggestions);
+
+        } else if (text.contains("cabeza") || text.contains("migrana") || text.contains("cefalea")) {
             reply.append("Para el alivio de dolor de cabeza leve a moderado o migraña:\n\n")
                  .append("• Acetaminofén / Dolex Avanzado (500 mg): Primera línea de elección por su alto perfil de seguridad gastrointestinal.\n")
                  .append("• Ibuprofeno 400 mg o Apronax 550 mg: Si el dolor se asocia a tensión muscular o inflamación (tomar siempre con alimentos).\n\n")

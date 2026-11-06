@@ -9,5 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductRepository extends MongoRepository<Product, String> {
     Optional<Product> findByNameIgnoreCase(String name);
+    List<Product> findAllByNameIgnoreCase(String name);
     List<Product> findByCat(String cat);
 }
