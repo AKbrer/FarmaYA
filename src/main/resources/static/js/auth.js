@@ -415,7 +415,7 @@ function buildRegisterCard() {
     field('¿Cómo usarás FarmaYA?', roleSelect),
     field('Nombre completo', h('input', { id: 'regName', type: 'text', autocomplete: 'name', placeholder: 'Tu nombre y apellido', required: true })),
     field('Correo electrónico', h('input', { id: 'regEmail', type: 'email', autocomplete: 'username', placeholder: 'tu@correo.com', required: true }), 'Te enviaremos un código de seguridad a este correo al presionar Crear mi cuenta.'),
-    field('Teléfono de contacto', h('input', { id: 'regPhone', type: 'tel', autocomplete: 'tel', placeholder: 'Ej. 300 123 4567', required: true })),
+    field('Teléfono de contacto (Obligatorio)', h('input', { id: 'regPhone', type: 'tel', autocomplete: 'tel', placeholder: 'Ej. 300 123 4567 (10 dígitos)', required: true, maxlength: 15 }), 'Obligatorio para que la farmacia y el repartidor puedan llamarte ante cualquier novedad o confirmación de tu pedido.'),
     field('Contraseña segura', h('input', { id: 'regPassword', type: 'password', autocomplete: 'new-password', placeholder: 'Mínimo 8 caracteres', required: true, minlength: 8 })),
     h('div', { id: 'step1Actions', class: 'actions' },
       h('button', {
@@ -591,7 +591,12 @@ function buildRegisterCard() {
 
     if (!name.value.trim()) { name.focus(); toast('Por favor escribe tu nombre y apellido.', 'error'); return false; }
     if (!email.value.trim() || !email.checkValidity()) { email.focus(); toast('Por favor ingresa un correo electrónico válido.', 'error'); return false; }
-    if (!phone.value.trim()) { phone.focus(); toast('Por favor ingresa tu teléfono de contacto.', 'error'); return false; }
+    const cleanPhone = (phone ? phone.value : '').replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 7) {
+      if (phone) phone.focus();
+      toast('El número de teléfono es obligatorio (mínimo 7 a 10 dígitos) para que la farmacia y el domiciliario puedan contactarte.', 'error');
+      return false;
+    }
     if (!pass.value || pass.value.length < 8) { pass.focus(); toast('La contraseña debe tener al menos 8 caracteres.', 'error'); return false; }
     return true;
   }
@@ -903,11 +908,18 @@ async function handleRegisterSubmit(event) {
   const role = document.getElementById('regRole').value;
   const btn = event.submitter || form.querySelector('button[type=submit]') || document.getElementById('btnStep1Next');
   const email = document.getElementById('regEmail').value.trim();
+  const phoneInputVal = (document.getElementById('regPhone')?.value || '').trim();
+  const digits = phoneInputVal.replace(/\D/g, '');
+  if (!digits || digits.length < 7) {
+    document.getElementById('regPhone')?.focus();
+    toast('El número de teléfono es obligatorio para que la farmacia y el repartidor puedan llamarte por novedades en tu pedido.', 'error');
+    return;
+  }
   const body = {
     name: document.getElementById('regName').value.trim(),
     email,
     password: document.getElementById('regPassword').value,
-    phone: document.getElementById('regPhone').value.trim(),
+    phone: phoneInputVal,
     role,
     documents: regUploadedDocs
   };

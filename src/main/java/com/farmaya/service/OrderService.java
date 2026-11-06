@@ -194,7 +194,11 @@ public class OrderService {
         now = Instant.now();
         o.clientId = client.id;
         o.clientName = client.name;
-        o.clientPhone = blank(r.phone()) ? client.phone : clean(r.phone(), 30);
+        String phoneToUse = blank(r.phone()) ? client.phone : clean(r.phone(), 30);
+        if (blank(phoneToUse) || phoneToUse.replaceAll("\\D", "").length() < 7) {
+            throw ApiException.bad("El número de teléfono es obligatorio para que la farmacia o el domiciliario puedan comunicarse contigo ante cualquier novedad.");
+        }
+        o.clientPhone = phoneToUse;
         o.address = address;
         o.zone = zone;
         o.city = city;
@@ -809,8 +813,10 @@ public class OrderService {
         }
         if (v.role == Role.FARMACIA || v.role == Role.REPARTIDOR) o.deliveryCode = null;
         if (v.role == Role.FARMACIA) {
-            if (!v.id.equals(o.pharmacyId)) o.address = null;
-            o.clientPhone = null;
+            if (!v.id.equals(o.pharmacyId)) {
+                o.address = null;
+                o.clientPhone = null;
+            }
         }
         if (v.role == Role.REPARTIDOR) {
             o.itemCount = o.items.size();

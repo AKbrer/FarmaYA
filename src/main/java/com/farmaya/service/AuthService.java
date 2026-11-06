@@ -114,7 +114,8 @@ public class AuthService {
         if (name.length() < 2) throw ApiException.bad("Escribe tu nombre completo.");
         if (!EMAIL.matcher(email).matches()) throw ApiException.bad("Escribe un correo electrónico válido.");
         if (r.password() == null || r.password().length() < 8) throw ApiException.bad("La contraseña debe tener al menos 8 caracteres.");
-        if (phone.replaceAll("\\D", "").length() < 7) throw ApiException.bad("Escribe un teléfono de contacto válido.");
+        String digitsPhone = phone.replaceAll("\\D", "");
+        if (digitsPhone.length() < 7 || digitsPhone.length() > 15) throw ApiException.bad("El número de teléfono es obligatorio (debe tener entre 7 y 15 dígitos) para que la farmacia o el domiciliario puedan comunicarse contigo ante cualquier novedad.");
 
         Role role;
         try {
@@ -285,7 +286,8 @@ public class AuthService {
             zone = u.zone != null && !u.zone.isBlank() ? u.zone : "Cobertura General";
         }
         if (name.length() < 2) throw ApiException.bad("Escribe tu nombre completo.");
-        if (phone.replaceAll("\\D", "").length() < 7) throw ApiException.bad("Escribe un teléfono de contacto válido.");
+        String digitsPhone = phone.replaceAll("\\D", "");
+        if (digitsPhone.length() < 7 || digitsPhone.length() > 15) throw ApiException.bad("El número de teléfono es obligatorio (debe tener entre 7 y 15 dígitos) para que la farmacia o el domiciliario puedan comunicarse contigo ante cualquier novedad.");
 
         if (u.role == Role.FARMACIA) {
             String pharmacyName = clean(r.pharmacyName());

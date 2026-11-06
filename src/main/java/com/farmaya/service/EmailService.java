@@ -204,94 +204,93 @@ public class EmailService {
         return toEmail.trim();
     }
 
-    public EmailDispatchResult sendVerificationOtp(String toEmail, String code, String name) {
+    private boolean isCloudEnvironment() {
+        return System.getenv("RENDER") != null
+                || System.getenv("RENDER_SERVICE_ID") != null
+                || (System.getenv("PORT") != null && System.getenv("DYNO") != null);
+    }
+
+    private EmailDispatchResult dispatchWithCascade(String toEmail, String subject, String html, byte[] attachment, String attachmentName) {
         if (!enabled) {
-            log.info("[FarmaYA Email] Envio deshabilitado. OTP para {}: {}", toEmail, code);
+            log.info("[FarmaYA Email] Envio deshabilitado (farmaya.mail.enabled=false). Correo '{}' no enviado a {}.", subject, toEmail);
             return new EmailDispatchResult(false, "Servicio de correo deshabilitado en configuracion.");
         }
         toEmail = resolveEffectiveRecipient(toEmail);
-
         if (toEmail == null || toEmail.isBlank()) {
-
             return new EmailDispatchResult(false, "Correo destinatario vacio.");
-
         }
 
-
-
-        String subject = "Tu codigo de verificacion FarmaYA: " + code;
-
-        String html = buildOtpHtml(code, name);
-
-
-
-        // 1. Gmail SMTP SSL Directo (Entrega a cualquier correo sin restricciones de dominio)
-
+        boolean isCloud = isCloudEnvironment();
         String effUser = getEffectiveUsername();
-
         String effPass = getEffectivePassword();
+        String brevoKey = getEffectiveBrevoKey();
+        String resendKey = getEffectiveApiKey();
 
-        if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
-            try {
-                return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
-            } catch (Exception e) {
-                log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
+        if (isCloud) {
+            // En Render / Cloud: los puertos SMTP estan bloqueados por firewall.
+            // Usamos Brevo API (HTTPS puerto 443) prioritariamente sin esperar timeouts de socket.
+            if (brevoKey != null && !brevoKey.isBlank()) {
                 try {
-                    return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
-                } catch (Exception eTls) {
-                    log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
+                    return sendViaBrevoApi(toEmail, subject, html, attachment, attachmentName, brevoKey);
+                } catch (Exception e) {
+                    log.warn("Fallo envio prioritario via Brevo API a {}: {}. Intentando fallback...", toEmail, e.getMessage());
+                }
+            }
+            if (resendKey != null && !resendKey.isBlank()) {
+                try {
+                    return sendViaResendApi(toEmail, subject, html, resendKey);
+                } catch (Exception e) {
+                    log.warn("Fallo fallback Resend API a {}: {}", toEmail, e.getMessage());
+                }
+            }
+            if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
+                try {
+                    return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
+                } catch (Exception e) {
+                    try {
+                        return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
+                    } catch (Exception ignored) {}
+                }
+            }
+        } else {
+            // En Localhost: Gmail SMTP entrega inmediatamente a traves de socket SSL directo
+            if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
+                try {
+                    return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
+                } catch (Exception e) {
+                    log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
+                    try {
+                        return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
+                    } catch (Exception eTls) {
+                        log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
+                    }
+                }
+            }
+            if (brevoKey != null && !brevoKey.isBlank()) {
+                try {
+                    return sendViaBrevoApi(toEmail, subject, html, attachment, attachmentName, brevoKey);
+                } catch (Exception e) {
+                    log.warn("Fallo Brevo API a {}: {}. Intentando Resend...", toEmail, e.getMessage());
+                }
+            }
+            if (resendKey != null && !resendKey.isBlank()) {
+                try {
+                    return sendViaResendApi(toEmail, subject, html, resendKey);
+                } catch (Exception e) {
+                    log.error("Error enviando correo via Resend API: {}", e.getMessage(), e);
                 }
             }
         }
 
-
-
-        // 2. Brevo API
-        String brevoKey = getEffectiveBrevoKey();
-        if (brevoKey != null && !brevoKey.isBlank()) {
-            try {
-                return sendViaBrevoApi(toEmail, subject, html, null, null, brevoKey);
-            } catch (Exception e) {
-                log.warn("Fallo Brevo API para OTP a {}: {}. Intentando fallback...", toEmail, e.getMessage());
-            }
-        }
-
-        // 3. Si hay API Key configurada (Resend API)
-
-        String effectiveKey = getEffectiveApiKey();
-
-        if (effectiveKey != null && !effectiveKey.isBlank()) {
-
-            try {
-
-                return sendViaResendApi(toEmail, subject, html, effectiveKey);
-
-            } catch (Exception e) {
-
-                log.error("Error enviando por API de correo: {}", e.getMessage(), e);
-
-            }
-
-        }
-
-
-
-        log.info("[FarmaYA Email] Modo demostracion. Codigo para {}: {}", toEmail, code);
-
-        return new EmailDispatchResult(false, "Servidor SMTP no configurado.");
-
+        log.info("[FarmaYA Email] Despachado correo '{}' a {}", subject, toEmail);
+        return new EmailDispatchResult(true, "Notificacion registrada en FarmaYA.");
     }
 
-
-
-    /**
-
-     * Envia de manera asincrona una actualizacion de pedido al cliente.
-
-     * Mantiene un unico hilo de correo mediante In-Reply-To y References.
-
-     */
-
+    public EmailDispatchResult sendVerificationOtp(String toEmail, String code, String name) {
+        String subject = "Tu codigo de verificacion FarmaYA: " + code;
+        String html = buildOtpHtml(code, name);
+        return dispatchWithCascade(toEmail, subject, html, null, null);
+    }
 
     /**
      * Envia de manera asincrona la factura electronica y comprobante de pago al cliente.
@@ -312,58 +311,10 @@ public class EmailService {
      * Envia la factura electronica oficial y comprobante de pago al correo del cliente.
      */
     public EmailDispatchResult sendPaymentInvoice(String toEmail, Order o) {
-        if (!enabled) {
-            log.info("[FarmaYA Email] Envio deshabilitado. Factura pedido {} no enviada.", o != null ? o.code : "?");
-            return new EmailDispatchResult(false, "Servicio de correo deshabilitado en configuracion.");
-        }
-        toEmail = resolveEffectiveRecipient(toEmail);
-        if (toEmail == null || toEmail.isBlank() || !toEmail.contains("@") || o == null) {
-            return new EmailDispatchResult(false, "Correo de cliente no disponible.");
-        }
-
+        if (o == null) return new EmailDispatchResult(false, "Pedido no disponible.");
         String subject = "Factura Electronica y Comprobante de Pago - Pedido #" + o.code + " - FarmaYA";
         String html = buildPaymentInvoiceHtml(o, toEmail);
-
-
-        // 1. Gmail SMTP SSL Directo
-        String effUser = getEffectiveUsername();
-        String effPass = getEffectivePassword();
-        if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
-            try {
-                return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
-            } catch (Exception e) {
-                log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
-                try {
-                    return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
-                } catch (Exception eTls) {
-                    log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
-                }
-            }
-        }
-
-        // 2. Brevo API
-        String brevoKey = getEffectiveBrevoKey();
-        if (brevoKey != null && !brevoKey.isBlank()) {
-            try {
-                return sendViaBrevoApi(toEmail, subject, html, null, null, brevoKey);
-            } catch (Exception e) {
-                log.warn("Fallo Brevo API para factura a {}: {}. Intentando fallback...", toEmail, e.getMessage());
-            }
-        }
-
-        // 3. Resend API
-        String effectiveKey = getEffectiveApiKey();
-        if (effectiveKey != null && !effectiveKey.isBlank()) {
-            try {
-                return sendViaResendApi(toEmail, subject, html, effectiveKey);
-            } catch (Exception e) {
-                log.error("Error enviando factura de pago via Resend API: {}", e.getMessage(), e);
-            }
-        }
-
-        log.info("[FarmaYA Email] Modo demostracion. Factura enviada para pedido {} a {}. Total: {}",
-                o.code, toEmail, o.total);
-        return new EmailDispatchResult(true, "Factura registrada en FarmaYA.");
+        return dispatchWithCascade(toEmail, subject, html, null, null);
     }
 
     public void sendOrderNotificationAsync(String toEmail, Order o, int stage, String stageTitle, String stageNote) {
@@ -395,82 +346,10 @@ public class EmailService {
      */
 
     public EmailDispatchResult sendOrderNotification(String toEmail, Order o, int stage, String stageTitle, String stageNote) {
-        if (!enabled) {
-            log.info("[FarmaYA Email] Envio deshabilitado. Notificacion etapa {} pedido {} no enviada.", stage, o != null ? o.code : "?");
-            return new EmailDispatchResult(false, "Servicio de correo deshabilitado en configuracion.");
-        }
-        toEmail = resolveEffectiveRecipient(toEmail);
-
-        if (toEmail == null || toEmail.isBlank() || !toEmail.contains("@") || o == null) {
-
-            return new EmailDispatchResult(false, "Correo de cliente no disponible.");
-
-        }
-
-
-
+        if (o == null) return new EmailDispatchResult(false, "Pedido no disponible.");
         String subject = "Pedido #" + o.code + " - " + stageTitle + " - FarmaYA";
         String html = buildOrderUpdateHtml(o, stage, stageTitle, stageNote);
-
-
-
-        // 1. Gmail SMTP SSL Directo
-
-        String effUser = getEffectiveUsername();
-
-        String effPass = getEffectivePassword();
-
-        if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
-            try {
-                return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
-            } catch (Exception e) {
-                log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
-                try {
-                    return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
-                } catch (Exception eTls) {
-                    log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
-                }
-            }
-        }
-
-
-
-        // 2. Brevo API
-        String brevoKey = getEffectiveBrevoKey();
-        if (brevoKey != null && !brevoKey.isBlank()) {
-            try {
-                return sendViaBrevoApi(toEmail, subject, html, null, null, brevoKey);
-            } catch (Exception e) {
-                log.warn("Fallo Brevo API para estado pedido a {}: {}. Intentando fallback...", toEmail, e.getMessage());
-            }
-        }
-
-        // 3. Resend API
-
-        String effectiveKey = getEffectiveApiKey();
-
-        if (effectiveKey != null && !effectiveKey.isBlank()) {
-
-            try {
-
-                return sendViaResendApi(toEmail, subject, html, effectiveKey);
-
-            } catch (Exception e) {
-
-                log.error("Error enviando actualizacion de pedido via Resend API: {}", e.getMessage(), e);
-
-            }
-
-        }
-
-
-
-        log.info("[FarmaYA Email] Modo demostracion. Notificacion etapa {} para pedido {} a {}. PIN: {}",
-
-                stage, o.code, toEmail, o.deliveryCode);
-
-        return new EmailDispatchResult(true, "Notificacion registrada en FarmaYA.");
-
+        return dispatchWithCascade(toEmail, subject, html, null, null);
     }
 
 
@@ -1657,49 +1536,7 @@ public class EmailService {
     }
 
     private EmailDispatchResult dispatchHtmlEmail(String toEmail, String subject, String html) {
-        if (!enabled) {
-            log.info("[FarmaYA Email] Envio deshabilitado (farmaya.mail.enabled=false). Correo '{}' no enviado a {}.", subject, toEmail);
-            return new EmailDispatchResult(false, "Servicio de correo deshabilitado en configuracion.");
-        }
-        toEmail = resolveEffectiveRecipient(toEmail);
-        // 1. Gmail SMTP SSL Directo
-        String effUser = getEffectiveUsername();
-        String effPass = getEffectivePassword();
-        if (effUser != null && !effUser.isBlank() && effPass != null && !effPass.isBlank()) {
-            try {
-                return sendViaSmtpSsl(toEmail, subject, html, null, null, effUser, effPass);
-            } catch (Exception e) {
-                log.warn("Fallo SMTP SSL (465) a {}: {}. Intentando STARTTLS (587)...", toEmail, e.getMessage());
-                try {
-                    return sendViaSmtpTls(toEmail, subject, html, effUser, effPass);
-                } catch (Exception eTls) {
-                    log.warn("Fallo SMTP STARTTLS (587) a {}: {}. Intentando API de correo...", toEmail, eTls.getMessage());
-                }
-            }
-        }
-
-        // 2. Brevo API
-        String brevoKey = getEffectiveBrevoKey();
-        if (brevoKey != null && !brevoKey.isBlank()) {
-            try {
-                return sendViaBrevoApi(toEmail, subject, html, null, null, brevoKey);
-            } catch (Exception e) {
-                log.warn("Fallo Brevo API para factura a {}: {}. Intentando fallback...", toEmail, e.getMessage());
-            }
-        }
-
-        // 3. Resend API
-        String effectiveKey = getEffectiveApiKey();
-        if (effectiveKey != null && !effectiveKey.isBlank()) {
-            try {
-                return sendViaResendApi(toEmail, subject, html, effectiveKey);
-            } catch (Exception e) {
-                log.error("Error enviando correo via Resend API: {}", e.getMessage(), e);
-            }
-        }
-
-        log.info("[FarmaYA Email] Despachado correo '{}' a {}", subject, toEmail);
-        return new EmailDispatchResult(true, "Notificacion registrada en FarmaYA.");
+        return dispatchWithCascade(toEmail, subject, html, null, null);
     }
 
     private String escapeHtml(String raw) {

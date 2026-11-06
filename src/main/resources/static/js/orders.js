@@ -415,7 +415,14 @@ function orderDetail(o, viewer) {
         )
       ),
 
-      o.clientPhone && h('span', { class: 'muted block-line' }, o.clientPhone),
+      o.clientPhone && h('div', { class: 'order-client-phone-wrap', style: 'margin: 6px 0; display: flex; align-items: center; gap: 8px;' },
+        h('span', { class: 'small muted', style: 'font-weight: 700;' }, 'Teléfono del cliente:'),
+        h('a', {
+          href: 'tel:' + o.clientPhone,
+          class: 'btn link small',
+          style: 'font-weight: 800; font-size: 13.5px; text-decoration: underline;'
+        }, o.clientPhone)
+      ),
 
       o.notes && h('span', { class: 'muted block-line' }, 'Nota: ' + o.notes)
 
