@@ -9,6 +9,8 @@
   let chatHistory = [];
   let isSending = false;
 
+  const AVATAR_SRC = '/images/farmabot-avatar.jpg?v=20261106v2';
+
   const QUICK_QUESTIONS = [
     'Tengo dolor de cabeza y fiebre',
     'Acidez y reflujo estomacal',
@@ -25,16 +27,14 @@
     root.id = 'farmabot-root';
     root.className = 'farmabot-container';
 
-    // Botón flotante para abrir el chat
+    // Botón flotante para abrir el chat con la foto de perfil en lugar de la cruz
     const launcher = document.createElement('button');
     launcher.id = 'farmabot-launcher';
     launcher.className = 'farmabot-launcher-btn';
     launcher.setAttribute('aria-label', 'Abrir asistente virtual FarmaBot');
     launcher.innerHTML = `
-      <div class="launcher-icon-wrap">
-        <svg class="launcher-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 5v14M5 12h14"></path>
-        </svg>
+      <div class="launcher-icon-wrap launcher-avatar-wrap">
+        <img src="${AVATAR_SRC}" alt="FarmaBot" class="launcher-avatar-img">
       </div>
       <span class="launcher-label">FarmaBot IA</span>
       <span class="launcher-badge-pulse" aria-hidden="true"></span>
@@ -51,9 +51,7 @@
       <header class="farmabot-header">
         <div class="farmabot-header-left">
           <div class="farmabot-avatar">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 10.5V8.8C19 4.9 15.9 1.8 12 1.8S5 4.9 5 8.8v1.7C3.3 11 2 12.8 2 15c0 2.8 2.2 5 5 5h10c2.8 0 5-2.2 5-5 0-2.2-1.3-4-3-4.5zM7.5 10c-.8 0-1.5-.7-1.5-1.5S6.7 7 7.5 7s1.5.7 1.5 1.5S8.3 10 7.5 10zm9 0c-.8 0-1.5-.7-1.5-1.5S15.7 7 16.5 7s1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/>
-            </svg>
+            <img src="${AVATAR_SRC}" alt="FarmaBot" class="farmabot-avatar-img">
             <span class="avatar-online-dot"></span>
           </div>
           <div class="farmabot-header-info">
@@ -145,9 +143,7 @@
 
   function renderInitialWelcome() {
     appendBotMessage({
-      reply: 'Hola, soy FarmaBot, tu asistente farmacéutico y operativo en FarmaYA.\n\n' +
-             'Puedo orientarte sobre síntomas habituales, opciones seguras de venta libre (OTC) o el funcionamiento de tus pedidos a domicilio.\n\n' +
-             '¿Qué molestia o síntoma tienes hoy, o en qué puedo colaborarte?',
+      reply: 'Hola, soy FarmaBot, tu asistente farmacéutico operativo en FarmaYA. ¿Qué malestares o síntomas tienes hoy con los que te pueda colaborar?',
       suggestedProducts: [],
       category: 'GENERAL',
       rxWarning: false
@@ -255,9 +251,7 @@
     const avatarWrap = document.createElement('div');
     avatarWrap.className = 'bot-avatar-tiny';
     avatarWrap.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-        <path d="M19 10.5V8.8C19 4.9 15.9 1.8 12 1.8S5 4.9 5 8.8v1.7C3.3 11 2 12.8 2 15c0 2.8 2.2 5 5 5h10c2.8 0 5-2.2 5-5 0-2.2-1.3-4-3-4.5zM7.5 10c-.8 0-1.5-.7-1.5-1.5S6.7 7 7.5 7s1.5.7 1.5 1.5S8.3 10 7.5 10zm9 0c-.8 0-1.5-.7-1.5-1.5S15.7 7 16.5 7s1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/>
-      </svg>
+      <img src="${AVATAR_SRC}" alt="FarmaBot" class="bot-avatar-img-tiny">
     `;
 
     const bubble = document.createElement('div');
@@ -304,20 +298,51 @@
         addBtn.type = 'button';
         addBtn.className = 'btn-add-to-cart-small';
         addBtn.textContent = 'Agregar a la canasta';
+
         addBtn.onclick = () => {
+          const user = window.state && window.state.user;
+
+          // 1. Si no ha iniciado sesión:
+          if (!user) {
+            // Guardar producto en la canasta para que persista
+            if (typeof window.addClientProduct === 'function') {
+              window.addClientProduct({
+                name: prod.name,
+                price: prod.price,
+                rx: !!prod.rx
+              });
+            }
+            if (typeof window.toast === 'function') {
+              window.toast('Inicia sesión o crea tu cuenta para ver tu canasta y completar tu pedido de ' + prod.name + '.', 'warn');
+            }
+            // Redirigir a login para que inicie sesión y vea su canasta cargada
+            window.location.hash = '#login';
+            return;
+          }
+
+          // 2. Si está autenticado pero con otro rol (FARMACIA o REPARTIDOR):
+          if (user.role !== 'CLIENTE') {
+            if (typeof window.toast === 'function') {
+              window.toast('Tu cuenta es de tipo ' + (user.role || 'aliado') + '. Para hacer pedidos a farmacias, ingresa con una cuenta de Cliente.', 'warn');
+            }
+            return;
+          }
+
+          // 3. Usuario autenticado como CLIENTE: agregar al carrito y sincronizar UI en vivo
           if (typeof window.addClientProduct === 'function') {
             window.addClientProduct({
               name: prod.name,
               price: prod.price,
               rx: !!prod.rx
             });
-            if (typeof window.toast === 'function') {
-              window.toast(prod.name + ' agregado a tu pedido.');
-            }
-          } else {
-            if (typeof window.toast === 'function') {
-              window.toast('Inicia sesión o abre el catálogo para pedir ' + prod.name);
-            }
+          }
+
+          if (typeof window.syncClientCartUI === 'function') {
+            window.syncClientCartUI();
+          }
+
+          if (typeof window.toast === 'function') {
+            window.toast(prod.name + ' añadido a tu canasta FarmaYA.');
           }
         };
 
@@ -345,9 +370,7 @@
     row.className = 'chat-row bot-row typing-row';
     row.innerHTML = `
       <div class="bot-avatar-tiny">
-        <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14">
-          <path d="M19 10.5V8.8C19 4.9 15.9 1.8 12 1.8S5 4.9 5 8.8v1.7C3.3 11 2 12.8 2 15c0 2.8 2.2 5 5 5h10c2.8 0 5-2.2 5-5 0-2.2-1.3-4-3-4.5zM7.5 10c-.8 0-1.5-.7-1.5-1.5S6.7 7 7.5 7s1.5.7 1.5 1.5S8.3 10 7.5 10zm9 0c-.8 0-1.5-.7-1.5-1.5S15.7 7 16.5 7s1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/>
-        </svg>
+        <img src="${AVATAR_SRC}" alt="FarmaBot" class="bot-avatar-img-tiny">
       </div>
       <div class="chat-bubble bot-bubble typing-bubble">
         <span class="typing-dot"></span>

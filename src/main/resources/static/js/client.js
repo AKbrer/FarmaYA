@@ -4,7 +4,47 @@
 
    Conserva 100% de la funcionalidad reactiva (API, Carrito, Leaflet Maps, Perfil, Estados). */
 
-let clientCart = [];
+let clientCart = []; persistClientCart(); syncClientCartUI();
+try {
+  const _savedCart = localStorage.getItem('farmaya_client_cart');
+  if (_savedCart) {
+    const _parsed = JSON.parse(_savedCart);
+    if (Array.isArray(_parsed)) clientCart = _parsed;
+  }
+} catch (_) {
+  clientCart = [];
+}
+
+function persistClientCart() {
+  try {
+    localStorage.setItem('farmaya_client_cart', JSON.stringify(clientCart));
+  } catch (_) {}
+}
+
+function syncClientCartUI() {
+  const qty = clientCart.reduce((n, i) => n + (i.quantity || 1), 0);
+  const total = clientCart.reduce((n, i) => n + (i.quantity || 1) * (i.price || 0), 0);
+
+  const headerCount = document.getElementById('navHeaderCartCount');
+  const headerTotal = document.getElementById('navHeaderCartTotal');
+  const headerPill = document.getElementById('navHeaderCartPill');
+
+  if (headerCount) headerCount.textContent = String(qty);
+  if (headerTotal && typeof money === 'function') headerTotal.textContent = money(total);
+  if (headerPill) {
+    if (qty > 0) headerPill.classList.add('has-items');
+    else headerPill.classList.remove('has-items');
+  }
+
+  if (typeof drawCart === 'function') {
+    try { drawCart(); } catch (_) {}
+  }
+  if (typeof drawProducts === 'function') {
+    try { drawProducts(); } catch (_) {}
+  }
+}
+window.persistClientCart = persistClientCart;
+window.syncClientCartUI = syncClientCartUI;
 
 let clientCategory = '';
 
@@ -1767,7 +1807,8 @@ function addClientProduct(p) {
     clientCart.push({ name: p.name, price: p.price, quantity: 1, rx: !!p.rx });
 
   }
-
+  persistClientCart();
+  syncClientCartUI();
 }
 
 function removeClientProduct(p) {
@@ -1785,7 +1826,8 @@ function removeClientProduct(p) {
     }
 
   }
-
+  persistClientCart();
+  syncClientCartUI();
 }
 
 /**

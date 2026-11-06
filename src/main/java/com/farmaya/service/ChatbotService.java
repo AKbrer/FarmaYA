@@ -70,7 +70,7 @@ public class ChatbotService {
         String query = req != null && req.message() != null ? req.message().trim() : "";
         if (query.isEmpty()) {
             return new ChatResponse(
-                "Hola, soy FarmaBot, tu asistente farmacéutico y operativo en FarmaYA. ¿En qué puedo orientarte hoy? Puedes consultarme sobre síntomas leves, medicamentos de venta libre, o el funcionamiento de nuestros pedidos a domicilio.",
+                "Hola, soy FarmaBot, tu asistente farmacéutico operativo en FarmaYA. ¿Qué malestares o síntomas tienes hoy con los que te pueda colaborar?",
                 Collections.emptyList(),
                 "GENERAL",
                 false
