@@ -291,8 +291,14 @@
         info.innerHTML = `
           <strong class="card-title">${escapeHtml(prod.name)}</strong>
           <span class="card-presentation">${escapeHtml(prod.presentation || prod.active || '')}</span>
-          <span class="card-price">$${formatMoney(prod.price)}</span>
         `;
+
+        const actionRow = document.createElement('div');
+        actionRow.className = 'card-action-row';
+
+        const priceSpan = document.createElement('span');
+        priceSpan.className = 'card-price';
+        priceSpan.textContent = '$' + formatMoney(prod.price);
 
         const addBtn = document.createElement('button');
         addBtn.type = 'button';
@@ -346,8 +352,10 @@
           }
         };
 
+        actionRow.appendChild(priceSpan);
+        actionRow.appendChild(addBtn);
         card.appendChild(info);
-        card.appendChild(addBtn);
+        card.appendChild(actionRow);
         productsWrap.appendChild(card);
       });
 
@@ -401,11 +409,11 @@
     // Negritas
     out = out.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-    // Listas con guion
-    out = out.replace(/(?:^|\n)- (.*?)(?=\n|$)/g, '<div class="bot-list-item"><span class="bot-bullet">•</span> <span>$1</span></div>');
+    // Listas con viñeta (• o -)
+    out = out.replace(/(?:^|\n)[•\-]\s*(.*?)(?=\n|$)/g, '<div class="bot-list-item"><span class="bot-bullet">•</span><span>$1</span></div>');
 
-    // Listas numeradas
-    out = out.replace(/(?:^|\n)(\d+)\. (.*?)(?=\n|$)/g, '<div class="bot-list-item"><strong class="bot-num">$1.</strong> <span>$2</span></div>');
+    // Listas numeradas (ej. 1. 2.)
+    out = out.replace(/(?:^|\n)(\d+)\.\s*(.*?)(?=\n|$)/g, '<div class="bot-list-item"><strong class="bot-num">$1.</strong><span>$2</span></div>');
 
     // Saltos de línea
     out = out.replace(/\n\n/g, '<br><br>');

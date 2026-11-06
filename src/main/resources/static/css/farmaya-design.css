@@ -11414,27 +11414,31 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 
 .farmabot-messages {
   flex: 1;
-  padding: 16px;
+  padding: 14px 14px;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 12px;
   background: var(--surface-soft, #F8FAFC);
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .chat-row {
   display: flex;
   gap: 8px;
-  max-width: 92%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .user-row {
-  align-self: flex-end;
-  flex-direction: row-reverse;
+  justify-content: flex-end;
 }
 
 .bot-row {
-  align-self: flex-start;
+  justify-content: flex-start;
 }
 
 .bot-avatar-tiny {
@@ -11463,14 +11467,19 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   padding: 11px 14px;
   border-radius: 14px;
   font-size: 13.5px;
-  line-height: 1.45;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-wrap: break-word;
   word-break: break-word;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 .user-bubble {
   background: linear-gradient(135deg, #004e46 0%, #006b5f 100%);
   color: #FFFFFF;
   border-bottom-right-radius: 4px;
+  max-width: 85%;
 }
 
 .bot-bubble {
@@ -11479,6 +11488,19 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   border: 1px solid var(--line, #E2E8F0);
   border-bottom-left-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  flex: 1;
+  min-width: 0;
+  max-width: calc(100% - 34px);
+  box-sizing: border-box;
+}
+
+.bot-text-content {
+  width: 100%;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-wrap: break-word;
+  word-break: break-word;
+  box-sizing: border-box;
 }
 
 .bot-bubble.is-rx-warning {
@@ -11503,12 +11525,23 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   display: flex;
   align-items: flex-start;
   gap: 6px;
-  margin: 4px 0;
+  margin: 5px 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.bot-list-item span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .bot-bullet, .bot-num {
   color: var(--primary, #004e46);
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .bot-products-grid {
@@ -11518,6 +11551,9 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .bot-products-heading {
@@ -11530,39 +11566,58 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 
 .bot-product-card {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   background: var(--surface-soft, #F8FAFC);
-  padding: 8px 10px;
-  border-radius: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
   border: 1px solid var(--line, #E2E8F0);
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .bot-product-card .card-info {
   display: flex;
   flex-direction: column;
+  width: 100%;
   min-width: 0;
+  box-sizing: border-box;
 }
 
 .bot-product-card .card-title {
-  font-size: 12.5px;
+  font-size: 13px;
+  font-weight: 700;
   color: var(--text, #1E293B);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.3;
 }
 
 .bot-product-card .card-presentation {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--muted, #64748B);
+  margin-top: 2px;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.bot-product-card .card-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .bot-product-card .card-price {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 800;
   color: var(--primary, #004e46);
-  margin-top: 2px;
 }
 
 .btn-add-to-cart-small {
