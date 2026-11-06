@@ -11141,3 +11141,84 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
     font-size: 12.5px;
   }
 }
+
+
+/* ==========================================================================
+   53. AJUSTE CABECERA SUPERIOR EN VISTA MÓVIL (FarmaYA + Desplegable)
+   Oculta los botones de Iniciar sesión / Crear cuenta en móvil y optimiza
+   el tamaño del logo y la barra para una visualización compacta y limpia.
+   ========================================================================== */
+@media (max-width: 768px) {
+  .site-header {
+    min-height: 52px !important;
+    height: 52px !important;
+    padding: 6px 14px !important;
+    padding-top: calc(6px + env(safe-area-inset-top, 0px)) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .brand,
+  .brand.brand-image,
+  .brand-image,
+  [data-theme="dark"] .brand-image {
+    width: auto !important;
+    max-width: 120px !important;
+    height: 32px !important;
+    max-height: 32px !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .brand-image img,
+  [data-theme="dark"] .brand-image img {
+    height: 32px !important;
+    max-height: 32px !important;
+    width: auto !important;
+    max-width: 120px !important;
+    object-fit: contain !important;
+    object-position: left center !important;
+    display: block !important;
+  }
+
+  /* Ocultar botones de auth en el header en móvil */
+  .header-auth-btn,
+  .site-header .header-auth-btn,
+  .nav-right .header-auth-btn,
+  .nav-header-pill.header-auth-btn {
+    display: none !important;
+  }
+
+  /* Desplegable menú principal (3 líneas) */
+  .nav-header-btn.hamburger-btn,
+  .hamburger-btn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    max-width: 38px !important;
+    max-height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    border-radius: 50% !important;
+  }
+
+  .nav-right {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+  }
+}

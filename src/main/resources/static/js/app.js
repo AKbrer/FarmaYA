@@ -11,8 +11,8 @@ function renderNavbar() {
     const isRegister = location.hash === '#register';
     const isLogin = location.hash === '#login';
     nav.append(
-      h('a', { class: 'nav-header-pill header-auth-btn' + (isLogin ? ' is-active' : ''), href: '#login' }, 'Iniciar sesión'),
-      h('a', { class: 'nav-header-pill header-auth-btn' + (isRegister ? ' is-active' : ''), href: '#register' }, 'Crear cuenta'),
+      h('a', { class: 'nav-header-pill header-auth-btn desktop-only' + (isLogin ? ' is-active' : ''), href: '#login' }, 'Iniciar sesión'),
+      h('a', { class: 'nav-header-pill header-auth-btn desktop-only' + (isRegister ? ' is-active' : ''), href: '#register' }, 'Crear cuenta'),
       h('button', {
         class: 'nav-header-btn hamburger-btn',
         type: 'button',
