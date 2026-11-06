@@ -415,7 +415,7 @@ function buildRegisterCard() {
     field('¿Cómo usarás FarmaYA?', roleSelect),
     field('Nombre completo', h('input', { id: 'regName', type: 'text', autocomplete: 'name', placeholder: 'Tu nombre y apellido', required: true })),
     field('Correo electrónico', h('input', { id: 'regEmail', type: 'email', autocomplete: 'username', placeholder: 'tu@correo.com', required: true }), 'Te enviaremos un código de seguridad a este correo al presionar Crear mi cuenta.'),
-    field('Teléfono de contacto (Obligatorio)', h('input', { id: 'regPhone', type: 'tel', autocomplete: 'tel', placeholder: 'Ej. 300 123 4567 (10 dígitos)', required: true, maxlength: 15 }), 'Obligatorio para que la farmacia y el repartidor puedan llamarte ante cualquier novedad o confirmación de tu pedido.'),
+    field('Teléfono de contacto (Obligatorio)', h('input', { id: 'regPhone', type: 'tel', autocomplete: 'tel', placeholder: 'Ej. 300 123 4567', required: true, maxlength: 15 })),
     field('Contraseña segura', h('input', { id: 'regPassword', type: 'password', autocomplete: 'new-password', placeholder: 'Mínimo 8 caracteres', required: true, minlength: 8 })),
     h('div', { id: 'step1Actions', class: 'actions' },
       h('button', {
