@@ -327,34 +327,55 @@ public class ChatbotService {
         List<SuggestedProductDto> suggestions = new ArrayList<>();
         StringBuilder reply = new StringBuilder();
 
-        if (text.contains("condon") || text.contains("condones") || text.contains("preservativo") || text.contains("preservativos") || text.contains("retardante") || text.contains("durex") || text.contains("prudence") || text.contains("trojan")) {
+        if (text.contains("condon") || text.contains("condones") || text.contains("preservativo") || text.contains("preservativos") || text.contains("retardante") || text.contains("durex") || text.contains("today")) {
             reply.append("Preservativos y Condones Certificados en FarmaYA:\n\n")
-                 .append("• Sensibilidad natural: Condones Durex Sensitivo Delgado o Today Ultra Delgado (látex extra fino para mayor sensación).\n")
-                 .append("• Estimulación y textura: Condones Today Triple Placer o Durex Máximo Placer (con estrías y relieves estimulantes).\n")
-                 .append("• Control masculino: Condones Duo Retardante (con benzocaína al 4.5% para prolongar el clímax).\n")
-                 .append("• Mayor confort: Trojan Magnum (tamaño grande extra ancho) o Prudence sabor fresa.\n\n")
-                 .append("Consejo: Almacénalos en lugar fresco y seco, lejos del calor para garantizar su máxima protección de barrera.");
+                 .append("• Sensibilidad natural: Condones Durex Sensitivo Delgado o Today Ultra Delgado (látex extra fino para mayor sensación piel a piel).\n")
+                 .append("• Estimulación y textura: Condones Today Triple Placer (con estrías y puntos estimulantes).\n")
+                 .append("• Control masculino: Condones Duo Retardante con benzocaína al 4.5% (ayuda al control del clímax).\n\n")
+                 .append("Consejo: Almacénalos en lugar fresco y seco, protegidos del calor para garantizar su máxima protección de barrera.");
 
-            findMatchingProducts(allProducts, Arrays.asList("durex sensitivo", "today triple", "duo retardante", "trojan magnum", "today ultra"), suggestions);
+            findMatchingProducts(allProducts, Arrays.asList("durex sensitivo", "today triple", "duo retardante", "today ultra"), suggestions);
 
         } else if (text.contains("lubricante") || text.contains("lubricantes") || text.contains("gel intimo") || text.contains("resequedad vaginal") || text.contains("lubricacion") || text.contains("k y") || text.contains("ky jelly")) {
             reply.append("Geles y Lubricantes Íntimos en FarmaYA:\n\n")
-                 .append("• Base acuosa clásica: Gel K-Y Jelly 100 g o Durex Original Clásico (no manchan, sin grasa y 100% compatibles con látex).\n")
-                 .append("• Sensaciones sensoriales: Durex Play Fresa (dulce comestible), Today Warm (efecto calor) o Natural Silk (efecto frío).\n")
-                 .append("• Cuidado femenino: Lubricante Vagisil con Ácido Hialurónico (alivio inmediato de la sequedad vaginal imitando la humedad natural).\n")
-                 .append("• Estimulación intensa: Gel Estimulante Femenino Durex Intense (potencia la sensibilidad clitoriana).");
+                 .append("• Base acuosa clásica: Gel Lubricante K-Y Jelly 100 g (no graso y 100% compatible con condones de látex).\n")
+                 .append("• Placer y aroma: Lubricante Durex Play Fresa 50 ml o Duo Aloe Vera (hidratación natural calmante).\n")
+                 .append("• Estimulación intensa: Gel Estimulante Femenino Durex Intense (potencia la sensibilidad clitoriana).\n")
+                 .append("• Cuidado femenino: Lubricante Vagisil con Ácido Hialurónico 30 g (alivio de la sequedad vaginal).");
 
-            findMatchingProducts(allProducts, Arrays.asList("durex play", "k y jelly", "today warm", "durex intense", "vagisil"), suggestions);
+            findMatchingProducts(allProducts, Arrays.asList("durex play", "k y jelly", "duo aloe", "durex intense"), suggestions);
 
-        } else if (text.contains("rendimiento") || text.contains("cama") || text.contains("vigor") || text.contains("potencia") || text.contains("potenciador") || text.contains("macho") || text.contains("maca") || text.contains("arginina") || text.contains("ereccion") || text.contains("sexual") || text.contains("tribulus")) {
+        } else if (text.contains("rendimiento") || text.contains("cama") || text.contains("vigor") || text.contains("potencia") || text.contains("potenciador") || text.contains("macho") || text.contains("maca") || text.contains("arginina") || text.contains("ereccion") || text.contains("sexual")) {
             reply.append("Suplementos y Vigorizantes Naturales para Rendimiento y Vitalidad:\n\n")
                  .append("En FarmaYA disponemos de opciones fitoterapéuticas y nutricionales de venta libre autorizadas por el INVIMA para favorecer la energía física y el desempeño íntimo:\n\n")
                  .append("• Vigorizantes naturales: Mero Macho Jarabe 500 ml (con Borojó, Chontaduro y Ginseng) y Maca Negra Andina Forte 500 mg.\n")
-                 .append("• Circulación y resistencia: L-Arginina 1000 mg + Zinc (aminoácido precursor de óxido nítrico para favorecer la vasodilatación y el vigor) y Ginseng Rojo Coreano Forte.\n")
-                 .append("• Energía física rápida: Vigor Total con Guaraná y Taurina o Tribulus Terrestris 750 mg.\n\n")
-                 .append("Nota sanitaria: Medicamentos farmacológicos sintéticos (como Sildenafil o Tadalafil) requieren fórmula médica oficial previa debido a su impacto sobre la presión arterial.");
+                 .append("• Circulación y resistencia: L-Arginina 1000 mg + Zinc (aminoácido precursor de óxido nítrico para favorecer la vasodilatación y el vigor) y Ginseng Rojo Coreano Forte 500 mg.\n\n")
+                 .append("Nota sanitaria: Fármacos sintéticos (como Sildenafil o Tadalafil) son medicamentos bajo fórmula médica (Rx) debido a precauciones sobre la tensión arterial.");
 
-            findMatchingProducts(allProducts, Arrays.asList("mero macho", "maca negra", "l arginina", "ginseng rojo", "vigor total"), suggestions);
+            findMatchingProducts(allProducts, Arrays.asList("mero macho", "maca negra", "l arginina", "ginseng rojo"), suggestions);
+
+        } else if (text.contains("dormir") || text.contains("sueno") || text.contains("insomnio") || text.contains("descanso") || text.contains("melatonina") || text.contains("magnesio")) {
+            reply.append("Opciones para la Conciliación del Sueño y Relajación Muscular:\n\n")
+                 .append("• Melatonina 3 mg con Pasiflora en gomitas: Inductor natural del sueño reparador y regulador del ritmo circadiano sin generar dependencia.\n")
+                 .append("• Citrato de Magnesio Puro en Polvo 250 g: Favorece la relajación neuromuscular, alivia calambres nocturnos y reduce la tensión.");
+
+            findMatchingProducts(allProducts, Arrays.asList("melatonina", "citrato de magnesio"), suggestions);
+
+        } else if (text.contains("tos") || text.contains("flemas") || text.contains("bronquios") || text.contains("expectorante")) {
+            reply.append("Para el alivio de la tos y expectoración:\n\n")
+                 .append("• Jarabe Abrilar Hedera Helix (100 ml): Expectorante fitoterapéutico natural que fluidifica las flemas y calma los bronquios.\n")
+                 .append("• Strepsils Pastillas Miel y Limón: Antiséptico bucofaríngeo para aliviar la carraspera y el dolor de garganta.\n")
+                 .append("• Vick Vaporub: Bálsamo para aplicar en pecho y cuello para abrir las vías respiratorias.");
+
+            findMatchingProducts(allProducts, Arrays.asList("abrilar", "strepsils", "vick"), suggestions);
+
+        } else if (text.contains("articulacion") || text.contains("colageno") || text.contains("omega") || text.contains("calcio")) {
+            reply.append("Nutrición y Cuidado Articular, Óseo y Cardiovascular:\n\n")
+                 .append("• Colágeno Hidrolizado con Vitamina C y Biotina (300 g): Para elasticidad de la piel, articulaciones, uñas y cabello.\n")
+                 .append("• Omega 3 Aceite de Pescado 1000 mg: Ácidos grasos EPA/DHA para salud cardiovascular, cerebral y articular.\n")
+                 .append("• Calcio 600 mg + Vitamina D3: Para fortalecimiento de la densidad ósea y dientes.");
+
+            findMatchingProducts(allProducts, Arrays.asList("colageno", "omega 3", "calcio"), suggestions);
 
         } else if (text.contains("embarazo") || text.contains("clearblue") || text.contains("gravitest")) {
             reply.append("Pruebas de Embarazo en FarmaYA:\n\n")
