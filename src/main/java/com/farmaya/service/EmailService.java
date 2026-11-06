@@ -1420,7 +1420,7 @@ public class EmailService {
                           <strong style="color: #0f172a;">FarmaYA Tecnologias en Salud S.A.S. &bull; NIT 901.842.109-4</strong><br>
                           Documento soporte de pago electronico conforme a la Ley 527 de 1999 y normatividad comercial vigente en Colombia.<br>
                           Medicamentos 100%% autenticos certificados bajo registro sanitario INVIMA &bull; Soporte 24/7 en 
-                          <a href="mailto:soporte@farmaya.com.co" style="color: #16865d; text-decoration: none; font-weight: 700;">soporte@farmaya.com.co</a>
+                          <a href="mailto:farmaya031@gmail.com" style="color: #16865d; text-decoration: none; font-weight: 700;">farmaya031@gmail.com</a>
                         </td>
                       </tr>
 
@@ -1763,7 +1763,7 @@ public class EmailService {
                         <td style="background: #f8fafc; padding: 22px 30px; border-top: 1px solid #e2e8f0; text-align: center; color: #64748b; font-size: 11.5px; line-height: 1.6;">
                           <strong style="color: #0f172a;">FarmaYA Colombia &bull; Departamento de Verificacion y Seguridad</strong><br>
                           Si tienes dudas sobre tus credenciales o configuracion de cuenta, responde a este correo o contactanos en 
-                          <a href="mailto:soporte@farmaya.com.co" style="color: #16865d; text-decoration: none; font-weight: 700;">soporte@farmaya.com.co</a>
+                          <a href="mailto:farmaya031@gmail.com" style="color: #16865d; text-decoration: none; font-weight: 700;">farmaya031@gmail.com</a>
                         </td>
                       </tr>
 
@@ -1885,7 +1885,7 @@ public class EmailService {
                                 <strong style="color: #0f172a; font-size: 14px; display: block; margin-bottom: 4px;">¿Consideras que se trata de un error o deseas apelar?</strong>
                                 <p style="margin: 0; color: #475569; font-size: 13px; line-height: 1.5;">
                                   Si deseas solicitar una revision de tu expediente o subsanar el motivo expuesto, puedes responder directamente a este correo o escribir a nuestro departamento de administracion en 
-                                  <a href="mailto:soporte@farmaya.com.co" style="color: #16865d; font-weight: 700; text-decoration: none;">soporte@farmaya.com.co</a> 
+                                  <a href="mailto:farmaya031@gmail.com" style="color: #16865d; font-weight: 700; text-decoration: none;">farmaya031@gmail.com</a> 
                                   indicando tu nombre y documento de identificacion.
                                 </p>
                               </td>

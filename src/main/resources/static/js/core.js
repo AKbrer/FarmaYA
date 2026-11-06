@@ -515,16 +515,16 @@ function farmayaSupportFooter() {
             h('div', { class: 'split-contact-card' },
               h('span', { class: 'split-ico-circle' }, icon('phone')),
               h('div', null,
-                h('span', { class: 'split-label' }, 'PBX Nacional / Línea Gratuita Directa'),
-                h('a', { class: 'split-val', href: 'tel:+576053092244' }, '+57 (605) 309-2244'),
+                h('span', { class: 'split-label' }, 'Línea de Atención Telefónica & Urgencias'),
+                h('a', { class: 'split-val', href: 'tel:+573024505917' }, '+57 302 450 5917'),
                 h('small', { class: 'split-sub' }, 'Atención continua las 24 horas del día')
               )
             ),
             h('div', { class: 'split-contact-card' },
               h('span', { class: 'split-ico-circle' }, icon('phone')),
               h('div', null,
-                h('span', { class: 'split-label' }, 'WhatsApp de Urgencias & Despacho'),
-                h('a', { class: 'split-val', href: 'https://wa.me/573009123456', target: '_blank' }, '+57 300 912 3456'),
+                h('span', { class: 'split-label' }, 'Línea de Soporte & WhatsApp'),
+                h('a', { class: 'split-val', href: 'https://wa.me/573243201934', target: '_blank' }, '+57 324 320 1934'),
                 h('small', { class: 'split-sub' }, 'Chat asistencial en tiempo real con farmacéuticos de turno')
               )
             )
@@ -544,16 +544,16 @@ function farmayaSupportFooter() {
             h('div', { class: 'split-contact-card' },
               h('span', { class: 'split-ico-circle navy' }, icon('inbox')),
               h('div', null,
-                h('span', { class: 'split-label' }, 'Correo de Soporte Técnico & Plataforma'),
-                h('a', { class: 'split-val navy', href: 'mailto:soporte@farmaya.com.co' }, 'soporte@farmaya.com.co'),
+                h('span', { class: 'split-label' }, 'Línea de Soporte (Correo)'),
+                h('a', { class: 'split-val navy', href: 'mailto:farmaya031@gmail.com' }, 'farmaya031@gmail.com'),
                 h('small', { class: 'split-sub' }, 'Respuesta garantizada en menos de 15 minutos')
               )
             ),
             h('div', { class: 'split-contact-card' },
               h('span', { class: 'split-ico-circle navy' }, icon('shield')),
               h('div', null,
-                h('span', { class: 'split-label' }, 'Correo de Atención al Usuario & PQRS'),
-                h('a', { class: 'split-val navy', href: 'mailto:atencion@farmaya.com.co' }, 'atencion@farmaya.com.co'),
+                h('span', { class: 'split-label' }, 'Línea de Atención (Correo)'),
+                h('a', { class: 'split-val navy', href: 'mailto:farmaya031@gmail.com' }, 'farmaya031@gmail.com'),
                 h('small', { class: 'split-sub' }, 'Lunes a Domingo con cobertura nacional en Colombia')
               )
             )
