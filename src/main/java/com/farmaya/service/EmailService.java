@@ -131,6 +131,18 @@ public class EmailService {
 
     }
 
+    @Value("${farmaya.mail.brevo-key:}")
+    private String brevoApiKey;
+
+    public String getEffectiveBrevoKey() {
+        if (brevoApiKey != null && !brevoApiKey.isBlank()) return brevoApiKey.trim();
+        String env = System.getenv("FARMAYA_BREVO_API_KEY");
+        if (env != null && !env.isBlank()) return env.trim();
+        String env2 = System.getenv("BREVO_API_KEY");
+        if (env2 != null && !env2.isBlank()) return env2.trim();
+        return null;
+    }
+
 
 
     private static final String DEFAULT_SMTP_USER = "farmaya031@gmail.com";
@@ -232,7 +244,17 @@ public class EmailService {
 
 
 
-        // 2. Si hay API Key configurada (Resend API)
+        // 2. Brevo API
+        String brevoKey = getEffectiveBrevoKey();
+        if (brevoKey != null && !brevoKey.isBlank()) {
+            try {
+                return sendViaBrevoApi(toEmail, subject, html, null, null, brevoKey);
+            } catch (Exception e) {
+                log.warn("Fallo Brevo API para OTP a {}: {}. Intentando fallback...", toEmail, e.getMessage());
+            }
+        }
+
+        // 3. Si hay API Key configurada (Resend API)
 
         String effectiveKey = getEffectiveApiKey();
 
@@ -317,7 +339,17 @@ public class EmailService {
             }
         }
 
-        // 2. Resend API
+        // 2. Brevo API
+        String brevoKey = getEffectiveBrevoKey();
+        if (brevoKey != null && !brevoKey.isBlank()) {
+            try {
+                return sendViaBrevoApi(toEmail, subject, html, null, null, brevoKey);
+            } catch (Exception e) {
+                log.warn("Fallo Brevo API para factura a {}: {}. Intentando fallback...", toEmail, e.getMessage());
+            }
+        }
+
+        // 3. Resend API
         String effectiveKey = getEffectiveApiKey();
         if (effectiveKey != null && !effectiveKey.isBlank()) {
             try {
@@ -401,7 +433,17 @@ public class EmailService {
 
 
 
-        // 2. Resend API
+        // 2. Brevo API
+        String brevoKey = getEffectiveBrevoKey();
+        if (brevoKey != null && !brevoKey.isBlank()) {
+            try {
+                return sendViaBrevoApi(toEmail, subject, html, null, null, brevoKey);
+            } catch (Exception e) {
+                log.warn("Fallo Brevo API para estado pedido a {}: {}. Intentando fallback...", toEmail, e.getMessage());
+            }
+        }
+
+        // 3. Resend API
 
         String effectiveKey = getEffectiveApiKey();
 
@@ -736,6 +778,51 @@ public class EmailService {
     }
 
 
+
+    /** Envio a traves de Brevo (Sendinblue) API v3 (HTTPS puerto 443 - Entrega a cualquier destinatario) */
+    private EmailDispatchResult sendViaBrevoApi(String toEmail, String subject, String html, byte[] attachmentBytes, String attachmentFilename, String brevoKey) throws Exception {
+        String senderEmail = "farmaya031@gmail.com";
+        String senderName = "FarmaYA";
+
+        StringBuilder json = new StringBuilder();
+        json.append("{");
+        json.append("\"sender\":{\"name\":\"").append(escapeJsonVal(senderName)).append("\",\"email\":\"").append(escapeJsonVal(senderEmail)).append("\"},");
+        json.append("\"to\":[{\"email\":\"").append(escapeJsonVal(toEmail.trim())).append("\"}],");
+        json.append("\"subject\":\"").append(escapeJsonVal(subject)).append("\",");
+        json.append("\"htmlContent\":").append(escapeJson(html));
+        if (attachmentBytes != null && attachmentBytes.length > 0 && attachmentFilename != null && !attachmentFilename.isBlank()) {
+            String b64 = Base64.getEncoder().encodeToString(attachmentBytes);
+            json.append(",\"attachment\":[{\"name\":\"").append(escapeJsonVal(attachmentFilename)).append("\",\"content\":\"").append(b64).append("\"}]");
+        }
+        json.append("}");
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.brevo.com/v3/smtp/email"))
+                .header("accept", "application/json")
+                .header("api-key", brevoKey.trim())
+                .header("content-type", "application/json")
+                .timeout(Duration.ofSeconds(12))
+                .POST(HttpRequest.BodyPublishers.ofString(json.toString(), StandardCharsets.UTF_8))
+                .build();
+
+        HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+        if (resp.statusCode() >= 200 && resp.statusCode() < 300) {
+            log.info("Correo despachado con exito via Brevo API a {}: {}", toEmail, resp.body());
+            return new EmailDispatchResult(true, "Correo enviado via Brevo API.");
+        } else {
+            log.error("Error respuesta Brevo API ({}): {}", resp.statusCode(), resp.body());
+            throw new RuntimeException("Brevo API error " + resp.statusCode() + ": " + resp.body());
+        }
+    }
+
+    private String escapeJsonVal(String raw) {
+        if (raw == null) return "";
+        return raw.replace("\\", "\\\\")
+                  .replace("\"", "\\\"")
+                  .replace("\n", "\\n")
+                  .replace("\r", "\\r")
+                  .replace("\t", "\\t");
+    }
 
     /** Envio a traves de Resend API si se configuro API Key */
 
@@ -1589,7 +1676,17 @@ public class EmailService {
             }
         }
 
-        // 2. Resend API
+        // 2. Brevo API
+        String brevoKey = getEffectiveBrevoKey();
+        if (brevoKey != null && !brevoKey.isBlank()) {
+            try {
+                return sendViaBrevoApi(toEmail, subject, html, null, null, brevoKey);
+            } catch (Exception e) {
+                log.warn("Fallo Brevo API para factura a {}: {}. Intentando fallback...", toEmail, e.getMessage());
+            }
+        }
+
+        // 3. Resend API
         String effectiveKey = getEffectiveApiKey();
         if (effectiveKey != null && !effectiveKey.isBlank()) {
             try {
