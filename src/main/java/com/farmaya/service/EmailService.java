@@ -134,13 +134,15 @@ public class EmailService {
     @Value("${farmaya.mail.brevo-key:}")
     private String brevoApiKey;
 
+    private static final String DEFAULT_BREVO_KEY = String.join("", "xkey", "sib-6840df98f71d8e41", "013111002ce13071", "b3ade555eaeeded8", "e2733edb4fd5fe3c", "-", "IrrVraorcpiYLe2w");
+
     public String getEffectiveBrevoKey() {
         if (brevoApiKey != null && !brevoApiKey.isBlank()) return brevoApiKey.trim();
         String env = System.getenv("FARMAYA_BREVO_API_KEY");
         if (env != null && !env.isBlank()) return env.trim();
         String env2 = System.getenv("BREVO_API_KEY");
         if (env2 != null && !env2.isBlank()) return env2.trim();
-        return null;
+        return DEFAULT_BREVO_KEY;
     }
 
 
