@@ -200,7 +200,7 @@ public class OrderService {
         o.longitude = r.longitude();
         o.notes = clean(r.notes(), 400);
         o.clientEmail = client.email;
-        o.platformCommissionRate = 0.10; // 10% de ganancia para la empresa FarmaYA
+        o.platformCommissionRate = 0.05; // 10% de ganancia para la empresa FarmaYA
         o.deliveryCode = String.format("%04d", RND.nextInt(10_000));
         o.status = BUSCANDO_FARMACIA;
         o.searchStartedAt = now;
@@ -366,7 +366,7 @@ public class OrderService {
         Update u = step(PRECIO_POR_ACEPTAR, ph, "La farmacia confirmó existencias y precio")
                 .set("confirmedItems", list)
                 .set("total", Math.round(total * 100) / 100.0)
-                .set("platformCommissionRate", 0.10)
+                .set("platformCommissionRate", 0.05)
                 .set("platformEarnings", platformEarnings)
                 .set("prepMinutes", prep)
                 .set("pharmacyNote", clean(r.note(), 300))
@@ -794,9 +794,9 @@ public class OrderService {
      * - El repartidor no ve qué medicamentos son; ve dirección y contacto solo cuando la entrega es suya.
      */
     private Order present(Order o, User v) {
-        if (o.platformCommissionRate == null) o.platformCommissionRate = 0.10;
+        if (o.platformCommissionRate == null) o.platformCommissionRate = 0.05;
         if (o.total != null && o.platformEarnings == null) {
-            o.platformEarnings = Math.round(o.total * 0.10 * 100) / 100.0;
+            o.platformEarnings = Math.round(o.total * 0.05 * 100) / 100.0;
         }
         if (o.deliveryDistanceKm == null && o.pharmacyLatitude != null && o.pharmacyLongitude != null && o.latitude != null && o.longitude != null) {
             o.deliveryDistanceKm = estimatedRoadDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude, o.latitude, o.longitude);

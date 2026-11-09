@@ -101,7 +101,7 @@ function adminPowerBiDashboard() {
           ),
           h('h2', { class: 'powerbi-banner-title' }, 'Dashboard Financiero FarmaYA'),
           h('p', { class: 'powerbi-banner-desc' },
-            'Monitoreo ejecutivo de ingresos brutos, liquidacion a farmacias aliadas y retencion del 10% de comision de plataforma.'
+            'Monitoreo ejecutivo de ingresos brutos, liquidacion a farmacias aliadas y retencion del 5% de comision de plataforma.'
           )
         ),
         h('div', { class: 'powerbi-banner-right' },
@@ -178,7 +178,7 @@ function adminPowerBiDashboard() {
         h('div', { class: 'powerbi-kpi-card accent-green' },
           h('div', { class: 'powerbi-kpi-top' },
             h('span', { class: 'powerbi-kpi-title' }, 'Ganancia FarmaYA (10%)'),
-            h('span', { class: 'powerbi-kpi-chip chip-green' }, '10.0% Comision')
+            h('span', { class: 'powerbi-kpi-chip chip-green' }, '5.0% Comision')
           ),
           h('div', { class: 'powerbi-kpi-value-row' },
             h('strong', { class: 'powerbi-kpi-value text-green' }, money(totalEarnings)),
@@ -256,7 +256,7 @@ function adminPowerBiDashboard() {
             h('span', { class: 'powerbi-bar-meta' },
               h('span', { class: 'muted' }, item.count + (item.count === 1 ? ' pedido · ' : ' pedidos · ')),
               h('span', { class: 'text-strong' }, 'Bruto: ' + money(item.gross)),
-              h('span', { class: 'powerbi-bar-commission-tag' }, 'FarmaYA 10%: ' + money(item.earnings))
+              h('span', { class: 'powerbi-bar-commission-tag' }, 'FarmaYA 5%: ' + money(item.earnings))
             )
           ),
           h('div', { class: 'powerbi-bar-track' },
@@ -322,7 +322,7 @@ function adminPowerBiDashboard() {
           ),
           h('div', { class: 'powerbi-channel-sub' },
             h('span', { class: 'muted small' }, pm.count + (pm.count === 1 ? ' pedido' : ' pedidos')),
-            h('span', { class: 'text-green small font-bold' }, 'Comision 10%: ' + money(pm.earnings))
+            h('span', { class: 'text-green small font-bold' }, 'Comision 5%: ' + money(pm.earnings))
           )
         );
       }) : [h('div', { class: 'muted small text-center p-4' }, 'No hay canales de pago registrados.')];
@@ -416,7 +416,7 @@ function adminPowerBiDashboard() {
       const matrixSection = h('div', { class: 'powerbi-matrix-card' },
         h('div', { class: 'powerbi-matrix-header' },
           h('div', null,
-            h('h3', { class: 'powerbi-matrix-title' }, 'Matriz Detallada de Liquidacion (Comision 10% FarmaYA)'),
+            h('h3', { class: 'powerbi-matrix-title' }, 'Matriz Detallada de Liquidacion (Comision 5% FarmaYA)'),
             h('p', { class: 'powerbi-matrix-subtitle' },
               filtered.length
                 ? 'Mostrando ' + Math.min(filtered.length, 50) + ' de ' + filtered.length + ' transacciones monetizadas.'

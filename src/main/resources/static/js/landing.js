@@ -195,7 +195,7 @@ function renderLandingPage() {
         h('h3', { class: 'landing-eco-title' }, 'Para Farmacias y Droguerias'),
         h('ul', { class: 'landing-eco-list' },
           h('li', null, icon('check', 'check-ico'), 'Incremento de ventas sin cobros fijos mensuales ni membresias.'),
-          h('li', null, icon('check', 'check-ico'), 'Comision transparente: 90% para la farmacia, 10% FarmaYA.'),
+          h('li', null, icon('check', 'check-ico'), 'Comision transparente: 95% para la farmacia, 5% FarmaYA.'),
           h('li', null, icon('check', 'check-ico'), 'Modulo de Prediccion de Demanda mensual con Inteligencia Artificial.'),
           h('li', null, icon('check', 'check-ico'), 'Panel administrativo para gestionar cotizaciones y stock.')
         ),

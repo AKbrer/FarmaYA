@@ -195,7 +195,7 @@ public class AdminService {
             Object v = d.get("sum");
             if (v instanceof Number n) gmv = n.doubleValue();
         }
-        double grossPlatformEarnings = Math.round(gmv * 0.10 * 100) / 100.0;
+        double grossPlatformEarnings = Math.round(gmv * 0.05 * 100) / 100.0;
 
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("byStatus", byStatus);
@@ -206,7 +206,7 @@ public class AdminService {
         m.put("platformEarnings", platformEarnings);
         m.put("gmv", gmv);
         m.put("grossPlatformEarnings", grossPlatformEarnings);
-        m.put("commissionRate", 0.10);
+        m.put("commissionRate", 0.05);
         return m;
     }
 

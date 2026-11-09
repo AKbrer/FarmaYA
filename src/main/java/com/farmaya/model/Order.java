@@ -41,7 +41,7 @@ public class Order {
     public String paymentTransactionId;
 
     // Ganancia y comisión empresarial FarmaYA (empresa dueña del programa)
-    public Double platformCommissionRate = 0.10; // 10%
+    public Double platformCommissionRate = 0.05; // 10%
     public Double platformEarnings; // Ganancia retenida por pedido
 
     // Verificación de entrega
