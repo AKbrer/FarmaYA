@@ -478,44 +478,72 @@ function movementHistory(endpoint) {
   let movSearch = '';
   let movPage = 1;
   const PAGE_SIZE = 30;
+  let rawMovements = [];
 
-  return live(() => API.get(endpoint), movements => {
-    if (!movements.length) return empty('Todavía no hay movimientos', 'Las acciones importantes que realices aparecerán aquí con fecha, hora y pedido relacionado.');
+  const tableHolder = h('div');
+  const paginationHolder = h('div');
+
+  function updateMovementsView() {
+    if (!rawMovements.length) {
+      tableHolder.replaceChildren(empty('Todavía no hay movimientos', 'Las acciones importantes que realices aparecerán aquí con fecha, hora y pedido relacionado.'));
+      paginationHolder.replaceChildren();
+      return;
+    }
 
     const q = movSearch.toLowerCase().trim();
-    const filtered = movements.filter(m => !q || [m.type, m.description, m.orderCode, m.code].filter(Boolean).join(' ').toLowerCase().includes(q));
+    const filtered = rawMovements.filter(m => !q || [m.type, m.description, m.orderCode, m.code].filter(Boolean).join(' ').toLowerCase().includes(q));
+
+    if (!filtered.length) {
+      tableHolder.replaceChildren(empty('Sin resultados', 'No se encontraron movimientos con ese criterio de búsqueda.'));
+      paginationHolder.replaceChildren();
+      return;
+    }
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (movPage > totalPages) movPage = totalPages;
     const startIdx = (movPage - 1) * PAGE_SIZE;
     const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
-    return h('div', { class: 'stack' },
-      h('div', { class: 'disbursement-search-wrap', style: 'max-width: 400px; margin-bottom: 12px;' },
-        h('span', { class: 'disbursement-search-icon' }, icon('search')),
-        h('input', {
-          type: 'search',
-          class: 'disbursement-search-input',
-          placeholder: 'Buscar en historial de movimientos...',
-          value: movSearch,
-          oninput: (e) => {
-            movSearch = e.target.value;
-            movPage = 1;
-            refreshAll();
-          }
-        })
-      ),
+    tableHolder.replaceChildren(
       h('div', { class: 'table-wrap movement-table' }, h('table', { class: 'users' },
         h('thead', null, h('tr', null, h('th', null, 'Acción'), h('th', null, 'Pedido'), h('th', null, 'Fecha y hora'))),
         h('tbody', null, paged.map(m => h('tr', null,
           h('td', null, h('strong', null, movementTypeLabel(m.type)), h('small', { class: 'block-line muted movement-description' }, m.description || 'Sin descripción')),
-          h('td', null, m.orderCode || '—'), h('td', null, formatMovementDate(m.createdAt))))))),
+          h('td', null, m.orderCode || '—'), h('td', null, formatMovementDate(m.createdAt)))))))
+    );
+
+    paginationHolder.replaceChildren(
       fyPagination(filtered.length, movPage, PAGE_SIZE, (p) => {
         movPage = p;
-        refreshAll();
+        updateMovementsView();
       })
     );
+  }
+
+  const searchInput = h('input', {
+    type: 'search',
+    class: 'disbursement-search-input',
+    placeholder: 'Buscar en historial de movimientos...',
+    value: movSearch,
+    oninput: (e) => {
+      movSearch = e.target.value;
+      movPage = 1;
+      updateMovementsView();
+    }
   });
+
+  const searchWrap = h('div', { class: 'disbursement-search-wrap', style: 'max-width: 400px; margin-bottom: 12px;' },
+    h('span', { class: 'disbursement-search-icon' }, icon('search')),
+    searchInput
+  );
+
+  const liveWatcher = live(() => API.get(endpoint), movements => {
+    rawMovements = Array.isArray(movements) ? movements : [];
+    updateMovementsView();
+    return h('div', { style: 'display:none;' });
+  });
+
+  return h('div', { class: 'stack' }, searchWrap, tableHolder, paginationHolder, liveWatcher);
 }
 
 function metricCard(label, value, detail, iconName) {

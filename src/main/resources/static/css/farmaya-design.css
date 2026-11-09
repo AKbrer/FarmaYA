@@ -12488,3 +12488,128 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   color: var(--muted);
   pointer-events: none;
 }
+
+/* ==========================================================================
+   56. VISTA FLUTTER MOVIL PARA DESEMBOLSOS Y TABLAS
+   ========================================================================== */
+
+.disbursement-flutter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  margin-bottom: 12px;
+}
+
+[data-theme="dark"] .disbursement-flutter-card {
+  background: var(--surface);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.disbursement-flutter-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.disbursement-flutter-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.disbursement-flutter-code {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.disbursement-flutter-bank-box {
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.disbursement-flutter-voucher-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.disbursement-flutter-fin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.disbursement-flutter-fin-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.disbursement-flutter-fin-item.highlight-green {
+  text-align: right;
+  background: rgba(0, 135, 90, 0.08);
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 135, 90, 0.2);
+}
+
+.disbursement-flutter-actions {
+  margin-top: 4px;
+}
+
+/* Adaptacion Flutter Movil para Desembolsos y Paginacion */
+@media (max-width: 768px) {
+  .disbursement-table-toolbar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .disbursement-table-title-group {
+    justify-content: space-between !important;
+    width: 100% !important;
+  }
+  .disbursement-search-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+  .disbursement-table-card {
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
+  }
+  .disbursement-kpis-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .disbursement-hero-banner {
+    padding: 16px !important;
+  }
+  .fy-pagination-wrap {
+    padding: 12px 10px !important;
+    width: 100% !important;
+  }
+  .fy-pagination-pages {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    padding-bottom: 4px !important;
+  }
+}

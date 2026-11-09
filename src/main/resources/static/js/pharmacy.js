@@ -634,6 +634,33 @@ function pharmacyOrders() {
     let pastSearch = '';
     let pastPage = 1;
     const pastSection = h('div', { style: 'margin-top: 22px;' });
+    const pastTitle = h('h3', { class: 'list-title', style: 'margin:0;' });
+    const pastListHolder = h('div', { class: 'list' });
+    const pastPaginationHolder = h('div');
+
+    const pastSearchInput = h('input', {
+      type: 'search',
+      class: 'disbursement-search-input',
+      placeholder: 'Buscar en pedidos anteriores...',
+      value: pastSearch,
+      oninput: (e) => {
+        pastSearch = e.target.value;
+        pastPage = 1;
+        renderPastOrders();
+      }
+    });
+
+    const pastCard = h('div', { class: 'card p-4' },
+      h('div', { style: 'display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;' },
+        pastTitle,
+        h('div', { class: 'disbursement-search-wrap', style: 'max-width:320px;' },
+          h('span', { class: 'disbursement-search-icon' }, icon('search')),
+          pastSearchInput
+        )
+      ),
+      pastListHolder,
+      pastPaginationHolder
+    );
 
     function renderPastOrders() {
       if (!past.length) {
@@ -642,39 +669,30 @@ function pharmacyOrders() {
       }
       const q = pastSearch.toLowerCase().trim();
       const filteredPast = past.filter(o => !q || [o.code, o.id, o.clientName, o.address, o.city].filter(Boolean).join(' ').toLowerCase().includes(q));
+      pastTitle.textContent = 'Historial de Pedidos Anteriores (' + filteredPast.length + ')';
+
+      if (!filteredPast.length) {
+        pastListHolder.replaceChildren(empty('Sin resultados', 'No se encontraron pedidos anteriores con ese criterio.'));
+        pastPaginationHolder.replaceChildren();
+        return;
+      }
+
       const totalPages = Math.max(1, Math.ceil(filteredPast.length / 30));
       if (pastPage > totalPages) pastPage = totalPages;
       const startIdx = (pastPage - 1) * 30;
       const pagedPast = filteredPast.slice(startIdx, startIdx + 30);
 
-      pastSection.replaceChildren(
-        h('div', { class: 'card p-4' },
-          h('div', { style: 'display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;' },
-            h('h3', { class: 'list-title', style: 'margin:0;' }, 'Historial de Pedidos Anteriores (' + filteredPast.length + ')'),
-            h('div', { class: 'disbursement-search-wrap', style: 'max-width:320px;' },
-              h('span', { class: 'disbursement-search-icon' }, icon('search')),
-              h('input', {
-                type: 'search',
-                class: 'disbursement-search-input',
-                placeholder: 'Buscar en pedidos anteriores...',
-                value: pastSearch,
-                oninput: (e) => {
-                  pastSearch = e.target.value;
-                  pastPage = 1;
-                  renderPastOrders();
-                }
-              })
-            )
-          ),
-          h('div', { class: 'list' }, pagedPast.map(o => orderRow(o))),
-          fyPagination(filteredPast.length, pastPage, 30, (p) => {
-            pastPage = p;
-            renderPastOrders();
-          })
-        )
+      pastListHolder.replaceChildren(...pagedPast.map(o => orderRow(o)));
+      pastPaginationHolder.replaceChildren(
+        fyPagination(filteredPast.length, pastPage, 30, (p) => {
+          pastPage = p;
+          renderPastOrders();
+        })
       );
     }
+
     renderPastOrders();
+    if (past.length) pastSection.replaceChildren(pastCard);
 
     return h('div', { class: 'stack' },
       courierIncident ? notice('warn', 'Alerta: Sin repartidores disponibles en este momento', 'Actualmente no hay repartidores disponibles cerca de tu farmacia (radio máximo 5 km). Estamos buscando activamente para continuar con la entrega tan pronto haya un repartidor disponible.') : null,
@@ -1173,7 +1191,36 @@ function pharmacyDisbursementsView() {
 
       // Tabla de liquidaciones recibidas dentro de recuadro grande con cuadrícula
       const rawHistory = data.disbursements || [];
-      const historyContainer = h('div');
+      const historyBadge = h('span', { class: 'disbursement-table-badge' });
+      const historyResultsHolder = h('div', { class: 'disbursement-results-holder' });
+      const historyPaginationHolder = h('div', { class: 'disbursement-pagination-holder' });
+
+      const historyInput = h('input', {
+        type: 'search',
+        class: 'disbursement-search-input',
+        placeholder: 'Buscar por código LIQ, comprobante o fecha...',
+        value: historySearch,
+        oninput: (e) => {
+          historySearch = e.target.value;
+          historyPage = 1;
+          renderHistory();
+        }
+      });
+
+      const historyCard = h('div', { class: 'disbursement-table-card' },
+        h('div', { class: 'disbursement-table-toolbar' },
+          h('div', { class: 'disbursement-table-title-group' },
+            h('h3', { class: 'disbursement-table-heading' }, 'Historial de Transferencias Bancarias Recibidas'),
+            historyBadge
+          ),
+          h('div', { class: 'disbursement-search-wrap' },
+            h('span', { class: 'disbursement-search-icon' }, icon('search')),
+            historyInput
+          )
+        ),
+        historyResultsHolder,
+        historyPaginationHolder
+      );
 
       function renderHistory() {
         const q = historySearch.toLowerCase().trim();
@@ -1184,79 +1231,114 @@ function pharmacyDisbursementsView() {
                  (d.method || '').toLowerCase().includes(q);
         });
 
+        historyBadge.textContent = filteredHistory.length + ' pagos';
+
+        if (!filteredHistory.length) {
+          historyResultsHolder.replaceChildren(empty('No se encontraron transferencias registradas', 'Apenas la administración liquide tus pedidos entregados, verás aquí el comprobante bancario.'));
+          historyPaginationHolder.replaceChildren();
+          return;
+        }
+
         const totalPages = Math.max(1, Math.ceil(filteredHistory.length / PAGE_SIZE));
         if (historyPage > totalPages) historyPage = totalPages;
         const startIdx = (historyPage - 1) * PAGE_SIZE;
         const paged = filteredHistory.slice(startIdx, startIdx + PAGE_SIZE);
 
-        const card = h('div', { class: 'disbursement-table-card' },
-          h('div', { class: 'disbursement-table-toolbar' },
-            h('div', { class: 'disbursement-table-title-group' },
-              h('h3', { class: 'disbursement-table-heading' }, 'Historial de Transferencias Bancarias Recibidas'),
-              h('span', { class: 'disbursement-table-badge' }, filteredHistory.length + ' pagos')
+        // Tabla Escritorio
+        const desktopTable = h('div', { class: 'table-wrap desktop-only' },
+          h('table', { class: 'data-table grid-bordered' },
+            h('thead', null,
+              h('tr', null,
+                h('th', null, 'Código'),
+                h('th', null, 'Fecha de Transferencia'),
+                h('th', null, 'Comprobante / Ref Bancaria'),
+                h('th', null, 'Medio de Pago'),
+                h('th', { class: 'text-right' }, 'Ventas Brutas'),
+                h('th', { class: 'text-right' }, 'Comisión FarmaYA (5%)'),
+                h('th', { class: 'text-right' }, 'Monto Neto Recibido (95%)'),
+                h('th', { class: 'text-center' }, 'Recibo Oficial')
+              )
             ),
-            h('div', { class: 'disbursement-search-wrap' },
-              h('span', { class: 'disbursement-search-icon' }, icon('search')),
-              h('input', {
-                type: 'search',
-                class: 'disbursement-search-input',
-                placeholder: 'Buscar por código LIQ, comprobante o fecha...',
-                value: historySearch,
-                oninput: (e) => {
-                  historySearch = e.target.value;
-                  historyPage = 1;
-                  renderHistory();
-                }
-              })
-            )
-          ),
-          paged.length ? h('div', { class: 'table-wrap' },
-            h('table', { class: 'data-table grid-bordered' },
-              h('thead', null,
-                h('tr', null,
-                  h('th', null, 'Código'),
-                  h('th', null, 'Fecha de Transferencia'),
-                  h('th', null, 'Comprobante / Ref Bancaria'),
-                  h('th', null, 'Medio de Pago'),
-                  h('th', { class: 'text-right' }, 'Ventas Brutas'),
-                  h('th', { class: 'text-right' }, 'Comisión FarmaYA (5%)'),
-                  h('th', { class: 'text-right' }, 'Monto Neto Recibido (95%)'),
-                  h('th', { class: 'text-center' }, 'Recibo Oficial')
+            h('tbody', null, paged.map(d =>
+              h('tr', null,
+                h('td', null, h('strong', { style: 'font-family:monospace; color:var(--primary); font-size:13.5px;' }, d.code)),
+                h('td', null, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-'),
+                h('td', null, h('span', { class: 'tag tone-blue', style: 'font-family:monospace; font-weight:700;' }, d.reference || '-')),
+                h('td', null, d.method === 'TRANSFERENCIA_BANCARIA' ? 'Transferencia Bancaria ACH' : d.method),
+                h('td', { class: 'text-right' }, money(d.grossTotal)),
+                h('td', { class: 'text-right text-red', style: 'color:#991b1b; font-weight:600;' }, '- ' + money(d.platformEarnings)),
+                h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14.5px;' }, money(d.netAmount) + ' COP'),
+                h('td', { class: 'text-center' },
+                  h('button', {
+                    class: 'btn secondary small',
+                    type: 'button',
+                    onclick: () => {
+                      if (typeof renderDisbursementReceiptModal === 'function') {
+                        renderDisbursementReceiptModal(d);
+                      } else {
+                        alert('Código: ' + d.code + '\nNeto: ' + money(d.netAmount) + ' COP\nRef: ' + d.reference);
+                      }
+                    }
+                  }, 'Ver Recibo')
+                )
+              )
+            ))
+          )
+        );
+
+        // Tarjetas Flutter Móvil
+        const mobileCards = h('div', { class: 'disbursement-mobile-cards-wrap mobile-only' },
+          paged.map(d =>
+            h('div', { class: 'disbursement-flutter-card' },
+              h('div', { class: 'disbursement-flutter-head' },
+                h('div', null,
+                  h('strong', { class: 'disbursement-flutter-code font-mono', style: 'color:var(--primary); font-size:14px;' }, d.code),
+                  h('span', { class: 'muted small block-line' }, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-')
+                ),
+                h('span', { class: 'badge-pill success small' }, 'Comprobante OK')
+              ),
+              h('div', { class: 'disbursement-flutter-voucher-row' },
+                h('span', { class: 'tag tone-blue small font-mono font-bold' }, 'Comp: ' + (d.reference || 'TRF-OK')),
+                h('span', { class: 'muted small' }, d.method === 'TRANSFERENCIA_BANCARIA' ? 'Transferencia ACH' : d.method)
+              ),
+              h('div', { class: 'disbursement-flutter-fin-grid' },
+                h('div', { class: 'disbursement-flutter-fin-item' },
+                  h('small', { class: 'muted' }, 'Ventas brutas'),
+                  h('span', { class: 'bold small' }, money(d.grossTotal))
+                ),
+                h('div', { class: 'disbursement-flutter-fin-item' },
+                  h('small', { class: 'muted' }, 'Comisión 5%'),
+                  h('span', { class: 'bold small text-red', style: 'color:#991b1b;' }, '- ' + money(d.platformEarnings))
+                ),
+                h('div', { class: 'disbursement-flutter-fin-item highlight-green' },
+                  h('small', { style: 'color:#166534; font-weight:700;' }, 'Neto recibido (95%)'),
+                  h('span', { style: 'font-weight:800; color:#166534; font-size:13.5px;' }, money(d.netAmount) + ' COP')
                 )
               ),
-              h('tbody', null, paged.map(d =>
-                h('tr', null,
-                  h('td', null, h('strong', { style: 'font-family:monospace; color:var(--primary); font-size:13.5px;' }, d.code)),
-                  h('td', null, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-'),
-                  h('td', null, h('span', { class: 'tag tone-blue', style: 'font-family:monospace; font-weight:700;' }, d.reference || '-')),
-                  h('td', null, d.method === 'TRANSFERENCIA_BANCARIA' ? 'Transferencia Bancaria ACH' : d.method),
-                  h('td', { class: 'text-right' }, money(d.grossTotal)),
-                  h('td', { class: 'text-right text-red', style: 'color:#991b1b; font-weight:600;' }, '- ' + money(d.platformEarnings)),
-                  h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14.5px;' }, money(d.netAmount) + ' COP'),
-                  h('td', { class: 'text-center' },
-                    h('button', {
-                      class: 'btn secondary small',
-                      type: 'button',
-                      onclick: () => {
-                        if (typeof renderDisbursementReceiptModal === 'function') {
-                          renderDisbursementReceiptModal(d);
-                        } else {
-                          alert('Código: ' + d.code + '\nNeto: ' + money(d.netAmount) + ' COP\nRef: ' + d.reference);
-                        }
-                      }
-                    }, 'Ver Recibo')
-                  )
-                )
-              ))
+              h('div', { class: 'disbursement-flutter-actions' },
+                h('button', {
+                  class: 'btn secondary block small',
+                  type: 'button',
+                  onclick: () => {
+                    if (typeof renderDisbursementReceiptModal === 'function') {
+                      renderDisbursementReceiptModal(d);
+                    } else {
+                      alert('Código: ' + d.code + '\nNeto: ' + money(d.netAmount) + ' COP\nRef: ' + d.reference);
+                    }
+                  }
+                }, 'Ver Recibo Oficial')
+              )
             )
-          ) : empty('No se encontraron transferencias registradas', 'Apenas la administración liquide tus pedidos entregados, verás aquí el comprobante bancario.'),
+          )
+        );
+
+        historyResultsHolder.replaceChildren(desktopTable, mobileCards);
+        historyPaginationHolder.replaceChildren(
           fyPagination(filteredHistory.length, historyPage, PAGE_SIZE, (p) => {
             historyPage = p;
             renderHistory();
           })
         );
-
-        historyContainer.replaceChildren(card);
       }
 
       renderHistory();
