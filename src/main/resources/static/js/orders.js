@@ -444,7 +444,7 @@ function orderDetail(o, viewer) {
 
       viewer.role === 'FARMACIA' && (o.incidentNote || '').toLowerCase().includes('repartidor')
 
-        ? notice('warn', 'Alerta: Sin repartidor disponible en tu zona', (o.incidentNote || 'No se encontraron repartidores disponibles en un radio de 5.0 km alrededor de tu farmacia.') + ' Reintentaremos la asignación tan pronto haya un repartidor en cobertura.')
+        ? notice('warn', 'Alerta: Sin repartidores disponibles en este momento', (o.incidentNote || 'No se encontraron repartidores disponibles en un radio de 5.0 km alrededor de tu farmacia.') + ' Reintentaremos la asignación tan pronto haya un repartidor en cobertura.')
 
         : h('div', { class: 'notice bad' }, h('strong', null, 'Incidencia reportada por ' + (o.incidentBy || '')), h('span', null, o.incidentNote))
 

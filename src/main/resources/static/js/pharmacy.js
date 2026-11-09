@@ -166,7 +166,7 @@ function pharmacyHeaderCard(user) {
           name: user.name,
           email: user.email,
           phone: user.phone,
-          zone: user.zone || 'Cobertura General',
+          
           pharmacyName: user.pharmacyName || user.name,
           address: newAddress,
           latitude: pos.lat,
@@ -601,7 +601,7 @@ function pharmacyOrders() {
 
     const courierIncident = active.some(o => o.status === 'CON_INCIDENCIA' && ((o.incidentNote || '').toLowerCase().includes('repartidor') || (o.incidentNote || '').toLowerCase().includes('5 km') || (o.incidentNote || '').toLowerCase().includes('zona')));
 
-    // 1. Solicitudes entrantes por aceptar en la zona de la farmacia
+    // 1. Solicitudes entrantes por aceptar
     const offersSection = offers.length ? h('section', {
       class: 'block pharmacy-pending-offers-block',
       style: 'border: 1.5px solid var(--primary); background: rgba(22, 134, 93, 0.05); border-radius: 16px; padding: 18px; margin-bottom: 22px;'
@@ -636,7 +636,7 @@ function pharmacyOrders() {
     ) : null;
 
     return h('div', { class: 'stack' },
-      courierIncident ? notice('warn', 'Alerta: Sin repartidores disponibles en tu zona', 'Actualmente no hay repartidores disponibles cerca de tu farmacia (radio máximo 5 km). Estamos buscando activamente para continuar con la entrega tan pronto haya un repartidor disponible.') : null,
+      courierIncident ? notice('warn', 'Alerta: Sin repartidores disponibles en este momento', 'Actualmente no hay repartidores disponibles cerca de tu farmacia (radio máximo 5 km). Estamos buscando activamente para continuar con la entrega tan pronto haya un repartidor disponible.') : null,
       offersSection,
       activeSection,
       pastSection

@@ -56,7 +56,6 @@ public class UserRepository {
                     .set("phone", user.phone)
                     .set("address", user.address)
                     .set("city", user.city)
-                    .set("zone", user.zone)
                     .set("pharmacyName", user.pharmacyName)
                     .set("licenseNumber", user.licenseNumber)
                     .set("openFrom", user.openFrom)

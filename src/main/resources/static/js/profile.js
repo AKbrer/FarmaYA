@@ -85,7 +85,6 @@ function openProfile(initialView = 'menu') {
         item('Correo electrónico', u.email),
         u.role === 'CLIENTE' && item('Dirección habitual', u.address ? (u.address + (u.city ? (', ' + u.city) : '')) : 'Sin dirección guardada'),
         u.role === 'CLIENTE' && u.city && item('Ciudad', u.city),
-        u.role === 'CLIENTE' && (u.latitude != null) && item('Ubicación en el mapa', 'Calibrada correctamente'),
         u.role === 'FARMACIA' && item('Establecimiento', u.pharmacyName),
         u.role === 'FARMACIA' && item('Dirección', u.address),
         u.role === 'FARMACIA' && item('Cuenta Bancaria para Pagos', u.bankName ? (u.bankName + ' · ' + (u.accountType || 'Ahorros') + ' · ' + u.accountNumber + (u.accountHolder ? ' (' + u.accountHolder + ')' : '')) : 'Sin cuenta bancaria registrada'),
@@ -139,7 +138,7 @@ function openProfile(initialView = 'menu') {
         id: 'pharmacyProfileGpsStatus',
         class: 'muted small',
         style: 'margin: 6px 0 0;'
-      }, (u.latitude != null) ? 'Ubicación calibrada en el mapa' : 'Sin ubicación calibrada en el mapa.');
+      }, '');
 
       const phGpsBtn = h('button', {
         class: 'btn secondary small',
@@ -256,7 +255,7 @@ function openProfile(initialView = 'menu') {
         id: 'profileGpsStatus',
         class: 'muted small',
         style: 'margin: 6px 0 0;'
-      }, (u.latitude != null) ? 'Ubicación guardada en el mapa' : 'Sin ubicación guardada en el mapa.');
+      }, '');
 
       const gpsBtn = h('button', {
         class: 'btn secondary small',

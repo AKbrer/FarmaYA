@@ -40,19 +40,16 @@ public class SeedData implements ApplicationRunner {
         seedCategories();
         seedProducts();
         if (!users.existsByRole(Role.ADMIN)) {
-            User a = base("Administrador FarmaYa", props.adminEmail(), "3000000000", Role.ADMIN, props.zones().get(0), props.adminPassword());
+            User a = base("Administrador FarmaYa", props.adminEmail(), "3000000000", Role.ADMIN, props.adminPassword());
             a.verified = true;
             users.save(a);
             log.info("Administrador creado: {}", props.adminEmail());
         }
         if (props.seedDemo() && users.findByEmailIgnoreCase("cliente@demo.com").isEmpty()) {
-            String z1 = props.zones().get(0);
-            String z2 = props.zones().size() > 1 ? props.zones().get(1) : z1;
-
-            User c = base("Camila Torres", "cliente@demo.com", "3001112233", Role.CLIENTE, z1, DEMO_PASSWORD);
+            User c = base("Camila Torres", "cliente@demo.com", "3001112233", Role.CLIENTE, DEMO_PASSWORD);
             c.verified = true;
 
-            User f1 = base("Laura Gómez", "farmacia@demo.com", "3004445566", Role.FARMACIA, z1, DEMO_PASSWORD);
+            User f1 = base("Laura Gómez", "farmacia@demo.com", "3004445566", Role.FARMACIA, DEMO_PASSWORD);
             f1.pharmacyName = "Botica Central";
             f1.address = "Calle 10 # 5-20";
             f1.licenseNumber = "RS-0001";
@@ -60,7 +57,7 @@ public class SeedData implements ApplicationRunner {
             f1.openTo = "00:00"; // 24 horas
             f1.verified = true;
 
-            User f2 = base("Andrés Ruiz", "farmacia2@demo.com", "3007778899", Role.FARMACIA, z2, DEMO_PASSWORD);
+            User f2 = base("Andrés Ruiz", "farmacia2@demo.com", "3007778899", Role.FARMACIA, DEMO_PASSWORD);
             f2.pharmacyName = "Droguería Vida";
             f2.address = "Carrera 7 # 12-45";
             f2.licenseNumber = "RS-0002";
@@ -68,7 +65,7 @@ public class SeedData implements ApplicationRunner {
             f2.openTo = "00:00";
             f2.verified = true;
 
-            User r = base("Mateo Pérez", "repartidor@demo.com", "3002223344", Role.REPARTIDOR, z1, DEMO_PASSWORD);
+            User r = base("Mateo Pérez", "repartidor@demo.com", "3002223344", Role.REPARTIDOR, DEMO_PASSWORD);
             r.vehicle = "Moto";
             r.verified = true;
 
@@ -200,13 +197,12 @@ public class SeedData implements ApplicationRunner {
         log.info("Catálogo completo verificado en colección 'productos'. Total en BD: {}", products.count());
     }
 
-    private User base(String name, String email, String phone, Role role, String zone, String password) {
+    private User base(String name, String email, String phone, Role role, String password) {
         User u = new User();
         u.name = name;
         u.email = email.toLowerCase();
         u.phone = phone;
         u.role = role;
-        u.zone = zone;
         u.passwordHash = auth.hashPassword(password);
         return u;
     }

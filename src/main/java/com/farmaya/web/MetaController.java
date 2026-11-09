@@ -23,7 +23,6 @@ public class MetaController {
         Map<String, String> statuses = new LinkedHashMap<>();
         for (OrderStatus s : OrderStatus.values()) statuses.put(s.name(), s.label);
         Map<String, Object> res = new LinkedHashMap<>();
-        res.put("zones", props.zones());
         res.put("statuses", statuses);
         res.put("demo", props.seedDemo());
         res.put("googleClientId", props.googleClientId() != null ? props.googleClientId() : "");

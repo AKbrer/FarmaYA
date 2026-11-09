@@ -408,7 +408,7 @@ function buildRegisterCard() {
 
   const latInput = h('input', { id: 'regLatitude', type: 'hidden' });
   const lngInput = h('input', { id: 'regLongitude', type: 'hidden' });
-  const coordsLabel = h('span', { id: 'regCoordsBadge', style: 'font-size:0.75rem; color:var(--teal); font-family:monospace;' }, 'Sin coordenadas fijadas');
+font-family:monospace;' }, 'Sin coordenadas fijadas');
 
   // PASO 1: Datos Personales y de Acceso
   const step1Box = h('div', { id: 'regStep1', class: 'form-stack' },
@@ -723,11 +723,8 @@ async function initRegPharmacyMap() {
 function updateRegMapPosition(lat, lng, pan) {
   const latEl = document.getElementById('regLatitude');
   const lngEl = document.getElementById('regLongitude');
-  const badgeEl = document.getElementById('regCoordsBadge');
-  if (latEl) latEl.value = Number(lat).toFixed(6);
+if (latEl) latEl.value = Number(lat).toFixed(6);
   if (lngEl) lngEl.value = Number(lng).toFixed(6);
-  if (badgeEl) badgeEl.textContent = `${Number(lat).toFixed(4)}, ${Number(lng).toFixed(4)}`;
-
   if (regPharmacyMarkerInstance) {
     regPharmacyMarkerInstance.setLatLng([lat, lng]);
   }

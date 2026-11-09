@@ -39,7 +39,6 @@ public class UserSyncService {
             doc.put("passwordHash", user.passwordHash);
             doc.put("phone", user.phone);
             doc.put("role", user.role.name());
-            doc.put("zone", user.zone);
             doc.put("enabled", user.enabled);
             doc.put("verified", user.verified);
             doc.put("active", user.active);

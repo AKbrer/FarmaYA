@@ -155,8 +155,7 @@ public class OrderService {
         String address = clean(r.address(), 200);
         if (blank(address) || address.length() < 5) throw ApiException.bad("Escribe la dirección de entrega completa.");
         String city = clean(r.city(), 100);
-        if (blank(city)) city = clean(r.zone(), 100);
-        if (blank(city) || city.equalsIgnoreCase("Zona General")) city = clean(client.city, 100);
+        if (blank(city)) city = clean(client.city, 100);
         if (blank(city)) city = "Cobertura General";
 
         // Proteccin anti-duplicados por clics mltiples rpidos del cliente (ventana de 15 segundos)
@@ -178,9 +177,6 @@ public class OrderService {
         }
 
         // La ubicación del cliente es su dirección / punto real, nunca "Zona General"
-        String zone = address;
-        if (r.latitude() != null && (r.latitude() < -90 || r.latitude() > 90)) throw ApiException.bad("Latitud inválida.");
-        if (r.longitude() != null && (r.longitude() < -180 || r.longitude() > 180)) throw ApiException.bad("Longitud inválida.");
 
         Order o = new Order();
         for (ItemRequest it : r.items()) {
@@ -199,9 +195,7 @@ public class OrderService {
             throw ApiException.bad("El número de teléfono es obligatorio para que la farmacia o el domiciliario puedan comunicarse contigo ante cualquier novedad.");
         }
         o.clientPhone = phoneToUse;
-        o.address = address;
-        o.zone = zone;
-        o.city = city;
+        o.address = address;o.city = city;
         o.latitude = r.latitude();
         o.longitude = r.longitude();
         o.notes = clean(r.notes(), 400);
@@ -319,7 +313,6 @@ public class OrderService {
                 .set("pharmacyAddress", ph.address)
                 .set("pharmacyLatitude", ph.latitude)
                 .set("pharmacyLongitude", ph.longitude)
-                .set("pharmacyZone", ph.zone)
                 .set("assignedAt", Instant.now());
         if (distanceKm != null) {
             u.set("deliveryDistanceKm", distanceKm)
@@ -584,7 +577,7 @@ public class OrderService {
         }
 
         int count = activePharmacies.size();
-        return new Dtos.AvailabilityResponse(true, count, "Hay " + count + " farmacia(s) disponible(s) en tu zona.");
+        return new Dtos.AvailabilityResponse(true, count, "Hay " + count + " farmacia(s) disponible(s).");
     }
 
     // =====================================================================

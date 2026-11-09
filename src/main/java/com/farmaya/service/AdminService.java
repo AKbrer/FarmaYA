@@ -53,7 +53,6 @@ public class AdminService {
         a.email = email;
         a.phone = phone;
         a.role = Role.ADMIN;
-        a.zone = "Cobertura General";
         a.passwordHash = encoder.encode(password);
         a.enabled = true;
         a.verified = true;

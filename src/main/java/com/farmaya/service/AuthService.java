@@ -106,10 +106,7 @@ public class AuthService {
         String name = clean(r.name());
         String email = clean(r.email()).toLowerCase();
         String phone = clean(r.phone());
-        String zone = clean(r.zone());
-        if (zone.isBlank()) {
-            zone = "Cobertura General";
-        }
+        
 
         if (name.length() < 2) throw ApiException.bad("Escribe tu nombre completo.");
         if (!EMAIL.matcher(email).matches()) throw ApiException.bad("Escribe un correo electrónico válido.");
@@ -129,7 +126,6 @@ public class AuthService {
         u.name = name;
         u.email = email;
         u.phone = phone;
-        u.zone = zone;
         u.role = role;
         u.passwordHash = encoder.encode(r.password());
         u.verified = role == Role.CLIENTE || role == Role.FARMACIA;
@@ -260,7 +256,6 @@ public class AuthService {
         newUser.name = name;
         newUser.email = email;
         newUser.phone = "";
-        newUser.zone = "Cobertura General";
         newUser.role = Role.CLIENTE;
         newUser.verified = true;
         newUser.enabled = true;
@@ -281,10 +276,7 @@ public class AuthService {
         String phone = clean(r.phone());
         if (email.isBlank() || !email.matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) throw ApiException.bad("Escribe un correo electrónico válido.");
         if (!email.equalsIgnoreCase(u.email) && users.findByEmailIgnoreCase(email).isPresent()) throw ApiException.conflict("Ya existe una cuenta con ese correo.");
-        String zone = clean(r.zone());
-        if (zone.isBlank()) {
-            zone = u.zone != null && !u.zone.isBlank() ? u.zone : "Cobertura General";
-        }
+        
         if (name.length() < 2) throw ApiException.bad("Escribe tu nombre completo.");
         String digitsPhone = phone.replaceAll("\\D", "");
         if (digitsPhone.length() < 7 || digitsPhone.length() > 15) throw ApiException.bad("El número de teléfono es obligatorio (debe tener entre 7 y 15 dígitos) para que la farmacia o el domiciliario puedan comunicarse contigo ante cualquier novedad.");
@@ -311,9 +303,9 @@ public class AuthService {
                 throw ApiException.bad("Revisa el horario de atención.");
             Double latitude = r.latitude() != null ? r.latitude() : u.latitude;
             Double longitude = r.longitude() != null ? r.longitude() : u.longitude;
-            if ((latitude == null) != (longitude == null)) throw ApiException.bad("Ingresa tanto la latitud como la longitud de la farmacia.");
-            if (latitude != null && (latitude < -90 || latitude > 90)) throw ApiException.bad("Latitud de farmacia inválida.");
-            if (longitude != null && (longitude < -180 || longitude > 180)) throw ApiException.bad("Longitud de farmacia inválida.");
+            
+            
+            
             u.pharmacyName = pharmacyName;
             u.address = address;
             u.latitude = latitude;
@@ -349,7 +341,6 @@ public class AuthService {
         u.name = name;
         u.email = email;
         u.phone = phone;
-        u.zone = zone;
         return users.save(u);
     }
 

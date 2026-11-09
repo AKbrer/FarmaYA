@@ -136,7 +136,7 @@ async function renderApp() {
   if (!app) return;
   if (!state.metaLoaded) {
     try { state.meta = await fetch('/api/meta').then(r => { if (!r.ok) throw new Error('No se pudo cargar la configuración'); return r.json(); }); }
-    catch (_) { state.meta = { zones: [], statuses: {}, demo: false }; }
+    catch (_) { state.meta = { statuses: {}, demo: false }; }
     state.metaLoaded = true;
   }
   if (API.token && !state.user) {

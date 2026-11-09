@@ -225,8 +225,8 @@ function courierDashboard() {
 
     return h('div', { class: 'pbi-dashboard' },
       walletSection,
-      d.deliveriesMissingCoordinates > 0 && notice('warn', 'Hay entregas pendientes de coordenadas', d.deliveriesMissingCoordinates + ' entregas no tienen coordenadas completas; se liquidarán una vez validadas.'),
-      h('div', { class: 'pbi-grid' }, perDay, accumulated, zonesCard, ledger),
+      
+      h('div', { class: 'pbi-grid' }, perDay, accumulated, ledger),
       h('p', { class: 'muted small' }, 'Modelo de compensación: ' + (d.feeFormula || 'Base por KM + incentivo térmico'))
     );
   });
@@ -321,7 +321,7 @@ function courierCard(o) {
       h('button', {
         class: 'btn danger-ghost',
         onclick: async () => {
-          if (await confirmBox({ title: '¿Liberar esta entrega?', message: 'Se reasignará a otro repartidor disponible en la zona.', ok: 'Liberar entrega', danger: true })) {
+          if (await confirmBox({ title: '¿Liberar esta entrega?', message: 'Se reasignará a otro repartidor disponible.', ok: 'Liberar entrega', danger: true })) {
             await act(null, () => API.post('/courier/orders/' + o.id + '/release'), 'Entrega liberada');
             refreshAll();
           }
@@ -392,7 +392,7 @@ async function openCourierRoute(o, toPharmacy = false) {
         courierMap.setView([pos.lat, pos.lng], 15);
         courierMarker.setLatLng([pos.lat, pos.lng]);
         if (target) await calculateCourierRoute(pos, target, courierMap, status);
-        else status.textContent = 'No se pudo ubicar el destino. Verifica las coordenadas.';
+        else status.textContent = 'No se pudo ubicar el destino de entrega.';
       } catch (err) {
         status.textContent = err.message;
       }
@@ -425,7 +425,7 @@ async function openCourierRoute(o, toPharmacy = false) {
       courierMap.setView([target.lat, target.lng], 14);
       status.textContent = 'Destino establecido. Pulsa «Iniciar navegación» para trazar el trayecto.';
     } else {
-      status.textContent = 'Este pedido no cuenta con coordenadas fijadas.';
+      status.textContent = 'Este pedido no cuenta con destino fijado.';
       locate.disabled = true;
     }
     setTimeout(() => courierMap.invalidateSize(), 150);
@@ -439,7 +439,7 @@ async function calculateCourierRoute(origin, destination, map, status) {
   try {
     status.textContent = 'Calculando trayecto más eficiente por geocerca...';
     const a = Number(origin.lat), b = Number(origin.lng), c = Number(destination.lat), d = Number(destination.lng);
-    if (![a, b, c, d].every(Number.isFinite)) throw new Error('Coordenadas no válidas.');
+    if (![a, b, c, d].every(Number.isFinite)) throw new Error('Destino no válido.');
     const url = 'https://router.project-osrm.org/route/v1/driving/' + b + ',' + a + ';' + d + ',' + c + '?overview=full&geometries=geojson&steps=true';
     const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
     if (!response.ok) throw new Error('Servicio OSRM respondió HTTP ' + response.status);

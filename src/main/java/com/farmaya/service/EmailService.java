@@ -1553,7 +1553,7 @@ public class EmailService {
         String recipientName = escapeHtml(u.name != null && !u.name.isBlank() ? u.name : "Usuario");
         String entityTitle = isRepartidor ? "Repartidor / Domiciliario" : "Farmacia Aliada";
         String establishmentName = escapeHtml(u.pharmacyName != null && !u.pharmacyName.isBlank() ? u.pharmacyName : u.name);
-        String zoneText = escapeHtml(u.zone != null && !u.zone.isBlank() ? u.zone : (u.city != null ? u.city : "Cobertura General"));
+        String cityText = escapeHtml(u.city != null && !u.city.isBlank() ? u.city : "Nacional");
         String vehicleText = escapeHtml((u.vehicle != null ? u.vehicle : "Moto") + (u.plate != null && !u.plate.isBlank() ? " [" + u.plate + "]" : ""));
         String addressText = escapeHtml(u.address != null && !u.address.isBlank() ? u.address : "Direccion registrada");
         String hoursText = escapeHtml((u.openFrom != null ? u.openFrom : "08:00") + " a " + (u.openTo != null ? u.openTo : "22:00"));
@@ -1566,8 +1566,8 @@ public class EmailService {
             specificGreeting = "Nos alegra informarte que tu cuenta y documentos de Domiciliario / Repartidor han sido revisados y <strong>verificados exitosamente</strong> por el equipo de administracion de FarmaYA. A partir de este momento te encuentras 100% autorizado para operar en la plataforma.";
             extraFields = "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Vehiculo:</td>" +
                 "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + vehicleText + "</td></tr>" +
-                "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Zona de Operacion:</td>" +
-                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + zoneText + "</td></tr>";
+                "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Ciudad de Operacion:</td>" +
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + cityText + "</td></tr>";
             instructions = "<li style=\"margin-bottom: 8px;\"><strong>Inicia sesion:</strong> Ingresa a la plataforma con tu correo y contrasena registrados.</li>" +
                 "<li style=\"margin-bottom: 8px;\"><strong>Activa tu disponibilidad:</strong> En la parte superior de tu panel, activa el boton <em>\"En servicio\"</em> para que el sistema te asigne pedidos en vivo.</li>" +
                 "<li><strong>Entrega segura con PIN:</strong> Recuerda que cada entrega se confirma solicitando el codigo PIN de 4 digitos al cliente receptor.</li>";
@@ -1576,7 +1576,7 @@ public class EmailService {
             extraFields = "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Correo:</td>" +
                 "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + escapeHtml(u.email) + "</td></tr>" +
                 "<tr><td style=\"padding: 6px 0; color: #64748b; font-size: 13px; font-weight: 600;\">Cobertura:</td>" +
-                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + zoneText + "</td></tr>";
+                "<td align=\"right\" style=\"padding: 6px 0; color: #0f172a; font-size: 13px; font-weight: 700;\">" + cityText + "</td></tr>";
             instructions = "<li style=\"margin-bottom: 8px;\"><strong>Explora el catalogo:</strong> Encuentra medicamentos con cotizacion inmediata.</li>" +
                 "<li style=\"margin-bottom: 8px;\"><strong>Paga 100% en linea:</strong> Metodos de pago digitales seguros via Wompi.</li>" +
                 "<li><strong>Entrega segura con PIN:</strong> Confirma la recepcion de tu paquete dictandole el codigo PIN a tu repartidor.</li>";
@@ -2098,7 +2098,7 @@ public class EmailService {
         String recipientName = escapeHtml(u.name != null && !u.name.isBlank() ? u.name : "Usuario");
         String roleDesc = u.role == Role.FARMACIA ? "de Farmacia Aliada" : (u.role == Role.REPARTIDOR ? "de Repartidor / Domiciliario" : (u.role == Role.ADMIN ? "de Administrador" : "de Cliente"));
         String establishmentName = escapeHtml(u.pharmacyName != null && !u.pharmacyName.isBlank() ? u.pharmacyName : u.name);
-        String zoneText = escapeHtml(u.zone != null && !u.zone.isBlank() ? u.zone : (u.city != null ? u.city : "Cobertura General"));
+        String cityText = escapeHtml(u.city != null && !u.city.isBlank() ? u.city : "Nacional");
 
         boolean needsVerification = (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR) && !u.verified;
 
@@ -2186,7 +2186,7 @@ public class EmailService {
                                 <td align="right" style="padding-bottom: 8px; font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
                               </tr>
                               <tr>
-                                <td style="padding-bottom: 8px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Zona / Ciudad:</td>
+                                <td style="padding-bottom: 8px; font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Ciudad:</td>
                                 <td align="right" style="padding-bottom: 8px; font-size: 13px; font-weight: 700; color: #0f172a;">%s</td>
                               </tr>
                               <tr>
@@ -2222,7 +2222,7 @@ public class EmailService {
             roleDesc,
             escapeHtml(u.email),
             recipientName,
-            zoneText,
+            cityText,
             statusLabelValue,
             alertBox
         );

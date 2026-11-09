@@ -11,7 +11,6 @@ public record FarmaYaProperties(
         int maxSearchRounds,
         int sessionHours,
         int maxActiveDeliveries,
-        List<String> zones,
         String timezone,
         String adminEmail,
         String adminPassword,

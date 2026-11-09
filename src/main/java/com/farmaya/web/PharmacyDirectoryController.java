@@ -1,6 +1,5 @@
 package com.farmaya.web;
 
-
 import com.farmaya.model.Role;
 import com.farmaya.model.User;
 import com.farmaya.service.OrderService;
@@ -32,9 +31,7 @@ public class PharmacyDirectoryController {
     public List<Map<String, Object>> list(@RequestAttribute("user") User user) {
         List<User> found = new ArrayList<>(users.findByRole(Role.FARMACIA).stream()
                 .filter(p -> p.verified && p.enabled).toList());
-        // Primero las de la zona del cliente, luego por nombre
-        found.sort(Comparator.comparing((User p) -> !(p.zone != null && p.zone.equals(user.zone)))
-                .thenComparing(p -> p.pharmacyName == null ? "" : p.pharmacyName.toLowerCase()));
+        found.sort(Comparator.comparing(p -> p.pharmacyName == null ? "" : p.pharmacyName.toLowerCase()));
 
         List<Map<String, Object>> out = new ArrayList<>();
         for (User p : found) {
@@ -42,11 +39,9 @@ public class PharmacyDirectoryController {
             m.put("id", p.id);
             m.put("name", p.pharmacyName);
             m.put("address", p.address);
-            m.put("zone", p.zone);
             m.put("openFrom", p.openFrom);
             m.put("openTo", p.openTo);
             m.put("open", p.active && orders.isOpenNow(p));
-            m.put("sameZone", p.zone != null && p.zone.equals(user.zone));
             out.add(m);
         }
         return out;

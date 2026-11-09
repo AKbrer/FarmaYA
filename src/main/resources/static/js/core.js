@@ -4,7 +4,7 @@ const FY_CROSS_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAAEZCAYA
 /* FarmaYA · núcleo del frontend: API, ayudantes de DOM y componentes comunes */
 
 const CONFIG = { currency: 'COP', locale: 'es-CO' }; // cambia la moneda aquí
-const state = { user: null, meta: { zones: [], statuses: {}, demo: false } };
+const state = { user: null, meta: { statuses: {}, demo: false } };
 const ROLE_NAMES = { CLIENTE: 'Cliente', FARMACIA: 'Farmacia', REPARTIDOR: 'Repartidor', ADMIN: 'Administrador' };
 
 /* ---------- Temas (Claro / Oscuro / Automático) ---------- */

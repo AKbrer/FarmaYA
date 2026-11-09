@@ -135,7 +135,7 @@ function renderClientDashboard() {
 
       if (!pharmacies.length) {
 
-        return empty('Aún no hay farmacias aliadas en tu zona', 'Apenas una farmacia autorizada se conecte en tu cuadrante, aparecerá aquí.');
+        return empty('Aún no hay farmacias aliadas disponibles', 'Apenas una farmacia autorizada se conecte en tu cuadrante, aparecerá aquí.');
 
       }
 
@@ -161,7 +161,7 @@ function renderClientDashboard() {
 
           ),
 
-          p.sameZone && h('span', { class: 'tag' }, 'Tu sector')
+          
 
         )
 
@@ -937,7 +937,7 @@ function renderClientDashboard() {
 
           coverageNoticeBox.replaceChildren(
 
-            notice('warn', 'Sin farmacia cerca de tu zona', res.message || 'No hay farmacias disponibles en tu zona en este momento.')
+            notice('warn', 'Sin farmacias disponibles', res.message || 'No hay farmacias disponibles en este momento.')
 
           );
 
@@ -1113,7 +1113,7 @@ function renderClientDashboard() {
 
         if (!hasCoverage) {
 
-          toast('No hay farmacias disponibles cerca de tu zona en este momento', 'error');
+          toast('No hay farmacias disponibles en este momento', 'error');
 
           return;
 
@@ -1132,10 +1132,7 @@ function renderClientDashboard() {
           items: clientCart.map(i => ({ name: i.name, quantity: i.quantity, prescription: !!i.rx, note: '' })),
 
           address: cleanAddress,
-
-          zone: cleanAddress,
-
-          city: cityInput.value.trim() || user.city || '',
+city: cityInput.value.trim() || user.city || '',
 
           latitude: latVal,
 
