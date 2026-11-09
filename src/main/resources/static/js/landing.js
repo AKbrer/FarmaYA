@@ -272,7 +272,7 @@ function renderLandingPage() {
     },
     {
       q: '¿Cual es el modelo de comision para farmacias aliadas?',
-      a: 'FarmaYA no cobra tarifas de suscripcion mensual ni cargos fijos. Por cada pedido completado y pagado, la farmacia recibe el 90% neto del valor de los medicamentos y la plataforma retiene un 10% fijo por servicios de tecnologia, conexion y pasarela.'
+      a: 'FarmaYA no cobra tarifas de suscripcion mensual ni cargos fijos. Por cada pedido completado y pagado, la farmacia recibe el 95% neto del valor de los medicamentos y la plataforma retiene un 5% fijo por servicios de tecnologia, conexion y pasarela.'
     }
   ];
 

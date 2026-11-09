@@ -200,7 +200,7 @@ public class OrderService {
         o.longitude = r.longitude();
         o.notes = clean(r.notes(), 400);
         o.clientEmail = client.email;
-        o.platformCommissionRate = 0.05; // 10% de ganancia para la empresa FarmaYA
+        o.platformCommissionRate = 0.05; // 5% de ganancia para la empresa FarmaYA
         o.deliveryCode = String.format("%04d", RND.nextInt(10_000));
         o.status = BUSCANDO_FARMACIA;
         o.searchStartedAt = now;
@@ -241,10 +241,10 @@ public class OrderService {
         u.set("paymentStatus", "PAGADO_FARMAYA");
         u.set("paymentTransactionId", txId);
         if (o.total != null) {
-            double fee = Math.round(o.total * 0.10 * 100) / 100.0;
+            double fee = Math.round(o.total * 0.05 * 100) / 100.0;
             u.set("platformEarnings", fee);
             try {
-                movements.record("RECAUDO_PASARELA", "Pago digital de medicamentos (" + o.total + " COP) recaudado vía pasarela en cuenta oficial FarmaYA. Retención comisión FarmaYA (10%): " + fee + " COP. Domicilio (" + courierFee(o.deliveryDistanceKm != null ? o.deliveryDistanceKm : 2.5) + " COP) a pagar al repartidor a la entrega.", client, o);
+                movements.record("RECAUDO_PASARELA", "Pago digital de medicamentos (" + o.total + " COP) recaudado vía pasarela en cuenta oficial FarmaYA. Retención comisión FarmaYA (5%): " + fee + " COP. Domicilio (" + courierFee(o.deliveryDistanceKm != null ? o.deliveryDistanceKm : 2.5) + " COP) a pagar al repartidor a la entrega.", client, o);
             } catch (Exception ignored) {}
         }
         Order res = present(apply(c, u, "Este pedido ya no está esperando tu confirmación de precio."), client);
@@ -362,7 +362,7 @@ public class OrderService {
         int prep = r.prepMinutes() == null ? 20 : r.prepMinutes();
         if (prep < 1 || prep > 240) throw ApiException.bad("El tiempo de preparación debe estar entre 1 y 240 minutos.");
 
-        double platformEarnings = Math.round(total * 0.10 * 100) / 100.0;
+        double platformEarnings = Math.round(total * 0.05 * 100) / 100.0;
         Update u = step(PRECIO_POR_ACEPTAR, ph, "La farmacia confirmó existencias y precio")
                 .set("confirmedItems", list)
                 .set("total", Math.round(total * 100) / 100.0)

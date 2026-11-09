@@ -355,7 +355,7 @@ function orderDetail(o, viewer) {
 
             h('tr', null, h('td', { colspan: 3 }, 'Total'), h('td', null, money(o.total))),
 
-            role === 'ADMIN' && o.total != null ? h('tr', { style: 'font-weight:700; color:var(--teal);' }, h('td', { colspan: 3 }, 'Ganancia FarmaYA (10%)'), h('td', null, money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.10)))) : null
+            role === 'ADMIN' && o.total != null ? h('tr', { style: 'font-weight:700; color:var(--teal);' }, h('td', { colspan: 3 }, 'Ganancia FarmaYA (5%)'), h('td', null, money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.05)))) : null
 
           ))),
 
@@ -387,7 +387,7 @@ function orderDetail(o, viewer) {
 
         h('span', { class: 'tag tone-done', style: 'font-weight:700;' }, `Tarifa del domicilio: ${money(deliveryFee)}`),
 
-        role === 'ADMIN' && o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, `Ganancia FarmaYA (10%): ${money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.10))}`) : null,
+        role === 'ADMIN' && o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, `Ganancia FarmaYA (5%): ${money(o.platformEarnings != null ? o.platformEarnings : (o.total * 0.05))}`) : null,
 
         o.paymentStatus === 'PAGADO_FARMAYA' ? h('span', { class: 'badge tone-done', style: 'font-weight:700;' }, `Productos Pagados a FarmaYA (${o.paymentMethod || 'PSE/Nequi'})`) : null,
 
@@ -634,7 +634,7 @@ async function renderPaymentPage(orderOrId) {
   const subtotalProducts = Number(o.total || 0);
   const deliveryDist = o.deliveryDistanceKm || 2.5;
   const deliveryFee = o.courierEarnings || Math.max(5000, 4000 + Math.ceil(deliveryDist) * 1000);
-  const platformFee = Math.round(subtotalProducts * 0.10);
+  const platformFee = Math.round(subtotalProducts * 0.05);
 
   const METHODS = [
     {

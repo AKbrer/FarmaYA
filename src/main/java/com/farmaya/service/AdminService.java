@@ -179,7 +179,7 @@ public class AdminService {
             if (v instanceof Number n) revenue = n.doubleValue();
         }
 
-        double platformEarnings = Math.round(revenue * 0.10 * 100) / 100.0;
+        double platformEarnings = Math.round(revenue * 0.05 * 100) / 100.0;
 
         List<OrderStatus> paidStatuses = List.of(
             OrderStatus.PRECIO_CONFIRMADO, OrderStatus.PEDIDO_EN_PREPARACION,

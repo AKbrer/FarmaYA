@@ -24,7 +24,7 @@ let powerBiPharmacy = 'ALL';
 let powerBiStatus = 'ALL_PAID';
 
 /**
- * Dashboard Analitico Power BI con Ganancia FarmaYA (10% fijo).
+ * Dashboard Analitico Power BI con Ganancia FarmaYA (5% fijo).
  * Disenado con estetica Power BI y optimizado para Flutter en vista movil.
  */
 function adminPowerBiDashboard() {
@@ -80,7 +80,7 @@ function adminPowerBiDashboard() {
       filtered.forEach(o => {
         const gross = Number(o.total) || 0;
         totalGross += gross;
-        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.05);
         totalEarnings += earnings;
       });
       const totalPharmacyNet = Math.max(0, totalGross - totalEarnings);
@@ -107,7 +107,7 @@ function adminPowerBiDashboard() {
         h('div', { class: 'powerbi-banner-right' },
           h('div', { class: 'powerbi-commission-callout' },
             h('span', { class: 'callout-label' }, 'Comision FarmaYA'),
-            h('strong', { class: 'callout-rate' }, '10%'),
+            h('strong', { class: 'callout-rate' }, '5%'),
             h('span', { class: 'callout-sub' }, 'Retencion por pedido')
           )
         )
@@ -174,10 +174,10 @@ function adminPowerBiDashboard() {
 
       // 4 Power BI KPI Tiles
       const kpisGrid = h('div', { class: 'powerbi-kpis-grid' },
-        // KPI 1: Ganancia Neta FarmaYA (10%)
+        // KPI 1: Ganancia Neta FarmaYA (5%)
         h('div', { class: 'powerbi-kpi-card accent-green' },
           h('div', { class: 'powerbi-kpi-top' },
-            h('span', { class: 'powerbi-kpi-title' }, 'Ganancia FarmaYA (10%)'),
+            h('span', { class: 'powerbi-kpi-title' }, 'Ganancia FarmaYA (5%)'),
             h('span', { class: 'powerbi-kpi-chip chip-green' }, '5.0% Comision')
           ),
           h('div', { class: 'powerbi-kpi-value-row' },
@@ -235,14 +235,14 @@ function adminPowerBiDashboard() {
         )
       );
 
-      // Visual A: Ranking de Farmacias y Ganancia FarmaYA 10%
+      // Visual A: Ranking de Farmacias y Ganancia FarmaYA 5%
       const byPharmacy = {};
       filtered.forEach(o => {
         const pName = o.pharmacyName || 'Sin asignar / Cobertura general';
         if (!byPharmacy[pName]) byPharmacy[pName] = { name: pName, gross: 0, earnings: 0, count: 0 };
         const gross = Number(o.total) || 0;
         byPharmacy[pName].gross += gross;
-        byPharmacy[pName].earnings += o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        byPharmacy[pName].earnings += o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.05);
         byPharmacy[pName].count += 1;
       });
       const pharmacyRanking = Object.values(byPharmacy).sort((a, b) => b.gross - a.gross);
@@ -266,8 +266,8 @@ function adminPowerBiDashboard() {
             },
               h('div', {
                 class: 'powerbi-bar-fill-farmaya',
-                style: 'width: 10%;',
-                title: '10% FarmaYA: ' + money(item.earnings)
+                style: 'width: 5%;',
+                title: '5% FarmaYA: ' + money(item.earnings)
               })
             )
           )
@@ -278,7 +278,7 @@ function adminPowerBiDashboard() {
         h('div', { class: 'powerbi-visual-header' },
           h('div', null,
             h('h3', { class: 'powerbi-visual-title' }, 'Rendimiento por Farmacia Aliada'),
-            h('p', { class: 'powerbi-visual-subtitle' }, 'Volumen de ventas brutas vs. Ganancia retenida por FarmaYA (10%)')
+            h('p', { class: 'powerbi-visual-subtitle' }, 'Volumen de ventas brutas vs. Ganancia retenida por FarmaYA (5%)')
           ),
           h('div', { class: 'powerbi-legend-row' },
             h('span', { class: 'powerbi-legend-item' },
@@ -287,7 +287,7 @@ function adminPowerBiDashboard() {
             ),
             h('span', { class: 'powerbi-legend-item' },
               h('span', { class: 'powerbi-dot dot-farmaya' }),
-              '10% FarmaYA'
+              '5% FarmaYA'
             )
           )
         ),
@@ -305,7 +305,7 @@ function adminPowerBiDashboard() {
         if (!byPayment[pm]) byPayment[pm] = { label: pm, gross: 0, earnings: 0, count: 0 };
         const gross = Number(o.total) || 0;
         byPayment[pm].gross += gross;
-        byPayment[pm].earnings += o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        byPayment[pm].earnings += o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.05);
         byPayment[pm].count += 1;
       });
       const paymentChannels = Object.values(byPayment).sort((a, b) => b.gross - a.gross);
@@ -343,7 +343,7 @@ function adminPowerBiDashboard() {
       // Data Matrix Table (Desktop & Flutter Mobile responsive)
       const tableRows = filtered.slice(0, 50).map(o => {
         const gross = Number(o.total) || 0;
-        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.05);
         const pharmaNet = Math.max(0, gross - earnings);
         const code = o.code || ('#' + (o.id || '').slice(-6).toUpperCase());
         const dt = new Date(o.createdAt || o.deliveredAt || Date.now());
@@ -373,7 +373,7 @@ function adminPowerBiDashboard() {
       // Mobile Flutter Cards List
       const mobileCardsList = filtered.slice(0, 30).map(o => {
         const gross = Number(o.total) || 0;
-        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.10);
+        const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.05);
         const pharmaNet = Math.max(0, gross - earnings);
         const code = o.code || ('#' + (o.id || '').slice(-6).toUpperCase());
         const dt = new Date(o.createdAt || o.deliveredAt || Date.now());
@@ -406,7 +406,7 @@ function adminPowerBiDashboard() {
               h('strong', { class: 'powerbi-flutter-amt muted' }, money(pharmaNet))
             ),
             h('div', { class: 'powerbi-flutter-fin-col text-right' },
-              h('span', { class: 'kpi-sub-label text-green font-bold' }, 'FarmaYA (10%)'),
+              h('span', { class: 'kpi-sub-label text-green font-bold' }, 'FarmaYA (5%)'),
               h('span', { class: 'powerbi-profit-pill' }, money(earnings))
             )
           )
@@ -435,7 +435,7 @@ function adminPowerBiDashboard() {
                 h('th', null, 'Fecha'),
                 h('th', null, 'Medio de Pago'),
                 h('th', { class: 'text-right' }, 'Total Bruto'),
-                h('th', { class: 'text-right' }, 'FarmaYA (10%)'),
+                h('th', { class: 'text-right' }, 'FarmaYA (5%)'),
                 h('th', { class: 'text-center' }, 'Estado')
               )
             ),
@@ -463,7 +463,7 @@ function adminPowerBiDashboard() {
 function adminView(user) {
   let root;
   root = h('div', { class: 'stack admin-root' }, adminHeaderCard(user), sideNavigation([
-    { label: 'Dashboard Power BI', icon: 'layout-dashboard', badge: '10%', render: adminPowerBiDashboard },
+    { label: 'Dashboard Power BI', icon: 'layout-dashboard', badge: '5%', render: adminPowerBiDashboard },
     { label: 'Predicción de Demanda', icon: 'ai-prediction', badge: 'IA', render: adminDemandForecast },
     { label: 'Pedidos', icon: 'package', render: adminOrders },
     { label: 'Verificaciones', icon: 'prescriptions', render: adminVerificationCenter },
@@ -795,7 +795,7 @@ function adminOrders() {
   const draw = () => holder.replaceChildren(live(() => API.get('/admin/orders' + (status ? '?status=' + status : '')), orders => {
     if (!orders.length) return empty('No hay pedidos con este filtro', 'Prueba con otro estado o muestra todos.');
     return h('div', { class: 'list' }, orders.map(o => {
-      const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.10) : 0);
+      const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.05) : 0);
       return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
         h('span', { class: 'muted small' }, o.address || o.city || 'Cobertura general'),
         o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
