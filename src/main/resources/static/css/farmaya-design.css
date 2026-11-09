@@ -12277,3 +12277,214 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
     font-size: 24px;
   }
 }
+
+
+/* ==========================================================================
+   55. RECUADRO DE TABLA GRANDE CON CUADRÍCULA Y BUSCADORES DE ALTA GAMA
+   ========================================================================== */
+
+/* Recuadro contenedor grande de tabla */
+.disbursement-table-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .disbursement-table-card {
+  background: var(--surface);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.disbursement-table-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.disbursement-table-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.disbursement-table-heading {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.disbursement-table-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 800;
+  background: rgba(0, 78, 70, 0.1);
+  color: var(--primary);
+  border: 1px solid rgba(0, 78, 70, 0.2);
+}
+
+/* Recuadro de Búsqueda */
+.disbursement-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 280px;
+  max-width: 440px;
+  width: 100%;
+}
+
+.disbursement-search-input {
+  width: 100%;
+  height: 42px;
+  padding: 0 16px 0 40px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.disbursement-search-input:focus {
+  border-color: var(--primary);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(0, 135, 90, 0.15);
+}
+
+.disbursement-search-icon {
+  position: absolute;
+  left: 13px;
+  color: var(--muted);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.disbursement-search-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Cuadrícula Nítida de Tabla */
+.data-table.grid-bordered {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.data-table.grid-bordered thead th {
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 13px 14px;
+  border-bottom: 2px solid var(--line);
+  border-right: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.data-table.grid-bordered tbody td {
+  padding: 13px 14px;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.data-table.grid-bordered th:last-child,
+.data-table.grid-bordered td:last-child {
+  border-right: none;
+}
+
+.data-table.grid-bordered tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.data-table.grid-bordered tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.015);
+}
+
+[data-theme="dark"] .data-table.grid-bordered tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.data-table.grid-bordered tbody tr:hover {
+  background: rgba(0, 135, 90, 0.045);
+}
+
+[data-theme="dark"] .data-table.grid-bordered tbody tr:hover {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+/* Paginación Universal */
+.fy-pagination-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+/* Buscador en tarjeta Power BI */
+.powerbi-card-search-wrap {
+  margin: 12px 0 16px 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.powerbi-card-search-wrap input {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px 0 38px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  transition: all 0.18s ease;
+}
+
+.powerbi-card-search-wrap input:focus {
+  border-color: #0284c7;
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.powerbi-card-search-wrap .search-ico {
+  position: absolute;
+  left: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}

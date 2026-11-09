@@ -630,11 +630,51 @@ function pharmacyOrders() {
       h('p', { class: 'muted small', style: 'margin: 0;' }, 'Cuando aceptes una solicitud de cliente o confirmes una cotización, la gestionarás aquí.')
     ) : null);
 
-    // 3. Historial de pedidos anteriores
-    const pastSection = past.length ? h('div', { class: 'list', style: 'margin-top: 18px;' },
-      h('h3', { class: 'list-title' }, 'Historial de Pedidos Anteriores (' + past.length + ')'),
-      past.map(o => orderRow(o))
-    ) : null;
+    // 3. Historial de pedidos anteriores (con buscador y paginación de máximo 30)
+    let pastSearch = '';
+    let pastPage = 1;
+    const pastSection = h('div', { style: 'margin-top: 22px;' });
+
+    function renderPastOrders() {
+      if (!past.length) {
+        pastSection.replaceChildren();
+        return;
+      }
+      const q = pastSearch.toLowerCase().trim();
+      const filteredPast = past.filter(o => !q || [o.code, o.id, o.clientName, o.address, o.city].filter(Boolean).join(' ').toLowerCase().includes(q));
+      const totalPages = Math.max(1, Math.ceil(filteredPast.length / 30));
+      if (pastPage > totalPages) pastPage = totalPages;
+      const startIdx = (pastPage - 1) * 30;
+      const pagedPast = filteredPast.slice(startIdx, startIdx + 30);
+
+      pastSection.replaceChildren(
+        h('div', { class: 'card p-4' },
+          h('div', { style: 'display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap;' },
+            h('h3', { class: 'list-title', style: 'margin:0;' }, 'Historial de Pedidos Anteriores (' + filteredPast.length + ')'),
+            h('div', { class: 'disbursement-search-wrap', style: 'max-width:320px;' },
+              h('span', { class: 'disbursement-search-icon' }, icon('search')),
+              h('input', {
+                type: 'search',
+                class: 'disbursement-search-input',
+                placeholder: 'Buscar en pedidos anteriores...',
+                value: pastSearch,
+                oninput: (e) => {
+                  pastSearch = e.target.value;
+                  pastPage = 1;
+                  renderPastOrders();
+                }
+              })
+            )
+          ),
+          h('div', { class: 'list' }, pagedPast.map(o => orderRow(o))),
+          fyPagination(filteredPast.length, pastPage, 30, (p) => {
+            pastPage = p;
+            renderPastOrders();
+          })
+        )
+      );
+    }
+    renderPastOrders();
 
     return h('div', { class: 'stack' },
       courierIncident ? notice('warn', 'Alerta: Sin repartidores disponibles en este momento', 'Actualmente no hay repartidores disponibles cerca de tu farmacia (radio máximo 5 km). Estamos buscando activamente para continuar con la entrega tan pronto haya un repartidor disponible.') : null,
@@ -1031,13 +1071,16 @@ function pharmacyDemandForecast() {
 
 function pharmacyDisbursementsView() {
   const container = h('div', { class: 'stack pharmacy-disbursements-root' });
+  let historySearch = '';
+  let historyPage = 1;
+  const PAGE_SIZE = 30;
 
   const draw = async () => {
     container.innerHTML = '<div class="p-6 text-center muted"><span class="spinner"></span> Consultando liquidaciones y pagos...</div>';
     try {
       const data = await API.get('/pharmacy/disbursements');
 
-            // Recuadro Superior Destacado (Hero Card de Farmacia)
+      // Recuadro Superior Destacado (Hero Card de Farmacia)
       const header = h('div', { class: 'disbursement-hero-banner' },
         h('div', { class: 'disbursement-hero-left' },
           h('div', { class: 'disbursement-hero-icon-box' },
@@ -1128,55 +1171,99 @@ function pharmacyDisbursementsView() {
         )
       );
 
-      // Tabla de liquidaciones recibidas
-      const historyList = data.disbursements || [];
-      const historySection = h('div', { class: 'card p-4' },
-        h('h3', { style: 'margin:0 0 12px;' }, 'Historial de Transferencias Bancarias Recibidas'),
-        historyList.length ? h('div', { class: 'table-wrap' },
-          h('table', { class: 'data-table' },
-            h('thead', null,
-              h('tr', null,
-                h('th', null, 'Código'),
-                h('th', null, 'Fecha de Transferencia'),
-                h('th', null, 'Comprobante / Ref Bancaria'),
-                h('th', null, 'Medio de Pago'),
-                h('th', { class: 'text-right' }, 'Ventas Brutas'),
-                h('th', { class: 'text-right' }, 'Comisión FarmaYA (5%)'),
-                h('th', { class: 'text-right' }, 'Monto Neto Recibido (95%)'),
-                h('th', { class: 'text-center' }, 'Recibo Oficial')
-              )
+      // Tabla de liquidaciones recibidas dentro de recuadro grande con cuadrícula
+      const rawHistory = data.disbursements || [];
+      const historyContainer = h('div');
+
+      function renderHistory() {
+        const q = historySearch.toLowerCase().trim();
+        const filteredHistory = rawHistory.filter(d => {
+          if (!q) return true;
+          return (d.code || '').toLowerCase().includes(q) ||
+                 (d.reference || '').toLowerCase().includes(q) ||
+                 (d.method || '').toLowerCase().includes(q);
+        });
+
+        const totalPages = Math.max(1, Math.ceil(filteredHistory.length / PAGE_SIZE));
+        if (historyPage > totalPages) historyPage = totalPages;
+        const startIdx = (historyPage - 1) * PAGE_SIZE;
+        const paged = filteredHistory.slice(startIdx, startIdx + PAGE_SIZE);
+
+        const card = h('div', { class: 'disbursement-table-card' },
+          h('div', { class: 'disbursement-table-toolbar' },
+            h('div', { class: 'disbursement-table-title-group' },
+              h('h3', { class: 'disbursement-table-heading' }, 'Historial de Transferencias Bancarias Recibidas'),
+              h('span', { class: 'disbursement-table-badge' }, filteredHistory.length + ' pagos')
             ),
-            h('tbody', null, historyList.map(d =>
-              h('tr', null,
-                h('td', null, h('strong', { style: 'font-family:monospace; color:var(--primary);' }, d.code)),
-                h('td', null, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-'),
-                h('td', null, h('span', { class: 'tag tone-blue', style: 'font-family:monospace; font-weight:700;' }, d.reference || '-')),
-                h('td', null, d.method === 'TRANSFERENCIA_BANCARIA' ? 'Transferencia Bancaria ACH' : d.method),
-                h('td', { class: 'text-right' }, money(d.grossTotal)),
-                h('td', { class: 'text-right text-red', style: 'color:#991b1b;' }, '- ' + money(d.platformEarnings)),
-                h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14px;' }, money(d.netAmount) + ' COP'),
-                h('td', { class: 'text-center' },
-                  h('button', {
-                    class: 'btn secondary small',
-                    type: 'button',
-                    onclick: () => {
-                      if (typeof renderDisbursementReceiptModal === 'function') {
-                        renderDisbursementReceiptModal(d);
-                      } else {
-                        alert('Código: ' + d.code + '\nNeto: ' + money(d.netAmount) + ' COP\nRef: ' + d.reference);
-                      }
-                    }
-                  }, 'Ver Recibo')
+            h('div', { class: 'disbursement-search-wrap' },
+              h('span', { class: 'disbursement-search-icon' }, icon('search')),
+              h('input', {
+                type: 'search',
+                class: 'disbursement-search-input',
+                placeholder: 'Buscar por código LIQ, comprobante o fecha...',
+                value: historySearch,
+                oninput: (e) => {
+                  historySearch = e.target.value;
+                  historyPage = 1;
+                  renderHistory();
+                }
+              })
+            )
+          ),
+          paged.length ? h('div', { class: 'table-wrap' },
+            h('table', { class: 'data-table grid-bordered' },
+              h('thead', null,
+                h('tr', null,
+                  h('th', null, 'Código'),
+                  h('th', null, 'Fecha de Transferencia'),
+                  h('th', null, 'Comprobante / Ref Bancaria'),
+                  h('th', null, 'Medio de Pago'),
+                  h('th', { class: 'text-right' }, 'Ventas Brutas'),
+                  h('th', { class: 'text-right' }, 'Comisión FarmaYA (5%)'),
+                  h('th', { class: 'text-right' }, 'Monto Neto Recibido (95%)'),
+                  h('th', { class: 'text-center' }, 'Recibo Oficial')
                 )
-              )
-            ))
-          )
-        ) : empty('Aún no tienes transferencias registradas', 'Apenas la administración liquide tus pedidos entregados, verás aquí el comprobante bancario.')
-      );
+              ),
+              h('tbody', null, paged.map(d =>
+                h('tr', null,
+                  h('td', null, h('strong', { style: 'font-family:monospace; color:var(--primary); font-size:13.5px;' }, d.code)),
+                  h('td', null, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-'),
+                  h('td', null, h('span', { class: 'tag tone-blue', style: 'font-family:monospace; font-weight:700;' }, d.reference || '-')),
+                  h('td', null, d.method === 'TRANSFERENCIA_BANCARIA' ? 'Transferencia Bancaria ACH' : d.method),
+                  h('td', { class: 'text-right' }, money(d.grossTotal)),
+                  h('td', { class: 'text-right text-red', style: 'color:#991b1b; font-weight:600;' }, '- ' + money(d.platformEarnings)),
+                  h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14.5px;' }, money(d.netAmount) + ' COP'),
+                  h('td', { class: 'text-center' },
+                    h('button', {
+                      class: 'btn secondary small',
+                      type: 'button',
+                      onclick: () => {
+                        if (typeof renderDisbursementReceiptModal === 'function') {
+                          renderDisbursementReceiptModal(d);
+                        } else {
+                          alert('Código: ' + d.code + '\nNeto: ' + money(d.netAmount) + ' COP\nRef: ' + d.reference);
+                        }
+                      }
+                    }, 'Ver Recibo')
+                  )
+                )
+              ))
+            )
+          ) : empty('No se encontraron transferencias registradas', 'Apenas la administración liquide tus pedidos entregados, verás aquí el comprobante bancario.'),
+          fyPagination(filteredHistory.length, historyPage, PAGE_SIZE, (p) => {
+            historyPage = p;
+            renderHistory();
+          })
+        );
+
+        historyContainer.replaceChildren(card);
+      }
+
+      renderHistory();
 
       const elements = [header];
       if (bankNotice) elements.push(bankNotice);
-      elements.push(kpis, historySection);
+      elements.push(kpis, historyContainer);
 
       container.replaceChildren(...elements);
     } catch (err) {

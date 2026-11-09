@@ -21,6 +21,10 @@ let adminSelectedMedName = '';
 
 let powerBiPeriod = 'ALL';
 let powerBiPharmacy = 'ALL';
+let pbiPharmaSearch = '';
+let pbiPharmaPage = 1;
+let pbiMatrixSearch = '';
+let pbiMatrixPage = 1;
 let powerBiStatus = 'ALL_PAID';
 
 /**
@@ -248,42 +252,50 @@ function adminPowerBiDashboard() {
       const pharmacyRanking = Object.values(byPharmacy).sort((a, b) => b.gross - a.gross);
       const maxPharmaGross = pharmacyRanking.length ? Math.max(...pharmacyRanking.map(p => p.gross), 1) : 1;
 
-      const pharmaBarsList = pharmacyRanking.length ? pharmacyRanking.map(item => {
+      // Filtro con buscador para farmacia aliada
+      const qPharma = pbiPharmaSearch.toLowerCase().trim();
+      const filteredPharmaRank = pharmacyRanking.filter(p => !qPharma || (p.name || '').toLowerCase().includes(qPharma));
+      const totalPharmaPages = Math.max(1, Math.ceil(filteredPharmaRank.length / 30));
+      if (pbiPharmaPage > totalPharmaPages) pbiPharmaPage = totalPharmaPages;
+      const startPharmaIdx = (pbiPharmaPage - 1) * 30;
+      const pagedPharmaRank = filteredPharmaRank.slice(startPharmaIdx, startPharmaIdx + 30);
+
+      const pharmaBarsList = pagedPharmaRank.length ? pagedPharmaRank.map(item => {
         const pctOfMax = Math.round((item.gross / maxPharmaGross) * 100);
         return h('div', { class: 'powerbi-bar-item' },
           h('div', { class: 'powerbi-bar-info-row' },
             h('strong', { class: 'powerbi-bar-label' }, item.name),
             h('span', { class: 'powerbi-bar-meta' },
-              h('span', { class: 'muted' }, item.count + (item.count === 1 ? ' pedido · ' : ' pedidos · ')),
+              h('span', { class: 'muted' }, item.count + (item.count === 1 ? ' pedido • ' : ' pedidos • ')),
               h('span', { class: 'text-strong' }, 'Bruto: ' + money(item.gross)),
               h('span', { class: 'powerbi-bar-commission-tag' }, 'FarmaYA 5%: ' + money(item.earnings))
             )
           ),
           h('div', { class: 'powerbi-bar-track' },
             h('div', {
-              class: 'powerbi-bar-fill-pharmacy',
-              style: 'width: ' + Math.max(pctOfMax, 6) + '%;'
-            },
-              h('div', {
-                class: 'powerbi-bar-fill-farmaya',
-                style: 'width: 5%;',
-                title: '5% FarmaYA: ' + money(item.earnings)
-              })
-            )
+              class: 'powerbi-bar-fill-pharma',
+              style: 'width: ' + pctOfMax + '%;',
+              title: 'Venta Bruta: ' + money(item.gross)
+            }),
+            h('div', {
+              class: 'powerbi-bar-fill-farmaya',
+              style: 'width: 5%;',
+              title: '5% FarmaYA: ' + money(item.earnings)
+            })
           )
         );
-      }) : [h('div', { class: 'muted small text-center p-4' }, 'No hay transacciones registradas para este filtro.')];
+      }) : [h('div', { class: 'muted small text-center p-4' }, 'No se encontraron farmacias con ese criterio de búsqueda.')];
 
       const visualFarmacias = h('div', { class: 'powerbi-visual-card' },
         h('div', { class: 'powerbi-visual-header' },
           h('div', null,
-            h('h3', { class: 'powerbi-visual-title' }, 'Rendimiento por Farmacia Aliada'),
+            h('h3', { class: 'powerbi-visual-title' }, 'Rendimiento por Farmacia Aliada (' + filteredPharmaRank.length + ')'),
             h('p', { class: 'powerbi-visual-subtitle' }, 'Volumen de ventas brutas vs. Ganancia retenida por FarmaYA (5%)')
           ),
           h('div', { class: 'powerbi-legend-row' },
             h('span', { class: 'powerbi-legend-item' },
               h('span', { class: 'powerbi-dot dot-pharmacy' }),
-              '90% Aliado'
+              '95% Aliado'
             ),
             h('span', { class: 'powerbi-legend-item' },
               h('span', { class: 'powerbi-dot dot-farmaya' }),
@@ -291,7 +303,25 @@ function adminPowerBiDashboard() {
             )
           )
         ),
-        h('div', { class: 'powerbi-bars-container' }, pharmaBarsList)
+        // Buscador para buscar la farmacia
+        h('div', { class: 'powerbi-card-search-wrap' },
+          h('span', { class: 'search-ico' }, icon('search')),
+          h('input', {
+            type: 'search',
+            placeholder: 'Buscar farmacia aliada por nombre o ciudad...',
+            value: pbiPharmaSearch,
+            oninput: (e) => {
+              pbiPharmaSearch = e.target.value;
+              pbiPharmaPage = 1;
+              draw();
+            }
+          })
+        ),
+        h('div', { class: 'powerbi-bars-container' }, pharmaBarsList),
+        fyPagination(filteredPharmaRank.length, pbiPharmaPage, 30, (p) => {
+          pbiPharmaPage = p;
+          draw();
+        })
       );
 
       // Visual B: Canales de Pago & Conversión
@@ -340,8 +370,18 @@ function adminPowerBiDashboard() {
 
       const visualsGrid = h('div', { class: 'powerbi-visuals-grid' }, visualFarmacias, visualCanales);
 
-      // Data Matrix Table (Desktop & Flutter Mobile responsive)
-      const tableRows = filtered.slice(0, 50).map(o => {
+      // Table (Desktop & Flutter Mobile responsive con buscador y máximo 30 por página)
+      const qMat = pbiMatrixSearch.toLowerCase().trim();
+      const filteredMatrix = filtered.filter(o => {
+        if (!qMat) return true;
+        return [o.code, o.clientName, o.pharmacyName, o.paymentMethod, o.status].filter(Boolean).join(' ').toLowerCase().includes(qMat);
+      });
+      const totalMatrixPages = Math.max(1, Math.ceil(filteredMatrix.length / 30));
+      if (pbiMatrixPage > totalMatrixPages) pbiMatrixPage = totalMatrixPages;
+      const startMatIdx = (pbiMatrixPage - 1) * 30;
+      const pagedMatrix = filteredMatrix.slice(startMatIdx, startMatIdx + 30);
+
+      const tableRows = pagedMatrix.map(o => {
         const gross = Number(o.total) || 0;
         const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.05);
         const pharmaNet = Math.max(0, gross - earnings);
@@ -350,28 +390,31 @@ function adminPowerBiDashboard() {
         const dtFmt = dt.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) + ' ' + dt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
 
         return h('tr', null,
-          h('td', { class: 'powerbi-cell-code' },
-            h('strong', null, code),
-            h('small', { class: 'muted d-block' }, o.clientName || 'Cliente')
+          h('td', null,
+            h('strong', { class: 'powerbi-table-code' }, code),
+            h('span', { class: 'd-block text-muted small' }, o.clientName || 'Cliente FarmaYA')
           ),
-          h('td', null, o.pharmacyName || 'Sin asignar'),
-          h('td', { class: 'muted small' }, dtFmt),
-          h('td', { class: 'small' }, o.paymentMethod || 'Wompi / Digital'),
-          h('td', { class: 'text-right' },
-            h('strong', null, money(gross)),
-            h('small', { class: 'muted d-block' }, 'Aliado: ' + money(pharmaNet))
+          h('td', null,
+            h('span', { class: 'font-weight-600' }, o.pharmacyName || 'Aliado FarmaYA'),
+            h('small', { class: 'muted d-block' }, 'Aliado (95%): ' + money(pharmaNet))
           ),
-          h('td', { class: 'text-right' },
-            h('span', { class: 'powerbi-profit-pill' }, money(earnings))
+          h('td', null,
+            h('span', { class: 'powerbi-date-badge' }, dtFmt)
           ),
+          h('td', null,
+            h('span', { class: 'powerbi-payment-pill' }, o.paymentMethod || 'Wompi')
+          ),
+          h('td', { class: 'text-right font-weight-700' }, money(gross)),
+          h('td', { class: 'text-right text-green font-weight-700' }, '+ ' + money(earnings)),
           h('td', { class: 'text-center' },
-            h('span', { class: 'tag tone-teal' }, (state.meta.statuses && state.meta.statuses[o.status]) || o.status)
+            h('span', { class: 'powerbi-status-badge status-' + (o.status || 'ENTREGADO').toLowerCase() },
+              o.status === 'ENTREGADO' ? 'Liquidado' : (o.status || 'Completado')
+            )
           )
         );
       });
 
-      // Mobile Flutter Cards List
-      const mobileCardsList = filtered.slice(0, 30).map(o => {
+      const mobileCardsList = pagedMatrix.map(o => {
         const gross = Number(o.total) || 0;
         const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.05);
         const pharmaNet = Math.max(0, gross - earnings);
@@ -381,19 +424,27 @@ function adminPowerBiDashboard() {
 
         return h('div', { class: 'powerbi-flutter-card' },
           h('div', { class: 'powerbi-flutter-card-top' },
-            h('div', { class: 'powerbi-flutter-card-code' },
-              h('strong', null, code),
-              h('span', { class: 'muted small ml-1' }, '· ' + dtFmt)
-            ),
-            h('span', { class: 'tag tone-teal small' }, (state.meta.statuses && state.meta.statuses[o.status]) || o.status)
+            h('strong', { class: 'powerbi-flutter-card-code' }, code),
+            h('span', { class: 'powerbi-status-badge status-' + (o.status || 'ENTREGADO').toLowerCase() },
+              o.status === 'ENTREGADO' ? 'Liquidado' : (o.status || 'Completado')
+            )
           ),
           h('div', { class: 'powerbi-flutter-card-mid' },
-            h('div', { class: 'small' },
-              h('span', { class: 'muted' }, 'Farmacia: '),
-              h('strong', null, o.pharmacyName || 'Sin asignar')
+            h('div', { class: 'powerbi-flutter-row' },
+              h('span', { class: 'muted small' }, 'Cliente:'),
+              h('strong', null, o.clientName || 'Cliente FarmaYA')
             ),
-            h('div', { class: 'small muted' },
-              h('span', null, 'Cliente: ' + (o.clientName || 'Cliente') + ' · ' + (o.paymentMethod || 'Wompi'))
+            h('div', { class: 'powerbi-flutter-row' },
+              h('span', { class: 'muted small' }, 'Farmacia:'),
+              h('strong', null, o.pharmacyName || 'Aliado FarmaYA')
+            ),
+            h('div', { class: 'powerbi-flutter-row' },
+              h('span', { class: 'muted small' }, 'Fecha:'),
+              h('span', null, dtFmt)
+            ),
+            h('div', { class: 'powerbi-flutter-row' },
+              h('span', { class: 'muted small' }, 'Medio:'),
+              h('span', { class: 'powerbi-payment-pill' }, o.paymentMethod || 'Wompi')
             )
           ),
           h('div', { class: 'powerbi-flutter-card-fin' },
@@ -402,7 +453,7 @@ function adminPowerBiDashboard() {
               h('strong', { class: 'powerbi-flutter-amt' }, money(gross))
             ),
             h('div', { class: 'powerbi-flutter-fin-col' },
-              h('span', { class: 'kpi-sub-label' }, 'Aliado (90%)'),
+              h('span', { class: 'kpi-sub-label' }, 'Aliado (95%)'),
               h('strong', { class: 'powerbi-flutter-amt muted' }, money(pharmaNet))
             ),
             h('div', { class: 'powerbi-flutter-fin-col text-right' },
@@ -416,14 +467,26 @@ function adminPowerBiDashboard() {
       const matrixSection = h('div', { class: 'powerbi-matrix-card' },
         h('div', { class: 'powerbi-matrix-header' },
           h('div', null,
-            h('h3', { class: 'powerbi-matrix-title' }, 'Matriz Detallada de Liquidacion (Comision 5% FarmaYA)'),
+            h('h3', { class: 'powerbi-matrix-title' }, 'Matriz Detallada de Liquidación (Comisión 5% FarmaYA)'),
             h('p', { class: 'powerbi-matrix-subtitle' },
-              filtered.length
-                ? 'Mostrando ' + Math.min(filtered.length, 50) + ' de ' + filtered.length + ' transacciones monetizadas.'
+              filteredMatrix.length
+                ? 'Mostrando ' + Math.min(filteredMatrix.length, 30) + ' de ' + filteredMatrix.length + ' transacciones monetizadas.'
                 : 'No se encontraron transacciones con los filtros seleccionados.'
             )
           ),
-          h('span', { class: 'powerbi-tag-mini' }, 'Filtro Dinamico Activo')
+          h('div', { class: 'powerbi-card-search-wrap', style: 'margin:0; min-width:260px;' },
+            h('span', { class: 'search-ico' }, icon('search')),
+            h('input', {
+              type: 'search',
+              placeholder: 'Buscar por cliente, farmacia, código...',
+              value: pbiMatrixSearch,
+              oninput: (e) => {
+                pbiMatrixSearch = e.target.value;
+                pbiMatrixPage = 1;
+                draw();
+              }
+            })
+          )
         ),
         // Desktop table wrap
         h('div', { class: 'powerbi-table-wrap desktop-only' },
@@ -449,7 +512,11 @@ function adminPowerBiDashboard() {
           mobileCardsList.length ? mobileCardsList : [
             h('div', { class: 'text-center muted p-4' }, 'No hay registros para mostrar.')
           ]
-        )
+        ),
+        fyPagination(filteredMatrix.length, pbiMatrixPage, 30, (p) => {
+          pbiMatrixPage = p;
+          draw();
+        })
       );
 
       wrapper.append(headerBanner, slicersBar, kpisGrid, visualsGrid, matrixSection);
@@ -788,27 +855,68 @@ function adminDemandForecast() {
 function adminOrders() {
   let status = adminFilter;
   adminFilter = '';
+  let searchQuery = '';
+  let currentPage = 1;
+  const PAGE_SIZE = 30;
+
   const holder = h('div');
-  const select = h('select', { 'aria-label': 'Filtrar por estado', onchange: () => { status = select.value; draw(); } },
+  const searchInput = h('input', {
+    type: 'search',
+    placeholder: 'Buscar pedido por código, cliente, farmacia, repartidor o dirección...',
+    style: 'flex: 1; min-width: 280px; height: 42px; padding: 0 14px; border-radius: 10px; border: 1.5px solid var(--line); font-size: 13.5px;',
+    oninput: (e) => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      currentPage = 1;
+      draw();
+    }
+  });
+
+  const select = h('select', {
+    'aria-label': 'Filtrar por estado',
+    style: 'height: 42px; border-radius: 10px; border: 1.5px solid var(--line); padding: 0 12px; font-weight: 600;',
+    onchange: () => {
+      status = select.value;
+      currentPage = 1;
+      draw();
+    }
+  },
     h('option', { value: '' }, 'Todos los estados'),
     Object.entries(state.meta.statuses).map(([k, v]) => h('option', { value: k }, v)));
   select.value = status;
+
   const draw = () => holder.replaceChildren(live(() => API.get('/admin/orders' + (status ? '?status=' + status : '')), orders => {
     if (!orders.length) return empty('No hay pedidos con este filtro', 'Prueba con otro estado o muestra todos.');
-    return h('div', { class: 'list' }, orders.map(o => {
-      const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.05) : 0);
-      return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
-        h('span', { class: 'muted small' }, o.address || o.city || 'Cobertura general'),
-        o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
-      ));
-    }));
+    const filtered = orders.filter(o => {
+      if (!searchQuery) return true;
+      return [o.code, o.id, o.clientName, o.pharmacyName, o.courierName, o.address, o.city].filter(Boolean).join(' ').toLowerCase().includes(searchQuery);
+    });
+
+    if (!filtered.length) return empty('Sin resultados', 'No se encontraron pedidos que coincidan con la búsqueda.');
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    const startIdx = (currentPage - 1) * PAGE_SIZE;
+    const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+    return h('div', { class: 'stack' },
+      h('div', { class: 'list' }, paged.map(o => {
+        const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.05) : 0);
+        return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
+          h('span', { class: 'muted small' }, o.address || o.city || 'Cobertura general'),
+          o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
+        ));
+      })),
+      fyPagination(filtered.length, currentPage, PAGE_SIZE, (p) => {
+        currentPage = p;
+        draw();
+      })
+    );
   }));
   draw();
-  return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, select), holder);
+  return h('div', { class: 'stack' }, h('div', { class: 'toolbar', style: 'display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:14px;' }, searchInput, select), holder);
 }
 
-/** Modal interactivo para solicitar el motivo de deshabilitacion y enviarlo por correo */
-async function promptDisableUser(user) {
+function promptDisableUser(user) {
   const name = user.pharmacyName || user.name || 'este usuario';
   const roleLabel = user.role === 'FARMACIA'
     ? 'la farmacia'
@@ -831,10 +939,20 @@ function adminUsers(role) {
   const titles = { FARMACIA: 'farmacias', REPARTIDOR: 'repartidores', CLIENTE: 'clientes' };
   let query = '';
   let timer;
+  let userPage = 1;
+  const PAGE_SIZE = 30;
+
   const search = h('input', {
     type: 'search', placeholder: 'Buscar por nombre, correo, teléfono o dirección...', 'aria-label': 'Buscar ' + titles[role],
-    style: 'width: 100%; font-size: 0.95rem; padding: 0.65rem 1rem; border-radius: 8px;',
-    oninput: () => { clearTimeout(timer); timer = setTimeout(() => { query = search.value.trim().toLowerCase(); refreshAll(); }, 150); }
+    style: 'width: 100%; font-size: 0.95rem; padding: 0.65rem 1rem; border-radius: 8px; border: 1.5px solid var(--line);',
+    oninput: () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        query = search.value.trim().toLowerCase();
+        userPage = 1;
+        refreshAll();
+      }, 150);
+    }
   });
 
   const list = live(() => API.get('/admin/users?role=' + role), users => {
@@ -843,6 +961,12 @@ function adminUsers(role) {
       [u.name, u.email, u.address, u.pharmacyName, u.phone, u.city].filter(Boolean).join(' ').toLowerCase().includes(query));
     if (!shown.length) return empty('Sin resultados', 'No encontramos ' + titles[role] + ' que coincidan con la búsqueda.');
     const needsVerify = role !== 'CLIENTE';
+
+    const totalPages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+    if (userPage > totalPages) userPage = totalPages;
+    const startIdx = (userPage - 1) * PAGE_SIZE;
+    const pagedUsers = shown.slice(startIdx, startIdx + PAGE_SIZE);
+
     const toggle = (u, kind, value, ok) => async e => {
       let reason = null;
       if (kind === 'enabled' && value === false) {
@@ -858,49 +982,66 @@ function adminUsers(role) {
       }
       refreshAll();
     };
-    return h('div', { class: 'table-wrap', style: 'width: 100%;' }, h('table', { class: 'users', style: 'width: 100%;' },
-      h('thead', null, h('tr', null,
-        h('th', null, role === 'FARMACIA' ? 'Farmacia' : 'Nombre'), h('th', null, 'Contacto'), h('th', null, 'Ubicación'), h('th', null, 'Estado'), h('th', null, 'Acciones'))),
-      h('tbody', null, shown.map(u => h('tr', { class: u.enabled ? '' : 'disabled' },
-        h('td', null,
-          h('strong', null, role === 'FARMACIA' ? (u.pharmacyName || u.name) : u.name),
-          role === 'FARMACIA' && h('small', { class: 'block-line muted' }, u.address),
-          role === 'FARMACIA' && h('small', { class: 'block-line muted' }, 'Licencia ' + (u.licenseNumber || 'N/A') + ', horario: ' + (u.openFrom || '08:00') + ' a ' + (u.openTo || '20:00')),
-          role === 'REPARTIDOR' && h('small', { class: 'block-line muted' }, (u.vehicle || 'Vehículo') + (u.plate ? ' [' + u.plate + ']' : '')),
-          role === 'FARMACIA' && h('small', { class: 'block-line muted' }, 'Responsable: ' + u.name)),
-        h('td', null, u.email, h('small', { class: 'block-line muted' }, u.phone || 'Sin teléfono')),
-        h('td', null, u.address || u.city || 'Ciudad completa'),
-        h('td', null,
-          !u.enabled ? h('div', { class: 'disabled-account-cell' },
-              h('span', { class: 'badge tone-bad' }, 'Deshabilitada'),
-              u.disabledReason ? h('small', { class: 'block-line text-danger', style: 'margin-top:4px; max-width:240px; font-size:11px; line-height:1.3; font-weight:600;' }, 'Motivo: ' + u.disabledReason) : null
-            )
-            : [
-                needsVerify ? h('span', { class: 'badge ' + (u.verified ? 'tone-done' : 'tone-wait') }, u.verified ? 'Verificada' : 'Por verificar') : null,
-                u.active === false
-                  ? h('span', { class: 'badge tone-wait', style: 'margin-left: 4px;' }, 'En pausa')
-                  : h('span', { class: 'badge tone-done', style: 'margin-left: 4px;' }, 'En servicio')
-              ],
-          role === 'FARMACIA' && u.editPermissionRequested && !u.canEditProfile && h('small', { class: 'block-line attention', style: 'margin-top:5px;font-weight:700;' }, 'Solicitó editar datos / número' + (u.editRequestNote ? ': ' + u.editRequestNote : '')),
-          role === 'FARMACIA' && u.canEditProfile && h('small', { class: 'block-line text-success', style: 'margin-top:5px;font-weight:700;' }, 'Edición autorizada por admin')),
-        h('td', { class: 'row-actions' },
-          u.verificationDocuments && u.verificationDocuments.length
-            ? h('button', { class: 'btn link small', onclick: () => openUserDocumentsModal(u) }, 'Expediente (' + u.verificationDocuments.length + ' PDFs)')
-            : null,
-          needsVerify && (u.verified
-            ? h('button', { class: 'btn ghost small', onclick: toggle(u, 'verified', false, 'Verificación retirada') }, 'Quitar verificación')
-            : h('button', { class: 'btn primary small', onclick: toggle(u, 'verified', true, 'Cuenta verificada') }, 'Verificar')),
-          role === 'FARMACIA' && (u.canEditProfile
-            ? h('button', { class: 'btn ghost small', onclick: toggle(u, 'edit-permission', false, 'Permiso de edición revocado') }, 'Revocar permiso edición')
-            : h('button', { class: 'btn ' + (u.editPermissionRequested ? 'primary' : 'ghost') + ' small', onclick: toggle(u, 'edit-permission', true, 'Permiso de edición concedido') }, u.editPermissionRequested ? 'Autorizar edición' : 'Permitir editar datos')),
-          u.enabled && (role === 'FARMACIA' || role === 'REPARTIDOR') && (u.active !== false
-            ? h('button', { class: 'btn ghost small', onclick: toggle(u, 'active', false, 'Cuenta puesta en pausa') }, 'Pausar')
-            : h('button', { class: 'btn secondary small', onclick: toggle(u, 'active', true, 'Cuenta reanudada') }, 'Reanudar')),
-          u.enabled
-            ? h('button', { class: 'btn danger-ghost small', onclick: toggle(u, 'enabled', false, 'Cuenta deshabilitada') }, 'Deshabilitar')
-            : h('button', { class: 'btn ghost small', onclick: toggle(u, 'enabled', true, 'Cuenta habilitada') }, 'Habilitar')))))));
+
+    return h('div', { class: 'stack', style: 'width: 100%;' },
+      h('div', { class: 'table-wrap', style: 'width: 100%;' }, h('table', { class: 'users', style: 'width: 100%;' },
+        h('thead', null, h('tr', null,
+          h('th', null, role === 'FARMACIA' ? 'Farmacia' : 'Nombre'),
+          h('th', null, 'Contacto'),
+          role === 'FARMACIA' ? h('th', null, 'Horario') : null,
+          role === 'REPARTIDOR' ? h('th', null, 'Vehículo') : null,
+          needsVerify ? h('th', null, 'Verificación Sanitaria') : null,
+          h('th', null, 'Estado'),
+          h('th', { class: 'text-right' }, 'Acciones'))),
+        h('tbody', null, pagedUsers.map(u => {
+          const isVer = u.verified;
+          const isEn = u.enabled;
+          const title = (role === 'FARMACIA' && u.pharmacyName) ? u.pharmacyName : u.name;
+          const subtitle = (role === 'FARMACIA' && u.pharmacyName) ? u.name : null;
+          const docs = u.verificationDocuments || [];
+          return h('tr', { class: isEn ? '' : 'user-disabled' },
+            h('td', null,
+              h('strong', null, title),
+              subtitle ? h('span', { class: 'muted small block-line' }, subtitle) : null,
+              h('span', { class: 'muted small block-line' }, (u.city || '') + (u.address ? ' • ' + u.address : '')),
+              u.licenseNumber ? h('small', { class: 'muted block-line', style: 'font-size: 11px;' }, 'Licencia: ' + u.licenseNumber) : null,
+              (!isEn && u.disabledReason) ? h('div', { class: 'tag tone-red', style: 'margin-top: 4px; font-size: 11px; display: inline-block;' }, 'Motivo: ' + u.disabledReason) : null),
+            h('td', null,
+              h('span', null, u.email),
+              u.phone ? h('span', { class: 'muted small block-line' }, u.phone) : null),
+            role === 'FARMACIA' ? h('td', null, (u.openFrom && u.openTo) ? u.openFrom + ' - ' + u.openTo : '24 horas') : null,
+            role === 'REPARTIDOR' ? h('td', null,
+              u.vehicle ? h('span', null, u.vehicle) : h('span', { class: 'muted' }, 'No indicado'),
+              u.plate ? h('span', { class: 'tag tone-teal', style: 'margin-left: 6px; font-weight: bold;' }, u.plate) : null) : null,
+            needsVerify ? h('td', null,
+              h('div', { style: 'display: flex; flex-direction: column; gap: 4px; align-items: flex-start;' },
+                h('span', { class: 'tag ' + (isVer ? 'tone-green' : 'tone-amber') }, isVer ? 'Verificado' : 'Pendiente'),
+                docs.length > 0
+                  ? h('button', {
+                    type: 'button',
+                    class: 'btn-link-sm',
+                    style: 'font-size: 11.5px; padding: 0; color: var(--primary); text-decoration: underline; background: none; border: none; cursor: pointer;',
+                    onclick: () => openUserDocumentsModal(u)
+                  }, icon('copy', 'inline-ico'), ' Ver ' + docs.length + ' documento(s)')
+                  : h('span', { class: 'muted', style: 'font-size: 11px;' }, 'Sin documentos adjuntos'))) : null,
+            h('td', null, h('span', { class: 'tag ' + (isEn ? 'tone-green' : 'tone-red') }, isEn ? 'Activo' : 'Deshabilitado')),
+            h('td', { class: 'actions-cell' },
+              needsVerify ? (isVer
+                ? h('button', { class: 'btn secondary small', onclick: toggle(u, 'verified', false, 'Verificación retirada') }, 'Quitar verificación')
+                : h('button', { class: 'btn primary small', onclick: toggle(u, 'verified', true, 'Usuario verificado y notificado') }, 'Verificar')) : null,
+              isEn
+                ? h('button', { class: 'btn danger small', onclick: toggle(u, 'enabled', false, 'Usuario deshabilitado') }, 'Deshabilitar')
+                : h('button', { class: 'btn secondary small', onclick: toggle(u, 'enabled', true, 'Usuario habilitado') }, 'Habilitar')));
+        }))
+      )),
+      fyPagination(shown.length, userPage, PAGE_SIZE, (p) => {
+        userPage = p;
+        refreshAll();
+      })
+    );
   });
-  return h('div', { class: 'stack', style: 'width: 100%;' }, h('div', { class: 'toolbar', style: 'width: 100%;' }, search), list);
+
+  return h('div', { class: 'stack' }, h('div', { class: 'toolbar' }, search), list);
 }
 
 function openPdfViewerDialog(title, dataUrl, filename) {
@@ -960,6 +1101,8 @@ function openUserDocumentsModal(user) {
 
 function adminVerificationCenter() {
   let filterRole = '';
+  let verifyPage = 1;
+  const PAGE_SIZE = 30;
   const filterButtons = [
     { label: 'Todas las solicitudes', role: '', iconName: 'clipboard-list' },
     { label: 'Farmacias pendientes', role: 'FARMACIA', iconName: 'building' },
@@ -973,7 +1116,7 @@ function adminVerificationCenter() {
     toolbar.replaceChildren(...filterButtons.map(fb => h('button', {
       type: 'button',
       class: 'btn tab-pill-btn ' + (filterRole === fb.role ? 'primary' : 'secondary'),
-      onclick: () => { filterRole = fb.role; renderView(); }
+      onclick: () => { filterRole = fb.role; verifyPage = 1; renderView(); }
     }, icon(fb.iconName), h('span', null, fb.label))));
 
     const content = live(() => API.get('/admin/verifications'), users => {
@@ -986,16 +1129,21 @@ function adminVerificationCenter() {
           : 'Todas las cuentas de farmacias y repartidores han sido revisadas y verificadas.');
       }
 
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (verifyPage > totalPages) verifyPage = totalPages;
+      const startIdx = (verifyPage - 1) * PAGE_SIZE;
+      const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
       const cardsContainer = h('div', {
         class: 'verification-cards-grid',
         style: 'display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 1.25rem; width: 100%;'
-      }, filtered.map(u => {
+      }, paged.map(u => {
         const isPh = u.role === 'FARMACIA';
         const docs = u.verificationDocuments || [];
 
-                const actVerify = async (val) => {
+        const actVerify = async (val) => {
           await act(null, () => API.post('/admin/users/' + u.id + '/verified', { value: val }),
-            val ? 'Cuenta verificada y notificada por correo al usuario' : 'Verificacion retirada');
+            val ? 'Cuenta verificada y notificada por correo al usuario' : 'Verificación retirada');
           u.verified = val;
           refreshAll();
         };
@@ -1003,118 +1151,91 @@ function adminVerificationCenter() {
         const actDisable = async () => {
           const reason = await promptDisableUser(u);
           if (!reason) return;
-          await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false, reason }),
-            'Cuenta deshabilitada y motivo notificado por correo');
+          await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false, reason }), 'Cuenta deshabilitada');
           u.enabled = false;
-          u.disabledReason = reason;
           refreshAll();
         };
 
-        return h('article', { class: 'block verification-item-card' },
-          h('div', { class: 'verification-card-header' },
+        return h('div', { class: 'card verification-item-card', style: 'padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.85rem;' },
+          h('div', { class: 'verification-card-header', style: 'display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;' },
             h('div', null,
-              h('div', { style: 'display:flex; align-items:center; gap:8px;' },
-                h('strong', { style: 'font-size:16px;' }, isPh ? (u.pharmacyName || u.name) : u.name),
-                h('span', { class: 'badge ' + (isPh ? 'tone-teal' : 'tone-blue'), style: 'display:inline-flex; align-items:center; gap:4px;' },
-                  icon(isPh ? 'building' : 'bike'),
-                  h('span', null, isPh ? 'Farmacia' : 'Repartidor')
-                )
-              ),
-              h('span', { class: 'muted small block-line', style: 'margin-top:4px;' }, 'Registrado ' + relTime(u.createdAt) + ' · ' + (u.city || u.address || 'Cobertura general'))
+              h('span', { class: 'tag ' + (isPh ? 'tone-teal' : 'tone-blue'), style: 'margin-bottom: 4px; display: inline-block;' },
+                isPh ? 'Farmacia Aliada' : 'Repartidor / Mensajero'),
+              h('h3', { style: 'margin: 0; font-size: 1.15rem; font-weight: 700;' }, isPh ? (u.pharmacyName || u.name) : u.name),
+              isPh && u.pharmacyName ? h('span', { class: 'muted small block-line' }, 'Representante: ' + u.name) : null,
+              h('span', { class: 'muted small block-line' }, u.email + (u.phone ? ' • ' + u.phone : ''))
             ),
-            h('span', { class: 'badge tone-wait' }, 'Pendiente')
+            h('span', { class: 'tag tone-amber', style: 'font-weight: 700;' }, 'Pendiente de Revisión')
           ),
-
-          h('div', { class: 'verification-details-grid' },
-            h('div', null,
-              h('span', { class: 'small muted block-line' }, 'Responsable / Titular:'),
-              h('strong', null, u.name),
-              h('span', { class: 'small muted block-line' }, u.email),
-              h('span', { class: 'small muted block-line' }, 'Tel: ' + (u.phone || 'No registrado'))
-            ),
-            isPh ? h('div', null,
-              h('span', { class: 'small muted block-line' }, 'Establecimiento y Licencia:'),
-              h('strong', null, u.address || 'Sin dirección física'),
-              h('span', { class: 'small muted block-line' }, 'Registro Sanitario: ' + (u.licenseNumber || 'No registrada')),
-              h('span', { class: 'small muted block-line' }, 'Horario: ' + (u.openFrom || '08:00') + ' a ' + (u.openTo || '22:00')),
-              
-              u.bankName ? h('div', { style: 'margin-top:6px; padding:6px 10px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px;' },
-                h('strong', { style: 'font-size:11px; color:#166534; display:block;' }, 'Cuenta para Pagos FarmaYA:'),
-                h('span', { style: 'font-size:12px; font-weight:700;' }, u.bankName + ' · ' + (u.accountType || 'Ahorros') + ' · ' + (u.accountNumber || '-')),
-                h('small', { class: 'muted block-line', style: 'font-size:10.5px;' }, 'Titular: ' + (u.accountHolder || u.name) + ' (NIT/C.C.: ' + (u.accountDocNumber || '-') + ')')
-              ) : null
-            ) : h('div', null,
-              h('span', { class: 'small muted block-line' }, 'Datos del Repartidor:'),
-              h('strong', null, 'Vehículo: ' + (u.vehicle || 'Moto')),
-              h('span', { class: 'small muted block-line' }, 'Placa: ' + (u.plate || 'No registrada'))
-            )
+          h('div', { class: 'verification-details-grid', style: 'background: var(--surface-soft); padding: 0.85rem; border-radius: 8px; font-size: 0.88rem; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;' },
+            h('div', null, h('span', { class: 'muted' }, 'Ciudad: '), h('strong', null, u.city || 'Nacional')),
+            h('div', null, h('span', { class: 'muted' }, 'Dirección: '), h('strong', null, u.address || '-')),
+            isPh ? h('div', { style: 'grid-column: span 2;' }, h('span', { class: 'muted' }, 'Licencia: '), h('strong', null, u.licenseNumber || 'En trámite')) : null,
+            !isPh ? h('div', null, h('span', { class: 'muted' }, 'Vehículo: '), h('strong', null, u.vehicle || 'Sin vehículo')) : null,
+            !isPh ? h('div', null, h('span', { class: 'muted' }, 'Placa: '), h('strong', null, u.plate || 'N/A')) : null
           ),
-
-          h('div', { class: 'verification-pdf-section' },
-            h('strong', { class: 'small bold block-line', style: 'margin-bottom:6px; color:var(--text);' },
-              'Documentos adjuntos en PDF (' + docs.length + '):'),
-            docs.length ? h('div', { class: 'doc-pdf-badges-wrap' }, docs.map(doc => h('div', { class: 'doc-pdf-pill' },
-              h('span', { class: 'doc-pdf-pill-title' }, doc.title || doc.docType),
-              h('button', {
+          h('div', { class: 'verification-docs-preview' },
+            h('strong', { style: 'font-size: 0.88rem; display: block; margin-bottom: 6px;' }, 'Documentación Adjunta (' + docs.length + '):'),
+            docs.length ? h('div', { style: 'display: flex; flex-direction: column; gap: 4px;' },
+              docs.map(d => h('button', {
                 type: 'button',
-                class: 'btn primary sm-btn',
-                onclick: () => openPdfViewerDialog(doc.title, doc.dataUrl, doc.filename),
-                style: 'display:inline-flex; align-items:center; gap:4px;'
-              }, icon('prescriptions'), h('span', null, 'Ver PDF')),
-              h('a', {
-                class: 'btn ghost sm-btn',
-                href: doc.dataUrl,
-                download: doc.filename || 'documento.pdf',
-                target: '_blank',
-                style: 'display:inline-flex; align-items:center; gap:4px;'
-              }, icon('download'), h('span', null, 'Descargar'))
-            ))) : h('p', { class: 'muted small', style: 'margin:0;' }, 'No se adjuntaron archivos PDF al momento de crear la cuenta.')
+                class: 'btn secondary small',
+                style: 'justify-content: flex-start; text-align: left; font-size: 12px; padding: 6px 10px;',
+                onclick: () => openPdfViewerDialog(d.url, d.name || 'Documento')
+              }, icon('copy'), h('span', { style: 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;' }, d.name || 'Documento PDF'))))
+              : h('p', { class: 'muted small', style: 'margin: 0;' }, 'No se adjuntaron archivos en el registro.')
           ),
-
-          h('div', { class: 'verification-actions-bar', style: 'margin-top:auto;' },
-            h('button', {
-              class: 'btn primary',
-              type: 'button',
-              onclick: () => actVerify(true),
-              style: 'display:inline-flex; align-items:center; gap:6px;'
-            }, icon('check'), h('span', null, 'Aprobar y Verificar')),
-            h('button', {
-              class: 'btn danger-ghost',
-              type: 'button',
-              onclick: actDisable,
-              style: 'display:inline-flex; align-items:center; gap:6px;'
-            }, icon('x'), h('span', null, 'Rechazar / Deshabilitar'))
-          )
+          h('div', { class: 'verification-actions-row', style: 'display: flex; gap: 8px; justify-content: flex-end; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--line);' },
+            h('button', { class: 'btn danger small', type: 'button', onclick: actDisable }, 'Rechazar / Deshabilitar'),
+            h('button', { class: 'btn primary small', type: 'button', onclick: () => actVerify(true) }, 'Aprobar y Verificar'))
         );
       }));
 
-      return h('div', { class: 'stack', style: 'width: 100%;' }, cardsContainer);
+      return h('div', { class: 'stack' },
+        cardsContainer,
+        fyPagination(filtered.length, verifyPage, PAGE_SIZE, (p) => {
+          verifyPage = p;
+          renderView();
+        })
+      );
     });
 
-    container.replaceChildren(toolbar, content);
+    container.replaceChildren(content);
   }
 
   renderView();
-  return container;
+  return h('div', { class: 'stack' }, toolbar, container);
 }
 
-/* Auditoría administrativa: acciones sobre aliados, catálogo, usuarios y sistema. */
 function adminMovements() {
   let query = '';
   let type = '';
+  let movPage = 1;
+  const PAGE_SIZE = 30;
   const holder = h('div', { class: 'stack' });
-  const search = h('input', { type: 'search', placeholder: 'Buscar código, usuario, acción o detalle administrativo', 'aria-label': 'Buscar movimientos administrativos', oninput: () => { query = search.value.trim().toLowerCase(); draw(); } });
-  const filter = h('select', { 'aria-label': 'Filtrar movimientos administrativos', onchange: () => { type = filter.value; draw(); } },
+  const search = h('input', {
+    type: 'search',
+    placeholder: 'Buscar código, usuario, acción o detalle administrativo',
+    'aria-label': 'Buscar movimientos administrativos',
+    style: 'border: 1.5px solid var(--line);',
+    oninput: () => { query = search.value.trim().toLowerCase(); movPage = 1; draw(); }
+  });
+  const filter = h('select', {
+    'aria-label': 'Filtrar movimientos administrativos',
+    style: 'border: 1.5px solid var(--line);',
+    onchange: () => { type = filter.value; movPage = 1; draw(); }
+  },
     h('option', { value: '' }, 'Todos los movimientos administrativos'),
     h('option', { value: 'USUARIO' }, 'Cuentas de usuario'),
     h('option', { value: 'PRODUCTO' }, 'Catálogo y productos'),
     h('option', { value: 'VERIFICACION' }, 'Verificaciones y permisos'),
+    h('option', { value: 'DESEMBOLSO' }, 'Desembolsos y liquidaciones'),
     h('option', { value: 'SISTEMA' }, 'Sistema'));
+
   const draw = () => {
     holder.replaceChildren(live(() => API.get('/admin/movements'), movements => {
       const filtered = movements.filter(m => {
-        // Excluir eventos estándar de delivery / pedidos ordinarios de clientes
-        if (m.orderCode && !String(m.type).startsWith('ADMIN') && !String(m.type).includes('VERIFICACION')) {
+        if (m.orderCode && !String(m.type).startsWith('ADMIN') && !String(m.type).includes('VERIFICACION') && !String(m.type).includes('DESEMBOLSO')) {
           return false;
         }
         const searchable = [m.code, m.type, m.description, m.actorName, m.actorRole].filter(Boolean).join(' ').toLowerCase();
@@ -1122,22 +1243,46 @@ function adminMovements() {
         if (type === 'USUARIO') typeOk = String(m.type).startsWith('USUARIO_') || String(m.type).includes('USUARIO');
         else if (type === 'PRODUCTO') typeOk = String(m.type).includes('PRODUCTO');
         else if (type === 'VERIFICACION') typeOk = String(m.type).includes('VERIFICACION') || String(m.type).includes('PERMISO');
+        else if (type === 'DESEMBOLSO') typeOk = String(m.type).includes('DESEMBOLSO');
         else if (type === 'SISTEMA') typeOk = m.actorRole === 'SISTEMA' || String(m.type).includes('SISTEMA');
         return typeOk && (!query || searchable.includes(query));
       });
-      if (!filtered.length) return empty('No hay movimientos administrativos', 'Las acciones de administración sobre usuarios, verificaciones, catálogo y configuración del sistema aparecerán aquí.');
-      return h('div', { class: 'table-wrap movement-table' }, h('table', { class: 'users' },
-        h('thead', null, h('tr', null, h('th', null, 'Código'), h('th', null, 'Acción Administrativa'), h('th', null, 'Detalle'), h('th', null, 'Responsable'), h('th', null, 'Fecha y hora'))),
-        h('tbody', null, filtered.map(m => h('tr', null,
-          h('td', null, h('strong', { class: 'movement-code' }, m.code || '—')),
-          h('td', null, h('strong', null, movementTypeLabel(m.type))),
-          h('td', null, h('span', { class: 'movement-description' }, m.description || 'Sin descripción')),
-          h('td', null, h('strong', null, m.actorName || 'Administrador'), h('small', { class: 'block-line muted' }, m.actorRole || 'ADMIN')),
-          h('td', null, formatMovementDate(m.createdAt)))))));
+
+      if (!filtered.length) return empty('No hay movimientos administrativos', 'Las acciones de administración sobre usuarios, verificaciones y catálogo se auditan aquí.');
+
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (movPage > totalPages) movPage = totalPages;
+      const startIdx = (movPage - 1) * PAGE_SIZE;
+      const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+      return h('div', { class: 'stack' },
+        h('div', { class: 'table-wrap' }, h('table', { class: 'users' },
+          h('thead', null, h('tr', null,
+            h('th', null, 'Acción administrativa'),
+            h('th', null, 'Afectado / Objeto'),
+            h('th', null, 'Responsable'),
+            h('th', null, 'Fecha y hora'))),
+          h('tbody', null, paged.map(m => {
+            const actor = m.actorName ? (m.actorName + (m.actorRole ? ' (' + m.actorRole + ')' : '')) : (m.actorRole || 'Sistema');
+            return h('tr', null,
+              h('td', null,
+                h('strong', null, movementTypeLabel(m.type)),
+                h('small', { class: 'block-line muted movement-description' }, m.description || 'Sin detalle')),
+              h('td', null,
+                m.orderCode ? h('span', { class: 'tag tone-teal', style: 'font-weight: 700;' }, m.orderCode) : (m.code || 'Auditoría general')),
+              h('td', null, actor),
+              h('td', null, formatMovementDate(m.createdAt)));
+          }))
+        )),
+        fyPagination(filtered.length, movPage, PAGE_SIZE, (p) => {
+          movPage = p;
+          draw();
+        })
+      );
     }));
   };
   draw();
-  return h('div', { class: 'stack' }, h('div', { class: 'toolbar movement-toolbar' }, search, filter), holder);
+  return h('div', { class: 'stack' }, h('div', { class: 'toolbar', style: 'display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:14px;' }, search, filter), holder);
 }
 
 function movementTypeLabel(type) {
@@ -1400,22 +1545,28 @@ function openCreateAdminModal(onCreated) {
 function adminCatalogManager() {
   let query = '';
   let category = '';
+  let catalogPage = 1;
+  const PAGE_SIZE = 30;
   const holder = h('div', { class: 'stack' });
 
   const search = h('input', {
     type: 'search',
     placeholder: 'Buscar medicamento por nombre, componente o laboratorio...',
     'aria-label': 'Buscar medicamento',
+    style: 'border: 1.5px solid var(--line);',
     oninput: () => {
       query = search.value.trim().toLowerCase();
+      catalogPage = 1;
       draw();
     }
   });
 
   const catSelect = h('select', {
     'aria-label': 'Filtrar por categoría',
+    style: 'border: 1.5px solid var(--line);',
     onchange: () => {
       category = catSelect.value;
+      catalogPage = 1;
       draw();
     }
   },
@@ -1441,6 +1592,11 @@ function adminCatalogManager() {
       return;
     }
 
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (catalogPage > totalPages) catalogPage = totalPages;
+    const startIdx = (catalogPage - 1) * PAGE_SIZE;
+    const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
     const tableWrap = h('div', { class: 'table-wrap stitch-admin-catalog-wrap' },
       h('table', { class: 'users admin-catalog-table' },
         h('thead', null,
@@ -1448,134 +1604,99 @@ function adminCatalogManager() {
             h('th', { style: 'width:90px' }, 'Imagen'),
             h('th', null, 'Medicamento / Ficha Técnica'),
             h('th', null, 'Categoría'),
-            h('th', null, 'Precio Sugerido'),
-            h('th', null, 'Estado Foto'),
-            h('th', { style: 'text-align:right' }, 'Acciones')
+            h('th', null, 'Registro INVIMA'),
+            h('th', { class: 'text-right' }, 'Precio Referencia'),
+            h('th', { class: 'text-center' }, 'Acciones')
           )
         ),
-        h('tbody', null, filtered.map(p => {
-          const hasCustom = !!(p.imageUrl || customImages[p.name]);
-          const artWrapper = h('div', {
-            class: 'admin-product-thumb',
-            style: 'cursor:pointer;',
-            title: 'Haz clic para cambiar la fotografía',
-            onclick: () => openProductImageModal(p, () => {
-              if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
-              draw();
-            })
-          }, productArt(p));
-
+        h('tbody', null, paged.map(p => {
+          const imgSrc = customImages[p.id] || p.img || (typeof getProductImagePlaceholder === 'function' ? getProductImagePlaceholder(p.name, p.cat) : '');
           return h('tr', null,
-            h('td', null, artWrapper),
-            h('td', null,
-              h('div', { style: 'display:flex;align-items:center;gap:6px;' },
-                h('strong', { class: 'admin-med-title' }, p.name),
-                p.rx && h('span', { class: 'badge-rx inline', style: 'font-size:11px;' }, 'Rx'),
-                p.featured && h('span', { class: 'badge tone-teal inline', style: 'font-size:10px;' }, 'Destacado')
-              ),
-              h('small', { class: 'block-line text-secondary' }, p.presentation || 'Sin presentación definida'),
-              h('small', { class: 'block-line muted' }, (p.lab || 'Laboratorio estándar') + (p.invima ? ' · ' + p.invima : '')),
-              p.active && h('small', { class: 'block-line muted' }, 'Principio: ' + p.active)
-            ),
-            h('td', null,
-              h('span', { class: 'badge' }, CATEGORIES.find(c => c.id === p.cat)?.label || p.cat)
-            ),
-            h('td', null,
-              h('strong', { class: 'product-price' }, money(p.price))
-            ),
-            h('td', null,
-              hasCustom
-                ? h('span', { class: 'badge tone-done' }, 'Foto personalizada')
-                : h('span', { class: 'badge tone-wait' }, 'Ilustración médica')
-            ),
-            h('td', { class: 'row-actions', style: 'justify-content:flex-end;gap:8px;' },
-              h('button', {
-                class: 'btn ghost small',
-                type: 'button',
-                title: 'Editar información y características del producto',
-                onclick: () => openAdminProductModal(p, () => {
-                  if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
-                  draw();
-                })
-              }, 'Editar'),
-              h('button', {
-                class: 'btn primary small',
-                type: 'button',
-                title: 'Gestionar foto del producto',
-                onclick: () => openProductImageModal(p, () => {
-                  if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
-                  draw();
-                })
-              }, hasCustom ? 'Foto' : '+ Foto'),
-              h('button', {
-                class: 'btn danger-ghost small',
-                type: 'button',
-                title: 'Eliminar este producto del catálogo',
-                onclick: async () => {
-                  const ok = await confirmBox({
-                    title: 'Eliminar producto',
-                    message: `¿Estás seguro de que deseas eliminar permanentemente "${p.name}" del catálogo institucional y de la base de datos?`,
-                    ok: 'Eliminar',
-                    danger: true
-                  });
-                  if (!ok) return;
-
-                  try {
-                    const targetId = p.id || encodeURIComponent(p.name);
-                    await API.delete('/products/' + targetId);
-                  } catch (err) {
-                    console.debug('Error deleting product from backend:', err);
+            h('td', { class: 'catalog-thumb-cell' },
+              h('div', { class: 'admin-prod-thumb-wrap' },
+                imgSrc ? h('img', {
+                  src: imgSrc,
+                  alt: p.name,
+                  class: 'admin-prod-thumb',
+                  loading: 'lazy',
+                  onerror: (e) => {
+                    e.currentTarget.style.display = 'none';
+                    if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
                   }
-
-                  const idx = CATALOG.findIndex(item => item === p || (p.id && item.id === p.id) || norm(item.name) === norm(p.name));
-                  if (idx >= 0) CATALOG.splice(idx, 1);
-                  if (typeof saveProductImage === 'function') saveProductImage(p.name, null);
-
-                  toast(`Producto "${p.name}" eliminado del catálogo.`);
-                  window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
-                  draw();
-                }
-              }, 'Eliminar')
+                }) : null,
+                h('div', { class: 'admin-prod-thumb-fallback', style: imgSrc ? 'display:none;' : 'display:flex;' },
+                  icon('capsule')
+                )
+              )
+            ),
+            h('td', null,
+              h('div', { class: 'prod-title-line' },
+                h('strong', { class: 'prod-name' }, p.name),
+                p.rx ? h('span', { class: 'tag tone-amber rx-mini-pill', title: 'Requiere Fórmula Médica' }, 'Rx') : null
+              ),
+              p.active ? h('span', { class: 'prod-active muted small block-line' }, p.active) : null,
+              h('span', { class: 'prod-meta muted small block-line' },
+                [p.presentation, p.lab].filter(Boolean).join(' • ')
+              )
+            ),
+            h('td', null,
+              h('span', { class: 'tag tone-teal cat-tag' },
+                (CATEGORIES.find(c => c.id === p.cat) || {}).label || p.cat
+              )
+            ),
+            h('td', null,
+              h('span', { class: 'invima-pill' }, p.invima || 'Trámite INVIMA')
+            ),
+            h('td', { class: 'text-right font-bold price-cell' },
+              money(p.price)
+            ),
+            h('td', { class: 'text-center actions-cell' },
+              h('div', { class: 'btn-group-mini' },
+                h('button', {
+                  type: 'button',
+                  class: 'btn secondary small icon-only',
+                  title: 'Cambiar imagen del producto',
+                  onclick: () => openProductImageModal(p, () => draw())
+                }, icon('pencil')),
+                h('button', {
+                  type: 'button',
+                  class: 'btn secondary small icon-only',
+                  title: 'Editar información del medicamento',
+                  onclick: () => openAdminProductModal(p, () => draw())
+                }, icon('settings'))
+              )
             )
           );
         }))
       )
     );
 
-    holder.replaceChildren(tableWrap);
+    holder.replaceChildren(
+      tableWrap,
+      fyPagination(filtered.length, catalogPage, PAGE_SIZE, (p) => {
+        catalogPage = p;
+        draw();
+      })
+    );
   };
 
-  // Escuchar actualizaciones de catálogo
-  window.addEventListener('farmaya:catalog-synced', draw);
-  window.addEventListener('farmaya:product-images-updated', draw);
+  const addBtn = h('button', {
+    class: 'btn primary btn-create-prod',
+    type: 'button',
+    onclick: () => openAdminProductModal(null, () => draw())
+  }, icon('package'), h('span', null, 'Nuevo Medicamento'));
+
+  const toolbar = h('div', { class: 'catalog-manager-toolbar' },
+    h('div', { class: 'catalog-search-wrap' }, search),
+    catSelect,
+    countPill,
+    addBtn
+  );
 
   draw();
-
-  return h('div', { class: 'stack' },
-    h('div', { class: 'section-heading' },
-      h('div', null,
-        h('h2', null, 'Catálogo de Medicamentos y Productos'),
-        h('p', { class: 'muted small' }, 'Ingresa nuevos medicamentos, edita los existentes y administra sus fotos y fichas técnicas en tiempo real.')
-      ),
-      h('button', {
-        class: 'btn primary',
-        type: 'button',
-        onclick: () => openAdminProductModal(null, () => {
-          if (typeof syncCatalogWithBackend === 'function') syncCatalogWithBackend();
-          draw();
-        })
-      }, '+ Ingresar Nuevo Producto')
-    ),
-    h('div', { class: 'toolbar', style: 'display:flex;align-items:center;gap:12px;flex-wrap:wrap;' },
-      search,
-      catSelect,
-      countPill
-    ),
-    holder
-  );
+  return h('div', { class: 'stack admin-catalog-root' }, toolbar, holder);
 }
 
-/* Modal integral para INGRESAR NUEVO o EDITAR producto existente */
 function openAdminProductModal(p, onSaved) {
   const isEditing = !!p;
   const customImages = typeof getCustomProductImages === 'function' ? getCustomProductImages() : {};
@@ -2266,6 +2387,11 @@ function adminDisbursementsView() {
   const container = h('div', { class: 'stack admin-disbursements-root' });
 
   let activeTab = 'PENDING'; // 'PENDING' | 'HISTORY'
+  let pendingSearch = '';
+  let pendingPage = 1;
+  let historySearch = '';
+  let historyPage = 1;
+  const PAGE_SIZE = 30;
 
   const draw = async () => {
     container.innerHTML = '<div class="p-6 text-center muted"><span class="spinner"></span> Cargando módulo de desembolsos...</div>';
@@ -2278,7 +2404,7 @@ function adminDisbursementsView() {
       const totalPendingNet = pendingList.reduce((acc, p) => acc + (p.netPayable || 0), 0);
       const totalHistoricNet = historyList.reduce((acc, d) => acc + (d.netAmount || 0), 0);
 
-            // Recuadro Superior Destacado (Hero Card)
+      // Recuadro Superior Destacado (Hero Card)
       const header = h('div', { class: 'disbursement-hero-banner' },
         h('div', { class: 'disbursement-hero-left' },
           h('div', { class: 'disbursement-hero-icon-box' },
@@ -2383,106 +2509,197 @@ function adminDisbursementsView() {
         tabs.children[1].className = 'btn ' + (activeTab === 'HISTORY' ? 'primary' : 'secondary');
 
         if (activeTab === 'PENDING') {
-          if (!pendingList.length) {
-            tabContainer.replaceChildren(empty('Todas las farmacias al día', 'No hay pedidos pendientes de liquidación bancaria en este momento.'));
-            return;
-          }
+          const q = pendingSearch.toLowerCase().trim();
+          const filteredPending = pendingList.filter(ph => {
+            if (!q) return true;
+            return (ph.pharmacyName || '').toLowerCase().includes(q) ||
+                   (ph.city || '').toLowerCase().includes(q) ||
+                   (ph.bankName || '').toLowerCase().includes(q) ||
+                   (ph.accountNumber || '').toLowerCase().includes(q) ||
+                   (ph.accountHolder || '').toLowerCase().includes(q) ||
+                   (ph.accountDocNumber || '').toLowerCase().includes(q) ||
+                   (ph.phone || '').toLowerCase().includes(q);
+          });
 
-          const table = h('div', { class: 'table-wrap' },
-            h('table', { class: 'data-table' },
-              h('thead', null,
-                h('tr', null,
-                  h('th', null, 'Farmacia / Ciudad'),
-                  h('th', null, 'Cuenta Bancaria Registrada'),
-                  h('th', { class: 'text-center' }, 'Pedidos'),
-                  h('th', { class: 'text-right' }, 'Ventas Brutas'),
-                  h('th', { class: 'text-right' }, 'Comisión 5%'),
-                  h('th', { class: 'text-right' }, 'Neto a Transferir (95%)'),
-                  h('th', { class: 'text-center' }, 'Acción')
-                )
+          const totalPages = Math.max(1, Math.ceil(filteredPending.length / PAGE_SIZE));
+          if (pendingPage > totalPages) pendingPage = totalPages;
+          const startIdx = (pendingPage - 1) * PAGE_SIZE;
+          const pagedPending = filteredPending.slice(startIdx, startIdx + PAGE_SIZE);
+
+          const card = h('div', { class: 'disbursement-table-card' },
+            // Barra superior de herramientas con título y buscador
+            h('div', { class: 'disbursement-table-toolbar' },
+              h('div', { class: 'disbursement-table-title-group' },
+                h('h3', { class: 'disbursement-table-heading' }, 'Saldos Pendientes por Desembolsar a Droguerías'),
+                h('span', { class: 'disbursement-table-badge' }, filteredPending.length + ' aliadas')
               ),
-              h('tbody', null, pendingList.map(ph =>
-                h('tr', null,
-                  h('td', null,
-                    h('strong', null, ph.pharmacyName),
-                    h('span', { class: 'muted small block-line' }, ph.city + (ph.phone ? ' · ' + ph.phone : ''))
-                  ),
-                  h('td', null,
-                    h('span', { style: 'font-weight:600; color:#0f172a;' }, ph.bankName + ' (' + ph.accountType + ')'),
-                    h('span', { class: 'muted small block-line', style: 'font-family:monospace;' }, 'N°: ' + ph.accountNumber),
-                    h('small', { class: 'muted block-line', style: 'font-size:11px;' }, 'Titular: ' + ph.accountHolder)
-                  ),
-                  h('td', { class: 'text-center' },
-                    h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, ph.pendingOrdersCount)
-                  ),
-                  h('td', { class: 'text-right' }, money(ph.grossTotal)),
-                  h('td', { class: 'text-right text-red', style: 'color:#991b1b; font-weight:600;' }, '- ' + money(ph.platformEarnings)),
-                  h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14.5px;' }, money(ph.netPayable) + ' COP'),
-                  h('td', { class: 'text-center' },
-                    h('button', {
-                      class: 'btn primary small',
-                      type: 'button',
-                      onclick: () => openDisbursementActionModal(ph, draw)
-                    }, 'Transferir')
+              h('div', { class: 'disbursement-search-wrap' },
+                h('span', { class: 'disbursement-search-icon' }, icon('search')),
+                h('input', {
+                  type: 'search',
+                  class: 'disbursement-search-input',
+                  placeholder: 'Buscar farmacia por nombre, ciudad, banco, cuenta o NIT...',
+                  value: pendingSearch,
+                  oninput: (e) => {
+                    pendingSearch = e.target.value;
+                    pendingPage = 1;
+                    renderTabContent();
+                  }
+                })
+              )
+            ),
+            // Tabla con cuadrícula nítida
+            pagedPending.length ? h('div', { class: 'table-wrap' },
+              h('table', { class: 'data-table grid-bordered' },
+                h('thead', null,
+                  h('tr', null,
+                    h('th', null, 'Farmacia / Ciudad'),
+                    h('th', null, 'Cuenta Bancaria Registrada'),
+                    h('th', { class: 'text-center' }, 'Pedidos'),
+                    h('th', { class: 'text-right' }, 'Ventas Brutas'),
+                    h('th', { class: 'text-right' }, 'Comisión 5%'),
+                    h('th', { class: 'text-right' }, 'Neto a Transferir (95%)'),
+                    h('th', { class: 'text-center' }, 'Acción')
                   )
-                )
-              ))
-            )
+                ),
+                h('tbody', null, pagedPending.map(ph =>
+                  h('tr', null,
+                    h('td', null,
+                      h('strong', null, ph.pharmacyName),
+                      h('span', { class: 'muted small block-line' }, (ph.city || 'Nacional') + (ph.phone ? ' • ' + ph.phone : ''))
+                    ),
+                    h('td', null,
+                      h('span', { style: 'font-weight:700; color:var(--text);' }, (ph.bankName || 'Bancolombia') + ' (' + (ph.accountType || 'Ahorros') + ')'),
+                      h('span', { class: 'muted small block-line', style: 'font-family:monospace; font-weight:700; color:var(--primary);' }, 'N°: ' + (ph.accountNumber || 'Sin cuenta')),
+                      h('small', { class: 'muted block-line', style: 'font-size:11px;' }, 'Titular: ' + (ph.accountHolder || ph.pharmacyName) + (ph.accountDocNumber ? ' • CC/NIT ' + ph.accountDocNumber : ''))
+                    ),
+                    h('td', { class: 'text-center' },
+                      h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, ph.pendingOrdersCount)
+                    ),
+                    h('td', { class: 'text-right' }, money(ph.grossTotal)),
+                    h('td', { class: 'text-right text-red', style: 'color:#991b1b; font-weight:600;' }, '- ' + money(ph.platformEarnings)),
+                    h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14.5px;' }, money(ph.netPayable) + ' COP'),
+                    h('td', { class: 'text-center' },
+                      h('button', {
+                        class: 'btn primary small',
+                        type: 'button',
+                        onclick: () => openDisbursementActionModal(ph, draw)
+                      }, 'Transferir')
+                    )
+                  )
+                ))
+              )
+            ) : empty('No se encontraron farmacias con ese criterio de búsqueda', 'Intenta con otro término o limpia el buscador.'),
+            // Paginación si supera 30
+            fyPagination(filteredPending.length, pendingPage, PAGE_SIZE, (p) => {
+              pendingPage = p;
+              renderTabContent();
+            })
           );
-          tabContainer.replaceChildren(table);
+
+          tabContainer.replaceChildren(card);
         } else {
           // Pestaña de Historial
-          if (!historyList.length) {
-            tabContainer.replaceChildren(empty('Sin transferencias registradas', 'Apenas realices el primer desembolso a una farmacia, se listará aquí con su comprobante oficial.'));
-            return;
-          }
+          const q = historySearch.toLowerCase().trim();
+          const filteredHistory = historyList.filter(d => {
+            if (!q) return true;
+            return (d.code || '').toLowerCase().includes(q) ||
+                   (d.pharmacyName || '').toLowerCase().includes(q) ||
+                   (d.pharmacyCity || '').toLowerCase().includes(q) ||
+                   (d.reference || '').toLowerCase().includes(q) ||
+                   (d.bankName || '').toLowerCase().includes(q) ||
+                   (d.accountNumber || '').toLowerCase().includes(q) ||
+                   (d.method || '').toLowerCase().includes(q);
+          });
 
-          const table = h('div', { class: 'table-wrap' },
-            h('table', { class: 'data-table' },
-              h('thead', null,
-                h('tr', null,
-                  h('th', null, 'Código / Fecha'),
-                  h('th', null, 'Droguería Beneficiaria'),
-                  h('th', null, 'Cuenta de Abono'),
-                  h('th', null, 'Comprobante / Ref'),
-                  h('th', { class: 'text-right' }, 'Ventas Brutas'),
-                  h('th', { class: 'text-right' }, 'Retención 5%'),
-                  h('th', { class: 'text-right' }, 'Neto Transferido (95%)'),
-                  h('th', { class: 'text-center' }, 'Comprobante')
-                )
+          const totalPages = Math.max(1, Math.ceil(filteredHistory.length / PAGE_SIZE));
+          if (historyPage > totalPages) historyPage = totalPages;
+          const startIdx = (historyPage - 1) * PAGE_SIZE;
+          const pagedHistory = filteredHistory.slice(startIdx, startIdx + PAGE_SIZE);
+
+          const card = h('div', { class: 'disbursement-table-card' },
+            // Barra superior de herramientas con título y buscador
+            h('div', { class: 'disbursement-table-toolbar' },
+              h('div', { class: 'disbursement-table-title-group' },
+                h('h3', { class: 'disbursement-table-heading' }, 'Historial de Transferencias y Comprobantes Oficiales'),
+                h('span', { class: 'disbursement-table-badge' }, filteredHistory.length + ' desembolsos')
               ),
-              h('tbody', null, historyList.map(d =>
-                h('tr', null,
-                  h('td', null,
-                    h('strong', { style: 'font-family:monospace; color:var(--primary);' }, d.code),
-                    h('span', { class: 'muted small block-line' }, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-')
-                  ),
-                  h('td', null,
-                    h('strong', null, d.pharmacyName),
-                    h('span', { class: 'muted small block-line' }, d.pharmacyCity || 'Nacional')
-                  ),
-                  h('td', null,
-                    h('span', { style: 'font-weight:600;' }, d.bankName + ' · ' + d.accountType),
-                    h('span', { class: 'muted small block-line', style: 'font-family:monospace;' }, d.accountNumber)
-                  ),
-                  h('td', null,
-                    h('span', { class: 'tag tone-blue', style: 'font-family:monospace; font-weight:700;' }, d.reference || '-')
-                  ),
-                  h('td', { class: 'text-right' }, money(d.grossTotal)),
-                  h('td', { class: 'text-right text-red', style: 'color:#991b1b;' }, '- ' + money(d.platformEarnings)),
-                  h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14px;' }, money(d.netAmount) + ' COP'),
-                  h('td', { class: 'text-center' },
-                    h('button', {
-                      class: 'btn secondary small',
-                      type: 'button',
-                      onclick: () => renderDisbursementReceiptModal(d)
-                    }, 'Ver Recibo')
+              h('div', { class: 'disbursement-search-wrap' },
+                h('span', { class: 'disbursement-search-icon' }, icon('search')),
+                h('input', {
+                  type: 'search',
+                  class: 'disbursement-search-input',
+                  placeholder: 'Buscar por código LIQ, droguería, comprobante o banco...',
+                  value: historySearch,
+                  oninput: (e) => {
+                    historySearch = e.target.value;
+                    historyPage = 1;
+                    renderTabContent();
+                  }
+                })
+              )
+            ),
+            // Tabla con cuadrícula nítida
+            pagedHistory.length ? h('div', { class: 'table-wrap' },
+              h('table', { class: 'data-table grid-bordered' },
+                h('thead', null,
+                  h('tr', null,
+                    h('th', null, 'Código / Fecha'),
+                    h('th', null, 'Droguería Beneficiaria'),
+                    h('th', null, 'Cuenta de Abono'),
+                    h('th', null, 'Comprobante / Ref'),
+                    h('th', { class: 'text-right' }, 'Ventas Brutas'),
+                    h('th', { class: 'text-right' }, 'Retención 5%'),
+                    h('th', { class: 'text-right' }, 'Neto Transferido (95%)'),
+                    h('th', { class: 'text-center' }, 'Comprobante')
                   )
-                )
-              ))
-            )
+                ),
+                h('tbody', null, pagedHistory.map(d =>
+                  h('tr', null,
+                    h('td', null,
+                      h('strong', { style: 'font-family:monospace; color:var(--primary); font-size:13.5px;' }, d.code),
+                      h('span', { class: 'muted small block-line' }, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-')
+                    ),
+                    h('td', null,
+                      h('strong', null, d.pharmacyName),
+                      h('span', { class: 'muted small block-line' }, d.pharmacyCity || 'Nacional')
+                    ),
+                    h('td', null,
+                      h('span', { style: 'font-weight:700;' }, (d.bankName || 'Bancolombia') + ' • ' + (d.accountType || 'Ahorros')),
+                      h('span', { class: 'muted small block-line', style: 'font-family:monospace; font-weight:700; color:var(--primary);' }, d.accountNumber)
+                    ),
+                    h('td', null,
+                      h('span', { class: 'tag tone-blue', style: 'font-family:monospace; font-weight:700;' }, d.reference || '-'),
+                      h('small', { class: 'muted block-line', style: 'font-size:11px;' }, d.method === 'TRANSFERENCIA_BANCARIA' ? 'Transferencia ACH' : d.method)
+                    ),
+                    h('td', { class: 'text-right' }, money(d.grossTotal)),
+                    h('td', { class: 'text-right text-red', style: 'color:#991b1b; font-weight:600;' }, '- ' + money(d.platformEarnings)),
+                    h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14.5px;' }, money(d.netAmount) + ' COP'),
+                    h('td', { class: 'text-center' },
+                      h('button', {
+                        class: 'btn secondary small',
+                        type: 'button',
+                        onclick: () => {
+                          if (typeof renderDisbursementReceiptModal === 'function') {
+                            renderDisbursementReceiptModal(d);
+                          } else {
+                            alert('Liquidación ' + d.code + ' por ' + money(d.netAmount) + ' COP');
+                          }
+                        }
+                      }, 'Ver Recibo')
+                    )
+                  )
+                ))
+              )
+            ) : empty('No se encontraron transferencias con ese criterio de búsqueda', 'Intenta con otro término o limpia el buscador.'),
+            // Paginación si supera 30
+            fyPagination(filteredHistory.length, historyPage, PAGE_SIZE, (p) => {
+              historyPage = p;
+              renderTabContent();
+            })
           );
-          tabContainer.replaceChildren(table);
+
+          tabContainer.replaceChildren(card);
         }
       }
 

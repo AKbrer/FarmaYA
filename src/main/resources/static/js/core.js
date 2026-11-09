@@ -475,13 +475,46 @@ function sideNavigation(items, start = 0) {
 }
 
 function movementHistory(endpoint) {
+  let movSearch = '';
+  let movPage = 1;
+  const PAGE_SIZE = 30;
+
   return live(() => API.get(endpoint), movements => {
     if (!movements.length) return empty('Todavía no hay movimientos', 'Las acciones importantes que realices aparecerán aquí con fecha, hora y pedido relacionado.');
-    return h('div', { class: 'table-wrap movement-table' }, h('table', { class: 'users' },
-      h('thead', null, h('tr', null, h('th', null, 'Acción'), h('th', null, 'Pedido'), h('th', null, 'Fecha y hora'))),
-      h('tbody', null, movements.map(m => h('tr', null,
-        h('td', null, h('strong', null, movementTypeLabel(m.type)), h('small', { class: 'block-line muted movement-description' }, m.description || 'Sin descripción')),
-        h('td', null, m.orderCode || '—'), h('td', null, formatMovementDate(m.createdAt)))))));
+
+    const q = movSearch.toLowerCase().trim();
+    const filtered = movements.filter(m => !q || [m.type, m.description, m.orderCode, m.code].filter(Boolean).join(' ').toLowerCase().includes(q));
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (movPage > totalPages) movPage = totalPages;
+    const startIdx = (movPage - 1) * PAGE_SIZE;
+    const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+    return h('div', { class: 'stack' },
+      h('div', { class: 'disbursement-search-wrap', style: 'max-width: 400px; margin-bottom: 12px;' },
+        h('span', { class: 'disbursement-search-icon' }, icon('search')),
+        h('input', {
+          type: 'search',
+          class: 'disbursement-search-input',
+          placeholder: 'Buscar en historial de movimientos...',
+          value: movSearch,
+          oninput: (e) => {
+            movSearch = e.target.value;
+            movPage = 1;
+            refreshAll();
+          }
+        })
+      ),
+      h('div', { class: 'table-wrap movement-table' }, h('table', { class: 'users' },
+        h('thead', null, h('tr', null, h('th', null, 'Acción'), h('th', null, 'Pedido'), h('th', null, 'Fecha y hora'))),
+        h('tbody', null, paged.map(m => h('tr', null,
+          h('td', null, h('strong', null, movementTypeLabel(m.type)), h('small', { class: 'block-line muted movement-description' }, m.description || 'Sin descripción')),
+          h('td', null, m.orderCode || '—'), h('td', null, formatMovementDate(m.createdAt))))))),
+      fyPagination(filtered.length, movPage, PAGE_SIZE, (p) => {
+        movPage = p;
+        refreshAll();
+      })
+    );
   });
 }
 
@@ -583,3 +616,83 @@ window.openOrderDetail = function(id) {
   }
   console.warn('Detalle de pedido invocado antes de que el módulo esté listo:', id);
 };
+
+
+/**
+ * Componente universal de paginación FarmaYA (máximo 30 elementos por lista con saltos de página)
+ */
+function fyPagination(totalItems, currentPage, pageSize, onPageChange) {
+  if (totalItems <= pageSize) return null;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  if (totalPages <= 1) return null;
+
+  const startIdx = (currentPage - 1) * pageSize + 1;
+  const endIdx = Math.min(currentPage * pageSize, totalItems);
+
+  const container = h('div', { class: 'catalog-pagination-wrap fy-pagination-wrap' });
+
+  const summary = h('div', { class: 'catalog-pagination-summary' },
+    h('span', null, 'Mostrando '),
+    h('strong', { style: 'color:var(--primary); font-weight:800;' }, startIdx + ' - ' + endIdx),
+    h('span', null, ' de ' + totalItems + ' registros'),
+    h('span', { class: 'muted', style: 'margin-left:8px; font-weight:500;' }, '(Página ' + currentPage + ' de ' + totalPages + ')')
+  );
+
+  const nav = h('div', { class: 'catalog-pagination-nav' });
+
+  // Botón Anterior
+  const prevBtn = h('button', {
+    type: 'button',
+    class: 'catalog-page-btn catalog-page-nav-btn',
+    disabled: currentPage <= 1,
+    onclick: () => {
+      if (currentPage > 1) onPageChange(currentPage - 1);
+    }
+  }, '« Anterior');
+  nav.appendChild(prevBtn);
+
+  // Generador de páginas con elipsis
+  const pagesToShow = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pagesToShow.push(i);
+  } else {
+    pagesToShow.push(1);
+    if (currentPage > 3) pagesToShow.push('...');
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      if (!pagesToShow.includes(i)) pagesToShow.push(i);
+    }
+    if (currentPage < totalPages - 2) pagesToShow.push('...');
+    if (!pagesToShow.includes(totalPages)) pagesToShow.push(totalPages);
+  }
+
+  pagesToShow.forEach(p => {
+    if (p === '...') {
+      nav.appendChild(h('span', { class: 'muted', style: 'padding:0 6px; font-weight:700;' }, '…'));
+    } else {
+      const pageBtn = h('button', {
+        type: 'button',
+        class: 'catalog-page-btn catalog-page-num' + (p === currentPage ? ' active' : ''),
+        onclick: () => {
+          if (p !== currentPage) onPageChange(p);
+        }
+      }, String(p));
+      nav.appendChild(pageBtn);
+    }
+  });
+
+  // Botón Siguiente
+  const nextBtn = h('button', {
+    type: 'button',
+    class: 'catalog-page-btn catalog-page-nav-btn',
+    disabled: currentPage >= totalPages,
+    onclick: () => {
+      if (currentPage < totalPages) onPageChange(currentPage + 1);
+    }
+  }, 'Siguiente »');
+  nav.appendChild(nextBtn);
+
+  container.append(nav, summary);
+  return container;
+}
