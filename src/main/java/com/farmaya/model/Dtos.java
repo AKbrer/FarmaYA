@@ -56,4 +56,32 @@ public final class Dtos {
     public record ChatRequest(String message, java.util.List<ChatMessage> history) {}
     public record SuggestedProductDto(String id, String name, String cat, double price, String active, String indication, boolean rx, String presentation) {}
     public record ChatResponse(String reply, java.util.List<SuggestedProductDto> suggestedProducts, String category, boolean rxWarning) {}
+
+    public record CreateDisbursementRequest(
+        String pharmacyId,
+        java.util.List<String> orderIds,
+        String reference,
+        String method,
+        String notes
+    ) {}
+
+    public record PharmacyPendingPayoutDto(
+        String pharmacyId,
+        String pharmacyName,
+        String pharmacyEmail,
+        String phone,
+        String address,
+        String city,
+        String bankName,
+        String accountType,
+        String accountNumber,
+        String accountHolder,
+        String accountDocNumber,
+        int pendingOrdersCount,
+        double grossTotal,
+        double platformEarnings,
+        double netPayable,
+        java.util.List<String> orderIds,
+        java.util.List<String> orderCodes
+    ) {}
 }

@@ -204,11 +204,11 @@ function adminPowerBiDashboard() {
           )
         ),
 
-        // KPI 3: Liquidacion Farmacias (90%)
+        // KPI 3: Liquidacion Farmacias (95%)
         h('div', { class: 'powerbi-kpi-card accent-purple' },
           h('div', { class: 'powerbi-kpi-top' },
-            h('span', { class: 'powerbi-kpi-title' }, 'Liquidacion Aliados (90%)'),
-            h('span', { class: 'powerbi-kpi-chip chip-purple' }, '90.0% Droguerias')
+            h('span', { class: 'powerbi-kpi-title' }, 'Liquidacion Aliados (95%)'),
+            h('span', { class: 'powerbi-kpi-chip chip-purple' }, '95.0% Droguerias')
           ),
           h('div', { class: 'powerbi-kpi-value-row' },
             h('strong', { class: 'powerbi-kpi-value text-purple' }, money(totalPharmacyNet)),
@@ -464,6 +464,7 @@ function adminView(user) {
   let root;
   root = h('div', { class: 'stack admin-root' }, adminHeaderCard(user), sideNavigation([
     { label: 'Dashboard Power BI', icon: 'layout-dashboard', badge: '5%', render: adminPowerBiDashboard },
+    { label: 'Desembolsos a Farmacias', icon: 'wallet', render: adminDisbursementsView },
     { label: 'Predicción de Demanda', icon: 'ai-prediction', badge: 'IA', render: adminDemandForecast },
     { label: 'Pedidos', icon: 'package', render: adminOrders },
     { label: 'Verificaciones', icon: 'prescriptions', render: adminVerificationCenter },
@@ -2071,4 +2072,387 @@ function openProductImageModal(p, onSaved) {
   );
 
   const d = openDialog(content, { wide: true });
+}
+
+
+/* =====================================================================
+   MÓDULO DE DESEMBOLSOS Y LIQUIDACIONES A FARMACIAS ALIADAS (95% NETO)
+   ===================================================================== */
+
+function renderDisbursementReceiptModal(d) {
+  const content = h('div', { class: 'receipt-modal-content', style: 'padding:14px 8px; font-family:system-ui, -apple-system, sans-serif;' },
+    // Cabecera institucional FarmaYA
+    h('div', { style: 'text-align:center; padding-bottom:16px; border-bottom:2px dashed #cbd5e1; margin-bottom:18px;' },
+      h('div', { style: 'display:inline-flex; align-items:center; gap:8px; margin-bottom:6px;' },
+        h('span', { style: 'font-weight:900; font-size:24px; color:var(--primary); letter-spacing:-0.5px;' }, 'Farma'),
+        h('span', { style: 'font-weight:900; font-size:24px; color:var(--teal); letter-spacing:-0.5px;' }, 'YA')
+      ),
+      h('h2', { style: 'margin:4px 0 2px; font-size:18px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;' }, 'Comprobante Oficial de Liquidación'),
+      h('p', { class: 'muted', style: 'font-size:12px; margin:0;' }, 'FarmaYA S.A.S. · NIT 901.849.201-4 · Pasarela Bancaria Wompi'),
+      h('div', { style: 'display:inline-block; margin-top:8px; background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:12px; font-weight:700; padding:4px 14px; border-radius:999px;' },
+        'DESEMBOLSO BANCARIO COMPLETADO (95% DE VENTAS)'
+      )
+    ),
+
+    // Datos drogueria y cuenta de abono
+    h('div', { style: 'display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:18px; font-size:13px;' },
+      h('div', { style: 'background:#f8fafc; padding:12px 14px; border-radius:8px; border:1px solid #e2e8f0;' },
+        h('strong', { style: 'display:block; color:#64748b; font-size:11px; text-transform:uppercase; margin-bottom:4px;' }, 'Droguería Beneficiaria'),
+        h('div', { style: 'font-weight:700; color:#0f172a; font-size:14.5px;' }, d.pharmacyName || 'Farmacia Aliada'),
+        h('div', { class: 'muted', style: 'font-size:12px; margin-top:3px;' }, 'Ciudad: ' + (d.pharmacyCity || 'Nacional')),
+        h('div', { class: 'muted', style: 'font-size:12px;' }, 'Tel: ' + (d.pharmacyPhone || '-')),
+        h('div', { class: 'muted', style: 'font-size:12px;' }, 'Correo: ' + (d.pharmacyEmail || '-'))
+      ),
+      h('div', { style: 'background:#f8fafc; padding:12px 14px; border-radius:8px; border:1px solid #e2e8f0;' },
+        h('strong', { style: 'display:block; color:#64748b; font-size:11px; text-transform:uppercase; margin-bottom:4px;' }, 'Cuenta Bancaria de Abono'),
+        h('div', { style: 'font-weight:700; color:#0f172a; font-size:14px;' }, (d.bankName || 'Bancolombia') + ' · ' + (d.accountType || 'Ahorros')),
+        h('div', { style: 'font-family:monospace; font-size:13px; font-weight:700; color:#0369a1; margin:3px 0;' }, 'N°: ' + (d.accountNumber || '-')),
+        h('div', { class: 'muted', style: 'font-size:12px;' }, 'Titular: ' + (d.accountHolder || '-')),
+        d.accountDocNumber ? h('div', { class: 'muted', style: 'font-size:12px;' }, 'NIT / C.C.: ' + d.accountDocNumber) : null
+      )
+    ),
+
+    // Metadatos de la transaccion
+    h('div', { style: 'display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:18px; font-size:12px; background:#f1f5f9; padding:10px 14px; border-radius:8px;' },
+      h('div', null, h('span', { class: 'muted', style: 'display:block;' }, 'Código Liquidación:'), h('strong', { style: 'font-family:monospace;' }, d.code || '-')),
+      h('div', null, h('span', { class: 'muted', style: 'display:block;' }, 'Comprobante / Ref:'), h('strong', { style: 'font-family:monospace; color:#0a5ca8;' }, d.reference || '-')),
+      h('div', null, h('span', { class: 'muted', style: 'display:block;' }, 'Fecha y Hora:'), h('strong', null, d.createdAt ? new Date(d.createdAt).toLocaleString('es-CO') : '-'))
+    ),
+
+    // Desglose contable
+    h('div', { style: 'border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; margin-bottom:20px;' },
+      h('table', { style: 'width:100%; border-collapse:collapse; font-size:13px;' },
+        h('tbody', null,
+          h('tr', { style: 'border-bottom:1px solid #f1f5f9;' },
+            h('td', { style: 'padding:10px 14px;' }, 'Ventas brutas de medicamentos (' + (d.orderCount || (d.orderCodes ? d.orderCodes.length : 1)) + ' pedidos entregados)'),
+            h('td', { style: 'padding:10px 14px; text-align:right; font-weight:600;' }, money(d.grossTotal || 0))
+          ),
+          h('tr', { style: 'border-bottom:1px solid #f1f5f9; color:#991b1b; background:#fef2f2;' },
+            h('td', { style: 'padding:10px 14px;' }, 'Retención por servicio tecnológico FarmaYA (5.0%)'),
+            h('td', { style: 'padding:10px 14px; text-align:right; font-weight:700;' }, '- ' + money(d.platformEarnings || Math.round((d.grossTotal || 0) * 0.05)))
+          ),
+          h('tr', { style: 'background:#f0fdf4; font-size:15px;' },
+            h('td', { style: 'padding:12px 14px; font-weight:800; color:#166534;' }, 'MONTO NETO TRANSFERIDO (95.0%)'),
+            h('td', { style: 'padding:12px 14px; text-align:right; font-weight:900; color:#166534;' }, money(d.netAmount || 0) + ' COP')
+          )
+        )
+      )
+    ),
+
+    d.notes ? h('p', { class: 'muted small', style: 'margin:0 0 16px; font-style:italic;' }, 'Notas: ' + d.notes) : null,
+
+    // Acciones
+    h('div', { style: 'display:flex; justify-content:space-between; align-items:center;' },
+      h('button', {
+        class: 'btn secondary',
+        type: 'button',
+        onclick: () => dialog.close()
+      }, 'Cerrar'),
+      h('button', {
+        class: 'btn primary',
+        type: 'button',
+        onclick: () => window.print()
+      }, 'Imprimir Comprobante')
+    )
+  );
+
+  const dialog = openDialog(content, { wide: true });
+}
+
+function openDisbursementActionModal(ph, onSuccess) {
+  const refInput = h('input', {
+    type: 'text',
+    value: 'ACH-' + Math.floor(100000 + Math.random() * 900000),
+    placeholder: 'Ej. ACH-482910 o TRANS-1294',
+    required: true
+  });
+
+  const methodSelect = h('select', null,
+    h('option', { value: 'TRANSFERENCIA_BANCARIA' }, 'Transferencia Bancaria ACH (Bancolombia Empresas / PSE)'),
+    h('option', { value: 'WOMPI_PAYOUT' }, 'Dispersión Automática Wompi Payouts'),
+    h('option', { value: 'NEQUI_EMPRESAS' }, 'Nequi / Daviplata Negocios')
+  );
+
+  const notesInput = h('input', {
+    type: 'text',
+    value: 'Liquidación de ' + ph.pendingOrdersCount + ' pedidos entregados (95% neto)',
+    placeholder: 'Notas u observaciones contables'
+  });
+
+  const content = h('div', { style: 'padding:10px 4px;' },
+    h('h3', { style: 'margin:0 0 6px;' }, 'Desembolsar Saldo a Farmacia'),
+    h('p', { class: 'muted small', style: 'margin:0 0 16px;' }, 'Transfiere el valor neto de las ventas (95%) a la cuenta bancaria de la droguería aliada.'),
+
+    // Ficha de cuenta destino
+    h('div', { style: 'background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:16px;' },
+      h('div', { style: 'display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;' },
+        h('div', null,
+          h('strong', { style: 'font-size:14px; color:#0f172a;' }, ph.pharmacyName),
+          h('span', { class: 'muted small block-line' }, (ph.city || 'Nacional') + ' · ' + (ph.phone || ''))
+        ),
+        h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, ph.pendingOrdersCount + ' pedidos listos')
+      ),
+      h('div', { style: 'display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12.5px; border-top:1px dashed #cbd5e1; padding-top:8px;' },
+        h('div', null, h('span', { class: 'muted' }, 'Banco: '), h('strong', null, ph.bankName || 'Bancolombia')),
+        h('div', null, h('span', { class: 'muted' }, 'Tipo de Cuenta: '), h('strong', null, ph.accountType || 'Ahorros')),
+        h('div', null, h('span', { class: 'muted' }, 'N° Cuenta: '), h('strong', { style: 'font-family:monospace; color:#0284c7;' }, ph.accountNumber || '-')),
+        h('div', null, h('span', { class: 'muted' }, 'Titular: '), h('strong', null, ph.accountHolder || ph.pharmacyName))
+      )
+    ),
+
+    // Resumen financiero
+    h('div', { style: 'background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin-bottom:18px;' },
+      h('div', { style: 'display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;' },
+        h('span', null, 'Ventas Brutas de Medicamentos:'),
+        h('strong', null, money(ph.grossTotal))
+      ),
+      h('div', { style: 'display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; color:#991b1b;' },
+        h('span', null, 'Retención Comisión FarmaYA (5.0%):'),
+        h('strong', null, '- ' + money(ph.platformEarnings))
+      ),
+      h('div', { style: 'display:flex; justify-content:space-between; font-size:15px; font-weight:800; color:#166534; border-top:1px solid #bbf7d0; padding-top:6px;' },
+        h('span', null, 'VALOR NETO A TRANSFERIR (95%):'),
+        h('span', null, money(ph.netPayable) + ' COP')
+      )
+    ),
+
+    // Formulario de datos de transferencia
+    h('div', { class: 'form-stack' },
+      field('Medio o Canal de Desembolso', methodSelect),
+      field('N° de Comprobante / Referencia Bancaria (Aprobación)', refInput, 'Identificador emitido por Bancolombia, Wompi o tu portal bancario.'),
+      field('Concepto / Notas', notesInput)
+    ),
+
+    // Botones
+    h('div', { class: 'actions', style: 'margin-top:20px; display:flex; justify-content:flex-end; gap:10px;' },
+      h('button', {
+        class: 'btn secondary',
+        type: 'button',
+        onclick: () => modal.close()
+      }, 'Cancelar'),
+      h('button', {
+        class: 'btn primary',
+        type: 'button',
+        onclick: async () => {
+          if (!refInput.value.trim()) {
+            toast('Ingresa la referencia o comprobante bancario', 'error');
+            return;
+          }
+          try {
+            const payload = {
+              pharmacyId: ph.pharmacyId,
+              orderIds: ph.orderIds,
+              reference: refInput.value.trim(),
+              method: methodSelect.value,
+              notes: notesInput.value.trim()
+            };
+            const result = await API.post('/admin/disbursements', payload);
+            toast('Desembolso registrado con éxito.', 'success');
+            modal.close();
+            if (onSuccess) onSuccess();
+            renderDisbursementReceiptModal(result);
+          } catch (err) {
+            toast(err.message || 'Error al ejecutar desembolso', 'error');
+          }
+        }
+      }, 'Confirmar y Enviar Transferencia')
+    )
+  );
+
+  const modal = openDialog(content, { wide: true });
+}
+
+function adminDisbursementsView() {
+  const container = h('div', { class: 'stack admin-disbursements-root' });
+
+  let activeTab = 'PENDING'; // 'PENDING' | 'HISTORY'
+
+  const draw = async () => {
+    container.innerHTML = '<div class="p-6 text-center muted"><span class="spinner"></span> Cargando módulo de desembolsos...</div>';
+    try {
+      const [pendingList, historyList] = await Promise.all([
+        API.get('/admin/disbursements/pending'),
+        API.get('/admin/disbursements')
+      ]);
+
+      const totalPendingNet = pendingList.reduce((acc, p) => acc + (p.netPayable || 0), 0);
+      const totalHistoricNet = historyList.reduce((acc, d) => acc + (d.netAmount || 0), 0);
+
+      const header = h('div', { class: 'pharmacy-header-card' },
+        h('div', { class: 'pharmacy-header-info' },
+          h('h1', { class: 'pharmacy-header-title' }, 'Desembolsos & Liquidaciones a Farmacias Aliadas'),
+          h('span', { class: 'pharmacy-header-address muted' }, 'Gestión del recaudo digital Wompi: dispersión del 95% neto a las cuentas bancarias de las droguerías aliadas.')
+        )
+      );
+
+      // KPI Cards
+      const kpis = h('div', { class: 'stitch-kpi-grid', style: 'grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom:20px;' },
+        h('div', { class: 'stitch-kpi-card accent-orange' },
+          h('div', { class: 'kpi-top-row' },
+            h('span', { class: 'kpi-label' }, 'Saldo Total Pendiente por Desembolsar'),
+            h('span', { class: 'kpi-chip chip-orange' }, '95.0% Aliados')
+          ),
+          h('div', { class: 'kpi-value-row' },
+            h('strong', { class: 'kpi-number text-orange' }, money(totalPendingNet)),
+            h('span', { class: 'kpi-currency' }, 'COP')
+          ),
+          h('span', { class: 'kpi-sub muted' }, pendingList.length + ' droguerías esperando liquidación bancaria')
+        ),
+        h('div', { class: 'stitch-kpi-card accent-green' },
+          h('div', { class: 'kpi-top-row' },
+            h('span', { class: 'kpi-label' }, 'Total Desembolsado Histórico'),
+            h('span', { class: 'kpi-chip chip-green' }, 'Transferido')
+          ),
+          h('div', { class: 'kpi-value-row' },
+            h('strong', { class: 'kpi-number text-green' }, money(totalHistoricNet)),
+            h('span', { class: 'kpi-currency' }, 'COP')
+          ),
+          h('span', { class: 'kpi-sub muted' }, historyList.length + ' transferencias bancarias ejecutadas con éxito')
+        ),
+        h('div', { class: 'stitch-kpi-card accent-blue' },
+          h('div', { class: 'kpi-top-row' },
+            h('span', { class: 'kpi-label' }, 'Comisión FarmaYA Retenida (5%)'),
+            h('span', { class: 'kpi-chip chip-blue' }, 'Plataforma')
+          ),
+          h('div', { class: 'kpi-value-row' },
+            h('strong', { class: 'kpi-number text-blue' }, money(Math.round(totalPendingNet * (5.0 / 95.0)))),
+            h('span', { class: 'kpi-currency' }, 'COP')
+          ),
+          h('span', { class: 'kpi-sub muted' }, '5% retenido automáticamente por servicios de software')
+        )
+      );
+
+      // Botones selectores de pestaña
+      const tabs = h('div', { class: 'tabs-row', style: 'display:flex; gap:10px; margin-bottom:16px;' },
+        h('button', {
+          class: 'btn ' + (activeTab === 'PENDING' ? 'primary' : 'secondary'),
+          type: 'button',
+          onclick: () => { activeTab = 'PENDING'; renderTabContent(); }
+        }, 'Saldos Pendientes por Desembolsar (' + pendingList.length + ')'),
+        h('button', {
+          class: 'btn ' + (activeTab === 'HISTORY' ? 'primary' : 'secondary'),
+          type: 'button',
+          onclick: () => { activeTab = 'HISTORY'; renderTabContent(); }
+        }, 'Historial de Desembolsos Realizados (' + historyList.length + ')')
+      );
+
+      const tabContainer = h('div', { class: 'disbursements-tab-body' });
+
+      function renderTabContent() {
+        tabs.children[0].className = 'btn ' + (activeTab === 'PENDING' ? 'primary' : 'secondary');
+        tabs.children[1].className = 'btn ' + (activeTab === 'HISTORY' ? 'primary' : 'secondary');
+
+        if (activeTab === 'PENDING') {
+          if (!pendingList.length) {
+            tabContainer.replaceChildren(empty('Todas las farmacias al día', 'No hay pedidos pendientes de liquidación bancaria en este momento.'));
+            return;
+          }
+
+          const table = h('div', { class: 'table-wrap' },
+            h('table', { class: 'data-table' },
+              h('thead', null,
+                h('tr', null,
+                  h('th', null, 'Farmacia / Ciudad'),
+                  h('th', null, 'Cuenta Bancaria Registrada'),
+                  h('th', { class: 'text-center' }, 'Pedidos'),
+                  h('th', { class: 'text-right' }, 'Ventas Brutas'),
+                  h('th', { class: 'text-right' }, 'Comisión 5%'),
+                  h('th', { class: 'text-right' }, 'Neto a Transferir (95%)'),
+                  h('th', { class: 'text-center' }, 'Acción')
+                )
+              ),
+              h('tbody', null, pendingList.map(ph =>
+                h('tr', null,
+                  h('td', null,
+                    h('strong', null, ph.pharmacyName),
+                    h('span', { class: 'muted small block-line' }, ph.city + (ph.phone ? ' · ' + ph.phone : ''))
+                  ),
+                  h('td', null,
+                    h('span', { style: 'font-weight:600; color:#0f172a;' }, ph.bankName + ' (' + ph.accountType + ')'),
+                    h('span', { class: 'muted small block-line', style: 'font-family:monospace;' }, 'N°: ' + ph.accountNumber),
+                    h('small', { class: 'muted block-line', style: 'font-size:11px;' }, 'Titular: ' + ph.accountHolder)
+                  ),
+                  h('td', { class: 'text-center' },
+                    h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, ph.pendingOrdersCount)
+                  ),
+                  h('td', { class: 'text-right' }, money(ph.grossTotal)),
+                  h('td', { class: 'text-right text-red', style: 'color:#991b1b; font-weight:600;' }, '- ' + money(ph.platformEarnings)),
+                  h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14.5px;' }, money(ph.netPayable) + ' COP'),
+                  h('td', { class: 'text-center' },
+                    h('button', {
+                      class: 'btn primary small',
+                      type: 'button',
+                      onclick: () => openDisbursementActionModal(ph, draw)
+                    }, 'Transferir')
+                  )
+                )
+              ))
+            )
+          );
+          tabContainer.replaceChildren(table);
+        } else {
+          // Pestaña de Historial
+          if (!historyList.length) {
+            tabContainer.replaceChildren(empty('Sin transferencias registradas', 'Apenas realices el primer desembolso a una farmacia, se listará aquí con su comprobante oficial.'));
+            return;
+          }
+
+          const table = h('div', { class: 'table-wrap' },
+            h('table', { class: 'data-table' },
+              h('thead', null,
+                h('tr', null,
+                  h('th', null, 'Código / Fecha'),
+                  h('th', null, 'Droguería Beneficiaria'),
+                  h('th', null, 'Cuenta de Abono'),
+                  h('th', null, 'Comprobante / Ref'),
+                  h('th', { class: 'text-right' }, 'Ventas Brutas'),
+                  h('th', { class: 'text-right' }, 'Retención 5%'),
+                  h('th', { class: 'text-right' }, 'Neto Transferido (95%)'),
+                  h('th', { class: 'text-center' }, 'Comprobante')
+                )
+              ),
+              h('tbody', null, historyList.map(d =>
+                h('tr', null,
+                  h('td', null,
+                    h('strong', { style: 'font-family:monospace; color:var(--primary);' }, d.code),
+                    h('span', { class: 'muted small block-line' }, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-')
+                  ),
+                  h('td', null,
+                    h('strong', null, d.pharmacyName),
+                    h('span', { class: 'muted small block-line' }, d.pharmacyCity || 'Nacional')
+                  ),
+                  h('td', null,
+                    h('span', { style: 'font-weight:600;' }, d.bankName + ' · ' + d.accountType),
+                    h('span', { class: 'muted small block-line', style: 'font-family:monospace;' }, d.accountNumber)
+                  ),
+                  h('td', null,
+                    h('span', { class: 'tag tone-blue', style: 'font-family:monospace; font-weight:700;' }, d.reference || '-')
+                  ),
+                  h('td', { class: 'text-right' }, money(d.grossTotal)),
+                  h('td', { class: 'text-right text-red', style: 'color:#991b1b;' }, '- ' + money(d.platformEarnings)),
+                  h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14px;' }, money(d.netAmount) + ' COP'),
+                  h('td', { class: 'text-center' },
+                    h('button', {
+                      class: 'btn secondary small',
+                      type: 'button',
+                      onclick: () => renderDisbursementReceiptModal(d)
+                    }, 'Ver Recibo')
+                  )
+                )
+              ))
+            )
+          );
+          tabContainer.replaceChildren(table);
+        }
+      }
+
+      renderTabContent();
+      container.replaceChildren(header, kpis, tabs, tabContainer);
+    } catch (err) {
+      container.replaceChildren(notice('error', 'Error al cargar módulo de desembolsos', err.message));
+    }
+  };
+
+  draw();
+  return container;
 }

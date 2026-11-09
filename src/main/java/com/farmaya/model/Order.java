@@ -54,6 +54,9 @@ public class Order {
     public int searchRound = 1;
     public int courierRound = 1;
     public Instant searchStartedAt, assignedAt, priceAskedAt, courierSearchStartedAt, deliveredAt;
+    public Boolean disbursed = false;
+    public String disbursementId;
+    public Instant disbursedAt;
 
     // Incidencias
     public OrderStatus statusBeforeIncident;

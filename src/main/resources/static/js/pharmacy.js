@@ -233,7 +233,8 @@ function pharmacyView(user) {
       { label: 'Predicción de Demanda', icon: 'ai-prediction', badge: 'IA', render: pharmacyDemandForecast },
       { label: 'Solicitudes y Despacho', icon: 'inbox', render: pharmacyOffers },
       { label: 'Mis pedidos activos', icon: 'package-check', render: pharmacyOrders },
-      { label: 'Kárdex de Movimientos', icon: 'history', render: () => movementHistory('/pharmacy/movements') }
+      { label: 'Kárdex de Movimientos', icon: 'history', render: () => movementHistory('/pharmacy/movements') },
+      { label: 'Liquidaciones y Pagos', icon: 'wallet', badge: '95%', render: pharmacyDisbursementsView }
     ], 0));
 }
 
@@ -1021,4 +1022,128 @@ function pharmacyDemandForecast() {
       filtered.length ? tableFrame : empty('Sin registros', 'No se encontraron medicamentos en esta categoria.')
     );
   });
+}
+
+
+/* =====================================================================
+   MÓDULO DE LIQUIDACIONES Y PAGOS PARA LA FARMACIA (95% NETO DE VENTAS)
+   ===================================================================== */
+
+function pharmacyDisbursementsView() {
+  const container = h('div', { class: 'stack pharmacy-disbursements-root' });
+
+  const draw = async () => {
+    container.innerHTML = '<div class="p-6 text-center muted"><span class="spinner"></span> Consultando liquidaciones y pagos...</div>';
+    try {
+      const data = await API.get('/pharmacy/disbursements');
+
+      const header = h('div', { class: 'pharmacy-header-card' },
+        h('div', { class: 'pharmacy-header-info' },
+          h('h1', { class: 'pharmacy-header-title' }, 'Mis Liquidaciones & Pagos Bancarios'),
+          h('span', { class: 'pharmacy-header-address muted' }, 'Consulta el saldo acumulado de tus ventas pagadas por pasarela digital y las transferencias acreditadas a tu cuenta.')
+        )
+      );
+
+      // Advertencia si la farmacia no tiene cuenta bancaria configurada
+      const bankNotice = !data.bankConfigured ? notice(
+        'warn',
+        'No has registrado tu cuenta bancaria de desembolsos',
+        'Para recibir las transferencias de tus ventas (95%), actualiza tus datos bancarios en la pestaña Mi Perfil.'
+      ) : null;
+
+      // KPI Cards
+      const kpis = h('div', { class: 'stitch-kpi-grid', style: 'grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin-bottom:20px;' },
+        h('div', { class: 'stitch-kpi-card accent-orange' },
+          h('div', { class: 'kpi-top-row' },
+            h('span', { class: 'kpi-label' }, 'Saldo Pendiente por Recibir'),
+            h('span', { class: 'kpi-chip chip-orange' }, '95% de Ventas')
+          ),
+          h('div', { class: 'kpi-value-row' },
+            h('strong', { class: 'kpi-number text-orange' }, money(data.pendingNet || 0)),
+            h('span', { class: 'kpi-currency' }, 'COP')
+          ),
+          h('span', { class: 'kpi-sub muted' }, (data.pendingOrdersCount || 0) + ' pedidos entregados en espera del próximo corte')
+        ),
+        h('div', { class: 'stitch-kpi-card accent-green' },
+          h('div', { class: 'kpi-top-row' },
+            h('span', { class: 'kpi-label' }, 'Total Histórico Transferido a tu Cuenta'),
+            h('span', { class: 'kpi-chip chip-green' }, 'Recibido')
+          ),
+          h('div', { class: 'kpi-value-row' },
+            h('strong', { class: 'kpi-number text-green' }, money(data.totalDisbursedHistoric || 0)),
+            h('span', { class: 'kpi-currency' }, 'COP')
+          ),
+          h('span', { class: 'kpi-sub muted' }, ((data.disbursements || []).length) + ' pagos transferidos exitosamente')
+        ),
+        h('div', { class: 'stitch-kpi-card accent-blue' },
+          h('div', { class: 'kpi-top-row' },
+            h('span', { class: 'kpi-label' }, 'Cuenta Bancaria de Abono'),
+            h('span', { class: 'kpi-chip chip-blue' }, data.bankConfigured ? 'Verificada' : 'Pendiente')
+          ),
+          h('div', { style: 'margin: 6px 0;' },
+            h('strong', { style: 'font-size:15px; color:#0f172a; display:block;' }, (data.bankName || 'Por registrar') + ' · ' + (data.accountType || 'Ahorros')),
+            h('span', { style: 'font-family:monospace; font-size:13.5px; font-weight:700; color:#0369a1;' }, 'N°: ' + (data.accountNumber || 'Sin cuenta'))
+          ),
+          h('span', { class: 'kpi-sub muted' }, 'Titular: ' + (data.accountHolder || state.user?.name || '-'))
+        )
+      );
+
+      // Tabla de liquidaciones recibidas
+      const historyList = data.disbursements || [];
+      const historySection = h('div', { class: 'card p-4' },
+        h('h3', { style: 'margin:0 0 12px;' }, 'Historial de Transferencias Bancarias Recibidas'),
+        historyList.length ? h('div', { class: 'table-wrap' },
+          h('table', { class: 'data-table' },
+            h('thead', null,
+              h('tr', null,
+                h('th', null, 'Código'),
+                h('th', null, 'Fecha de Transferencia'),
+                h('th', null, 'Comprobante / Ref Bancaria'),
+                h('th', null, 'Medio de Pago'),
+                h('th', { class: 'text-right' }, 'Ventas Brutas'),
+                h('th', { class: 'text-right' }, 'Comisión FarmaYA (5%)'),
+                h('th', { class: 'text-right' }, 'Monto Neto Recibido (95%)'),
+                h('th', { class: 'text-center' }, 'Recibo Oficial')
+              )
+            ),
+            h('tbody', null, historyList.map(d =>
+              h('tr', null,
+                h('td', null, h('strong', { style: 'font-family:monospace; color:var(--primary);' }, d.code)),
+                h('td', null, d.createdAt ? new Date(d.createdAt).toLocaleDateString('es-CO') : '-'),
+                h('td', null, h('span', { class: 'tag tone-blue', style: 'font-family:monospace; font-weight:700;' }, d.reference || '-')),
+                h('td', null, d.method === 'TRANSFERENCIA_BANCARIA' ? 'Transferencia Bancaria ACH' : d.method),
+                h('td', { class: 'text-right' }, money(d.grossTotal)),
+                h('td', { class: 'text-right text-red', style: 'color:#991b1b;' }, '- ' + money(d.platformEarnings)),
+                h('td', { class: 'text-right font-bold', style: 'color:#166534; font-size:14px;' }, money(d.netAmount) + ' COP'),
+                h('td', { class: 'text-center' },
+                  h('button', {
+                    class: 'btn secondary small',
+                    type: 'button',
+                    onclick: () => {
+                      if (typeof renderDisbursementReceiptModal === 'function') {
+                        renderDisbursementReceiptModal(d);
+                      } else {
+                        alert('Código: ' + d.code + '\nNeto: ' + money(d.netAmount) + ' COP\nRef: ' + d.reference);
+                      }
+                    }
+                  }, 'Ver Recibo')
+                )
+              )
+            ))
+          )
+        ) : empty('Aún no tienes transferencias registradas', 'Apenas la administración liquide tus pedidos entregados, verás aquí el comprobante bancario.')
+      );
+
+      const elements = [header];
+      if (bankNotice) elements.push(bankNotice);
+      elements.push(kpis, historySection);
+
+      container.replaceChildren(...elements);
+    } catch (err) {
+      container.replaceChildren(notice('error', 'Error al consultar pagos', err.message));
+    }
+  };
+
+  draw();
+  return container;
 }

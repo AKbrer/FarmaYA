@@ -25,10 +25,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
     private final AdminService admin;
     private final OrderService orders;
+    private final com.farmaya.service.DisbursementService disbursements;
 
-    public AdminController(AdminService admin, OrderService orders) {
+    public AdminController(AdminService admin, OrderService orders, com.farmaya.service.DisbursementService disbursements) {
         this.admin = admin;
         this.orders = orders;
+        this.disbursements = disbursements;
     }
 
     @GetMapping("/movements")
@@ -89,5 +91,21 @@ public class AdminController {
     @PostMapping("/orders/{id}/cancel")
     public Order cancel(@PathVariable("id") String id, @RequestAttribute("user") User me, @RequestBody NoteRequest r) {
         return orders.cancelByAdmin(id, me, r.note());
+    }
+
+    @GetMapping("/disbursements/pending")
+    public List<com.farmaya.model.Dtos.PharmacyPendingPayoutDto> pendingDisbursements() {
+        return disbursements.getPendingPayouts();
+    }
+
+    @GetMapping("/disbursements")
+    public List<com.farmaya.model.Disbursement> allDisbursements() {
+        return disbursements.listAll();
+    }
+
+    @PostMapping("/disbursements")
+    public com.farmaya.model.Disbursement executeDisbursement(@RequestBody com.farmaya.model.Dtos.CreateDisbursementRequest req,
+                                                              @RequestAttribute("user") User me) {
+        return disbursements.executeDisbursement(req, me);
     }
 }

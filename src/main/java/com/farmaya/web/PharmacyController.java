@@ -27,11 +27,15 @@ public class PharmacyController {
     private final OrderService orders;
     private final MovementService movements;
     private final PartnerDashboardService dashboard;
+    private final com.farmaya.service.DisbursementService disbursements;
 
-    public PharmacyController(OrderService orders, MovementService movements, PartnerDashboardService dashboard) {
+    public PharmacyController(OrderService orders, MovementService movements,
+                              PartnerDashboardService dashboard,
+                              com.farmaya.service.DisbursementService disbursements) {
         this.orders = orders;
         this.movements = movements;
         this.dashboard = dashboard;
+        this.disbursements = disbursements;
     }
 
     @GetMapping("/movements")
@@ -91,5 +95,10 @@ public class PharmacyController {
     @PostMapping("/orders/{id}/ready")
     public Order ready(@PathVariable String id, @RequestAttribute("user") User user) {
         return orders.markReady(id, user);
+    }
+
+    @GetMapping("/disbursements")
+    public Map<String, Object> disbursements(@RequestAttribute("user") User user) {
+        return disbursements.getPharmacyOverview(user);
     }
 }
