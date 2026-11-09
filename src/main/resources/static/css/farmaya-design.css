@@ -11813,3 +11813,467 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
     height: 520px;
   }
 }
+
+
+/* ==========================================================================
+   54. MÓDULO DE DESEMBOLSOS Y LIQUIDACIONES A FARMACIAS (95% NETO)
+   ========================================================================== */
+
+/* Recuadro de Cabecera Hero */
+.disbursement-hero-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 26px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 22px;
+}
+
+[data-theme="dark"] .disbursement-hero-banner {
+  background: linear-gradient(135deg, rgba(11, 132, 87, 0.08) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.disbursement-hero-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.disbursement-hero-icon-box {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  background: rgba(11, 132, 87, 0.12);
+  color: #0b8457;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(11, 132, 87, 0.2);
+}
+
+[data-theme="dark"] .disbursement-hero-icon-box {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.3);
+}
+
+.disbursement-hero-icon-box svg {
+  width: 28px;
+  height: 28px;
+}
+
+.disbursement-hero-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.disbursement-hero-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.disbursement-hero-subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.disbursement-hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.disbursement-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.disbursement-pill.pill-green {
+  background: rgba(11, 132, 87, 0.12);
+  color: #0b8457;
+  border: 1px solid rgba(11, 132, 87, 0.25);
+}
+
+.disbursement-pill.pill-blue {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.disbursement-pill.pill-amber {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="dark"] .disbursement-pill.pill-green {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] .disbursement-pill.pill-blue {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .disbursement-pill.pill-amber {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.disbursement-hero-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.disbursement-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  border: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.disbursement-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+/* Grilla de Recuadros KPI */
+.disbursement-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+/* Recuadro de Tarjeta KPI */
+.disbursement-kpi-card {
+  padding: 22px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.disbursement-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 78, 70, 0.25);
+}
+
+[data-theme="dark"] .disbursement-kpi-card {
+  background: var(--surface);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .disbursement-kpi-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.disbursement-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+}
+
+.disbursement-kpi-card.accent-amber::before {
+  background: linear-gradient(90deg, #f59e0b, #d97706);
+}
+
+.disbursement-kpi-card.accent-green::before {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.disbursement-kpi-card.accent-blue::before {
+  background: linear-gradient(90deg, #38bdf8, #0284c7);
+}
+
+.disbursement-kpi-card.accent-purple::before {
+  background: linear-gradient(90deg, #a855f7, #7c3aed);
+}
+
+/* Encabezado del Recuadro KPI */
+.disbursement-kpi-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.disbursement-kpi-label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.disbursement-kpi-label {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.disbursement-kpi-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.disbursement-kpi-badge.badge-amber {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+
+.disbursement-kpi-badge.badge-green {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.disbursement-kpi-badge.badge-blue {
+  background: rgba(2, 132, 199, 0.14);
+  color: #0369a1;
+  border: 1px solid rgba(2, 132, 199, 0.28);
+}
+
+[data-theme="dark"] .disbursement-kpi-badge.badge-amber {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .disbursement-kpi-badge.badge-green {
+  background: rgba(52, 211, 153, 0.16);
+  color: #34d399;
+}
+
+[data-theme="dark"] .disbursement-kpi-badge.badge-blue {
+  background: rgba(56, 189, 248, 0.16);
+  color: #38bdf8;
+}
+
+/* Valor del Recuadro KPI */
+.disbursement-kpi-amount-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+
+.disbursement-kpi-amount {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.disbursement-kpi-amount.text-amber {
+  color: #b45309;
+}
+
+.disbursement-kpi-amount.text-green {
+  color: #047857;
+}
+
+.disbursement-kpi-amount.text-blue {
+  color: #0369a1;
+}
+
+[data-theme="dark"] .disbursement-kpi-amount.text-amber {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .disbursement-kpi-amount.text-green {
+  color: #34d399;
+}
+
+[data-theme="dark"] .disbursement-kpi-amount.text-blue {
+  color: #38bdf8;
+}
+
+.disbursement-kpi-currency {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+/* Pie del Recuadro KPI */
+.disbursement-kpi-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.4;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+
+/* Aliases para compatibilidad */
+.stitch-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.stitch-kpi-card {
+  padding: 22px 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stitch-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+}
+
+.stitch-kpi-card.accent-orange::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
+.stitch-kpi-card.accent-green::before { background: linear-gradient(90deg, #10b981, #059669); }
+.stitch-kpi-card.accent-blue::before { background: linear-gradient(90deg, #38bdf8, #0284c7); }
+
+.kpi-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 4px 0 2px;
+}
+
+.kpi-number {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-number.text-orange { color: #b45309; }
+.kpi-number.text-green { color: #047857; }
+.kpi-number.text-blue { color: #0369a1; }
+
+[data-theme="dark"] .kpi-number.text-orange { color: #fbbf24; }
+[data-theme="dark"] .kpi-number.text-green { color: #34d399; }
+[data-theme="dark"] .kpi-number.text-blue { color: #38bdf8; }
+
+.kpi-currency {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.kpi-sub {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.4;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+
+@media (max-width: 640px) {
+  .disbursement-hero-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 18px;
+  }
+  .disbursement-hero-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .disbursement-kpi-amount {
+    font-size: 24px;
+  }
+}

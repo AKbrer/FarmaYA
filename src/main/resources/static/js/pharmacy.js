@@ -1037,10 +1037,27 @@ function pharmacyDisbursementsView() {
     try {
       const data = await API.get('/pharmacy/disbursements');
 
-      const header = h('div', { class: 'pharmacy-header-card' },
-        h('div', { class: 'pharmacy-header-info' },
-          h('h1', { class: 'pharmacy-header-title' }, 'Mis Liquidaciones & Pagos Bancarios'),
-          h('span', { class: 'pharmacy-header-address muted' }, 'Consulta el saldo acumulado de tus ventas pagadas por pasarela digital y las transferencias acreditadas a tu cuenta.')
+            // Recuadro Superior Destacado (Hero Card de Farmacia)
+      const header = h('div', { class: 'disbursement-hero-banner' },
+        h('div', { class: 'disbursement-hero-left' },
+          h('div', { class: 'disbursement-hero-icon-box' },
+            icon('wallet')
+          ),
+          h('div', { class: 'disbursement-hero-details' },
+            h('h1', { class: 'disbursement-hero-title' }, 'Mis Liquidaciones & Pagos Bancarios'),
+            h('p', { class: 'disbursement-hero-subtitle' }, 'Resumen financiero de ventas recaudadas por pasarela digital Wompi y transferencias a tu cuenta bancaria.'),
+            h('div', { class: 'disbursement-hero-chips' },
+              h('span', { class: 'disbursement-pill pill-amber' }, '95.0% Neto Farmacia'),
+              h('span', { class: 'disbursement-pill pill-blue' }, '5.0% Tarifa FarmaYA'),
+              h('span', { class: 'disbursement-pill pill-green' }, 'Acreditación Directa')
+            )
+          )
+        ),
+        h('div', { class: 'disbursement-hero-right' },
+          h('div', { class: 'disbursement-status-badge' },
+            h('span', { class: 'disbursement-status-dot' }),
+            h('span', null, data.bankConfigured ? 'Cuenta Verificada' : 'Cuenta Pendiente')
+          )
         )
       );
 
@@ -1051,40 +1068,63 @@ function pharmacyDisbursementsView() {
         'Para recibir las transferencias de tus ventas (95%), actualiza tus datos bancarios en la pestaña Mi Perfil.'
       ) : null;
 
-      // KPI Cards
-      const kpis = h('div', { class: 'stitch-kpi-grid', style: 'grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin-bottom:20px;' },
-        h('div', { class: 'stitch-kpi-card accent-orange' },
-          h('div', { class: 'kpi-top-row' },
-            h('span', { class: 'kpi-label' }, 'Saldo Pendiente por Recibir'),
-            h('span', { class: 'kpi-chip chip-orange' }, '95% de Ventas')
+      // Recuadros de Métricas Financieras (KPI Cards con Borde, Fondo y Acentos)
+      const kpis = h('div', { class: 'disbursement-kpis-grid' },
+        // Recuadro 1: Saldo Pendiente 95%
+        h('div', { class: 'disbursement-kpi-card accent-amber' },
+          h('div', { class: 'disbursement-kpi-head' },
+            h('div', { class: 'disbursement-kpi-label-group' },
+              icon('wallet', 'muted'),
+              h('span', { class: 'disbursement-kpi-label' }, 'Saldo Pendiente por Recibir')
+            ),
+            h('span', { class: 'disbursement-kpi-badge badge-amber' }, '95% de Ventas')
           ),
-          h('div', { class: 'kpi-value-row' },
-            h('strong', { class: 'kpi-number text-orange' }, money(data.pendingNet || 0)),
-            h('span', { class: 'kpi-currency' }, 'COP')
+          h('div', { class: 'disbursement-kpi-amount-row' },
+            h('span', { class: 'disbursement-kpi-amount text-amber' }, money(data.pendingNet || 0)),
+            h('span', { class: 'disbursement-kpi-currency' }, 'COP')
           ),
-          h('span', { class: 'kpi-sub muted' }, (data.pendingOrdersCount || 0) + ' pedidos entregados en espera del próximo corte')
+          h('div', { class: 'disbursement-kpi-footer' },
+            icon('package', 'muted'),
+            h('span', null, (data.pendingOrdersCount || 0) + ' pedidos entregados en espera del próximo corte bancario')
+          )
         ),
-        h('div', { class: 'stitch-kpi-card accent-green' },
-          h('div', { class: 'kpi-top-row' },
-            h('span', { class: 'kpi-label' }, 'Total Histórico Transferido a tu Cuenta'),
-            h('span', { class: 'kpi-chip chip-green' }, 'Recibido')
+
+        // Recuadro 2: Total Histórico Transferido
+        h('div', { class: 'disbursement-kpi-card accent-green' },
+          h('div', { class: 'disbursement-kpi-head' },
+            h('div', { class: 'disbursement-kpi-label-group' },
+              icon('check', 'muted'),
+              h('span', { class: 'disbursement-kpi-label' }, 'Total Transferido a tu Cuenta')
+            ),
+            h('span', { class: 'disbursement-kpi-badge badge-green' }, 'Acreditado')
           ),
-          h('div', { class: 'kpi-value-row' },
-            h('strong', { class: 'kpi-number text-green' }, money(data.totalDisbursedHistoric || 0)),
-            h('span', { class: 'kpi-currency' }, 'COP')
+          h('div', { class: 'disbursement-kpi-amount-row' },
+            h('span', { class: 'disbursement-kpi-amount text-green' }, money(data.totalDisbursedHistoric || 0)),
+            h('span', { class: 'disbursement-kpi-currency' }, 'COP')
           ),
-          h('span', { class: 'kpi-sub muted' }, ((data.disbursements || []).length) + ' pagos transferidos exitosamente')
+          h('div', { class: 'disbursement-kpi-footer' },
+            icon('shield', 'muted'),
+            h('span', null, ((data.disbursements || []).length) + ' pagos transferidos exitosamente con comprobante')
+          )
         ),
-        h('div', { class: 'stitch-kpi-card accent-blue' },
-          h('div', { class: 'kpi-top-row' },
-            h('span', { class: 'kpi-label' }, 'Cuenta Bancaria de Abono'),
-            h('span', { class: 'kpi-chip chip-blue' }, data.bankConfigured ? 'Verificada' : 'Pendiente')
+
+        // Recuadro 3: Cuenta Bancaria Registrada
+        h('div', { class: 'disbursement-kpi-card accent-blue' },
+          h('div', { class: 'disbursement-kpi-head' },
+            h('div', { class: 'disbursement-kpi-label-group' },
+              icon('bank', 'muted'),
+              h('span', { class: 'disbursement-kpi-label' }, 'Cuenta Bancaria de Abono')
+            ),
+            h('span', { class: 'disbursement-kpi-badge badge-blue' }, data.bankConfigured ? 'Activa' : 'Sin Registrar')
           ),
-          h('div', { style: 'margin: 6px 0;' },
-            h('strong', { style: 'font-size:15px; color:#0f172a; display:block;' }, (data.bankName || 'Por registrar') + ' · ' + (data.accountType || 'Ahorros')),
-            h('span', { style: 'font-family:monospace; font-size:13.5px; font-weight:700; color:#0369a1;' }, 'N°: ' + (data.accountNumber || 'Sin cuenta'))
+          h('div', { style: 'margin: 4px 0;' },
+            h('strong', { style: 'font-size:16px; color:var(--text); display:block; font-weight:800;' }, (data.bankName || 'Por registrar') + ' • ' + (data.accountType || 'Ahorros')),
+            h('span', { style: 'font-family:monospace; font-size:14px; font-weight:800; color:var(--primary); letter-spacing:0.03em;' }, 'N°: ' + (data.accountNumber || 'Sin cuenta'))
           ),
-          h('span', { class: 'kpi-sub muted' }, 'Titular: ' + (data.accountHolder || state.user?.name || '-'))
+          h('div', { class: 'disbursement-kpi-footer' },
+            icon('user', 'muted'),
+            h('span', null, 'Titular: ' + (data.accountHolder || state.user?.name || '-'))
+          )
         )
       );
 

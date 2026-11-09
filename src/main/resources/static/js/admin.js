@@ -2278,47 +2278,87 @@ function adminDisbursementsView() {
       const totalPendingNet = pendingList.reduce((acc, p) => acc + (p.netPayable || 0), 0);
       const totalHistoricNet = historyList.reduce((acc, d) => acc + (d.netAmount || 0), 0);
 
-      const header = h('div', { class: 'pharmacy-header-card' },
-        h('div', { class: 'pharmacy-header-info' },
-          h('h1', { class: 'pharmacy-header-title' }, 'Desembolsos & Liquidaciones a Farmacias Aliadas'),
-          h('span', { class: 'pharmacy-header-address muted' }, 'Gestión del recaudo digital Wompi: dispersión del 95% neto a las cuentas bancarias de las droguerías aliadas.')
+            // Recuadro Superior Destacado (Hero Card)
+      const header = h('div', { class: 'disbursement-hero-banner' },
+        h('div', { class: 'disbursement-hero-left' },
+          h('div', { class: 'disbursement-hero-icon-box' },
+            icon('wallet')
+          ),
+          h('div', { class: 'disbursement-hero-details' },
+            h('h1', { class: 'disbursement-hero-title' }, 'Desembolsos & Liquidaciones a Farmacias Aliadas'),
+            h('p', { class: 'disbursement-hero-subtitle' }, 'Gestión central de dispersión de fondos Wompi a cuentas bancarias de las droguerías aliadas.'),
+            h('div', { class: 'disbursement-hero-chips' },
+              h('span', { class: 'disbursement-pill pill-amber' }, '95.0% Aliados en Ventas'),
+              h('span', { class: 'disbursement-pill pill-blue' }, '5.0% Tarifa FarmaYA'),
+              h('span', { class: 'disbursement-pill pill-green' }, 'Dispersión ACH / Wompi')
+            )
+          )
+        ),
+        h('div', { class: 'disbursement-hero-right' },
+          h('div', { class: 'disbursement-status-badge' },
+            h('span', { class: 'disbursement-status-dot' }),
+            h('span', null, 'Cortes de Pago en Línea')
+          )
         )
       );
 
-      // KPI Cards
-      const kpis = h('div', { class: 'stitch-kpi-grid', style: 'grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom:20px;' },
-        h('div', { class: 'stitch-kpi-card accent-orange' },
-          h('div', { class: 'kpi-top-row' },
-            h('span', { class: 'kpi-label' }, 'Saldo Total Pendiente por Desembolsar'),
-            h('span', { class: 'kpi-chip chip-orange' }, '95.0% Aliados')
+      // Recuadros de Métricas Financieras (KPI Cards con Borde, Fondo y Acentos)
+      const kpis = h('div', { class: 'disbursement-kpis-grid' },
+        // Recuadro 1: Saldo Pendiente 95%
+        h('div', { class: 'disbursement-kpi-card accent-amber' },
+          h('div', { class: 'disbursement-kpi-head' },
+            h('div', { class: 'disbursement-kpi-label-group' },
+              icon('wallet', 'muted'),
+              h('span', { class: 'disbursement-kpi-label' }, 'Saldo Total Pendiente por Desembolsar')
+            ),
+            h('span', { class: 'disbursement-kpi-badge badge-amber' }, '95.0% Aliados')
           ),
-          h('div', { class: 'kpi-value-row' },
-            h('strong', { class: 'kpi-number text-orange' }, money(totalPendingNet)),
-            h('span', { class: 'kpi-currency' }, 'COP')
+          h('div', { class: 'disbursement-kpi-amount-row' },
+            h('span', { class: 'disbursement-kpi-amount text-amber' }, money(totalPendingNet)),
+            h('span', { class: 'disbursement-kpi-currency' }, 'COP')
           ),
-          h('span', { class: 'kpi-sub muted' }, pendingList.length + ' droguerías esperando liquidación bancaria')
+          h('div', { class: 'disbursement-kpi-footer' },
+            icon('building', 'muted'),
+            h('span', null, pendingList.length + ' droguerías aliadas en espera de transferencia bancaria')
+          )
         ),
-        h('div', { class: 'stitch-kpi-card accent-green' },
-          h('div', { class: 'kpi-top-row' },
-            h('span', { class: 'kpi-label' }, 'Total Desembolsado Histórico'),
-            h('span', { class: 'kpi-chip chip-green' }, 'Transferido')
+
+        // Recuadro 2: Total Desembolsado Histórico
+        h('div', { class: 'disbursement-kpi-card accent-green' },
+          h('div', { class: 'disbursement-kpi-head' },
+            h('div', { class: 'disbursement-kpi-label-group' },
+              icon('check', 'muted'),
+              h('span', { class: 'disbursement-kpi-label' }, 'Total Desembolsado Histórico')
+            ),
+            h('span', { class: 'disbursement-kpi-badge badge-green' }, 'Transferido')
           ),
-          h('div', { class: 'kpi-value-row' },
-            h('strong', { class: 'kpi-number text-green' }, money(totalHistoricNet)),
-            h('span', { class: 'kpi-currency' }, 'COP')
+          h('div', { class: 'disbursement-kpi-amount-row' },
+            h('span', { class: 'disbursement-kpi-amount text-green' }, money(totalHistoricNet)),
+            h('span', { class: 'disbursement-kpi-currency' }, 'COP')
           ),
-          h('span', { class: 'kpi-sub muted' }, historyList.length + ' transferencias bancarias ejecutadas con éxito')
+          h('div', { class: 'disbursement-kpi-footer' },
+            icon('shield', 'muted'),
+            h('span', null, historyList.length + ' transferencias bancarias conciliadas con comprobante')
+          )
         ),
-        h('div', { class: 'stitch-kpi-card accent-blue' },
-          h('div', { class: 'kpi-top-row' },
-            h('span', { class: 'kpi-label' }, 'Comisión FarmaYA Retenida (5%)'),
-            h('span', { class: 'kpi-chip chip-blue' }, 'Plataforma')
+
+        // Recuadro 3: Comisión FarmaYA Retenida (5%)
+        h('div', { class: 'disbursement-kpi-card accent-blue' },
+          h('div', { class: 'disbursement-kpi-head' },
+            h('div', { class: 'disbursement-kpi-label-group' },
+              icon('package', 'muted'),
+              h('span', { class: 'disbursement-kpi-label' }, 'Tarifa FarmaYA Retenida (5%)')
+            ),
+            h('span', { class: 'disbursement-kpi-badge badge-blue' }, '5.0% Plataforma')
           ),
-          h('div', { class: 'kpi-value-row' },
-            h('strong', { class: 'kpi-number text-blue' }, money(Math.round(totalPendingNet * (5.0 / 95.0)))),
-            h('span', { class: 'kpi-currency' }, 'COP')
+          h('div', { class: 'disbursement-kpi-amount-row' },
+            h('span', { class: 'disbursement-kpi-amount text-blue' }, money(Math.round(totalPendingNet * (5.0 / 95.0)))),
+            h('span', { class: 'disbursement-kpi-currency' }, 'COP')
           ),
-          h('span', { class: 'kpi-sub muted' }, '5% retenido automáticamente por servicios de software')
+          h('div', { class: 'disbursement-kpi-footer' },
+            icon('capsule', 'muted'),
+            h('span', null, 'Retención legal automática por intermediación y catálogo FarmaYA')
+          )
         )
       );
 
