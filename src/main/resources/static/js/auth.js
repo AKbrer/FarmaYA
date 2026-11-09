@@ -267,6 +267,23 @@ function openGoogleOAuthConnectModal() {
   const d = openDialog(modal);
 }
 
+function quickLoginBtn(label, email) {
+  return h('button', {
+    type: 'button',
+    class: 'btn secondary small',
+    style: 'font-size: 11px; padding: 6px 8px; justify-content: center;',
+    onclick: () => {
+      const emailInput = document.getElementById('loginEmail');
+      const passInput = document.getElementById('loginPassword');
+      const alert = document.getElementById('loginAlert');
+      if (emailInput) emailInput.value = email;
+      if (passInput) passInput.value = 'Demo1234!';
+      if (alert) alert.hidden = true;
+      toast('Credenciales cargadas: ' + label + ' (' + email + ')');
+    }
+  }, label);
+}
+
 function buildLoginCard() {
   const card = h('section', { class: 'auth-card', id: 'cardLogin' },
     h('div', { class: 'auth-card-heading' },
@@ -288,6 +305,18 @@ function buildLoginCard() {
       },
         googleIcon(),
         h('span', null, 'Iniciar sesión con Google')
+      )
+    ),
+        h('div', { class: 'demo-accounts-box', style: 'margin-top: 18px; padding: 12px 14px; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 12px;' },
+      h('div', { style: 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;' },
+        h('span', { class: 'bold small', style: 'color: var(--text);' }, 'Cuentas de prueba rápida:'),
+        h('span', { class: 'muted small' }, 'Clave: ', h('code', null, 'Demo1234!'))
+      ),
+      h('div', { style: 'display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;' },
+        quickLoginBtn('Admin', 'admin@farmaya.local'),
+        quickLoginBtn('Farmacia', 'farmacia0001@farmaya.com'),
+        quickLoginBtn('Cliente', 'cliente0001@farmaya.com'),
+        quickLoginBtn('Repartidor', 'repartidor0001@farmaya.com')
       )
     ),
     h('div', { class: 'auth-footer' },
@@ -876,6 +905,8 @@ function promptEmailOtpVerification({ email, role, onVerified }) {
 async function handleLoginSubmit(event) {
   event.preventDefault();
   const btn = document.getElementById('btnLogin');
+  const alert = document.getElementById('loginAlert');
+  if (alert) alert.hidden = true;
   const email = document.getElementById('loginEmail').value.trim();
   const password = document.getElementById('loginPassword').value;
 
@@ -886,7 +917,14 @@ async function handleLoginSubmit(event) {
       body: JSON.stringify({ email, password })
     });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'No pudimos iniciar sesión. Revisa tus datos.');
+    if (!response.ok) {
+      const msg = data.error || 'Correo o contraseña incorrectos.';
+      if (alert) {
+        alert.hidden = false;
+        alert.textContent = msg;
+      }
+      throw new Error(msg);
+    }
     API.setToken(data.token);
     state.user = data.user;
     location.hash = routeForRole(data.user.role);
