@@ -916,7 +916,7 @@ function adminOrders() {
   return h('div', { class: 'stack' }, h('div', { class: 'toolbar', style: 'display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:14px;' }, searchInput, select), holder);
 }
 
-function promptDisableUser(user) {
+async function promptDisableUser(user) {
   const name = user.pharmacyName || user.name || 'este usuario';
   const roleLabel = user.role === 'FARMACIA'
     ? 'la farmacia'

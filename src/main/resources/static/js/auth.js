@@ -408,7 +408,6 @@ function buildRegisterCard() {
 
   const latInput = h('input', { id: 'regLatitude', type: 'hidden' });
   const lngInput = h('input', { id: 'regLongitude', type: 'hidden' });
-font-family:monospace;' }, 'Sin coordenadas fijadas');
 
   // PASO 1: Datos Personales y de Acceso
   const step1Box = h('div', { id: 'regStep1', class: 'form-stack' },
