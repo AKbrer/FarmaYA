@@ -361,7 +361,7 @@ function orderDetail(o, viewer) {
             h('td', { class: 'order-item-subtotal', 'data-label': 'Subtotal' },
               h('span', { class: 'order-cell-label mobile-only muted small font-bold' }, 'Subtotal: '),
               h('strong', { class: 'order-cell-val order-subtotal-val' }, c.available ? money(c.quantity * c.unitPrice) : '')
-            ))))),
+            )))),
 
           h('tfoot', null,
 
