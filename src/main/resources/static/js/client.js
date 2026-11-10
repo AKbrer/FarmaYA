@@ -1442,7 +1442,7 @@ city: cityInput.value.trim() || user.city || '',
 
     h('div', { class: 'welcome-art', 'aria-hidden': 'true' },
 
-      h('img', { class: 'fy-cross', src: FY_CROSS_SRC, alt: 'FarmaYA' })
+      h('img', { class: 'welcome-logo-img', src: '/images/farmaya-logo.png?v=1', alt: 'FarmaYA' })
 
     )
 
