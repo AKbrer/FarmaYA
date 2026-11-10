@@ -20,10 +20,11 @@ public class Order {
     public String clientId, clientName, clientPhone, clientEmail, address, zone, city, notes;
     public Double latitude, longitude;
     public List<Item> items = new ArrayList<>();
-    public OrderStatus status;
+    @Indexed public OrderStatus status;
 
     // Farmacia
-    public String pharmacyId, pharmacyName, pharmacyAddress, pharmacyZone;
+    @Indexed public String pharmacyId;
+    public String pharmacyName, pharmacyAddress, pharmacyZone;
     public Double pharmacyLatitude, pharmacyLongitude;
     /** Distancia vial estimada y tarifa congelada al completar la entrega. */
     public Double deliveryDistanceKm, courierEarnings;
@@ -33,7 +34,8 @@ public class Order {
     public String pharmacyNote;
 
     // Repartidor
-    public String courierId, courierName, courierPhone;
+    @Indexed public String courierId;
+    public String courierName, courierPhone;
 
     // Pasarela de Pagos (PSE, Nequi y cuenta oficial FarmaYA)
     public String paymentMethod; // "PSE", "NEQUI", "TRANSFERENCIA"
@@ -54,7 +56,7 @@ public class Order {
     public int searchRound = 1;
     public int courierRound = 1;
     public Instant searchStartedAt, assignedAt, priceAskedAt, courierSearchStartedAt, deliveredAt;
-    public Boolean disbursed = false;
+    @Indexed public Boolean disbursed = false;
     public String disbursementId;
     public Instant disbursedAt;
 
@@ -63,7 +65,8 @@ public class Order {
     public String incidentNote, incidentBy;
 
     public List<HistoryEntry> history = new ArrayList<>();
-    public Instant createdAt, updatedAt;
+    @Indexed public Instant createdAt;
+    @Indexed public Instant updatedAt;
 
     /** Solo para la respuesta al repartidor (no se persiste). */
     @Transient public Integer itemCount;
@@ -102,7 +105,7 @@ public class Order {
 
     /** Registro de quién hizo qué y cuándo. */
     public static class HistoryEntry {
-        public OrderStatus status;
+        @Indexed public OrderStatus status;
         public String actorId, actorName, actorRole, note;
         public Instant at = Instant.now();
 

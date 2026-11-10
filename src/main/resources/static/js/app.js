@@ -215,7 +215,11 @@ function syncHeaderHeight() {
 window.addEventListener('resize', syncHeaderHeight);
 
 window.addEventListener('hashchange', () => { renderApp(); });
-window.addEventListener('load', () => { renderApp(); });
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => { renderApp(); });
+} else {
+  renderApp();
+}
 
 /* Cabecera: la línea divisoria solo aparece cuando hay contenido pasando por debajo. */
 (function () {

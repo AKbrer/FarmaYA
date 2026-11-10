@@ -3,14 +3,15 @@ package com.farmaya.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Instant;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 public class User {
     @Id public String id;
     public String name;
-    public String email;
+    @Indexed public String email;
     @JsonIgnore public String passwordHash;
     public String phone;
-    public Role role;
+    @Indexed public Role role;
     public String zone;
     public String city;
 
@@ -20,7 +21,7 @@ public class User {
     public String disabledReason;
     public Instant disabledAt;
     /** Farmacias y repartidores deben ser verificados por un administrador. */
-    public boolean verified;
+    @Indexed public boolean verified;
     /** Farmacia: recibiendo pedidos. Repartidor: disponible. */
     public boolean active = true;
     /** Validación de correo mediante código OTP. */
@@ -74,5 +75,5 @@ public class User {
     public String googleId;
     public String avatarUrl;
 
-    public Instant createdAt = Instant.now();
+    @Indexed public Instant createdAt = Instant.now();
 }

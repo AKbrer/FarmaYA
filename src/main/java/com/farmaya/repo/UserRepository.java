@@ -200,18 +200,30 @@ public class UserRepository {
     }
 
     public List<User> findAll() {
-        Map<String, User> allById = new LinkedHashMap<>();
-        for (String collection : COLLECTIONS) {
-            for (User u : mongo.find(new Query(Criteria.where("role").exists(true)), User.class, collection)) {
-                if (u.id != null) {
-                    allById.putIfAbsent(u.id, u);
-                    USER_COLLECTION_CACHE.putIfAbsent(u.id, collection);
-                }
-            }
-        }
-        List<User> all = new ArrayList<>(allById.values());
-        all.sort(Comparator.comparing((User u) -> u.createdAt,
-                Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+        Query query = new Query(Criteria.where("role").exists(true));
+        query.fields().exclude("verificationDocuments.dataUrl");
+
+        List<User> all = COLLECTIONS.parallelStream()
+                .flatMap(collection -> {
+                    List<User> list = mongo.find(query, User.class, collection);
+                    for (User u : list) {
+                        if (u.id != null) {
+                            USER_COLLECTION_CACHE.putIfAbsent(u.id, collection);
+                        }
+                    }
+                    return list.stream();
+                })
+                .collect(java.util.stream.Collectors.toMap(
+                        u -> u.id,
+                        u -> u,
+                        (existing, replacement) -> existing,
+                        LinkedHashMap::new
+                ))
+                .values()
+                .stream()
+                .sorted(Comparator.comparing((User u) -> u.createdAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())).reversed())
+                .toList();
         return all;
     }
 
