@@ -117,60 +117,6 @@ function renderClientDashboard() {
     return h('div', { style: 'display:none;' });
   }, 3500);
 
-  const pharmacyBox = h('section', { class: 'block stitch-pharmacies-block' },
-
-    h('div', { class: 'section-heading' },
-
-      h('div', null,
-
-        h('span', { class: 'eyebrow' }, 'RED DE FARMACIAS ASISTENCIALES'),
-
-        h('h2', null, 'Droguerías de turno en tu cobertura')
-
-      )
-
-    ),
-
-    live(() => API.get('/pharmacies'), pharmacies => {
-
-      if (!pharmacies.length) {
-
-        return empty('Aún no hay farmacias aliadas disponibles', 'Apenas una farmacia autorizada se conecte en tu cuadrante, aparecerá aquí.');
-
-      }
-
-      return h('div', { class: 'pharmacy-grid' }, pharmacies.map(p =>
-
-        h('article', { class: 'pharmacy-tile' },
-
-          h('div', { class: 'pharmacy-avatar' },
-
-            h('img', { class: 'fy-cross', src: FY_CROSS_SRC, alt: '' })
-
-          ),
-
-          h('div', { class: 'pharmacy-tile-info' },
-
-            h('strong', null, p.name || 'Farmacia Aliada'),
-
-            h('p', null, p.address || p.city || 'Barranquilla'),
-
-            h('small', { class: p.open ? 'text-success' : 'muted' }, p.open ? '● Recibiendo despachos' : '○ Fuera de turno'),
-
-            h('small', { class: 'muted block-line' }, 'Horario: ' + p.openFrom + '–' + p.openTo)
-
-          ),
-
-          
-
-        )
-
-      ));
-
-    })
-
-  );
-
   function drawProducts() {
 
     const q = norm(clientSearch);
@@ -1719,7 +1665,6 @@ city: cityInput.value.trim() || user.city || '',
 
           ),
 
-          pharmacyBox,
 
           h('section', { class: 'trust-card stitch-sidebar-trust' },
 
