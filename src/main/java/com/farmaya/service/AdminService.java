@@ -80,11 +80,7 @@ public class AdminService {
     }
 
     public List<User> pendingVerifications() {
-        return users.findAll().stream()
-                .filter(u -> !u.verified && (u.role == Role.FARMACIA || u.role == Role.REPARTIDOR))
-                .sorted(java.util.Comparator.comparing((User u) -> u.createdAt,
-                        java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
-                .limit(500).toList();
+        return users.findPendingVerifications();
     }
 
     public User setVerified(String id, boolean value, User admin) {

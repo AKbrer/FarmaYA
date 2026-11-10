@@ -134,14 +134,26 @@ window.logout = logout;
 async function renderApp() {
   const app = document.getElementById('app-container');
   if (!app) return;
+
+  // Carga paralela ultra-rapida de configuracion inicial y sesion activa
+  const bootstrapTasks = [];
   if (!state.metaLoaded) {
-    try { state.meta = await fetch('/api/meta').then(r => { if (!r.ok) throw new Error('No se pudo cargar la configuración'); return r.json(); }); }
-    catch (_) { state.meta = { statuses: {}, demo: false }; }
-    state.metaLoaded = true;
+    bootstrapTasks.push(
+      fetch('/api/meta')
+        .then(r => r.ok ? r.json() : { statuses: {}, demo: false })
+        .then(data => { state.meta = data; state.metaLoaded = true; })
+        .catch(() => { state.meta = { statuses: {}, demo: false }; state.metaLoaded = true; })
+    );
   }
   if (API.token && !state.user) {
-    try { state.user = await API.get('/auth/me'); }
-    catch (_) { API.setToken(null); state.user = null; }
+    bootstrapTasks.push(
+      API.get('/auth/me')
+        .then(u => { state.user = u; })
+        .catch(() => { API.setToken(null); state.user = null; })
+    );
+  }
+  if (bootstrapTasks.length) {
+    await Promise.all(bootstrapTasks);
   }
   const hash = location.hash || (state.user ? routeForRole(state.user.role) : '#home');
   if (state.user && ['#home', '#login', '#register', ''].includes(hash)) location.hash = routeForRole(state.user.role);

@@ -23,6 +23,16 @@ public class ProductController {
     private final ProductRepository products;
     private final MovementService movements;
 
+    // Cache en memoria para catalogo general (evita consultas repetitivas a Atlas)
+    private static final long CATALOG_CACHE_TTL_MS = 60_000;
+    private static volatile List<Product> cachedAllProducts = null;
+    private static volatile long lastCatalogFetch = 0;
+
+    public static synchronized void invalidateCatalogCache() {
+        cachedAllProducts = null;
+        lastCatalogFetch = 0;
+    }
+
     public ProductController(ProductRepository products, MovementService movements) {
         this.products = products;
         this.movements = movements;
@@ -34,7 +44,15 @@ public class ProductController {
         if (cat != null && !cat.isBlank()) {
             return products.findByCat(cat.trim());
         }
-        return products.findAll();
+        long now = System.currentTimeMillis();
+        List<Product> cached = cachedAllProducts;
+        if (cached != null && (now - lastCatalogFetch < CATALOG_CACHE_TTL_MS)) {
+            return cached;
+        }
+        List<Product> fresh = products.findAll();
+        cachedAllProducts = fresh;
+        lastCatalogFetch = now;
+        return fresh;
     }
 
     @Public
@@ -50,7 +68,8 @@ public class ProductController {
         if (p.price <= 0) throw ApiException.bad("El precio sugerido debe ser mayor a 0.");
         p.id = null;
         Product saved = products.save(p);
-        movements.record("ADMIN_PRODUCTO", "Creó el producto «" + saved.name + "» en el catálogo", me, null);
+        invalidateCatalogCache();
+        movements.record("ADMIN_PRODUCTO", "Creo el producto " + saved.name + " en el catalogo", me, null);
         return saved;
     }
 
@@ -75,7 +94,8 @@ public class ProductController {
         if (p.art != null) existing.art = p.art;
         if (p.color != null) existing.color = p.color;
         Product saved = products.save(existing);
-        movements.record("ADMIN_PRODUCTO", "Actualizó información y precio del producto «" + saved.name + "»", me, null);
+        invalidateCatalogCache();
+        movements.record("ADMIN_PRODUCTO", "Actualizo informacion y precio del producto " + saved.name, me, null);
         return saved;
     }
 
@@ -86,7 +106,8 @@ public class ProductController {
             .or(() -> products.findByNameIgnoreCase(id))
             .ifPresent(p -> {
                 products.delete(p);
-                movements.record("ADMIN_PRODUCTO", "Eliminó el producto «" + p.name + "» del catálogo", me, null);
+                invalidateCatalogCache();
+                movements.record("ADMIN_PRODUCTO", "Elimino el producto " + p.name + " del catalogo", me, null);
             });
     }
 }

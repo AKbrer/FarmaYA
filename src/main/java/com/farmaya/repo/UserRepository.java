@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -15,13 +16,17 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
 /**
- * Acceso unificado a cuentas sin utilizar la colección histórica `users`.
- * Cada cuenta se persiste exclusivamente en la colección correspondiente a su rol.
+ * Acceso unificado y de alto rendimiento a cuentas por rol en MongoDB.
+ * Incluye enrutamiento directo y cache en memoria de colecciones para eliminar roundtrips innecesarios.
  */
 @Repository
 public class UserRepository {
     public static final List<String> COLLECTIONS = List.of(
             "clientes", "farmacias", "domiciliarios", "administradores", "users");
+
+    // Cache en memoria para resolver al instante la coleccion donde reside cada usuario
+    private static final Map<String, String> USER_COLLECTION_CACHE = new ConcurrentHashMap<>();
+    private static final Map<String, String> EMAIL_COLLECTION_CACHE = new ConcurrentHashMap<>();
 
     private final MongoTemplate mongo;
 
@@ -41,12 +46,20 @@ public class UserRepository {
         return Criteria.where("_id").is(id);
     }
 
+    public static void evictCache(String id, String email) {
+        if (id != null) USER_COLLECTION_CACHE.remove(id);
+        if (email != null) EMAIL_COLLECTION_CACHE.remove(email.trim().toLowerCase());
+    }
+
     public User save(User user) {
         if (user == null || user.role == null) {
             throw new IllegalArgumentException("La cuenta debe tener un rol antes de guardarse.");
         }
         String col = collectionFor(user.role);
         if (user.id != null && !user.id.isBlank()) {
+            USER_COLLECTION_CACHE.put(user.id, col);
+            if (user.email != null) EMAIL_COLLECTION_CACHE.put(user.email.trim().toLowerCase(), col);
+
             Query q = new Query(idCriteria(user.id));
             org.springframework.data.mongodb.core.query.Update update = new org.springframework.data.mongodb.core.query.Update()
                     .set("enabled", user.enabled)
@@ -78,27 +91,64 @@ public class UserRepository {
                 }
             }
         }
-        return mongo.save(user, col);
+        User saved = mongo.save(user, col);
+        if (saved != null && saved.id != null) {
+            USER_COLLECTION_CACHE.put(saved.id, col);
+            if (saved.email != null) EMAIL_COLLECTION_CACHE.put(saved.email.trim().toLowerCase(), col);
+        }
+        return saved;
     }
 
     public Optional<User> findById(String id) {
         if (id == null || id.isBlank()) return Optional.empty();
         Query q = new Query(idCriteria(id)).limit(1);
+
+        // 1. Intento rapido en la coleccion recordada (1 solo salto de red a Atlas en lugar de 5)
+        String cachedCol = USER_COLLECTION_CACHE.get(id);
+        if (cachedCol != null) {
+            User user = mongo.findOne(q, User.class, cachedCol);
+            if (user != null) return Optional.of(user);
+            USER_COLLECTION_CACHE.remove(id);
+        }
+
+        // 2. Busqueda exhaustiva y registro en cache
         for (String collection : COLLECTIONS) {
             User user = mongo.findOne(q, User.class, collection);
-            if (user != null) return Optional.of(user);
+            if (user != null) {
+                USER_COLLECTION_CACHE.put(id, collection);
+                if (user.email != null) EMAIL_COLLECTION_CACHE.put(user.email.trim().toLowerCase(), collection);
+                return Optional.of(user);
+            }
         }
         return Optional.empty();
     }
 
     public Optional<User> findByEmailIgnoreCase(String email) {
         if (email == null || email.isBlank()) return Optional.empty();
+        String cleanEmail = email.trim().toLowerCase();
         Query query = new Query(new Criteria().andOperator(
                 Criteria.where("role").exists(true),
                 Criteria.where("email").regex("^" + Pattern.quote(email.trim()) + "$", "i"))).limit(1);
+
+        // 1. Intento rapido en la coleccion recordada
+        String cachedCol = EMAIL_COLLECTION_CACHE.get(cleanEmail);
+        if (cachedCol != null) {
+            User user = mongo.findOne(query, User.class, cachedCol);
+            if (user != null) {
+                if (user.id != null) USER_COLLECTION_CACHE.put(user.id, cachedCol);
+                return Optional.of(user);
+            }
+            EMAIL_COLLECTION_CACHE.remove(cleanEmail);
+        }
+
+        // 2. Busqueda exhaustiva en todas las colecciones
         for (String collection : COLLECTIONS) {
             User user = mongo.findOne(query, User.class, collection);
-            if (user != null) return Optional.of(user);
+            if (user != null) {
+                EMAIL_COLLECTION_CACHE.put(cleanEmail, collection);
+                if (user.id != null) USER_COLLECTION_CACHE.put(user.id, collection);
+                return Optional.of(user);
+            }
         }
         return Optional.empty();
     }
@@ -107,10 +157,16 @@ public class UserRepository {
         if (role == null) return List.of();
         Map<String, User> byId = new LinkedHashMap<>();
         for (User u : mongo.find(new Query(Criteria.where("role").is(role)), User.class, collectionFor(role))) {
-            if (u.id != null) byId.put(u.id, u);
+            if (u.id != null) {
+                byId.put(u.id, u);
+                USER_COLLECTION_CACHE.put(u.id, collectionFor(role));
+            }
         }
         for (User u : mongo.find(new Query(Criteria.where("role").is(role)), User.class, "users")) {
-            if (u.id != null) byId.putIfAbsent(u.id, u);
+            if (u.id != null) {
+                byId.putIfAbsent(u.id, u);
+                USER_COLLECTION_CACHE.putIfAbsent(u.id, "users");
+            }
         }
         return new ArrayList<>(byId.values());
     }
@@ -119,11 +175,38 @@ public class UserRepository {
         return !findByRole(role).isEmpty();
     }
 
+    /**
+     * Consulta optimizada para solicitudes pendientes de verificacion.
+     * Solo examina 'farmacias' y 'domiciliarios' con verified: false, omitiendo 'clientes' y 'administradores'.
+     */
+    public List<User> findPendingVerifications() {
+        List<User> list = new ArrayList<>();
+        Query q = new Query(Criteria.where("verified").is(false));
+        for (User u : mongo.find(q, User.class, "farmacias")) {
+            if (u.id != null) {
+                list.add(u);
+                USER_COLLECTION_CACHE.put(u.id, "farmacias");
+            }
+        }
+        for (User u : mongo.find(q, User.class, "domiciliarios")) {
+            if (u.id != null) {
+                list.add(u);
+                USER_COLLECTION_CACHE.put(u.id, "domiciliarios");
+            }
+        }
+        list.sort(Comparator.comparing((User u) -> u.createdAt,
+                Comparator.nullsLast(Comparator.naturalOrder())).reversed());
+        return list;
+    }
+
     public List<User> findAll() {
         Map<String, User> allById = new LinkedHashMap<>();
         for (String collection : COLLECTIONS) {
             for (User u : mongo.find(new Query(Criteria.where("role").exists(true)), User.class, collection)) {
-                if (u.id != null) allById.putIfAbsent(u.id, u);
+                if (u.id != null) {
+                    allById.putIfAbsent(u.id, u);
+                    USER_COLLECTION_CACHE.putIfAbsent(u.id, collection);
+                }
             }
         }
         List<User> all = new ArrayList<>(allById.values());
