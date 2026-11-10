@@ -12801,3 +12801,42 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
     border-radius: 16px !important;
   }
 }
+
+/* ==========================================================================
+   58. RENDIMIENTO DE HARDWARE GLOBAL (GPU, CONTENT-VISIBILITY, 60 FPS)
+   ========================================================================== */
+
+/* Aceleracion por GPU para transiciones suaves sin recalculos de layout */
+.dialog-sheet,
+.sheet-backdrop,
+.cart-panel,
+.toast,
+.mobile-cart-bar {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Contencion de renderizado: el navegador omite el calculo de elementos fuera de pantalla */
+.products-grid > *,
+.orders-list > *,
+.verification-flutter-card,
+.disbursement-flutter-card,
+.powerbi-flutter-card,
+.stitch-admin-kpi-card {
+  contain: content;
+}
+
+/* Optimizacion de fuentes y textos para despliegue instantaneo */
+body, button, input, select, textarea {
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Desactivar animaciones costosas de layout en celulares */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

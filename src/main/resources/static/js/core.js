@@ -101,23 +101,47 @@ function zoneSelect(name, current) {
 }
 
 /* ---------- API ---------- */
+const API_CACHE = new Map();
+
 const API = {
   token: localStorage.getItem('fy_token'),
   setToken(t) {
     this.token = t;
+    API_CACHE.clear();
     if (t) localStorage.setItem('fy_token', t); else localStorage.removeItem('fy_token');
   },
+  clearCache(prefix) {
+    if (prefix) {
+      for (const k of API_CACHE.keys()) {
+        if (k.startsWith(prefix)) API_CACHE.delete(k);
+      }
+    } else {
+      API_CACHE.clear();
+    }
+  },
+  getCached(path) {
+    const entry = API_CACHE.get(path);
+    if (!entry) return null;
+    if (Date.now() - entry.time < 180_000) return entry.data; // 3 minutos SWR
+    return null;
+  },
   async call(method, path, body) {
+    if (method !== 'GET') {
+      API_CACHE.clear();
+    }
     const headers = { 'Content-Type': 'application/json' };
     if (this.token) headers.Authorization = 'Bearer ' + this.token;
     const res = await fetch('/api' + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
     let data = null;
     try { data = await res.json(); } catch (e) { /* sin cuerpo */ }
     if (!res.ok) {
-      const msg = (data && data.error) || 'No pudimos completar la acción. Intenta de nuevo.';
+      const msg = (data && data.error) || 'No pudimos completar la accion. Intenta de nuevo.';
       const lost = res.status === 401 || (res.status === 403 && /deshabilitada/.test(msg));
       if (lost && this.token) { this.setToken(null); state.user = null; if (typeof renderApp === 'function') renderApp(); }
       throw new Error(msg);
+    }
+    if (method === 'GET') {
+      API_CACHE.set(path, { data, time: Date.now() });
     }
     return data;
   },
@@ -325,8 +349,28 @@ const refreshAll = () => document.dispatchEvent(new Event('fy:refresh'));
  * únicamente si los datos cambiaron. Se detiene al salir del DOM.
  */
 function live(fetcher, draw, every = 5000) {
-  const box = h('div', { class: 'live' }, h('div', { class: 'loading', role: 'status', 'aria-label': 'Cargando' }, skeleton()));
+  const box = h('div', { class: 'live' });
   let sig = null, busy = false;
+  let hasRendered = false;
+
+  // SWR: Renderizado instantaneo (0ms) si los datos ya fueron consultados en la sesion
+  try {
+    const fnStr = typeof fetcher === 'function' ? fetcher.toString() : '';
+    const m = fnStr.match(/API\.get\(\s*['"]([^'"]+)['"]/);
+    if (m && m[1]) {
+      const cached = API.getCached(m[1]);
+      if (cached !== null) {
+        box.replaceChildren(draw(cached));
+        sig = JSON.stringify(cached);
+        hasRendered = true;
+      }
+    }
+  } catch (_) {}
+
+  if (!hasRendered) {
+    box.replaceChildren(h('div', { class: 'loading', role: 'status', 'aria-label': 'Cargando' }, skeleton()));
+  }
+
   const tick = async force => {
     if (busy && !force) return;
     busy = true;
@@ -340,12 +384,12 @@ function live(fetcher, draw, every = 5000) {
           box.replaceChildren(rendered);
         } catch (renderErr) {
           console.error('[FarmaYA live draw error]', renderErr);
-          box.replaceChildren(notice('bad', 'Error visualizando informaci\u00f3n', renderErr.message || String(renderErr)));
+          box.replaceChildren(notice('bad', 'Error visualizando informacion', renderErr.message || String(renderErr)));
         }
       }
     } catch (e) {
       console.error('[FarmaYA live fetch error]', e);
-      if (sig === null) box.replaceChildren(notice('bad', 'No pudimos cargar la informaci\u00f3n', e.message || String(e)));
+      if (sig === null && !hasRendered) box.replaceChildren(notice('bad', 'No pudimos cargar la informacion', e.message || String(e)));
     } finally { busy = false; }
   };
   const onRefresh = () => tick(true);
@@ -366,9 +410,17 @@ function tabs(items, start = 0) {
   const panel = h('div', { class: 'panel', role: 'tabpanel' });
   const bar = h('div', { class: 'tabs', role: 'tablist' });
   const buttons = items.map((it, i) => h('button', { class: 'tab', role: 'tab', type: 'button', onclick: () => select(i) }, it.label));
+  const renderedCache = {};
+
   function select(i) {
-    buttons.forEach((b, j) => { b.classList.toggle('on', i === j); b.setAttribute('aria-selected', String(i === j)); });
-    panel.replaceChildren(items[i].render());
+    buttons.forEach((b, j) => {
+      b.classList.toggle('on', i === j);
+      b.setAttribute('aria-selected', String(i === j));
+    });
+    if (!renderedCache[i]) {
+      renderedCache[i] = items[i].render();
+    }
+    panel.replaceChildren(renderedCache[i]);
   }
   bar.append(...buttons);
   select(start);
