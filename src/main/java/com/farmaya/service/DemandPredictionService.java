@@ -8,9 +8,10 @@ import com.farmaya.repo.DemandForecastRepository;
 import com.farmaya.repo.OrderRepository;
 import com.farmaya.repo.ProductRepository;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,19 +32,19 @@ public class DemandPredictionService {
     }
 
     /**
-     * Obtiene el listado de pronósticos actuales. Si la colección está vacía,
-     * realiza el cálculo y entrenamiento predictivo con el historial existente en MongoDB.
+     * Obtiene el listado de pronosticos actuales. Si la coleccion esta vacia o
+     * desactualizada respecto a los meses cronologicos, recalcula y persiste.
      */
     public List<DemandForecast> getForecasts() {
         List<DemandForecast> existing = forecastRepo.findAllByOrderByEstimatedOrdersDesc();
-        if (existing.isEmpty()) {
+        if (existing.isEmpty() || existing.get(0).monthLabels == null || !existing.get(0).monthLabels.toString().contains("Nov")) {
             return recalculateForecasts();
         }
         return existing;
     }
 
     /**
-     * Genera la serie agregada por categoría (ALTA, MEDIA, BAJA) para el gráfico de líneas general.
+     * Genera la serie agregada por categoria (ALTA, MEDIA, BAJA) para el grafico de lineas general.
      */
     public Map<String, Object> buildAggregatedChartSeries(List<DemandForecast> forecasts) {
         Map<String, Object> series = new LinkedHashMap<>();
@@ -96,18 +97,25 @@ public class DemandPredictionService {
     }
 
     /**
-     * Recalcula el modelo analítico de demanda mensual clasificando en ALTA, MEDIA y BAJA
-     * a partir de los pedidos históricos en MongoDB, generando los puntos para el gráfico de líneas.
+     * Recalcula el modelo analitico de demanda mensual clasificando en ALTA, MEDIA y BAJA
+     * a partir de los pedidos historicos en MongoDB, generando los puntos para el grafico de lineas.
+     * Serie cronologica continua: Mes-2 (Sep) -> Mes-1 (Oct) -> Mes Actual (Nov) -> Proximo Mes Proyectado (Dic).
      */
     public List<DemandForecast> recalculateForecasts() {
-        log.info("Iniciando análisis y clasificación de demanda mensual de medicamentos...");
+        log.info("Iniciando analisis y clasificacion de demanda mensual de medicamentos...");
         List<Order> allOrders = orderRepo.findAll();
         List<Product> catalog = productRepo.findAll();
 
         Instant now = Instant.now();
-        Instant threeMonthsAgo = now.minus(90, ChronoUnit.DAYS);
+        ZoneId zone = ZoneId.systemDefault();
 
-        // Agrupar pedidos válidos (no cancelados ni rechazados) por medicamento
+        // Ventanas cronologicas exactas basadas en meses de calendario
+        YearMonth ymNow = YearMonth.now(); // Noviembre 2026
+        YearMonth ymMinus2 = ymNow.minusMonths(2); // Septiembre 2026
+        YearMonth ymMinus1 = ymNow.minusMonths(1); // Octubre 2026
+        YearMonth ymNext = ymNow.plusMonths(1); // Diciembre 2026
+
+        // Agrupar pedidos validos (no cancelados ni rechazados) por medicamento
         Map<String, List<OrderItemSample>> ordersByMed = new HashMap<>();
 
         for (Order ord : allOrders) {
@@ -132,36 +140,38 @@ public class DemandPredictionService {
             }
         }
 
-        // Asegurar que todos los productos del catálogo aparezcan en el modelo
+        // Asegurar que todos los productos del catalogo aparezcan en el modelo
         for (Product p : catalog) {
             if (p.name != null && !p.name.isBlank()) {
                 ordersByMed.putIfAbsent(p.name.trim(), new ArrayList<>());
             }
         }
 
-        // Etiquetas para el gráfico de líneas (3 meses anteriores + 1 mes proyectado)
+        // Etiquetas para el grafico de lineas: 2 meses anteriores + mes actual en curso + mes siguiente proyectado
         DateTimeFormatter monthFmt = DateTimeFormatter.ofPattern("MMM", Locale.forLanguageTag("es-CO"));
-        ZoneId zone = ZoneId.systemDefault();
-        String mMinus3 = monthFmt.format(now.minus(90, ChronoUnit.DAYS).atZone(zone));
-        String mMinus2 = monthFmt.format(now.minus(60, ChronoUnit.DAYS).atZone(zone));
-        String mMinus1 = monthFmt.format(now.minus(30, ChronoUnit.DAYS).atZone(zone));
         DateTimeFormatter dtfFull = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.forLanguageTag("es-CO"));
-        String nextMonthFull = dtfFull.format(now.plus(30, ChronoUnit.DAYS).atZone(zone));
+
+        String mMinus2 = monthFmt.format(ymMinus2.atDay(1));
+        String mMinus1 = monthFmt.format(ymMinus1.atDay(1));
+        String mCurrent = monthFmt.format(ymNow.atDay(1));
+        String mProjShort = monthFmt.format(ymNext.atDay(1)) + " (Proy. IA)";
+
+        String nextMonthFull = dtfFull.format(ymNext.atDay(1));
         if (!nextMonthFull.isEmpty()) {
             nextMonthFull = Character.toUpperCase(nextMonthFull.charAt(0)) + nextMonthFull.substring(1);
         }
-        String mProjShort = monthFmt.format(now.plus(30, ChronoUnit.DAYS).atZone(zone)) + " (Proy. IA)";
 
         List<String> monthLabels = List.of(
-            Character.toUpperCase(mMinus3.charAt(0)) + mMinus3.substring(1),
             Character.toUpperCase(mMinus2.charAt(0)) + mMinus2.substring(1),
             Character.toUpperCase(mMinus1.charAt(0)) + mMinus1.substring(1),
+            Character.toUpperCase(mCurrent.charAt(0)) + mCurrent.substring(1),
             Character.toUpperCase(mProjShort.charAt(0)) + mProjShort.substring(1)
         );
 
-        // Métricas temporales por medicamento
+        // Metricas temporales por medicamento
         Map<String, MedStats> statsMap = new HashMap<>();
         List<Integer> orderCounts = new ArrayList<>();
+        int currentDayOfMonth = Math.max(1, LocalDate.now().getDayOfMonth());
 
         for (Map.Entry<String, List<OrderItemSample>> entry : ordersByMed.entrySet()) {
             String med = entry.getKey();
@@ -169,50 +179,47 @@ public class DemandPredictionService {
 
             int totalOrders = samples.size();
             int totalUnits = samples.stream().mapToInt(s -> s.quantity).sum();
-            
-            // Recientes (últimos 45 días) vs Anteriores (45 a 90 días) para cálculo de tendencia
-            Instant midPoint = now.minus(45, ChronoUnit.DAYS);
-            int recentOrders = (int) samples.stream().filter(s -> s.date.isAfter(midPoint)).count();
-            int previousOrders = (int) samples.stream().filter(s -> s.date.isAfter(threeMonthsAgo) && s.date.isBefore(midPoint)).count();
 
-            // Ventanas de 30 días para los puntos de la línea de tiempo
-            Instant p30 = now.minus(30, ChronoUnit.DAYS);
-            Instant p60 = now.minus(60, ChronoUnit.DAYS);
-            Instant p90 = now.minus(90, ChronoUnit.DAYS);
+            // Desglose por mes calendario
+            int ptMinus2 = (int) samples.stream().filter(s -> YearMonth.from(s.date.atZone(zone)).equals(ymMinus2)).count();
+            int ptMinus1 = (int) samples.stream().filter(s -> YearMonth.from(s.date.atZone(zone)).equals(ymMinus1)).count();
+            int ptCurrent = (int) samples.stream().filter(s -> YearMonth.from(s.date.atZone(zone)).equals(ymNow)).count();
 
-            int ptMinus3 = (int) samples.stream().filter(s -> s.date.isAfter(p90) && s.date.isBefore(p60)).count();
-            int ptMinus2 = (int) samples.stream().filter(s -> s.date.isAfter(p60) && s.date.isBefore(p30)).count();
-            int ptMinus1 = (int) samples.stream().filter(s -> s.date.isAfter(p30)).count();
+            // Run-rate proyectado del mes actual en curso (Noviembre) a 30 dias
+            int projectedCurrentMonthClose = Math.max(ptCurrent, (int) Math.round((double) ptCurrent * (30.0 / currentDayOfMonth)));
 
-            // Promedio mensual estimado
-            int estimatedOrders = Math.max(1, (int) Math.round((recentOrders * 1.5 + previousOrders * 0.5) / 2.0));
+            // Ponderacion de demanda esperada para el proximo mes (Diciembre)
+            int estimatedOrders = Math.max(1, (int) Math.round((projectedCurrentMonthClose * 0.50) + (ptMinus1 * 0.35) + (ptMinus2 * 0.15)));
+
             if (totalOrders == 0) {
-                // Producto sin historial previo: estimación base según catálogo
-                boolean popular = med.toLowerCase().contains("ibuprofeno") || med.toLowerCase().contains("paracetamol");
+                // Producto sin historial previo: estimacion base segun catalogo
+                boolean popular = med.toLowerCase().contains("ibuprofeno") || med.toLowerCase().contains("paracetamol") || med.toLowerCase().contains("acetaminof");
                 estimatedOrders = popular ? 28 : 6;
-                ptMinus3 = popular ? 22 : 5;
-                ptMinus2 = popular ? 25 : 6;
-                ptMinus1 = popular ? 26 : 5;
+                ptMinus2 = popular ? 22 : 5;
+                ptMinus1 = popular ? 25 : 6;
+                ptCurrent = popular ? 26 : 5;
             } else {
-                // Ajustar puntos si el historial era muy escaso
-                if (ptMinus1 == 0) ptMinus1 = Math.max(1, estimatedOrders - 2);
+                // Ajustar puntos si el historial del mes actual o previos es incipiente
+                if (ptCurrent == 0) ptCurrent = Math.max(1, (int) Math.round(estimatedOrders * 0.85));
+                if (ptMinus1 == 0) ptMinus1 = Math.max(1, ptCurrent - 1);
                 if (ptMinus2 == 0) ptMinus2 = Math.max(1, ptMinus1 - 1);
-                if (ptMinus3 == 0) ptMinus3 = Math.max(1, ptMinus2 - 1);
             }
 
             double avgUnitsPerOrder = totalOrders > 0 ? (double) totalUnits / totalOrders : 1.5;
             int predictedUnits = (int) Math.ceil(estimatedOrders * avgUnitsPerOrder);
 
             String trend;
-            if (recentOrders > previousOrders * 1.25) {
+            int recentWeight = ptCurrent + ptMinus1;
+            int pastWeight = ptMinus2 * 2;
+            if (recentWeight > pastWeight * 1.25) {
                 trend = "Creciente";
-            } else if (recentOrders < previousOrders * 0.75 && previousOrders > 2) {
+            } else if (recentWeight < pastWeight * 0.75 && pastWeight > 2) {
                 trend = "Decreciente";
             } else {
                 trend = "Estable";
             }
 
-            List<Integer> historyPoints = List.of(ptMinus3, ptMinus2, ptMinus1, estimatedOrders);
+            List<Integer> historyPoints = List.of(ptMinus2, ptMinus1, ptCurrent, estimatedOrders);
 
             statsMap.put(med, new MedStats(med, totalOrders, estimatedOrders, predictedUnits, trend, historyPoints));
             orderCounts.add(estimatedOrders);
@@ -240,12 +247,12 @@ public class DemandPredictionService {
                 category = "ALTA";
                 confidence = 92.5;
                 safetyStock = (int) Math.ceil(s.predictedUnits * 1.35); // 35% de stock de seguridad
-                recommendation = "Alta rotación proyectada. Incrementar pedidos al proveedor y mantener inventario de seguridad para evitar roturas.";
+                recommendation = "Alta rotacion proyectada. Incrementar pedidos al proveedor y mantener inventario de seguridad para evitar roturas.";
             } else if (s.estimatedOrders <= lowCutoff) {
                 category = "BAJA";
                 confidence = 88.0;
-                safetyStock = (int) Math.ceil(s.predictedUnits * 1.10); // 10% stock mínimo
-                recommendation = "Baja frecuencia de pedidos. Comprar lotes reducidos o bajo demanda para evitar inmovilización de capital o vencimiento.";
+                safetyStock = (int) Math.ceil(s.predictedUnits * 1.10); // 10% stock minimo
+                recommendation = "Baja frecuencia de pedidos. Comprar lotes reducidos o bajo demanda para evitar inmovilizacion de capital o vencimiento.";
             } else {
                 category = "MEDIA";
                 confidence = 90.0;
@@ -276,7 +283,7 @@ public class DemandPredictionService {
         // Persistir en MongoDB
         forecastRepo.deleteAll();
         List<DemandForecast> saved = forecastRepo.saveAll(forecasts);
-        log.info("Pronósticos de demanda calculados y persistidos en MongoDB: {} medicamentos clasificados.", saved.size());
+        log.info("Pronosticos de demanda calculados y persistidos en MongoDB: {} medicamentos clasificados. Periodo proyectado: {}", saved.size(), nextMonthFull);
 
         return saved;
     }

@@ -448,23 +448,23 @@ function fyDownloadBytes(bytes, filename, mime) {
  */
 function fyGetTimelineMonthLabels(providedLabels) {
   if (Array.isArray(providedLabels) && providedLabels.length >= 2 && String(providedLabels[0]).indexOf('Mes') < 0) {
-    return providedLabels.slice(0, 4);
+    return providedLabels;
   }
   const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   const now = new Date();
   const m = now.getMonth();
   const y = now.getFullYear();
 
-  // 3 meses anteriores en orden cronologico hacia adelante + mes proyectado
-  const d3 = new Date(y, m - 3, 1);
+  // 2 meses anteriores cronologicos + mes actual en curso (Noviembre) + proximo mes proyectado (Diciembre)
   const d2 = new Date(y, m - 2, 1);
   const d1 = new Date(y, m - 1, 1);
+  const dNow = new Date(y, m, 1);
   const dNext = new Date(y, m + 1, 1);
 
   return [
-    MONTHS[d3.getMonth()],
     MONTHS[d2.getMonth()],
     MONTHS[d1.getMonth()],
+    MONTHS[dNow.getMonth()],
     MONTHS[dNext.getMonth()] + ' (Proy. IA)'
   ];
 }
@@ -578,7 +578,8 @@ function fyDemandLineChartSvg(chartData, selectedMed) {
       const px = x(i).toFixed(1);
       const py = y(pts[i]).toFixed(1);
       const isProj = i === n - 1;
-      const tip = `${line.name} (${labels[i]}): ${v} solicitudes ${isProj ? '- Proyeccion Machine Learning' : '- Historico'}`;
+      const isCurrent = i === n - 2;
+      const tip = `${line.name} (${labels[i]}): ${v} solicitudes ${isProj ? '- Proyeccion Machine Learning' : (isCurrent ? '- Mes Actual en Curso' : '- Historico')}`;
 
       // Texto de valor encima del punto
       g += `<text x="${px}" y="${(py - 9).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="${line.color}">${v}</text>`;
