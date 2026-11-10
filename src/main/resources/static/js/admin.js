@@ -1386,37 +1386,37 @@ function adminVerificationCenter() {
           ),
           h('span', { class: 'tag tone-amber small font-bold' }, 'Pendiente')
         ),
-        h('div', null,
+        h('div', { class: 'verification-flutter-main-info' },
           h('strong', { class: 'verification-flutter-title block-line' }, isPh ? (u.pharmacyName || u.name) : u.name),
           isPh && u.pharmacyName ? h('span', { class: 'muted small block-line' }, 'Representante: ' + u.name) : null,
-          h('span', { class: 'muted small block-line' }, u.email + (u.phone ? '  ' + u.phone : ''))
+          h('span', { class: 'muted small block-line' }, u.email + (u.phone ? ' · ' + u.phone : ''))
         ),
-        h('div', { class: 'verification-flutter-info-box' },
-          h('div', null,
-            h('span', { class: 'small muted' }, 'Ubicacion: '),
-            h('strong', { class: 'small' }, (u.city || 'Nacional') + (u.address ? ' - ' + u.address : ''))
+        h('div', { class: 'verification-flutter-meta-list' },
+          h('div', { class: 'verification-flutter-meta-item' },
+            h('span', { class: 'verification-flutter-meta-label' }, 'Ubicacion:'),
+            h('span', { class: 'verification-flutter-meta-val' }, (u.city || 'Nacional') + (u.address ? ' · ' + u.address : ''))
           ),
           isPh
-            ? h('div', null,
-                h('span', { class: 'small muted' }, 'Licencia INVIMA: '),
-                h('strong', { class: 'small font-mono' }, u.licenseNumber || 'En tramite')
+            ? h('div', { class: 'verification-flutter-meta-item' },
+                h('span', { class: 'verification-flutter-meta-label' }, 'Licencia INVIMA:'),
+                h('span', { class: 'verification-flutter-meta-val font-mono font-bold' }, u.licenseNumber || 'En tramite')
               )
-            : h('div', null,
-                h('span', { class: 'small muted' }, 'Vehiculo: '),
-                h('strong', { class: 'small' }, (u.vehicle || 'Sin vehiculo') + (u.plate ? ' (' + u.plate + ')' : ''))
+            : h('div', { class: 'verification-flutter-meta-item' },
+                h('span', { class: 'verification-flutter-meta-label' }, 'Vehiculo:'),
+                h('span', { class: 'verification-flutter-meta-val' }, (u.vehicle || 'Sin vehiculo') + (u.plate ? ' (' + u.plate + ')' : ''))
               )
         ),
         docs.length
           ? h('button', {
               type: 'button',
               class: 'btn secondary small block',
-              style: 'font-weight:700;',
+              style: 'font-weight:700; width:100%; justify-content:center;',
               onclick: () => openUserDocumentsModal(u)
             }, icon('prescriptions'), h('span', null, 'Ver Expediente PDF (' + docs.length + ')'))
-          : null,
+          : h('div', { class: 'text-center muted small', style: 'padding: 4px;' }, 'Sin expediente digital adjunto'),
         h('div', { class: 'verification-flutter-actions' },
           h('button', { class: 'btn danger small block', type: 'button', onclick: actDisable }, 'Rechazar'),
-          h('button', { class: 'btn primary small block', type: 'button', onclick: () => actVerify(true) }, 'Aprobar')
+          h('button', { class: 'btn primary small block', type: 'button', onclick: () => actVerify(true) }, 'Aprobar y Verificar')
         )
       );
     }));

@@ -640,7 +640,7 @@ function farmayaSupportFooter() {
               h('div', null,
                 h('span', { class: 'split-label' }, 'Línea de Soporte & WhatsApp'),
                 h('a', { class: 'split-val', href: 'https://wa.me/573243201934', target: '_blank' }, '+57 324 320 1934'),
-                h('small', { class: 'split-sub' }, 'Chat asistencial en tiempo real con farmacéuticos de turno')
+                h('small', { class: 'split-sub' }, 'Soporte y asesoría farmacéutica en tiempo real')
               )
             )
           )
@@ -681,7 +681,7 @@ function farmayaSupportFooter() {
         h('div', { class: 'brand-mini-row' },
           h('span', { class: 'brand-mark-footer' }, '+'),
           h('strong', null, 'FarmaYA'),
-          h('span', { class: 'muted' }, '· Red Digital Asistencial de Droguerías y Repartos de Salud')
+          h('span', { class: 'muted' }, '· Red Digital Oficial de Droguerías y Repartos de Salud')
         ),
         h('span', { class: 'muted' }, '© 2026 FarmaYA S.A.S. • Todos los derechos reservados • Colombia')
       )

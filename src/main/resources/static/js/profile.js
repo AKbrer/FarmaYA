@@ -543,7 +543,7 @@ function clientOrdersView() {
                 const isPaid = ['PRECIO_CONFIRMADO', 'PEDIDO_EN_PREPARACION', 'PEDIDO_LISTO', 'BUSCANDO_REPARTIDOR', 'REPARTIDOR_ASIGNADO', 'PEDIDO_RECOGIDO'].includes(o.status);
                 const isEnCamino = o.status === 'EN_CAMINO';
 
-                let statusTitle = 'Buscando droguería de turno cercana...';
+                let statusTitle = 'Buscando droguería aliada cercana...';
                 let statusColor = '#0284c7';
                 if (isAssigned) { statusTitle = 'Farmacia asignada · Verificando inventario'; statusColor = '#0d9488'; }
                 else if (isQuoted) { statusTitle = '¡Cotización lista! Esperando tu confirmación de pago'; statusColor = '#d97706'; }

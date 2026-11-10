@@ -1,4 +1,4 @@
-﻿/* FarmaYA · Experiencia de Salud a Domicilio y Catálogo Farmacéutico
+/* FarmaYA · Experiencia de Salud a Domicilio y Catálogo Farmacéutico
 
    Diseño inspirado en el sistema Clinical Vitality de Google Stitch (Pantallas 8, 4, 5 y 3).
 
@@ -673,7 +673,7 @@ function renderClientDashboard() {
 
         bodyContent = h('div', { class: 'cart-preview-empty' },
 
-          h('div', { style: 'font-size: 36px; margin-bottom: 8px;' }, '🧺'),
+          h('div', { class: 'cart-preview-empty-icon tone-teal', style: 'margin-bottom: 8px; display: inline-flex;' }, icon('shopping-bag')),
 
           h('strong', { style: 'display: block; font-size: 15px; margin-bottom: 4px; color: var(--text);' }, 'Tu canasta está vacía'),
 
@@ -1410,7 +1410,7 @@ city: cityInput.value.trim() || user.city || '',
 
       h('h1', null, 'Hola, ' + (user.name || 'bienvenido').split(' ')[0]),
 
-      h('p', null, 'Tu farmacia de confianza directo a tu hogar. Consulta farmacéutica y despacho asistencial en tiempo real.'),
+      h('p', null, 'Tu farmacia de confianza directo a tu hogar. Medicamentos originales y despacho prioritario en tiempo real.'),
 
       // Buscador clínico con botón integrado a un lado
 

@@ -9178,9 +9178,9 @@ ol.timeline small {
 }
 
 /* ==========================================================================
-   Mobile Flutter View Optimization (@media max-width: 640px)
+   Mobile Flutter View Optimization (@media max-width: 768px)
    ========================================================================== */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .mobile-only {
     display: flex !important;
   }
@@ -12733,47 +12733,74 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   font-weight: 700;
 }
 
-/* Tarjetas Flutter nativas para Verificaciones en pantalla móvil */
+/* Filas Flutter nativas para Verificaciones en pantalla móvil */
 .verification-flutter-card {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
+  padding: 16px 18px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   margin-bottom: 12px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 [data-theme="dark"] .verification-flutter-card {
   background: var(--surface);
-  border-color: rgba(255, 255, 255, 0.09);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 }
 
 .verification-flutter-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
 }
 
-.verification-flutter-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1.25;
-}
-
-.verification-flutter-info-box {
-  background: var(--surface-soft);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
+.verification-flutter-main-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
+}
+
+.verification-flutter-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.verification-flutter-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  padding: 8px 12px;
+  background: var(--surface-soft);
+  border-radius: 8px;
+  border: 1px solid var(--line);
+}
+
+.verification-flutter-meta-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.verification-flutter-meta-label {
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 90px;
+  font-size: 12px;
+}
+
+.verification-flutter-meta-val {
+  color: var(--text);
+  font-weight: 500;
+  word-break: break-word;
 }
 
 .verification-flutter-actions {
@@ -12783,6 +12810,16 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   margin-top: 4px;
   padding-top: 10px;
   border-top: 1px dashed var(--line);
+}
+
+.verification-flutter-actions .btn {
+  width: 100% !important;
+  justify-content: center !important;
+  font-weight: 700 !important;
+  padding: 10px 14px !important;
+  min-height: 42px !important;
+  border-radius: 10px !important;
+  font-size: 13.5px !important;
 }
 
 @media (max-width: 768px) {
