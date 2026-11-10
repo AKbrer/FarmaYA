@@ -1167,110 +1167,301 @@ function openUserDocumentsModal(user) {
 
 function adminVerificationCenter() {
   let filterRole = '';
+  let searchQuery = '';
   let verifyPage = 1;
   const PAGE_SIZE = 30;
+
   const filterButtons = [
     { label: 'Todas las solicitudes', role: '', iconName: 'clipboard-list' },
     { label: 'Farmacias pendientes', role: 'FARMACIA', iconName: 'building' },
     { label: 'Repartidores pendientes', role: 'REPARTIDOR', iconName: 'bike' }
   ];
 
-  const toolbar = h('div', { class: 'filter-tabs-bar verification-tabs-bar' });
-  const container = h('div', { class: 'stack verification-center-root' });
+  // Cabecera institucional
+  const heroBanner = h('div', { class: 'disbursement-hero-banner' },
+    h('div', { class: 'disbursement-hero-left' },
+      h('div', { class: 'disbursement-hero-icon-box' }, icon('prescriptions')),
+      h('div', { class: 'disbursement-hero-details' },
+        h('h2', { class: 'disbursement-hero-title' }, 'Centro de Verificaciones Sanitarias'),
+        h('p', { class: 'disbursement-hero-subtitle' },
+          'Revision documental, validacion de licencias y autorizacion operativa de farmacias aliadas y repartidores.'
+        ),
+        h('div', { class: 'disbursement-hero-chips' },
+          h('span', { class: 'tag tone-amber font-bold' }, 'Revision por Filas'),
+          h('span', { class: 'tag tone-teal font-bold' }, 'Dossier PDF Oficial')
+        )
+      )
+    )
+  );
 
-  function renderView() {
-    toolbar.replaceChildren(...filterButtons.map(fb => h('button', {
-      type: 'button',
-      class: 'btn tab-pill-btn ' + (filterRole === fb.role ? 'primary' : 'secondary'),
-      onclick: () => { filterRole = fb.role; verifyPage = 1; renderView(); }
-    }, icon(fb.iconName), h('span', null, fb.label))));
+  const tabsBar = h('div', { class: 'filter-tabs-bar verification-tabs-bar' });
+  const badgeCount = h('span', { class: 'verification-table-badge' });
 
-    const content = live(() => API.get('/admin/verifications'), users => {
-      let filtered = users;
-      if (filterRole) filtered = users.filter(u => u.role === filterRole);
+  const searchInput = h('input', {
+    type: 'search',
+    class: 'verification-search-input',
+    placeholder: 'Buscar solicitud por nombre, drogueria, correo, ciudad, NIT o placa...',
+    value: searchQuery
+  });
 
-      if (!filtered.length) {
-        return empty('No hay solicitudes pendientes', filterRole
-          ? 'No hay cuentas de ' + (filterRole === 'FARMACIA' ? 'farmacias' : 'repartidores') + ' pendientes por verificar.'
-          : 'Todas las cuentas de farmacias y repartidores han sido revisadas y verificadas.');
-      }
+  const searchWrap = h('div', { class: 'verification-search-wrap' },
+    h('span', { class: 'search-lens-icon' }, icon('search')),
+    searchInput
+  );
 
-      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-      if (verifyPage > totalPages) verifyPage = totalPages;
-      const startIdx = (verifyPage - 1) * PAGE_SIZE;
-      const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+  const toolbar = h('div', { class: 'verification-table-toolbar' },
+    h('div', { class: 'verification-table-title-group' },
+      tabsBar,
+      badgeCount
+    ),
+    searchWrap
+  );
 
-      const cardsContainer = h('div', {
-        class: 'verification-cards-grid',
-        style: 'display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 1.25rem; width: 100%;'
-      }, paged.map(u => {
-        const isPh = u.role === 'FARMACIA';
-        const docs = u.verificationDocuments || [];
+  const resultsHolder = h('div', { class: 'verification-results-holder' });
+  const paginationHolder = h('div', { class: 'verification-pagination-holder' });
 
-        const actVerify = async (val) => {
-          await act(null, () => API.post('/admin/users/' + u.id + '/verified', { value: val }),
-            val ? 'Cuenta verificada y notificada por correo al usuario' : 'Verificación retirada');
-          u.verified = val;
-          refreshAll();
-        };
+  const cardWrapper = h('div', { class: 'verification-table-card' },
+    toolbar,
+    resultsHolder,
+    paginationHolder
+  );
 
-        const actDisable = async () => {
-          const reason = await promptDisableUser(u);
-          if (!reason) return;
-          await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false, reason }), 'Cuenta deshabilitada');
-          u.enabled = false;
-          refreshAll();
-        };
+  let cachedUsers = null;
 
-        return h('div', { class: 'card verification-item-card', style: 'padding: 1.25rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.85rem;' },
-          h('div', { class: 'verification-card-header', style: 'display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;' },
-            h('div', null,
-              h('span', { class: 'tag ' + (isPh ? 'tone-teal' : 'tone-blue'), style: 'margin-bottom: 4px; display: inline-block;' },
-                isPh ? 'Farmacia Aliada' : 'Repartidor / Mensajero'),
-              h('h3', { style: 'margin: 0; font-size: 1.15rem; font-weight: 700;' }, isPh ? (u.pharmacyName || u.name) : u.name),
-              isPh && u.pharmacyName ? h('span', { class: 'muted small block-line' }, 'Representante: ' + u.name) : null,
-              h('span', { class: 'muted small block-line' }, u.email + (u.phone ? ' • ' + u.phone : ''))
-            ),
-            h('span', { class: 'tag tone-amber', style: 'font-weight: 700;' }, 'Pendiente de Revisión')
-          ),
-          h('div', { class: 'verification-details-grid', style: 'background: var(--surface-soft); padding: 0.85rem; border-radius: 8px; font-size: 0.88rem; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;' },
-            h('div', null, h('span', { class: 'muted' }, 'Ciudad: '), h('strong', null, u.city || 'Nacional')),
-            h('div', null, h('span', { class: 'muted' }, 'Dirección: '), h('strong', null, u.address || '-')),
-            isPh ? h('div', { style: 'grid-column: span 2;' }, h('span', { class: 'muted' }, 'Licencia: '), h('strong', null, u.licenseNumber || 'En trámite')) : null,
-            !isPh ? h('div', null, h('span', { class: 'muted' }, 'Vehículo: '), h('strong', null, u.vehicle || 'Sin vehículo')) : null,
-            !isPh ? h('div', null, h('span', { class: 'muted' }, 'Placa: '), h('strong', null, u.plate || 'N/A')) : null
-          ),
-          h('div', { class: 'verification-docs-preview' },
-            h('strong', { style: 'font-size: 0.88rem; display: block; margin-bottom: 6px;' }, 'Documentación Adjunta (' + docs.length + '):'),
-            docs.length ? h('div', { style: 'display: flex; flex-direction: column; gap: 4px;' },
-              docs.map(d => h('button', {
-                type: 'button',
-                class: 'btn secondary small',
-                style: 'justify-content: flex-start; text-align: left; font-size: 12px; padding: 6px 10px;',
-                onclick: () => openPdfViewerDialog(d.url, d.name || 'Documento')
-              }, icon('copy'), h('span', { style: 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap;' }, d.name || 'Documento PDF'))))
-              : h('p', { class: 'muted small', style: 'margin: 0;' }, 'No se adjuntaron archivos en el registro.')
-          ),
-          h('div', { class: 'verification-actions-row', style: 'display: flex; gap: 8px; justify-content: flex-end; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--line);' },
-            h('button', { class: 'btn danger small', type: 'button', onclick: actDisable }, 'Rechazar / Deshabilitar'),
-            h('button', { class: 'btn primary small', type: 'button', onclick: () => actVerify(true) }, 'Aprobar y Verificar'))
-        );
-      }));
+  function renderRows() {
+    if (!cachedUsers) return;
 
-      return h('div', { class: 'stack' },
-        cardsContainer,
-        fyPagination(filtered.length, verifyPage, PAGE_SIZE, (p) => {
-          verifyPage = p;
-          renderView();
-        })
+    let filtered = cachedUsers;
+    if (filterRole) {
+      filtered = filtered.filter(u => u.role === filterRole);
+    }
+
+    const q = searchQuery.toLowerCase().trim();
+    if (q) {
+      filtered = filtered.filter(u => {
+        return (u.name || '').toLowerCase().includes(q) ||
+               (u.pharmacyName || '').toLowerCase().includes(q) ||
+               (u.email || '').toLowerCase().includes(q) ||
+               (u.phone || '').toLowerCase().includes(q) ||
+               (u.city || '').toLowerCase().includes(q) ||
+               (u.address || '').toLowerCase().includes(q) ||
+               (u.licenseNumber || '').toLowerCase().includes(q) ||
+               (u.vehicle || '').toLowerCase().includes(q) ||
+               (u.plate || '').toLowerCase().includes(q);
+      });
+    }
+
+    badgeCount.textContent = filtered.length + ' solicitudes';
+
+    if (!filtered.length) {
+      resultsHolder.replaceChildren(
+        empty('No hay solicitudes coincidentes', q
+          ? 'Ninguna solicitud coincide con "' + q + '". Intenta con otro termino.'
+          : (filterRole
+            ? 'No hay cuentas de ' + (filterRole === 'FARMACIA' ? 'farmacias' : 'repartidores') + ' pendientes por verificar.'
+            : 'Todas las cuentas de farmacias y repartidores han sido revisadas y verificadas.'))
       );
-    });
+      paginationHolder.replaceChildren();
+      return;
+    }
 
-    container.replaceChildren(content);
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    if (verifyPage > totalPages) verifyPage = totalPages;
+    const startIdx = (verifyPage - 1) * PAGE_SIZE;
+    const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+    // 1. Tabla Desktop (Alineacion estricta por filas)
+    const desktopTable = h('div', { class: 'table-wrap desktop-only' },
+      h('table', { class: 'data-table grid-bordered verification-table' },
+        h('thead', null,
+          h('tr', null,
+            h('th', null, 'Tipo / Solicitante'),
+            h('th', null, 'Ubicacion'),
+            h('th', null, 'Datos de Operacion'),
+            h('th', { class: 'text-center' }, 'Expediente Digital'),
+            h('th', { class: 'text-center' }, 'Estado'),
+            h('th', { class: 'text-right' }, 'Acciones de Verificacion')
+          )
+        ),
+        h('tbody', null, paged.map(u => {
+          const isPh = u.role === 'FARMACIA';
+          const docs = u.verificationDocuments || [];
+
+          const actVerify = async (val) => {
+            await act(null, () => API.post('/admin/users/' + u.id + '/verified', { value: val }),
+              val ? 'Cuenta verificada y notificada por correo al usuario' : 'Verificacion retirada');
+            u.verified = val;
+            refreshAll();
+          };
+
+          const actDisable = async () => {
+            const reason = await promptDisableUser(u);
+            if (!reason) return;
+            await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false, reason }), 'Cuenta deshabilitada');
+            u.enabled = false;
+            refreshAll();
+          };
+
+          return h('tr', null,
+            h('td', null,
+              h('span', { class: 'tag ' + (isPh ? 'tone-teal' : 'tone-blue') + ' small font-bold', style: 'margin-bottom:4px; display:inline-block;' },
+                isPh ? 'Farmacia Aliada' : 'Repartidor'
+              ),
+              h('strong', { class: 'block-line' }, isPh ? (u.pharmacyName || u.name) : u.name),
+              isPh && u.pharmacyName ? h('span', { class: 'muted small block-line' }, 'Representante: ' + u.name) : null,
+              h('span', { class: 'muted small block-line' }, u.email + (u.phone ? '  ' + u.phone : ''))
+            ),
+            h('td', null,
+              h('strong', { class: 'block-line' }, u.city || 'Nacional'),
+              h('span', { class: 'muted small block-line' }, u.address || 'Sin direccion')
+            ),
+            h('td', null,
+              isPh
+                ? h('div', null,
+                    h('span', { class: 'small muted block-line' }, 'Licencia Sanitaria INVIMA:'),
+                    h('span', { class: 'tag font-mono font-bold' }, u.licenseNumber || 'En tramite')
+                  )
+                : h('div', null,
+                    h('span', { class: 'small muted block-line' }, 'Vehiculo y Placa:'),
+                    h('strong', { class: 'small block-line' }, u.vehicle || 'Sin vehiculo'),
+                    u.plate ? h('span', { class: 'tag tone-neutral small font-mono font-bold' }, u.plate) : null
+                  )
+            ),
+            h('td', { class: 'text-center' },
+              docs.length
+                ? h('button', {
+                    type: 'button',
+                    class: 'btn secondary small',
+                    style: 'font-weight:700;',
+                    onclick: () => openUserDocumentsModal(u)
+                  }, icon('prescriptions'), h('span', null, docs.length + ' Docs PDF'))
+                : h('span', { class: 'muted small' }, 'Sin adjuntos')
+            ),
+            h('td', { class: 'text-center' },
+              h('span', { class: 'tag tone-amber font-bold small' }, 'Pendiente')
+            ),
+            h('td', { style: 'text-align: right; white-space: nowrap;' },
+              h('div', { class: 'verification-row-actions' },
+                h('button', {
+                  class: 'btn danger small',
+                  type: 'button',
+                  onclick: actDisable
+                }, 'Rechazar'),
+                h('button', {
+                  class: 'btn primary small',
+                  type: 'button',
+                  onclick: () => actVerify(true)
+                }, 'Aprobar y Verificar')
+              )
+            )
+          );
+        }))
+      )
+    );
+
+    // 2. Tarjetas para Vista Flutter (Dispositivos Moviles <= 768px)
+    const mobileCards = h('div', { class: 'mobile-only stack' }, paged.map(u => {
+      const isPh = u.role === 'FARMACIA';
+      const docs = u.verificationDocuments || [];
+
+      const actVerify = async (val) => {
+        await act(null, () => API.post('/admin/users/' + u.id + '/verified', { value: val }),
+          val ? 'Cuenta verificada y notificada por correo al usuario' : 'Verificacion retirada');
+        u.verified = val;
+        refreshAll();
+      };
+
+      const actDisable = async () => {
+        const reason = await promptDisableUser(u);
+        if (!reason) return;
+        await act(null, () => API.post('/admin/users/' + u.id + '/enabled', { value: false, reason }), 'Cuenta deshabilitada');
+        u.enabled = false;
+        refreshAll();
+      };
+
+      return h('div', { class: 'verification-flutter-card' },
+        h('div', { class: 'verification-flutter-head' },
+          h('span', { class: 'tag ' + (isPh ? 'tone-teal' : 'tone-blue') + ' small font-bold' },
+            isPh ? 'Farmacia Aliada' : 'Repartidor'
+          ),
+          h('span', { class: 'tag tone-amber small font-bold' }, 'Pendiente')
+        ),
+        h('div', null,
+          h('strong', { class: 'verification-flutter-title block-line' }, isPh ? (u.pharmacyName || u.name) : u.name),
+          isPh && u.pharmacyName ? h('span', { class: 'muted small block-line' }, 'Representante: ' + u.name) : null,
+          h('span', { class: 'muted small block-line' }, u.email + (u.phone ? '  ' + u.phone : ''))
+        ),
+        h('div', { class: 'verification-flutter-info-box' },
+          h('div', null,
+            h('span', { class: 'small muted' }, 'Ubicacion: '),
+            h('strong', { class: 'small' }, (u.city || 'Nacional') + (u.address ? ' - ' + u.address : ''))
+          ),
+          isPh
+            ? h('div', null,
+                h('span', { class: 'small muted' }, 'Licencia INVIMA: '),
+                h('strong', { class: 'small font-mono' }, u.licenseNumber || 'En tramite')
+              )
+            : h('div', null,
+                h('span', { class: 'small muted' }, 'Vehiculo: '),
+                h('strong', { class: 'small' }, (u.vehicle || 'Sin vehiculo') + (u.plate ? ' (' + u.plate + ')' : ''))
+              )
+        ),
+        docs.length
+          ? h('button', {
+              type: 'button',
+              class: 'btn secondary small block',
+              style: 'font-weight:700;',
+              onclick: () => openUserDocumentsModal(u)
+            }, icon('prescriptions'), h('span', null, 'Ver Expediente PDF (' + docs.length + ')'))
+          : null,
+        h('div', { class: 'verification-flutter-actions' },
+          h('button', { class: 'btn danger small block', type: 'button', onclick: actDisable }, 'Rechazar'),
+          h('button', { class: 'btn primary small block', type: 'button', onclick: () => actVerify(true) }, 'Aprobar')
+        )
+      );
+    }));
+
+    resultsHolder.replaceChildren(desktopTable, mobileCards);
+
+    paginationHolder.replaceChildren(
+      fyPagination(filtered.length, verifyPage, PAGE_SIZE, (p) => {
+        verifyPage = p;
+        renderRows();
+      })
+    );
   }
 
-  renderView();
-  return h('div', { class: 'stack' }, toolbar, container);
+  function updateTabs() {
+    tabsBar.replaceChildren(...filterButtons.map(fb => h('button', {
+      type: 'button',
+      class: 'btn tab-pill-btn ' + (filterRole === fb.role ? 'primary' : 'secondary'),
+      onclick: () => {
+        filterRole = fb.role;
+        verifyPage = 1;
+        updateTabs();
+        renderRows();
+      }
+    }, icon(fb.iconName), h('span', null, fb.label))));
+  }
+
+  searchInput.oninput = (e) => {
+    searchQuery = e.target.value;
+    verifyPage = 1;
+    renderRows();
+  };
+
+  updateTabs();
+
+  const liveNode = live(() => API.get('/admin/verifications'), users => {
+    cachedUsers = users || [];
+    renderRows();
+    return cardWrapper;
+  });
+
+  return h('div', { class: 'stack verification-center-root' },
+    heroBanner,
+    liveNode
+  );
 }
 
 function adminMovements() {
