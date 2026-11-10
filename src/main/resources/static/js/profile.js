@@ -17,7 +17,7 @@ function openProfile(initialView = 'menu') {
     const u = user();
     if (!u) {
       return h('header', { class: 'profile-head' },
-        h('span', { class: 'avatar avatar-logo', 'aria-hidden': 'true', style: 'background:transparent;display:flex;align-items:center;justify-content:center;' }, h('img', { src: '/images/farmaya-logo.png?v=1', alt: 'FarmaYA', style: 'height:24px;width:auto;max-width:100%;object-fit:contain;' })),
+        h('span', { class: 'avatar avatar-cross', 'aria-hidden': 'true', style: 'background:transparent;display:flex;align-items:center;justify-content:center;' }, h('img', { src: '/images/farmaya-cross.png?v=1', alt: 'FarmaYA', style: 'height:36px;width:auto;max-width:100%;object-fit:contain;' })),
         h('div', { class: 'profile-meta' },
           h('h2', { class: 'profile-name' }, 'FarmaYa'),
           h('p', { class: 'profile-sub' }, 'Salud y farmacia a domicilio')));

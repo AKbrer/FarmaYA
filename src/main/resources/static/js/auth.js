@@ -271,7 +271,7 @@ function openGoogleOAuthConnectModal() {
 function buildLoginCard() {
   const card = h('section', { class: 'auth-card', id: 'cardLogin' },
     h('div', { class: 'auth-card-heading' },
-      h('span', { class: 'auth-icon auth-logo-box' }, h('img', { class: 'auth-logo-img', src: '/images/farmaya-logo.png?v=1', alt: 'FarmaYA' })),
+      h('span', { class: 'auth-icon auth-cross-box' }, h('img', { class: 'auth-cross-img', src: '/images/farmaya-cross.png?v=1', alt: 'FarmaYA' })),
       h('h2', null, '¡Qué bueno tenerte aquí!'),
       h('p', null, 'Inicia sesión para continuar con FarmaYA')
     ),
@@ -643,7 +643,7 @@ function buildRegisterCard() {
 
   const card = h('section', { class: 'auth-card', id: 'cardRegister' },
     h('div', { class: 'auth-card-heading' },
-      h('span', { class: 'auth-icon auth-logo-box' }, h('img', { class: 'auth-logo-img', src: '/images/farmaya-logo.png?v=1', alt: 'FarmaYA' })),
+      h('span', { class: 'auth-icon auth-cross-box' }, h('img', { class: 'auth-cross-img', src: '/images/farmaya-cross.png?v=1', alt: 'FarmaYA' })),
       h('h2', null, 'Crea tu cuenta FarmaYA'),
       h('p', null, 'Salud a domicilio, medicamentos originales y seguimiento en vivo')
     ),

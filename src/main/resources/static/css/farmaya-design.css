@@ -13453,18 +13453,20 @@ body, button, input, select, textarea {
 }
 
 /* ==========================================================================
-   59. LOGO FARMAYA EN PANEL DE AUTENTICACION Y HERO
+   59. LOGO DE LA CRUZ FARMAYA EN PANEL DE AUTENTICACION Y HERO
    ========================================================================== */
+.auth-card .auth-icon.auth-cross-box,
 .auth-card .auth-icon.auth-logo-box,
+.auth-icon.auth-cross-box,
 .auth-icon.auth-logo-box {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  width: 100% !important;
-  max-width: 220px !important;
+  width: auto !important;
+  max-width: 90px !important;
   height: auto !important;
-  min-height: 44px !important;
-  margin: 0 auto 12px auto !important;
+  min-height: 68px !important;
+  margin: 0 auto 10px auto !important;
   background: transparent !important;
   box-shadow: none !important;
   border: 0 !important;
@@ -13472,39 +13474,60 @@ body, button, input, select, textarea {
   padding: 0 !important;
 }
 
+.auth-cross-img,
 .auth-logo-img {
   width: auto !important;
-  max-width: 210px !important;
-  height: 42px !important;
-  max-height: 46px !important;
+  max-width: 76px !important;
+  height: 64px !important;
+  max-height: 68px !important;
   object-fit: contain !important;
   object-position: center !important;
   display: block !important;
   margin: 0 auto !important;
-  filter: none !important;
+  filter: drop-shadow(0 4px 12px rgba(18, 53, 38, 0.16)) !important;
 }
 
+[data-theme="dark"] .auth-cross-img,
+[data-theme="dark"] .auth-logo-img {
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.45)) !important;
+}
+
+.welcome-art .welcome-cross-img,
 .welcome-art .welcome-logo-img {
   width: 100% !important;
-  max-width: 170px !important;
+  max-width: 130px !important;
   height: auto !important;
-  max-height: 48px !important;
+  max-height: 120px !important;
   object-fit: contain !important;
   display: block !important;
-  filter: drop-shadow(0 4px 14px rgba(18, 53, 38, 0.15)) !important;
+  filter: drop-shadow(0 8px 24px rgba(18, 53, 38, 0.22)) !important;
+}
+
+[data-theme="dark"] .welcome-art .welcome-cross-img,
+[data-theme="dark"] .welcome-art .welcome-logo-img {
+  filter: drop-shadow(0 8px 26px rgba(0, 0, 0, 0.55)) !important;
 }
 
 @media (max-width: 768px) {
+  .auth-card .auth-icon.auth-cross-box,
   .auth-card .auth-icon.auth-logo-box,
+  .auth-icon.auth-cross-box,
   .auth-icon.auth-logo-box {
-    max-width: 180px !important;
-    min-height: 36px !important;
-    margin: 0 auto 8px auto !important;
+    max-width: 76px !important;
+    min-height: 56px !important;
+    margin: 0 auto 6px auto !important;
   }
 
+  .auth-cross-img,
   .auth-logo-img {
-    height: 34px !important;
-    max-height: 36px !important;
-    max-width: 170px !important;
+    height: 52px !important;
+    max-height: 56px !important;
+    max-width: 64px !important;
+  }
+
+  .welcome-art .welcome-cross-img,
+  .welcome-art .welcome-logo-img {
+    max-width: 95px !important;
+    max-height: 88px !important;
   }
 }
