@@ -382,20 +382,23 @@ function pharmacyDashboard() {
     const statusCard = pharmacyChartCard('Estado de los pedidos', 'Distribución de los pedidos recibidos', statusBody);
 
     const bestBody = best.length
-      ? h('div', { class: 'pbi-rank' }, best.map((item, i) => h('div', { class: 'pbi-rank-row' },
-        h('div', { class: 'pbi-rank-top' },
-          h('span', { class: 'pbi-rank-name' }, (i + 1) + '. ' + item.name),
-          h('strong', null, item.quantity + ' uds')),
-        h('div', { class: 'pbi-rank-track', title: money(item.sales || 0) },
-          h('span', { class: 'pbi-rank-fill', style: 'width:' + Math.max(3, Math.round((Number(item.quantity) || 0) * 100 / maxQty)) + '%' })),
-        h('small', { class: 'muted' }, money(item.sales || 0) + ' en ventas'))))
+      ? excelTable(
+          ['#', 'Medicamento / Producto', { label: 'Unidades', class: 'text-right' }, { label: 'Ventas', class: 'text-right' }],
+          best.map((item, i) => h('tr', null,
+            h('td', { class: 'text-center font-mono' }, String(i + 1)),
+            h('td', null, h('strong', null, item.name)),
+            h('td', { class: 'text-right' }, h('span', { class: 'tag tone-teal small font-bold' }, item.quantity + ' uds')),
+            h('td', { class: 'text-right font-bold' }, money(item.sales || 0))
+          )),
+          { tableClass: 'fy-compact-excel-table' }
+        )
       : empty('Sin ventas de medicamentos', 'Aparecerán cuando haya pedidos entregados con artículos confirmados.');
     const bestCard = pharmacyChartCard('Medicamentos más vendidos', 'Por unidades vendidas', bestBody);
 
     const tableCard = h('section', { class: 'pbi-card wide' },
       h('div', { class: 'pbi-card-head' }, h('div', null, h('h3', null, 'Detalle de pedidos'), h('small', null, rows.length + (rows.length === 1 ? ' pedido' : ' pedidos') + ' en el período'))),
-      rows.length ? h('div', { class: 'table-wrap' },
-        h('table', { class: 'prices pharmacy-report-table' },
+      rows.length ? h('div', { class: 'table-wrap fy-excel-wrap' },
+        h('table', { class: 'prices grid-bordered fy-excel-table pharmacy-report-table' },
           h('thead', null, h('tr', null, h('th', null, 'Pedido'), h('th', null, 'Fecha y hora'), h('th', null, 'Estado'), h('th', null, 'Total'), h('th', null, 'Venta'))),
           h('tbody', null, rows.map(o => h('tr', null,
             h('td', null, o.code), h('td', null, formatReportDate(o.createdAt)), h('td', null, pharmacyStatusLabel(o.status)), h('td', null, money(o.total || 0)),
@@ -438,8 +441,59 @@ function pharmacyOffers(t) {
     document.title = ids.size ? '(' + ids.size + ') FarmaYA' : 'FarmaYA';
 
     if (!data.orders.length) return empty('No hay solicitudes por ahora', 'Esta pantalla se actualiza sola. Apenas llegue una solicitud de tu zona, la verás aquí.');
-    return h('div', { class: 'list' }, data.orders.map(o => offerRow(o, fresh.includes(o.id))));
+    return pharmacyOffersExcelTable(data.orders, fresh);
   });
+}
+
+function pharmacyOffersExcelTable(offers, freshIds = []) {
+  const freshSet = new Set(freshIds || []);
+  return excelTable(
+    ['Solicitud / Código', 'Estado', 'Lo que se pidió', 'Dirección de entrega', { label: 'Acciones', class: 'text-right' }],
+    offers.map(o => {
+      const isFresh = freshSet.has(o.id);
+      const tr = h('tr', { class: isFresh ? 'is-fresh-row' : '' },
+        h('td', { class: 'col-code' },
+          h('strong', { class: 'code font-mono' }, o.code || 'SOLICITUD'),
+          h('small', { class: 'muted block-line', style: 'margin-top:3px;' }, 'Esperando hace ', elapsedEl(o.searchStartedAt || o.createdAt))
+        ),
+        h('td', { class: 'col-status' },
+          h('span', { class: 'tag ' + (isFresh ? 'tone-teal' : 'tone-amber') + ' small font-bold' }, isFresh ? 'Nueva solicitud' : 'Esperando respuesta')
+        ),
+        h('td', { class: 'col-items' },
+          h('div', { class: 'excel-items-cell' },
+            (o.items || []).map(i => i.name + ' x' + i.quantity + (i.note ? ' (' + i.note + ')' : '')).join(', ')
+          ),
+          o.notes ? h('small', { class: 'muted block-line', style: 'margin-top:2px;' }, 'Nota: ' + o.notes) : null
+        ),
+        h('td', { class: 'col-address' },
+          h('strong', { class: 'block-line', style: 'font-size:13px;' }, o.address || 'Dirección en cobertura'),
+          o.city ? h('small', { class: 'muted block-line' }, o.city + (o.deliveryDistanceKm ? ' (~' + o.deliveryDistanceKm + ' km)' : '')) : null
+        ),
+        h('td', { class: 'col-actions text-right' },
+          h('div', { class: 'excel-actions-cell' },
+            h('button', {
+              class: 'btn primary small',
+              type: 'button',
+              onclick: async e => {
+                const order = await act(e.currentTarget, () => API.post('/pharmacy/orders/' + o.id + '/accept'), 'Pedido aceptado. Confirma existencias y precios.');
+                if (order) { leaveCard(tr); openPriceForm(order); } else refreshAll();
+              }
+            }, 'Aceptar pedido'),
+            h('button', {
+              class: 'btn ghost small',
+              type: 'button',
+              onclick: async e => {
+                const r = await act(e.currentTarget, () => API.post('/pharmacy/orders/' + o.id + '/reject'));
+                if (r) leaveCard(tr);
+              }
+            }, 'No lo tengo')
+          )
+        )
+      );
+      return tr;
+    }),
+    { tableClass: 'fy-orders-excel-table' }
+  );
 }
 
 /** Saca la tarjeta con una animación y luego refresca la lista. */
@@ -624,13 +678,13 @@ function pharmacyOrders() {
         ),
         h('span', { class: 'tag primary', style: 'font-weight: 800;' }, offers.length + ' por atender')
       ),
-      h('div', { class: 'list' }, offers.map(o => offerRow(o, true)))
+      pharmacyOffersExcelTable(offers, offers.map(o => o.id))
     ) : null;
 
     // 2. Pedidos en preparación y despacho
-    const activeSection = active.length ? h('div', { class: 'list' },
+    const activeSection = active.length ? h('div', { class: 'stack' },
       h('h3', { class: 'list-title' }, 'Pedidos en curso (' + active.length + ')'),
-      active.map(o => orderRow(o, pharmacyAction(o)))
+      ordersExcelTable(active, { showClient: true, actionsFor: pharmacyAction })
     ) : (!offers.length ? h('div', { class: 'card', style: 'background: var(--surface); padding: 22px; text-align: center; border: 1.5px dashed var(--line); border-radius: 16px; margin-bottom: 16px;' },
       h('div', { style: 'margin-bottom: 8px;' }, icon('package-check', 'text-muted')),
       h('h4', { style: 'margin: 0 0 4px 0; font-size: 16px; font-weight: 700;' }, 'No tienes pedidos en preparación activa'),
@@ -642,7 +696,7 @@ function pharmacyOrders() {
     let pastPage = 1;
     const pastSection = h('div', { style: 'margin-top: 22px;' });
     const pastTitle = h('h3', { class: 'list-title', style: 'margin:0;' });
-    const pastListHolder = h('div', { class: 'list' });
+    const pastListHolder = h('div', { class: 'stack' });
     const pastPaginationHolder = h('div');
 
     const pastSearchInput = h('input', {
@@ -689,7 +743,7 @@ function pharmacyOrders() {
       const startIdx = (pastPage - 1) * 30;
       const pagedPast = filteredPast.slice(startIdx, startIdx + 30);
 
-      pastListHolder.replaceChildren(...pagedPast.map(o => orderRow(o)));
+      pastListHolder.replaceChildren(ordersExcelTable(pagedPast, { showClient: true }));
       pastPaginationHolder.replaceChildren(
         fyPagination(filteredPast.length, pastPage, 30, (p) => {
           pastPage = p;
@@ -1067,7 +1121,7 @@ function pharmacyDemandForecast() {
         h('span', { class: 'muted text-xs' }, 'Mostrando ' + filtered.length + ' de ' + list.length + ' medicamentos')
       ),
       h('div', { style: 'overflow-x: auto; width: 100%;' },
-        h('table', { class: 'forecast-table', style: 'width: 100%; border-collapse: collapse;' },
+        h('table', { class: 'data-table grid-bordered fy-excel-table forecast-table', style: 'width: 100%;' },
           tableHeader,
           h('tbody', null, ...tableRows)
         )
@@ -1251,9 +1305,9 @@ function pharmacyDisbursementsView() {
         const startIdx = (historyPage - 1) * PAGE_SIZE;
         const paged = filteredHistory.slice(startIdx, startIdx + PAGE_SIZE);
 
-        // Tabla Escritorio
-        const desktopTable = h('div', { class: 'table-wrap desktop-only' },
-          h('table', { class: 'data-table grid-bordered' },
+        // Tabla Excel unificada (Escritorio + Flutter Movil)
+        const desktopTable = h('div', { class: 'table-wrap fy-excel-wrap' },
+          h('table', { class: 'data-table grid-bordered fy-excel-table' },
             h('thead', null,
               h('tr', null,
                 h('th', null, 'Código'),
@@ -1339,7 +1393,7 @@ function pharmacyDisbursementsView() {
           )
         );
 
-        historyResultsHolder.replaceChildren(desktopTable, mobileCards);
+        historyResultsHolder.replaceChildren(desktopTable);
         historyPaginationHolder.replaceChildren(
           fyPagination(filteredHistory.length, historyPage, PAGE_SIZE, (p) => {
             historyPage = p;

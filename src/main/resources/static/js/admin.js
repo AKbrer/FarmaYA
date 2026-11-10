@@ -390,33 +390,26 @@ function adminPowerBiDashboard() {
         const startPharmaIdx = (pbiPharmaPage - 1) * 30;
         const pagedPharmaRank = filteredPharmaRank.slice(startPharmaIdx, startPharmaIdx + 30);
 
-        const pharmaBarsList = pagedPharmaRank.length ? pagedPharmaRank.map(item => {
-          const pctOfMax = Math.round((item.gross / maxPharmaGross) * 100);
-          return h('div', { class: 'powerbi-bar-item' },
-            h('div', { class: 'powerbi-bar-info-row' },
-              h('strong', { class: 'powerbi-bar-label' }, item.name),
-              h('span', { class: 'powerbi-bar-meta' },
-                h('span', { class: 'muted' }, item.count + (item.count === 1 ? ' pedido • ' : ' pedidos • ')),
-                h('span', { class: 'text-strong' }, 'Bruto: ' + money(item.gross)),
-                h('span', { class: 'powerbi-bar-commission-tag' }, 'FarmaYA 5%: ' + money(item.earnings))
-              )
-            ),
-            h('div', { class: 'powerbi-bar-track' },
-              h('div', {
-                class: 'powerbi-bar-fill-pharma',
-                style: 'width: ' + pctOfMax + '%;',
-                title: 'Venta Bruta: ' + money(item.gross)
+        if (pagedPharmaRank.length) {
+          pharmaBarsHolder.replaceChildren(
+            excelTable(
+              ['Farmacia Aliada', { label: 'Pedidos', class: 'text-center' }, { label: 'Bruto (100%)', class: 'text-right' }, { label: '95% Aliado', class: 'text-right' }, { label: '5% FarmaYA', class: 'text-right' }],
+              pagedPharmaRank.map(item => {
+                const pharmaNet = Math.max(0, item.gross - item.earnings);
+                return h('tr', null,
+                  h('td', null, h('strong', null, item.name)),
+                  h('td', { class: 'text-center font-mono' }, String(item.count)),
+                  h('td', { class: 'text-right font-bold' }, money(item.gross)),
+                  h('td', { class: 'text-right muted' }, money(pharmaNet)),
+                  h('td', { class: 'text-right text-green font-bold' }, money(item.earnings))
+                );
               }),
-              h('div', {
-                class: 'powerbi-bar-fill-farmaya',
-                style: 'width: 5%;',
-                title: '5% FarmaYA: ' + money(item.earnings)
-              })
+              { tableClass: 'fy-compact-excel-table' }
             )
           );
-        }) : [h('div', { class: 'muted small text-center p-4' }, 'No se encontraron farmacias con ese criterio de búsqueda.')];
-
-        pharmaBarsHolder.replaceChildren(...pharmaBarsList);
+        } else {
+          pharmaBarsHolder.replaceChildren(h('div', { class: 'muted small text-center p-4' }, 'No se encontraron farmacias con ese criterio de búsqueda.'));
+        }
         pharmaPaginationHolder.replaceChildren(
           fyPagination(filteredPharmaRank.length, pbiPharmaPage, 30, (p) => {
             pbiPharmaPage = p;
@@ -648,9 +641,9 @@ function adminPowerBiDashboard() {
             matrixSearchInput
           )
         ),
-        // Desktop table wrap
-        h('div', { class: 'powerbi-table-wrap desktop-only' },
-          h('table', { class: 'powerbi-table' },
+        // Tabla Excel unificada (Escritorio + Flutter Movil)
+        h('div', { class: 'table-wrap fy-excel-wrap powerbi-table-wrap' },
+          h('table', { class: 'data-table grid-bordered fy-excel-table powerbi-table' },
             h('thead', null,
               h('tr', null,
                 h('th', null, 'Pedido / Cliente'),
@@ -665,8 +658,7 @@ function adminPowerBiDashboard() {
             matrixTbody
           )
         ),
-        // Mobile Flutter Cards
-        matrixMobileCardsHolder,
+
         matrixPaginationHolder
       );
 
@@ -987,7 +979,7 @@ function adminDemandForecast() {
         h('span', { class: 'muted text-xs' }, 'Mostrando ' + filtered.length + ' de ' + list.length + ' medicamentos')
       ),
       h('div', { style: 'overflow-x: auto; width: 100%;' },
-        h('table', { class: 'forecast-table', style: 'width: 100%; border-collapse: collapse;' },
+        h('table', { class: 'data-table grid-bordered fy-excel-table forecast-table', style: 'width: 100%;' },
           tableHeader,
           h('tbody', null, ...tableRows)
         )
@@ -1034,13 +1026,7 @@ function adminOrders() {
     const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
     listHolder.replaceChildren(
-      h('div', { class: 'list' }, paged.map(o => {
-        const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.05) : 0);
-        return orderRow(o, h('div', { style: 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;' },
-          h('span', { class: 'muted small' }, o.address || o.city || 'Cobertura general'),
-          o.total != null ? h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, 'Ganancia FarmaYA: ' + money(profit)) : null
-        ));
-      })),
+      ordersExcelTable(paged, { showPharmacy: true, showClient: true, showProfit: true }),
       fyPagination(filtered.length, currentPage, PAGE_SIZE, (p) => {
         currentPage = p;
         updateOrdersView();
@@ -1146,7 +1132,7 @@ function adminUsers(role) {
     };
 
     listHolder.replaceChildren(
-      h('div', { class: 'table-wrap', style: 'width: 100%;' }, h('table', { class: 'users', style: 'width: 100%;' },
+      h('div', { class: 'table-wrap fy-excel-wrap', style: 'width: 100%;' }, h('table', { class: 'data-table grid-bordered fy-excel-table users', style: 'width: 100%;' },
         h('thead', null, h('tr', null,
           h('th', null, 'Usuario'),
           h('th', null, 'Contacto / Ciudad'),
@@ -1255,19 +1241,20 @@ function openPdfViewerDialog(title, dataUrl, filename) {
 function openUserDocumentsModal(user) {
   const docs = user.verificationDocuments || [];
   const list = docs.length
-    ? h('div', { class: 'doc-pdf-list' }, docs.map(doc => h('div', { class: 'doc-pdf-item' },
-        h('div', { class: 'doc-pdf-left' },
-          h('span', { class: 'doc-pdf-icon' }, icon('prescriptions')),
-          h('div', null,
-            h('strong', { class: 'block-line' }, doc.title || doc.docType),
-            h('span', { class: 'small muted' }, doc.filename || 'Documento PDF')
+    ? excelTable(
+        ['Documento', 'Archivo PDF', { label: 'Acciones', class: 'text-right' }],
+        docs.map(doc => h('tr', null,
+          h('td', null, h('strong', null, doc.title || doc.docType)),
+          h('td', null, h('span', { class: 'small muted font-mono' }, doc.filename || 'Documento PDF')),
+          h('td', { class: 'text-right' },
+            h('div', { class: 'excel-actions-cell' },
+              h('button', { class: 'btn primary small', type: 'button', onclick: () => openPdfViewerDialog(doc.title, doc.dataUrl, doc.filename) }, 'Ver PDF'),
+              h('a', { class: 'btn ghost small', href: doc.dataUrl, download: doc.filename, target: '_blank' }, 'Descargar')
+            )
           )
-        ),
-        h('div', { class: 'doc-pdf-actions' },
-          h('button', { class: 'btn primary small', onclick: () => openPdfViewerDialog(doc.title, doc.dataUrl, doc.filename) }, 'Ver PDF'),
-          h('a', { class: 'btn ghost small', href: doc.dataUrl, download: doc.filename, target: '_blank' }, 'Descargar')
-        )
-      )))
+        )),
+        { tableClass: 'fy-compact-excel-table' }
+      )
     : empty('Sin documentos PDF', 'Este usuario no adjuntó archivos PDF al momento de su registro.');
 
   const body = h('div', { class: 'sheet-body', style: 'max-width:680px; width:90vw;' },
@@ -1389,9 +1376,9 @@ function adminVerificationCenter() {
     const startIdx = (verifyPage - 1) * PAGE_SIZE;
     const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
-    // 1. Tabla Desktop (Alineacion estricta por filas)
-    const desktopTable = h('div', { class: 'table-wrap desktop-only' },
-      h('table', { class: 'data-table grid-bordered verification-table' },
+    // 1. Tabla Excel Unificada (Escritorio + Flutter Movil)
+    const desktopTable = h('div', { class: 'table-wrap fy-excel-wrap' },
+      h('table', { class: 'data-table grid-bordered fy-excel-table verification-table' },
         h('thead', null,
           h('tr', null,
             h('th', null, 'Tipo / Solicitante'),
@@ -1540,7 +1527,7 @@ function adminVerificationCenter() {
       );
     }));
 
-    resultsHolder.replaceChildren(desktopTable, mobileCards);
+    resultsHolder.replaceChildren(desktopTable);
 
     paginationHolder.replaceChildren(
       fyPagination(filtered.length, verifyPage, PAGE_SIZE, (p) => {
@@ -1617,7 +1604,7 @@ function adminMovements() {
     const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
     holder.replaceChildren(
-      h('div', { class: 'table-wrap' }, h('table', { class: 'users' },
+      h('div', { class: 'table-wrap fy-excel-wrap' }, h('table', { class: 'data-table grid-bordered fy-excel-table users' },
         h('thead', null, h('tr', null,
           h('th', null, 'Acción administrativa'),
           h('th', null, 'Afectado / Objeto'),
@@ -1730,7 +1717,7 @@ function adminAdministratorsView(currentUser) {
     };
 
     listHolder.replaceChildren(
-      h('div', { class: 'table-wrap' }, h('table', { class: 'users' },
+      h('div', { class: 'table-wrap fy-excel-wrap' }, h('table', { class: 'data-table grid-bordered fy-excel-table users' },
         h('thead', null, h('tr', null,
           h('th', null, 'Administrador'),
           h('th', null, 'Contacto Institucional'),
@@ -2945,8 +2932,8 @@ function adminDisbursementsView() {
         }
 
         // Tabla de Escritorio
-        const desktopTable = h('div', { class: 'table-wrap desktop-only' },
-          h('table', { class: 'data-table grid-bordered' },
+        const desktopTable = h('div', { class: 'table-wrap fy-excel-wrap' },
+          h('table', { class: 'data-table grid-bordered fy-excel-table' },
             h('thead', null,
               h('tr', null,
                 h('th', null, 'Farmacia / Ciudad'),
@@ -3028,7 +3015,7 @@ function adminDisbursementsView() {
           )
         );
 
-        pendingResultsHolder.replaceChildren(desktopTable, mobileCards);
+        pendingResultsHolder.replaceChildren(desktopTable);
         pendingPaginationHolder.replaceChildren(
           fyPagination(filteredPending.length, pendingPage, PAGE_SIZE, (p) => {
             pendingPage = p;
@@ -3097,8 +3084,8 @@ function adminDisbursementsView() {
         }
 
         // Tabla de Escritorio
-        const desktopTable = h('div', { class: 'table-wrap desktop-only' },
-          h('table', { class: 'data-table grid-bordered' },
+        const desktopTable = h('div', { class: 'table-wrap fy-excel-wrap' },
+          h('table', { class: 'data-table grid-bordered fy-excel-table' },
             h('thead', null,
               h('tr', null,
                 h('th', null, 'Código / Fecha'),
@@ -3200,7 +3187,7 @@ function adminDisbursementsView() {
           )
         );
 
-        historyResultsHolder.replaceChildren(desktopTable, mobileCards);
+        historyResultsHolder.replaceChildren(desktopTable);
         historyPaginationHolder.replaceChildren(
           fyPagination(filteredHistory.length, historyPage, PAGE_SIZE, (p) => {
             historyPage = p;

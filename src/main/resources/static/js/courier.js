@@ -201,11 +201,16 @@ function courierDashboard() {
     const zones = d.topZones || [];
     const maxZone = Math.max(1, ...zones.map(z => Number(z.deliveries) || 0));
     const zonesBody = zones.length
-      ? h('div', { class: 'pbi-rank' }, zones.map((z, i) => h('div', { class: 'pbi-rank-row' },
-        h('div', { class: 'pbi-rank-top' }, h('span', { class: 'pbi-rank-name' }, (i + 1) + '. ' + z.zone), h('strong', null, plural(z.deliveries))),
-        h('div', { class: 'pbi-rank-track', title: money(z.earnings || 0) },
-          h('span', { class: 'pbi-rank-fill', style: 'width:' + Math.max(3, Math.round((Number(z.deliveries) || 0) * 100 / maxZone)) + '%' })),
-        h('small', { class: 'muted' }, money(z.earnings || 0) + ' ganados en esta zona'))))
+      ? excelTable(
+          ['#', 'Zona / Sector', { label: 'Entregas', class: 'text-right' }, { label: 'Ganancias', class: 'text-right' }],
+          zones.map((z, i) => h('tr', null,
+            h('td', { class: 'text-center font-mono' }, String(i + 1)),
+            h('td', null, h('strong', null, z.zone)),
+            h('td', { class: 'text-right' }, h('span', { class: 'tag tone-teal small font-bold' }, plural(z.deliveries))),
+            h('td', { class: 'text-right font-bold' }, money(z.earnings || 0))
+          )),
+          { tableClass: 'fy-compact-excel-table' }
+        )
       : empty('Aún no hay zonas', 'Aparecerán cuando completes domicilios en este período.');
     const zonesCard = pharmacyChartCard('Zonas con más entregas', 'Cobertura geográfica de tu cuadrante', zonesBody, true);
 
@@ -213,14 +218,17 @@ function courierDashboard() {
     const ledger = h('section', { class: 'pbi-card wide' },
       h('div', { class: 'pbi-card-head' }, h('div', null, h('h3', null, 'Kárdex de entregas por pedido'), h('small', null, 'Trazabilidad de cada entrega y verificación sanitaria'))),
       ledgerRows.length
-        ? h('div', { class: 'courier-ledger' }, ledgerRows.map(r => h('article', { class: 'courier-ledger-row' },
-          h('div', { class: 'courier-ledger-info' },
-            h('strong', null, r.code),
-            h('small', { class: 'muted' }, r.pharmacyName + ' → ' + r.zone),
-            h('small', { class: 'muted' }, formatReportDate(r.deliveredAt))),
-          h('div', { class: 'courier-ledger-money' },
-            h('strong', { class: r.earnings == null ? 'muted' : 'courier-plus' }, r.earnings == null ? 'Sin tarifa' : '+' + money(r.earnings)),
-            h('small', { class: 'muted' }, 'Acumulado ' + money(r.accumulated || 0))))))
+        ? excelTable(
+            ['Código', 'Ruta (Farmacia -> Destino)', 'Fecha y hora', { label: 'Tarifa', class: 'text-right' }, { label: 'Acumulado', class: 'text-right' }],
+            ledgerRows.map(r => h('tr', null,
+              h('td', null, h('strong', { class: 'code font-mono' }, r.code)),
+              h('td', null, h('span', null, r.pharmacyName + ' -> ' + r.zone)),
+              h('td', null, h('span', { class: 'muted small' }, formatReportDate(r.deliveredAt))),
+              h('td', { class: 'text-right' }, h('strong', { class: r.earnings == null ? 'muted' : 'courier-plus' }, r.earnings == null ? 'Sin tarifa' : '+' + money(r.earnings))),
+              h('td', { class: 'text-right font-bold' }, money(r.accumulated || 0))
+            )),
+            { tableClass: 'fy-compact-excel-table' }
+          )
         : empty('No hay domicilios registrados en este período', 'Realiza entregas para registrar movimientos en tu historial.'));
 
     return h('div', { class: 'pbi-dashboard' },
@@ -250,46 +258,50 @@ function courierOffers() {
     if (fresh.length) { toast('¡Nueva entrega clínica disponible!'); beep(); }
     seenCourierOffers = ids;
     if (!data.orders.length) return empty('No hay entregas pendientes en tu rango de cobertura', 'Esta pantalla se actualiza automáticamente cuando una droguería prepare un pedido dentro de tu radio de entrega.');
-    return h('div', { class: 'list' }, data.orders.map(o => {
-      const distKm = o.deliveryDistanceKm != null ? o.deliveryDistanceKm : (o.pharmacyLatitude && o.latitude ? Math.round(farmayaDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude, o.latitude, o.longitude) * 1.3 * 10) / 10 : 2.5);
-      const fee = o.courierEarnings != null ? o.courierEarnings : Math.max(5000, 4000 + Math.ceil(distKm) * 1000);
+    return excelTable(
+      ['Código / Estado', 'Recogida (Farmacia)', 'Destino (Cliente)', 'Lo que se pidió', { label: 'Ganancia Domicilio', class: 'text-right' }, { label: 'Acciones', class: 'text-right' }],
+      data.orders.map(o => {
+        const distKm = o.deliveryDistanceKm != null ? o.deliveryDistanceKm : (o.pharmacyLatitude && o.latitude ? Math.round(farmayaDistanceKm(o.pharmacyLatitude, o.pharmacyLongitude, o.latitude, o.longitude) * 1.3 * 10) / 10 : 2.5);
+        const fee = o.courierEarnings != null ? o.courierEarnings : Math.max(5000, 4000 + Math.ceil(distKm) * 1000);
+        const isFresh = fresh.includes(o.id);
 
-      const card = h('article', { class: 'offer stitch-offer' + (fresh.includes(o.id) ? ' fresh' : '') },
-        h('div', { class: 'offer-head' },
-          h('div', null,
-            h('span', { class: 'badge-flash' }, 'Recogida Inmediata'),
-            h('strong', { class: 'block mt-1' }, 'Recoger en: ' + (o.pharmacyName || 'Farmacia Aliada'))
+        const tr = h('tr', { class: isFresh ? 'is-fresh-row' : '' },
+          h('td', { class: 'col-code' },
+            h('strong', { class: 'code font-mono' }, o.code || 'ENTREGA'),
+            h('span', { class: 'badge-flash', style: 'display:inline-block; margin-top:4px;' }, 'Recogida Inmediata'),
+            h('small', { class: 'muted block-line', style: 'margin-top:3px;' }, 'Listo hace ', elapsedEl(o.courierSearchStartedAt || o.updatedAt))
           ),
-          h('span', { class: 'muted' }, 'Listo hace ', elapsedEl(o.courierSearchStartedAt || o.updatedAt))
-        ),
-        h('div', { class: 'courier-offer-payout-highlight' },
-          h('div', null,
-            h('span', { class: 'small muted block-line' }, 'Ganancia del domicilio a cobrar:'),
-            h('strong', { class: 'courier-payout-val' }, money(fee)),
-            h('small', { class: 'block-line muted', style: 'font-size:12px; margin-top:2px;' }, 'El cliente te pagará esta tarifa directamente al entregar')
+          h('td', { class: 'col-address' },
+            h('strong', { class: 'block-line', style: 'font-size:13px;' }, o.pharmacyName || 'Farmacia Aliada'),
+            h('small', { class: 'muted block-line' }, o.pharmacyAddress || 'Dirección de farmacia')
           ),
-          h('span', { class: 'tag tone-teal', style: 'font-weight:700;' }, `~${distKm} km ruta`)
-        ),
-        h('dl', { class: 'facts' },
-          h('div', null, h('dt', null, 'Dirección de farmacia'), h('dd', null, o.pharmacyAddress || 'Dirección de farmacia')),
-          h('div', null, h('dt', null, 'Entregar a cliente en'), h('dd', null, o.address || o.city || 'Destino de entrega')),
-          h('div', null, h('dt', null, 'Distancia Farmacia → Cliente'), h('dd', null, `~${distKm} km`)),
-          h('div', null, h('dt', null, 'Tarifa del domicilio a cobrar'), h('dd', null, h('strong', { style: 'color:var(--primary); font-weight:700;' }, money(fee) + ' (Cobro en mano al llegar)'))),
-          h('div', null, h('dt', null, 'Paquete clínico'), h('dd', null, itemsSummary(o))),
-          o.total != null && h('div', null, h('dt', null, 'Valor de los productos (Ya pagados)'), h('dd', null, money(o.total) + ' (Recaudado por FarmaYA)'))
-        ),
-        h('div', { class: 'actions left' },
-          h('button', {
-            class: 'btn primary',
-            onclick: async e => {
-              const r = await act(e.currentTarget, () => API.post('/courier/orders/' + o.id + '/accept'), 'Entrega aceptada. Dirígete a la farmacia.');
-              if (r) leaveCard(card); else refreshAll();
-            }
-          }, 'Aceptar entrega y cobrar ' + money(fee) + ' al cliente')
-        )
-      );
-      return card;
-    }));
+          h('td', { class: 'col-address' },
+            h('strong', { class: 'block-line', style: 'font-size:13px;' }, o.address || o.city || 'Destino de entrega'),
+            h('span', { class: 'tag tone-teal small', style: 'display:inline-block; margin-top:4px; font-weight:700;' }, `~${distKm} km ruta`)
+          ),
+          h('td', { class: 'col-items' },
+            h('div', { class: 'excel-items-cell' }, itemsSummary(o)),
+            o.total != null ? h('small', { class: 'muted block-line', style: 'margin-top:2px;' }, 'Productos pagados: ' + money(o.total)) : null
+          ),
+          h('td', { class: 'col-total text-right' },
+            h('strong', { class: 'excel-money-val', style: 'color:var(--primary);' }, money(fee)),
+            h('small', { class: 'muted block-line' }, 'Cobro en mano al entregar')
+          ),
+          h('td', { class: 'col-actions text-right' },
+            h('button', {
+              class: 'btn primary small',
+              type: 'button',
+              onclick: async e => {
+                const r = await act(e.currentTarget, () => API.post('/courier/orders/' + o.id + '/accept'), 'Entrega aceptada. Dirígete a la farmacia.');
+                if (r) leaveCard(tr); else refreshAll();
+              }
+            }, 'Aceptar entrega (' + money(fee) + ')')
+          )
+        );
+        return tr;
+      }),
+      { tableClass: 'fy-orders-excel-table' }
+    );
   });
 }
 
@@ -298,10 +310,85 @@ function courierOrders() {
     if (!orders.length) return empty('Aún no tienes entregas asignadas', 'Las entregas que aceptes aparecerán aquí para el seguimiento de la ruta y validación de PIN.');
     const active = orders.filter(o => !FINAL.includes(o.status));
     const past = orders.filter(o => FINAL.includes(o.status));
-    return h('div', { class: 'stack' },
-      active.length ? h('div', { class: 'list' }, h('h3', { class: 'list-title' }, 'Entregas en curso (' + active.length + ')'), active.map(o => courierCard(o))) : null,
-      past.length ? h('div', { class: 'list' }, h('h3', { class: 'list-title' }, 'Historial de entregas entregadas'), past.map(o => orderRow(o))) : null
-    );
+
+    const activeTable = active.length ? h('div', { class: 'stack' },
+      h('h3', { class: 'list-title' }, 'Entregas en curso (' + active.length + ')'),
+      excelTable(
+        ['Código', 'Estado', 'Recogida (Farmacia)', 'Destino (Paciente)', { label: 'Tarifa a cobrar', class: 'text-right' }, { label: 'Acciones', class: 'text-right' }],
+        active.map(o => {
+          const step = (label, path, ok, cls = 'primary') => h('button', {
+            class: 'btn small ' + cls,
+            type: 'button',
+            onclick: async e => {
+              await act(e.currentTarget, () => API.post('/courier/orders/' + o.id + '/' + path), ok);
+              refreshAll();
+            }
+          }, label);
+
+          let actions = [];
+          if (o.status === 'REPARTIDOR_ASIGNADO') {
+            actions = [
+              step('Ya recogí en farmacia', 'pickup', 'Pedido recogido con éxito'),
+              h('button', {
+                class: 'btn danger-ghost small',
+                type: 'button',
+                onclick: async () => {
+                  if (await confirmBox({ title: '¿Liberar esta entrega?', message: 'Se reasignará a otro repartidor disponible.', ok: 'Liberar entrega', danger: true })) {
+                    await act(null, () => API.post('/courier/orders/' + o.id + '/release'), 'Entrega liberada');
+                    refreshAll();
+                  }
+                }
+              }, 'Liberar')
+            ];
+          } else if (o.status === 'PEDIDO_RECOGIDO') {
+            actions = [step('Iniciar ruta hacia paciente', 'on-the-way', 'En camino al domicilio')];
+          } else if (o.status === 'EN_CAMINO') {
+            actions = [h('button', { class: 'btn primary small stitch-pin-btn', type: 'button', onclick: () => openDeliverDialog(o) }, 'Validar PIN')];
+          }
+
+          return h('tr', { class: 'tone-' + statusTone(o.status) },
+            h('td', { class: 'col-code' },
+              h('strong', { class: 'code font-mono' }, o.code),
+              h('span', { class: 'badge-cold-chain', style: 'display:inline-block; margin-top:4px; font-size:10.5px;' }, 'Cadena de frío 2°-8°C')
+            ),
+            h('td', { class: 'col-status' },
+              badge(o.status),
+              h('div', { style: 'margin-top:4px;' }, blister(o, 'sm', { noCaption: true }))
+            ),
+            h('td', { class: 'col-address' },
+              h('strong', { class: 'block-line', style: 'font-size:13px;' }, o.pharmacyName || 'Farmacia'),
+              o.pharmacyAddress ? h('small', { class: 'muted block-line' }, o.pharmacyAddress) : null,
+              o.pharmacyAddress ? h('button', { class: 'btn link small', style: 'padding:0; margin-top:2px;', type: 'button', onclick: () => openCourierRoute(o, true) }, 'Ver ruta a farmacia') : null
+            ),
+            h('td', { class: 'col-address' },
+              h('strong', { class: 'block-line', style: 'font-size:13px;' }, o.clientName || 'Cliente'),
+              o.address ? h('small', { class: 'block-line' }, o.address) : null,
+              o.clientPhone ? h('small', { class: 'muted block-line' }, 'Tel: ' + o.clientPhone) : null,
+              o.notes ? h('small', { class: 'muted block-line' }, 'Nota: ' + o.notes) : null,
+              o.address ? h('button', { class: 'btn link small', style: 'padding:0; margin-top:2px;', type: 'button', onclick: () => openCourierRoute(o, false) }, 'Ver ruta al paciente') : null
+            ),
+            h('td', { class: 'col-total text-right' },
+              h('strong', { class: 'excel-money-val', style: 'color:var(--primary);' }, money(o.courierEarnings || 4500)),
+              h('small', { class: 'muted block-line' }, 'Cobro en mano')
+            ),
+            h('td', { class: 'col-actions text-right' },
+              h('div', { class: 'excel-actions-cell' },
+                ...actions,
+                h('button', { class: 'btn ghost small', type: 'button', onclick: () => (window.openOrderDetail || openOrderDetail)(o.id) }, 'Ver detalle')
+              )
+            )
+          );
+        }),
+        { tableClass: 'fy-orders-excel-table' }
+      )
+    ) : null;
+
+    const pastTable = past.length ? h('div', { class: 'stack' },
+      h('h3', { class: 'list-title' }, 'Historial de entregas entregadas (' + past.length + ')'),
+      ordersExcelTable(past, { showPharmacy: true, showClient: true })
+    ) : null;
+
+    return h('div', { class: 'stack' }, activeTable, pastTable);
   });
 }
 

@@ -300,6 +300,89 @@ function orderRow(o, actions) {
 
 /* ---------- Detalle (diálogo que se actualiza solo) ---------- */
 
+/**
+ * Tabla Excel elegante para listas de pedidos en toda la plataforma (Cliente, Farmacia, Admin, Repartidores).
+ */
+function ordersExcelTable(orders, opts = {}) {
+  const list = Array.isArray(orders) ? orders : [];
+  if (!list.length) {
+    return empty(opts.emptyTitle || 'No hay pedidos', opts.emptyText || '');
+  }
+  const role = opts.role || (state.user && state.user.role) || '';
+  const showPharmacy = opts.showPharmacy !== undefined ? opts.showPharmacy : (role === 'ADMIN' || role === 'CLIENTE' || role === 'REPARTIDOR');
+  const showClient = opts.showClient !== undefined ? opts.showClient : (role === 'ADMIN' || role === 'FARMACIA' || role === 'REPARTIDOR');
+  const showProfit = Boolean(opts.showProfit || role === 'ADMIN');
+
+  const headers = [
+    { label: 'Código', class: 'col-code' },
+    { label: 'Estado', class: 'col-status' },
+    { label: 'Lo que se pidió', class: 'col-items' },
+    { label: 'Dirección / Lugar', class: 'col-address' },
+    { label: 'Total', class: 'col-total text-right' },
+    { label: 'Acciones', class: 'col-actions text-right' }
+  ];
+
+  const rows = list.map(o => {
+    const open = () => (window.openOrderDetail || openOrderDetail)(o.id);
+    const hasPin = role === 'CLIENTE' && o.deliveryCode && !['ENTREGADO', 'CANCELADO', 'CANCELADA', 'VENCIDA', 'RECHAZADA'].includes(o.status);
+    const profit = o.platformEarnings != null ? o.platformEarnings : (o.total ? Math.round(o.total * 0.05) : 0);
+    const extraActions = typeof opts.actionsFor === 'function' ? opts.actionsFor(o) : null;
+
+    return h('tr', {
+      class: 'fy-clickable-row tone-' + statusTone(o.status),
+      tabindex: 0,
+      onclick: e => {
+        if (e.target && e.target.closest && e.target.closest('button, a, input, select')) return;
+        open();
+      },
+      onkeydown: e => {
+        if (e.key === 'Enter' && e.target === e.currentTarget) open();
+      }
+    },
+      h('td', { class: 'col-code' },
+        h('strong', { class: 'code font-mono' }, o.code),
+        hasPin ? h('span', { class: 'badge tone-done small mt-1', style: 'display:inline-block; margin-top:4px; font-weight:800;' }, 'PIN: ' + o.deliveryCode) : null,
+        h('small', { class: 'muted block-line', style: 'margin-top:3px;' }, rowMeta(o))
+      ),
+      h('td', { class: 'col-status' },
+        badge(o.status)
+      ),
+      h('td', { class: 'col-items' },
+        h('div', { class: 'excel-items-cell' }, itemsSummary(o)),
+        o.notes ? h('small', { class: 'muted block-line', style: 'margin-top:2px;' }, 'Nota: ' + o.notes) : null
+      ),
+      h('td', { class: 'col-address' },
+        o.address ? h('strong', { class: 'block-line', style: 'font-size:13px;' }, o.address) : null,
+        o.city ? h('small', { class: 'muted block-line' }, o.city) : (!o.address ? h('small', { class: 'muted' }, 'Cobertura general') : null),
+        showPharmacy && o.pharmacyName ? h('small', { class: 'muted block-line' }, 'Farmacia: ' + o.pharmacyName) : null,
+        showClient && o.clientName ? h('small', { class: 'muted block-line' }, 'Cliente: ' + o.clientName) : null,
+        role === 'ADMIN' && o.courierName ? h('small', { class: 'muted block-line' }, 'Repartidor: ' + o.courierName) : null
+      ),
+      h('td', { class: 'col-total text-right' },
+        o.total != null
+          ? h('strong', { class: 'excel-money-val' }, money(o.total))
+          : h('span', { class: 'muted small' }, 'Por cotizar'),
+        showProfit && o.total != null
+          ? h('span', { class: 'tag tone-teal small block-line', style: 'margin-top:4px; font-weight:700; display:inline-block;' }, '5%: ' + money(profit))
+          : null
+      ),
+      h('td', { class: 'col-actions text-right', onclick: e => e.stopPropagation() },
+        h('div', { class: 'excel-actions-cell' },
+          extraActions,
+          h('button', {
+            type: 'button',
+            class: 'btn secondary small',
+            onclick: open
+          }, 'Ver detalle')
+        )
+      )
+    );
+  });
+
+  return excelTable(headers, rows, { tableClass: 'fy-orders-excel-table' });
+}
+window.ordersExcelTable = ordersExcelTable;
+
 function openOrderDetail(id) {
 
   const body = live(() => API.get('/orders/' + id), o => orderDetail(o, state.user), 4000);
@@ -337,7 +420,7 @@ function orderDetail(o, viewer) {
 
     ? block('Productos y precio',
 
-        h('div', { class: 'table-wrap' }, h('table', { class: 'prices' },
+        h('div', { class: 'table-wrap fy-excel-wrap' }, h('table', { class: 'prices grid-bordered fy-excel-table' },
 
           h('thead', null, h('tr', null, h('th', null, 'Producto'), h('th', null, 'Cant.'), h('th', null, 'Precio'), h('th', null, 'Subtotal'))),
 
@@ -375,13 +458,15 @@ function orderDetail(o, viewer) {
 
     : (o.items && o.items.length
 
-      ? block('Productos solicitados', h('ul', { class: 'plain order-requested-items-list' }, o.items.map(i => h('li', { class: 'order-requested-item-card' },
-          h('div', { class: 'order-req-name-group' },
-            h('strong', { class: 'order-req-title' }, i.name),
-            i.note ? h('small', { class: 'muted block-line' }, i.note) : null
-          ),
-          h('span', { class: 'tag tone-teal font-bold small' }, i.quantity + (i.quantity === 1 ? ' unidad' : ' unidades'))
-        ))))
+      ? block('Productos solicitados', excelTable(
+          ['Producto', 'Nota / Especificación', { label: 'Cantidad', class: 'text-right' }],
+          o.items.map(i => h('tr', null,
+            h('td', null, h('strong', null, i.name)),
+            h('td', null, i.note ? h('span', { class: 'muted small' }, i.note) : h('span', { class: 'muted small' }, '—')),
+            h('td', { class: 'text-right' }, h('span', { class: 'tag tone-teal font-bold small' }, i.quantity + (i.quantity === 1 ? ' unidad' : ' unidades')))
+          )),
+          { tableClass: 'fy-compact-excel-table' }
+        ))
 
       : null);
 
@@ -507,21 +592,21 @@ function orderDetail(o, viewer) {
 
     detailActions(o, viewer),
 
-    block('Historial y Novedades del Pedido', h('ol', { class: 'timeline' }, (o.history || []).map(e => h('li', { class: 'timeline-item' },
-
-      h('div', { class: 'timeline-header' },
-
-        h('strong', { class: 'timeline-status' }, statusLabel(e.status)),
-
-        h('time', { class: 'timeline-time' }, clock(e.at))
-
-      ),
-
-      e.note && h('p', { class: 'timeline-note' }, e.note),
-
-      e.actorName && h('small', { class: 'timeline-actor' }, 'Por: ' + e.actorName)
-
-    ))))
+    block('Historial y Novedades del Pedido', (o.history && o.history.length)
+      ? excelTable(
+          ['Evento / Estado', 'Detalle y Responsable', { label: 'Fecha y hora', class: 'text-right' }],
+          o.history.map(e => h('tr', null,
+            h('td', null, h('strong', null, statusLabel(e.status))),
+            h('td', null,
+              e.note ? h('div', { class: 'small' }, e.note) : null,
+              e.actorName ? h('small', { class: 'muted block-line' }, 'Por: ' + e.actorName) : (!e.note ? h('small', { class: 'muted' }, '—') : null)
+            ),
+            h('td', { class: 'text-right' }, h('time', { class: 'muted small font-mono' }, clock(e.at)))
+          )),
+          { tableClass: 'fy-compact-excel-table' }
+        )
+      : empty('Sin novedades aún', '')
+    )
 
   );
 
@@ -1110,7 +1195,22 @@ async function renderPaymentPage(orderOrId) {
         icon('package'),
         h('span', null, 'Detalle de Productos')
       ),
-      h('div', { class: 'payment-products-list' }, ...itemsNodes)
+      excelTable(
+        ['Producto', { label: 'Cant.', class: 'text-center' }, { label: 'Subtotal', class: 'text-right' }],
+        (o.items && o.items.length) ? o.items.map(it => h('tr', null,
+          h('td', null,
+            h('strong', null, it.name),
+            h('small', { class: 'muted block-line' }, it.prescription ? 'Venta controlada' : 'Venta libre verificada')
+          ),
+          h('td', { class: 'text-center' }, h('strong', null, String(it.quantity || 1))),
+          h('td', { class: 'text-right' }, h('strong', null, money(it.subtotal || (it.unitPrice ? it.unitPrice * (it.quantity || 1) : subtotalProducts))))
+        )) : [h('tr', null,
+          h('td', null, 'Medicamentos solicitados en pedido'),
+          h('td', { class: 'text-center' }, '1'),
+          h('td', { class: 'text-right' }, h('strong', null, money(subtotalProducts)))
+        )],
+        { tableClass: 'fy-compact-excel-table' }
+      )
     ),
 
     h('div', { class: 'payment-totals-card' },

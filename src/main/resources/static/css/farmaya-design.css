@@ -14099,3 +14099,259 @@ ol.timeline > li,
     gap: 4px !important;
   }
 }
+
+/* ==========================================================================
+   62. TABLAS TIPO EXCEL ELEGANTE (.fy-excel-wrap / .fy-excel-table)
+   Aplica en toda la plataforma (Pedidos, Solicitudes, Entregas, Canasta, Admin)
+   ========================================================================== */
+.fy-excel-wrap {
+  display: block !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 12px !important;
+  background: var(--surface) !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03) !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+}
+
+[data-theme="dark"] .fy-excel-wrap {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28) !important;
+}
+
+.fy-cart-excel-wrap {
+  margin: 10px 0 !important;
+  border-radius: 10px !important;
+}
+
+.fy-excel-table {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: var(--surface) !important;
+  margin: 0 !important;
+  font-size: 13.5px !important;
+}
+
+.fy-excel-table thead th {
+  background: var(--surface-soft) !important;
+  color: var(--muted) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  padding: 12px 14px !important;
+  border-bottom: 2px solid var(--line) !important;
+  border-right: 1px solid var(--line) !important;
+  white-space: nowrap !important;
+  vertical-align: middle !important;
+}
+
+.fy-excel-table thead th:last-child {
+  border-right: none !important;
+}
+
+.fy-excel-table thead th.text-right {
+  text-align: right !important;
+}
+
+.fy-excel-table thead th.text-center {
+  text-align: center !important;
+}
+
+.fy-excel-table tbody td,
+.fy-excel-table tfoot td {
+  padding: 12px 14px !important;
+  font-size: 13px !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--line) !important;
+  border-right: 1px solid var(--line) !important;
+  vertical-align: middle !important;
+  line-height: 1.4 !important;
+}
+
+.fy-excel-table tbody td:last-child,
+.fy-excel-table tfoot td:last-child {
+  border-right: none !important;
+}
+
+.fy-excel-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+.fy-excel-table tfoot tr:first-child td {
+  border-top: 2px solid var(--line) !important;
+  background: var(--surface-soft) !important;
+  font-weight: 800 !important;
+}
+
+.fy-excel-table tfoot tr:last-child td {
+  border-bottom: none !important;
+}
+
+/* Cebra sutil tipo hoja de calculo profesional */
+.fy-excel-table tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.016) !important;
+}
+
+[data-theme="dark"] .fy-excel-table tbody tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+/* Hover elegante en filas */
+.fy-excel-table tbody tr:hover {
+  background: rgba(22, 134, 93, 0.045) !important;
+}
+
+[data-theme="dark"] .fy-excel-table tbody tr:hover {
+  background: rgba(16, 185, 129, 0.08) !important;
+}
+
+.fy-excel-table tbody tr.fy-clickable-row {
+  cursor: pointer !important;
+}
+
+.fy-excel-table tbody tr.is-fresh-row {
+  box-shadow: inset 4px 0 0 var(--primary) !important;
+  background: rgba(22, 134, 93, 0.055) !important;
+}
+
+/* Alineacion y dimensiones inteligentes por columna */
+.fy-excel-table .col-code {
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.fy-excel-table .col-status {
+  min-width: 130px;
+}
+
+.fy-excel-table .col-items {
+  min-width: 185px;
+  max-width: 320px;
+  white-space: normal !important;
+}
+
+.fy-excel-table .col-address {
+  min-width: 180px;
+  max-width: 270px;
+  white-space: normal !important;
+}
+
+.fy-excel-table .col-total {
+  min-width: 110px;
+  white-space: nowrap;
+}
+
+.fy-excel-table .col-actions {
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.excel-items-cell {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.excel-money-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.excel-actions-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Tablas compactas (Canasta, Productos solicitados, Timeline, Documentos) */
+.fy-compact-excel-table thead th {
+  padding: 9px 11px !important;
+  font-size: 10.5px !important;
+}
+
+.fy-compact-excel-table tbody td {
+  padding: 9px 11px !important;
+  font-size: 12.5px !important;
+}
+
+/* Titulo limpio encima de tablas de pedidos */
+.stack > .list-title {
+  margin: 0 0 6px 0 !important;
+  font-size: 13.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+}
+
+/* ==========================================================================
+   VISTA FLUTTER MOVIL (<= 768px): PRESERVAR COLUMNAS Y FILAS TIPO EXCEL
+   ========================================================================== */
+@media (max-width: 768px) {
+  .fy-excel-wrap {
+    display: block !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Preservar estructura real de tabla Excel (filas + columnas reales, nunca colapsar ni esconder thead) */
+  .fy-excel-wrap .fy-excel-table {
+    display: table !important;
+    width: 100% !important;
+    border-collapse: separate !important;
+  }
+
+  .fy-excel-wrap .fy-excel-table thead {
+    display: table-header-group !important;
+  }
+
+  .fy-excel-wrap .fy-excel-table tbody {
+    display: table-row-group !important;
+  }
+
+  .fy-excel-wrap .fy-excel-table tfoot {
+    display: table-footer-group !important;
+  }
+
+  .fy-excel-wrap .fy-excel-table tr {
+    display: table-row !important;
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .fy-excel-wrap .fy-excel-table th,
+  .fy-excel-wrap .fy-excel-table td {
+    display: table-cell !important;
+    width: auto !important;
+    text-align: inherit !important;
+    padding: 10px 11px !important;
+  }
+
+  .fy-excel-wrap .fy-excel-table th::before,
+  .fy-excel-wrap .fy-excel-table td::before {
+    content: none !important;
+    display: none !important;
+  }
+
+  .fy-excel-table:not(.fy-compact-excel-table) {
+    min-width: 700px !important;
+  }
+
+  .fy-compact-excel-table {
+    min-width: 100% !important;
+  }
+}

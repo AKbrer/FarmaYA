@@ -417,74 +417,42 @@ function renderClientDashboard() {
 
         ? empty('Tu carrito está vacío', 'Explora el catálogo y agrega los medicamentos que requieres para cotizar con farmacias aliadas.')
 
-        : h('div', { class: 'cart-items stitch-cart-items' },
-
-            clientCart.map(item =>
-
-              h('div', { class: 'cart-item stitch-cart-item' },
-
-                h('div', { class: 'cart-item-info' },
-
-                  h('strong', { class: 'cart-item-name' }, item.name),
-
-                  h('small', { class: 'muted block-line' }, money(item.price) + ' c/u · precio sugerido'),
-
-                  h('div', { class: 'quantity-control' },
-
-                    h('button', {
-
-                      type: 'button',
-
-                      class: 'qty-btn',
-
-                      'aria-label': 'Quitar uno',
-
-                      onclick: () => {
-
-                        item.quantity--;
-
-                        if (item.quantity <= 0) clientCart = clientCart.filter(x => x !== item);
-
-                        drawCart();
-
-                        drawProducts();
-
-                      }
-
-                    }, '−'),
-
-                    h('span', null, item.quantity),
-
-                    h('button', {
-
-                      type: 'button',
-
-                      class: 'qty-btn',
-
-                      'aria-label': 'Agregar uno',
-
-                      onclick: () => {
-
-                        item.quantity = Math.min(99, item.quantity + 1);
-
-                        drawCart();
-
-                        drawProducts();
-
-                      }
-
-                    }, '+')
-
-                  )
-
-                ),
-
-                h('strong', { class: 'cart-item-subtotal' }, money(item.price * item.quantity))
-
-              )
-
-            )
-
+        : excelTable(
+            ['Producto', { label: 'Cant.', class: 'text-center' }, { label: 'Subtotal', class: 'text-right' }],
+            clientCart.map(item => h('tr', null,
+              h('td', null,
+                h('strong', { class: 'cart-item-name' }, item.name),
+                h('small', { class: 'muted block-line' }, money(item.price) + ' c/u · sugerido')
+              ),
+              h('td', { class: 'text-center' },
+                h('div', { class: 'quantity-control', style: 'justify-content:center; margin:0;' },
+                  h('button', {
+                    type: 'button',
+                    class: 'qty-btn',
+                    'aria-label': 'Quitar uno',
+                    onclick: () => {
+                      item.quantity--;
+                      if (item.quantity <= 0) clientCart = clientCart.filter(x => x !== item);
+                      drawCart();
+                      drawProducts();
+                    }
+                  }, '−'),
+                  h('span', null, item.quantity),
+                  h('button', {
+                    type: 'button',
+                    class: 'qty-btn',
+                    'aria-label': 'Agregar uno',
+                    onclick: () => {
+                      item.quantity = Math.min(99, item.quantity + 1);
+                      drawCart();
+                      drawProducts();
+                    }
+                  }, '+')
+                )
+              ),
+              h('td', { class: 'text-right' }, h('strong', { class: 'cart-item-subtotal' }, money(item.price * item.quantity)))
+            )),
+            { tableClass: 'fy-compact-excel-table', wrapClass: 'fy-cart-excel-wrap' }
           ),
 
       clientCart.length ? h('div', { class: 'cart-breakdown' },
@@ -683,86 +651,46 @@ function renderClientDashboard() {
 
       } else {
 
-        bodyContent = h('div', { class: 'cart-preview-items' },
-
-          clientCart.map(item =>
-
-            h('div', { class: 'cart-preview-item' },
-
-              h('div', { class: 'cart-preview-item-info' },
-
-                h('strong', { class: 'cart-preview-item-name', title: item.name }, item.name),
-
-                h('span', { class: 'cart-preview-item-price' }, money(item.price) + ' c/u · sugerido')
-
-              ),
-
-              h('div', { class: 'cart-preview-item-right' },
-
-                h('div', { class: 'cart-preview-qty-control' },
-
-                  h('button', {
-
-                    type: 'button',
-
-                    class: 'cart-preview-qty-btn',
-
-                    'aria-label': 'Quitar uno',
-
-                    onclick: (e) => {
-
-                      e.stopPropagation();
-
-                      item.quantity--;
-
-                      if (item.quantity <= 0) clientCart = clientCart.filter(x => x !== item);
-
-                      refreshPreview();
-
-                      drawCart();
-
-                      drawProducts();
-
-                    }
-
-                  }, '−'),
-
-                  h('span', { class: 'cart-preview-qty-num' }, item.quantity),
-
-                  h('button', {
-
-                    type: 'button',
-
-                    class: 'cart-preview-qty-btn',
-
-                    'aria-label': 'Agregar uno',
-
-                    onclick: (e) => {
-
-                      e.stopPropagation();
-
-                      item.quantity = Math.min(99, item.quantity + 1);
-
-                      refreshPreview();
-
-                      drawCart();
-
-                      drawProducts();
-
-                    }
-
-                  }, '+')
-
-                ),
-
-                h('strong', { class: 'cart-preview-item-subtotal' }, money(item.price * item.quantity))
-
+        bodyContent = excelTable(
+          ['Producto', { label: 'Cant.', class: 'text-center' }, { label: 'Subtotal', class: 'text-right' }],
+          clientCart.map(item => h('tr', null,
+            h('td', null,
+              h('strong', { class: 'cart-preview-item-name', title: item.name }, item.name),
+              h('span', { class: 'cart-preview-item-price block-line' }, money(item.price) + ' c/u · sugerido')
+            ),
+            h('td', { class: 'text-center' },
+              h('div', { class: 'cart-preview-qty-control', style: 'justify-content:center; margin:0 auto;' },
+                h('button', {
+                  type: 'button',
+                  class: 'cart-preview-qty-btn',
+                  'aria-label': 'Quitar uno',
+                  onclick: (e) => {
+                    e.stopPropagation();
+                    item.quantity--;
+                    if (item.quantity <= 0) clientCart = clientCart.filter(x => x !== item);
+                    refreshPreview();
+                    drawCart();
+                    drawProducts();
+                  }
+                }, '−'),
+                h('span', { class: 'cart-preview-qty-num' }, item.quantity),
+                h('button', {
+                  type: 'button',
+                  class: 'cart-preview-qty-btn',
+                  'aria-label': 'Agregar uno',
+                  onclick: (e) => {
+                    e.stopPropagation();
+                    item.quantity = Math.min(99, item.quantity + 1);
+                    refreshPreview();
+                    drawCart();
+                    drawProducts();
+                  }
+                }, '+')
               )
-
-            )
-
-          )
-
+            ),
+            h('td', { class: 'text-right' }, h('strong', { class: 'cart-preview-item-subtotal' }, money(item.price * item.quantity)))
+          )),
+          { tableClass: 'fy-compact-excel-table', wrapClass: 'fy-cart-excel-wrap' }
         );
 
       }

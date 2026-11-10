@@ -557,7 +557,7 @@ function movementHistory(endpoint) {
     const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
     tableHolder.replaceChildren(
-      h('div', { class: 'table-wrap movement-table' }, h('table', { class: 'users' },
+      h('div', { class: 'table-wrap fy-excel-wrap movement-table' }, h('table', { class: 'data-table grid-bordered fy-excel-table users' },
         h('thead', null, h('tr', null, h('th', null, 'Acción'), h('th', null, 'Pedido'), h('th', null, 'Fecha y hora'))),
         h('tbody', null, paged.map(m => h('tr', null,
           h('td', null, h('strong', null, movementTypeLabel(m.type)), h('small', { class: 'block-line muted movement-description' }, m.description || 'Sin descripción')),
@@ -607,9 +607,18 @@ function partnerActivity(endpoint) {
   return live(() => API.get(endpoint), data => {
     const rows = data.recentOrders || [];
     if (!rows.length) return empty('Aún no hay actividad', 'Cuando recibas y gestiones pedidos, verás aquí los movimientos recientes.');
-    return h('div', { class: 'list' }, rows.map(o => h('article', { class: 'activity-row' },
-      h('div', null, h('strong', null, o.code), h('small', { class: 'block-line muted' }, formatMovementDate(o.createdAt)), null),
-      h('div', { class: 'activity-right' }, badge(o.status), o.total != null ? h('strong', null, money(o.total)) : null))));
+    return excelTable(
+      ['Código', 'Fecha y hora', 'Estado', { label: 'Total', class: 'text-right' }],
+      rows.map(o => h('tr', {
+        class: 'fy-clickable-row',
+        onclick: () => (window.openOrderDetail || openOrderDetail)(o.id)
+      },
+        h('td', null, h('strong', { class: 'code font-mono' }, o.code)),
+        h('td', null, h('span', { class: 'muted small' }, formatMovementDate(o.createdAt))),
+        h('td', null, badge(o.status)),
+        h('td', { class: 'text-right' }, o.total != null ? h('strong', null, money(o.total)) : h('span', { class: 'muted small' }, '—'))
+      ))
+    );
   });
 }
 
@@ -776,3 +785,29 @@ function fyPagination(totalItems, currentPage, pageSize, onPageChange) {
   container.append(nav, summary);
   return container;
 }
+
+
+/**
+ * Construye una tabla tipo Excel elegante con filas y columnas delimitadas.
+ * Compatible con escritorio y desplazamiento tactil fluido en vista Flutter.
+ */
+function excelTable(headers, bodyRows, opts = {}) {
+  const tableCls = 'data-table grid-bordered fy-excel-table' + (opts.tableClass ? ' ' + opts.tableClass : '');
+  const wrapCls = 'table-wrap fy-excel-wrap' + (opts.wrapClass ? ' ' + opts.wrapClass : '');
+
+  const thead = h('thead', null,
+    h('tr', null, headers.map(col => {
+      const label = typeof col === 'string' ? col : col.label;
+      const cls = typeof col === 'object' && col.class ? col.class : null;
+      return h('th', { scope: 'col', class: cls }, label);
+    }))
+  );
+
+  const tbody = h('tbody', null, bodyRows);
+  const tfoot = opts.tfoot || null;
+
+  return h('div', { class: wrapCls },
+    h('table', { class: tableCls }, thead, tbody, tfoot)
+  );
+}
+window.excelTable = excelTable;
