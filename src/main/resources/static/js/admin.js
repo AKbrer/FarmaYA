@@ -62,7 +62,12 @@ function adminPowerBiDashboard() {
         if (powerBiStatus === 'IN_PROGRESS' && (!PAID_STATUSES.includes(o.status) || o.status === 'ENTREGADO')) return false;
 
         // Farmacia
-        if (powerBiPharmacy !== 'ALL' && o.pharmacyName !== powerBiPharmacy) return false;
+        // Farmacia (seleccion exacta o busqueda por texto)
+        if (powerBiPharmacy && powerBiPharmacy !== 'ALL') {
+          const phTarget = powerBiPharmacy.toLowerCase().trim();
+          const oPh = (o.pharmacyName || '').toLowerCase().trim();
+          if (oPh !== phTarget && !oPh.includes(phTarget)) return false;
+        }
 
         // Periodo
         if (powerBiPeriod !== 'ALL') {
@@ -129,14 +134,128 @@ function adminPowerBiDashboard() {
         h('option', { value: '30D', selected: powerBiPeriod === '30D' }, 'Ultimos 30 Dias')
       );
 
-      const pharmacySelect = h('select', {
-        class: 'powerbi-slicer-select',
-        'aria-label': 'Filtro por Farmacia',
-        onchange: e => { powerBiPharmacy = e.target.value; draw(); }
-      },
-        h('option', { value: 'ALL', selected: powerBiPharmacy === 'ALL' }, 'Todas las Farmacias Aliadas'),
-        pharmacyNames.map(name => h('option', { value: name, selected: powerBiPharmacy === name }, name))
+      // Buscador interactivo de farmacias aliadas con autocompletado y seleccion rapida
+      const isCustomPharmacy = powerBiPharmacy && powerBiPharmacy !== 'ALL';
+      const pharmacySearchInput = h('input', {
+        type: 'text',
+        class: 'powerbi-slicer-search-input',
+        placeholder: isCustomPharmacy ? powerBiPharmacy : 'Buscar farmacia aliada...',
+        value: isCustomPharmacy ? powerBiPharmacy : '',
+        'aria-label': 'Buscar farmacia aliada',
+        autocomplete: 'off'
+      });
+
+      const clearPharmacyBtn = isCustomPharmacy ? h('button', {
+        class: 'powerbi-search-clear-btn',
+        type: 'button',
+        title: 'Restablecer a todas las farmacias',
+        'aria-label': 'Borrar filtro de farmacia',
+        onclick: (e) => {
+          e.stopPropagation();
+          powerBiPharmacy = 'ALL';
+          draw();
+        }
+      }, 'x') : null;
+
+      const toggleDropdownBtn = h('button', {
+        class: 'powerbi-search-toggle-btn',
+        type: 'button',
+        title: 'Ver todas las farmacias aliadas',
+        'aria-label': 'Desplegar lista de farmacias',
+        onclick: (e) => {
+          e.stopPropagation();
+          if (suggestionsList.style.display === 'block') {
+            suggestionsList.style.display = 'none';
+          } else {
+            renderSuggestions('');
+            suggestionsList.style.display = 'block';
+            pharmacySearchInput.focus();
+          }
+        }
+      }, h('svg', { width: '12', height: '12', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2.5' },
+        h('path', { d: 'M6 9l6 6 6-6' })
+      ));
+
+      const suggestionsList = h('div', {
+        class: 'powerbi-pharmacy-suggestions',
+        style: 'display: none;'
+      });
+
+      function renderSuggestions(query = '') {
+        const q = (query || '').toLowerCase().trim();
+        const matches = pharmacyNames.filter(name => !q || name.toLowerCase().includes(q));
+
+        const items = [];
+        // Opcion principal: Todas las farmacias
+        items.push(h('div', {
+          class: 'powerbi-suggestion-item' + (powerBiPharmacy === 'ALL' ? ' is-active' : ''),
+          onclick: () => {
+            powerBiPharmacy = 'ALL';
+            draw();
+          }
+        },
+          h('span', { class: 'suggestion-name' }, 'Todas las Farmacias Aliadas'),
+          h('span', { class: 'suggestion-badge' }, pharmacyNames.length + ' aliadas')
+        ));
+
+        if (matches.length) {
+          matches.forEach(name => {
+            const count = ordersList.filter(o => o.pharmacyName === name).length;
+            items.push(h('div', {
+              class: 'powerbi-suggestion-item' + (powerBiPharmacy === name ? ' is-active' : ''),
+              onclick: () => {
+                powerBiPharmacy = name;
+                draw();
+              }
+            },
+              h('span', { class: 'suggestion-name' }, name),
+              h('span', { class: 'suggestion-count' }, count + (count === 1 ? ' pedido' : ' pedidos'))
+            ));
+          });
+        } else {
+          items.push(h('div', { class: 'powerbi-suggestion-empty' },
+            'No se encontraron farmacias con "' + query + '"'
+          ));
+        }
+
+        suggestionsList.replaceChildren(...items);
+      }
+
+      pharmacySearchInput.addEventListener('focus', () => {
+        renderSuggestions(pharmacySearchInput.value);
+        suggestionsList.style.display = 'block';
+      });
+
+      pharmacySearchInput.addEventListener('input', (e) => {
+        renderSuggestions(e.target.value);
+        suggestionsList.style.display = 'block';
+      });
+
+      pharmacySearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = pharmacySearchInput.value.trim();
+          powerBiPharmacy = val || 'ALL';
+          draw();
+        } else if (e.key === 'Escape') {
+          suggestionsList.style.display = 'none';
+        }
+      });
+
+      const pharmacySearchWrap = h('div', { class: 'powerbi-pharmacy-search-wrap' },
+        h('span', { class: 'powerbi-search-icon', 'aria-hidden': 'true' }, icon('search')),
+        pharmacySearchInput,
+        clearPharmacyBtn,
+        toggleDropdownBtn,
+        suggestionsList
       );
+
+      const handleOutsideClick = (e) => {
+        if (!pharmacySearchWrap.contains(e.target)) {
+          suggestionsList.style.display = 'none';
+        }
+      };
+      setTimeout(() => document.addEventListener('click', handleOutsideClick), 0);
 
       const statusSelect = h('select', {
         class: 'powerbi-slicer-select',
@@ -167,7 +286,7 @@ function adminPowerBiDashboard() {
         ),
         h('div', { class: 'powerbi-slicer-group' },
           h('span', { class: 'powerbi-slicer-label' }, 'Farmacia:'),
-          pharmacySelect
+          pharmacySearchWrap
         ),
         h('div', { class: 'powerbi-slicer-group' },
           h('span', { class: 'powerbi-slicer-label' }, 'Estado:'),

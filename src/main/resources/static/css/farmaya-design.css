@@ -13531,3 +13531,220 @@ body, button, input, select, textarea {
     max-height: 88px !important;
   }
 }
+
+/* ==========================================================================
+   60. BUSCADOR INTERACTIVO DE FARMACIAS EN DASHBOARD ADMIN POWER BI
+   ========================================================================== */
+.powerbi-pharmacy-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 250px;
+  max-width: 320px;
+  height: 38px;
+  background: var(--surface-soft, #f8fafc);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .powerbi-pharmacy-search-wrap {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.powerbi-pharmacy-search-wrap:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(22, 134, 93, 0.15);
+  background: var(--surface);
+}
+
+.powerbi-pharmacy-search-wrap .powerbi-search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 10px;
+  color: var(--muted);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.powerbi-pharmacy-search-wrap .powerbi-search-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.powerbi-slicer-search-input {
+  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none !important;
+  background: transparent !important;
+  color: var(--text);
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.powerbi-slicer-search-input::placeholder {
+  color: var(--muted);
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.powerbi-search-clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 4px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .powerbi-search-clear-btn {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.powerbi-search-clear-btn:hover {
+  background: rgba(220, 38, 38, 0.18);
+  color: var(--danger, #dc2626);
+}
+
+.powerbi-search-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-right: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.powerbi-search-toggle-btn:hover {
+  background: var(--line);
+  color: var(--text);
+}
+
+.powerbi-pharmacy-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  min-width: 280px;
+  max-height: 280px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+  z-index: 1000;
+  padding: 6px 0;
+}
+
+[data-theme="dark"] .powerbi-pharmacy-suggestions {
+  background: var(--surface, #1e293b);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+}
+
+.powerbi-suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.powerbi-suggestion-item:hover {
+  background: var(--primary-soft, #e0f5e9);
+  color: var(--primary-dark, #0f6b4a);
+}
+
+[data-theme="dark"] .powerbi-suggestion-item:hover {
+  background: rgba(22, 134, 93, 0.2);
+  color: #a7f3d0;
+}
+
+.powerbi-suggestion-item.is-active {
+  background: var(--primary-soft, #e0f5e9);
+  color: var(--primary, #16865d);
+  font-weight: 700;
+}
+
+[data-theme="dark"] .powerbi-suggestion-item.is-active {
+  background: rgba(22, 134, 93, 0.25);
+  color: #34d399;
+}
+
+.powerbi-suggestion-item .suggestion-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 210px;
+}
+
+.powerbi-suggestion-item .suggestion-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.powerbi-suggestion-item .suggestion-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.powerbi-suggestion-empty {
+  padding: 12px 14px;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .powerbi-pharmacy-search-wrap {
+    min-width: 100% !important;
+    max-width: 100% !important;
+    height: 42px !important;
+  }
+  .powerbi-pharmacy-suggestions {
+    position: fixed !important;
+    left: 14px !important;
+    right: 14px !important;
+    top: auto !important;
+    bottom: 20px !important;
+    max-height: 55vh !important;
+    z-index: 9999 !important;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35) !important;
+  }
+}
