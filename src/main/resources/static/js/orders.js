@@ -341,15 +341,27 @@ function orderDetail(o, viewer) {
 
           h('thead', null, h('tr', null, h('th', null, 'Producto'), h('th', null, 'Cant.'), h('th', null, 'Precio'), h('th', null, 'Subtotal'))),
 
-          h('tbody', null, o.confirmedItems.map(c => h('tr', { class: c.available ? '' : 'na' },
+          h('tbody', null, o.confirmedItems.map(c => h('tr', { class: 'order-price-row ' + (c.available ? '' : 'na') },
 
-            h('td', null, c.name, !c.available && h('small', null, 'No disponible')),
+            h('td', { class: 'order-item-name', 'data-label': 'Producto' },
+              h('strong', { class: 'order-item-title' }, c.name),
+              !c.available ? h('span', { class: 'tag tone-amber small', style: 'margin-left: 8px;' }, 'No disponible') : null
+            ),
 
-            h('td', null, c.available ? c.quantity : ''),
+            h('td', { class: 'order-item-qty', 'data-label': 'Cant.' },
+              h('span', { class: 'order-cell-label mobile-only muted small font-bold' }, 'Cantidad: '),
+              h('span', { class: 'order-cell-val' }, c.available ? (c.quantity + ' un.') : '')
+            ),
 
-            h('td', null, c.available ? money(c.unitPrice) : ''),
+            h('td', { class: 'order-item-price', 'data-label': 'Precio unit.' },
+              h('span', { class: 'order-cell-label mobile-only muted small font-bold' }, 'Precio: '),
+              h('span', { class: 'order-cell-val' }, c.available ? money(c.unitPrice) : '')
+            ),
 
-            h('td', null, c.available ? money(c.quantity * c.unitPrice) : '')))),
+            h('td', { class: 'order-item-subtotal', 'data-label': 'Subtotal' },
+              h('span', { class: 'order-cell-label mobile-only muted small font-bold' }, 'Subtotal: '),
+              h('strong', { class: 'order-cell-val order-subtotal-val' }, c.available ? money(c.quantity * c.unitPrice) : '')
+            ))))),
 
           h('tfoot', null,
 
@@ -363,9 +375,13 @@ function orderDetail(o, viewer) {
 
     : (o.items && o.items.length
 
-      ? block('Productos solicitados', h('ul', { class: 'plain' }, o.items.map(i => h('li', null,
-
-          h('span', null, i.name + ' ×' + i.quantity), i.note && h('small', { class: 'muted' }, i.note)))))
+      ? block('Productos solicitados', h('ul', { class: 'plain order-requested-items-list' }, o.items.map(i => h('li', { class: 'order-requested-item-card' },
+          h('div', { class: 'order-req-name-group' },
+            h('strong', { class: 'order-req-title' }, i.name),
+            i.note ? h('small', { class: 'muted block-line' }, i.note) : null
+          ),
+          h('span', { class: 'tag tone-teal font-bold small' }, i.quantity + (i.quantity === 1 ? ' unidad' : ' unidades'))
+        ))))
 
       : null);
 

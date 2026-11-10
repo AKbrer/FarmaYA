@@ -473,7 +473,7 @@ function offerRow(o, isFresh) {
 
 function openPriceForm(order) {
   const rows = order.items.map(it => {
-    const avail = h('input', { type: 'checkbox', checked: true, 'aria-label': 'Disponible: ' + it.name });
+    const avail = h('input', { type: 'checkbox', checked: true, 'aria-label': 'Disponible: ' + it.name, onchange: () => recompute() });
     const fixedQty = it.quantity || 1;
     const price = h('input', {
       type: 'number',
@@ -483,23 +483,29 @@ function openPriceForm(order) {
       required: true,
       placeholder: '0',
       'aria-label': 'Precio unitario de ' + it.name,
-      style: 'height:38px; border-radius:8px; text-align:right; font-weight:700;'
+      class: 'quote-price-input',
+      style: 'height:40px; border-radius:8px; text-align:right; font-weight:700; width:100%;'
     });
-    const sub = h('output', { class: 'subtotal' }, money(0));
+    const sub = h('output', { class: 'subtotal quote-subtotal' }, money(0));
     return { it, avail, fixedQty, price, sub, tr: null };
   });
   rows.forEach(r => {
     r.tr = h('tr', { class: 'quote-row' },
-      h('td', { class: 'q-check', 'data-label': 'Tengo' }, r.avail),
+      h('td', { class: 'q-check', 'data-label': 'Tengo' },
+        h('label', { class: 'quote-avail-wrap' },
+          r.avail,
+          h('span', { class: 'quote-avail-text' }, 'Disponible')
+        )
+      ),
       h('td', { class: 'q-name' },
         h('strong', { class: 'q-product' }, r.it.name),
         r.it.note && h('small', { class: 'muted block-line' }, r.it.note)),
       h('td', { class: 'q-qty', 'data-label': 'Cantidad solicitada' },
-        h('span', { class: 'badge tone-go', style: 'font-weight:700; border-radius:6px; font-size:12px; padding:4px 9px;' },
+        h('span', { class: 'badge tone-go quote-qty-pill', style: 'font-weight:700; border-radius:6px; font-size:12px; padding:4px 9px;' },
           r.fixedQty + (r.fixedQty === 1 ? ' unidad' : ' unidades')
         )),
       h('td', { class: 'q-price', 'data-label': 'Precio unitario (COP)' },
-        h('div', { class: 'money-field' },
+        h('div', { class: 'money-field quote-money-field' },
           h('span', { class: 'money-prefix', 'aria-hidden': 'true' }, '$'),
           r.price
         )),
@@ -535,6 +541,7 @@ function openPriceForm(order) {
   const form = h('form', {
     class: 'sheet-body quote-sheet',
     oninput: recompute,
+    onchange: recompute,
     onsubmit: async e => {
       e.preventDefault();
       const items = rows.map(r => ({ name: r.it.name, available: r.avail.checked, quantity: r.fixedQty, unitPrice: Number(r.price.value) }));
