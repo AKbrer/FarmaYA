@@ -4,6 +4,7 @@ import com.farmaya.model.DemandForecast;
 import com.farmaya.model.Order;
 import com.farmaya.model.OrderStatus;
 import com.farmaya.model.Product;
+import com.farmaya.model.User;
 import com.farmaya.repo.DemandForecastRepository;
 import com.farmaya.repo.OrderRepository;
 import com.farmaya.repo.ProductRepository;
@@ -15,6 +16,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,16 +28,18 @@ public class DemandPredictionService {
     private final DemandForecastRepository forecastRepo;
     private final OrderRepository orderRepo;
     private final ProductRepository productRepo;
+    private final MongoTemplate mongo;
 
-    public DemandPredictionService(DemandForecastRepository forecastRepo, OrderRepository orderRepo, ProductRepository productRepo) {
+    public DemandPredictionService(DemandForecastRepository forecastRepo, OrderRepository orderRepo,
+                                   ProductRepository productRepo, MongoTemplate mongo) {
         this.forecastRepo = forecastRepo;
         this.orderRepo = orderRepo;
         this.productRepo = productRepo;
+        this.mongo = mongo;
     }
 
     /**
-     * Obtiene el listado de pronosticos actuales. Si la coleccion esta vacia o
-     * desactualizada respecto a los meses cronologicos, recalcula y persiste.
+     * Obtiene el listado de pronosticos globales (uso administrativo).
      */
     public List<DemandForecast> getForecasts() {
         List<DemandForecast> existing = forecastRepo.findAllByOrderByEstimatedOrdersDesc();
@@ -41,6 +47,27 @@ public class DemandPredictionService {
             return recalculateForecasts();
         }
         return existing;
+    }
+
+    /**
+     * Calcula el pronostico de demanda exclusivo de una farmacia a partir de sus ventas reales.
+     */
+    public List<DemandForecast> getForecastsForPharmacy(User pharmacy) {
+        if (pharmacy == null || pharmacy.id == null) {
+            return List.of();
+        }
+        List<Order> pharmacyOrders = mongo.find(
+                Query.query(Criteria.where("pharmacyId").is(pharmacy.id)),
+                Order.class,
+                "pedidos"
+        );
+        List<Order> validSales = pharmacyOrders.stream()
+                .filter(o -> o.status != OrderStatus.CANCELADA && o.status != OrderStatus.RECHAZADA)
+                .toList();
+        if (validSales.isEmpty()) {
+            return List.of();
+        }
+        return computeForecasts(validSales, List.of());
     }
 
     /**
@@ -105,27 +132,40 @@ public class DemandPredictionService {
         log.info("Iniciando analisis y clasificacion de demanda mensual de medicamentos...");
         List<Order> allOrders = orderRepo.findAll();
         List<Product> catalog = productRepo.findAll();
+        List<DemandForecast> forecasts = computeForecasts(allOrders, catalog);
 
+        // Persistir en MongoDB
+        forecastRepo.deleteAll();
+        List<DemandForecast> saved = forecastRepo.saveAll(forecasts);
+        log.info("Pronosticos de demanda calculados y persistidos en MongoDB: {} medicamentos clasificados.", saved.size());
+        return saved;
+    }
+
+    /**
+     * Motor analitico compartido para calcular demanda mensual (ALTA, MEDIA, BAJA) y serie cronologica
+     * a partir de un conjunto de pedidos (global para Admin o filtrado por farmacia).
+     */
+    private List<DemandForecast> computeForecasts(List<Order> sourceOrders, List<Product> catalog) {
         Instant now = Instant.now();
         ZoneId zone = ZoneId.systemDefault();
 
         // Ventanas cronologicas exactas basadas en meses de calendario
-        YearMonth ymNow = YearMonth.now(); // Noviembre 2026
-        YearMonth ymMinus2 = ymNow.minusMonths(2); // Septiembre 2026
-        YearMonth ymMinus1 = ymNow.minusMonths(1); // Octubre 2026
-        YearMonth ymNext = ymNow.plusMonths(1); // Diciembre 2026
+        YearMonth ymNow = YearMonth.now();
+        YearMonth ymMinus2 = ymNow.minusMonths(2);
+        YearMonth ymMinus1 = ymNow.minusMonths(1);
+        YearMonth ymNext = ymNow.plusMonths(1);
 
         // Agrupar pedidos validos (no cancelados ni rechazados) por medicamento
         Map<String, List<OrderItemSample>> ordersByMed = new HashMap<>();
 
-        for (Order ord : allOrders) {
+        for (Order ord : sourceOrders) {
             if (ord.status == OrderStatus.CANCELADA || ord.status == OrderStatus.RECHAZADA) continue;
             Instant date = ord.createdAt != null ? ord.createdAt : now;
-            
+
             // Preferir items confirmados si existen
             if (ord.confirmedItems != null && !ord.confirmedItems.isEmpty()) {
                 for (Order.ConfirmedItem ci : ord.confirmedItems) {
-                    if (ci.name != null && !ci.name.isBlank()) {
+                    if (ci.available && ci.name != null && !ci.name.isBlank()) {
                         ordersByMed.computeIfAbsent(ci.name.trim(), k -> new ArrayList<>())
                                 .add(new OrderItemSample(date, ci.quantity > 0 ? ci.quantity : 1));
                     }
@@ -140,11 +180,17 @@ public class DemandPredictionService {
             }
         }
 
-        // Asegurar que todos los productos del catalogo aparezcan en el modelo
-        for (Product p : catalog) {
-            if (p.name != null && !p.name.isBlank()) {
-                ordersByMed.putIfAbsent(p.name.trim(), new ArrayList<>());
+        // En vista global (Admin), incluir todos los productos del catalogo aunque no tengan pedidos
+        if (catalog != null) {
+            for (Product p : catalog) {
+                if (p.name != null && !p.name.isBlank()) {
+                    ordersByMed.putIfAbsent(p.name.trim(), new ArrayList<>());
+                }
             }
+        }
+
+        if (ordersByMed.isEmpty()) {
+            return List.of();
         }
 
         // Etiquetas para el grafico de lineas: 2 meses anteriores + mes actual en curso + mes siguiente proyectado
@@ -185,14 +231,16 @@ public class DemandPredictionService {
             int ptMinus1 = (int) samples.stream().filter(s -> YearMonth.from(s.date.atZone(zone)).equals(ymMinus1)).count();
             int ptCurrent = (int) samples.stream().filter(s -> YearMonth.from(s.date.atZone(zone)).equals(ymNow)).count();
 
-            // Run-rate proyectado del mes actual en curso (Noviembre) a 30 dias
+            // Run-rate proyectado del mes actual en curso a 30 dias
             int projectedCurrentMonthClose = Math.max(ptCurrent, (int) Math.round((double) ptCurrent * (30.0 / currentDayOfMonth)));
 
-            // Ponderacion de demanda esperada para el proximo mes (Diciembre)
-            int estimatedOrders = Math.max(1, (int) Math.round((projectedCurrentMonthClose * 0.50) + (ptMinus1 * 0.35) + (ptMinus2 * 0.15)));
+            // Ponderacion de demanda esperada para el proximo mes basada en ventas reales
+            int weightedEst = (int) Math.round((projectedCurrentMonthClose * 0.50) + (ptMinus1 * 0.35) + (ptMinus2 * 0.15));
+            int histAvg = totalOrders > 0 ? Math.max(1, (int) Math.ceil((double) totalOrders / 2.0)) : 1;
+            int estimatedOrders = Math.max(histAvg, weightedEst);
 
             if (totalOrders == 0) {
-                // Producto sin historial previo: estimacion base segun catalogo
+                // Producto sin historial previo (solo vista global admin): estimacion base segun catalogo
                 boolean popular = med.toLowerCase().contains("ibuprofeno") || med.toLowerCase().contains("paracetamol") || med.toLowerCase().contains("acetaminof");
                 estimatedOrders = popular ? 28 : 6;
                 ptMinus2 = popular ? 22 : 5;
@@ -228,11 +276,11 @@ public class DemandPredictionService {
         // Calcular cortes de cuantiles para clasificar en ALTA, MEDIA, BAJA
         Collections.sort(orderCounts);
         int n = orderCounts.size();
-        int lowCutoff = n > 2 ? orderCounts.get(Math.max(0, n / 3)) : 8;
-        int highCutoff = n > 2 ? orderCounts.get(Math.min(n - 1, (2 * n) / 3)) : 25;
-        
+        int lowCutoff = n > 2 ? orderCounts.get(Math.max(0, n / 3)) : 1;
+        int highCutoff = n > 2 ? orderCounts.get(Math.min(n - 1, (2 * n) / 3)) : 2;
+
         if (highCutoff <= lowCutoff) {
-            highCutoff = lowCutoff + 5;
+            highCutoff = lowCutoff + 1;
         }
 
         List<DemandForecast> forecasts = new ArrayList<>();
@@ -279,13 +327,7 @@ public class DemandPredictionService {
 
         // Ordenar descendentemente por pedidos estimados
         forecasts.sort((a, b) -> Integer.compare(b.estimatedOrders, a.estimatedOrders));
-
-        // Persistir en MongoDB
-        forecastRepo.deleteAll();
-        List<DemandForecast> saved = forecastRepo.saveAll(forecasts);
-        log.info("Pronosticos de demanda calculados y persistidos en MongoDB: {} medicamentos clasificados. Periodo proyectado: {}", saved.size(), nextMonthFull);
-
-        return saved;
+        return forecasts;
     }
 
     private static class OrderItemSample {

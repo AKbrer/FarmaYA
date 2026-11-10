@@ -233,6 +233,7 @@ function pharmacyView(user) {
       { label: 'Predicción de Demanda', icon: 'ai-prediction', badge: 'IA', render: pharmacyDemandForecast },
       { label: 'Solicitudes y Despacho', icon: 'inbox', render: pharmacyOffers },
       { label: 'Mis pedidos activos', icon: 'package-check', render: pharmacyOrders },
+      { label: 'Pedidos realizados', icon: 'check', render: pharmacyCompletedOrders },
       { label: 'Kárdex de Movimientos', icon: 'history', render: () => movementHistory('/pharmacy/movements') },
       { label: 'Liquidaciones y Pagos', icon: 'wallet', badge: '95%', render: pharmacyDisbursementsView }
     ], 0));
@@ -782,6 +783,151 @@ function pharmacyAction(o) {
 }
 
 /**
+ * Pestana dedicada en el panel izquierdo: Pedidos realizados (entregados y finalizados) de esta farmacia registrada.
+ */
+function pharmacyCompletedOrders() {
+  let filterMode = 'DELIVERED'; // DELIVERED | ALL_FINAL
+  let searchQ = '';
+  let page = 1;
+  const PAGE_SIZE = 30;
+
+  return live(() => API.get('/pharmacy/orders'), orders => {
+    const FIN = ['ENTREGADO', 'ENTREGADA', 'CANCELADA', 'CANCELADO', 'VENCIDA', 'RECHAZADA'];
+    const allFinal = (orders || []).filter(o => FIN.includes(o.status));
+    const delivered = allFinal.filter(o => o.status === 'ENTREGADO' || o.status === 'ENTREGADA');
+
+    const totalGross = delivered.reduce((s, o) => s + (Number(o.total) || 0), 0);
+    const totalFee = Math.round(totalGross * 0.05);
+    const totalNet = Math.max(0, totalGross - totalFee);
+
+    const kpis = h('div', { class: 'disbursement-kpis-grid', style: 'margin-bottom: 16px;' },
+      h('div', { class: 'disbursement-kpi-card accent-green' },
+        h('div', { class: 'disbursement-kpi-head' },
+          h('span', { class: 'disbursement-kpi-label' }, 'Pedidos Entregados'),
+          h('span', { class: 'disbursement-kpi-badge badge-green' }, 'Completados')
+        ),
+        h('div', { class: 'disbursement-kpi-amount-row' },
+          h('strong', { class: 'disbursement-kpi-amount text-green' }, String(delivered.length)),
+          h('span', { class: 'disbursement-kpi-currency' }, 'pedidos')
+        )
+      ),
+      h('div', { class: 'disbursement-kpi-card accent-blue' },
+        h('div', { class: 'disbursement-kpi-head' },
+          h('span', { class: 'disbursement-kpi-label' }, 'Ventas Brutas Realizadas'),
+          h('span', { class: 'disbursement-kpi-badge badge-blue' }, '100%')
+        ),
+        h('div', { class: 'disbursement-kpi-amount-row' },
+          h('strong', { class: 'disbursement-kpi-amount' }, money(totalGross)),
+          h('span', { class: 'disbursement-kpi-currency' }, 'COP')
+        )
+      ),
+      h('div', { class: 'disbursement-kpi-card accent-amber' },
+        h('div', { class: 'disbursement-kpi-head' },
+          h('span', { class: 'disbursement-kpi-label' }, 'Tu Ingreso Neto (95%)'),
+          h('span', { class: 'disbursement-kpi-badge badge-amber' }, '-5% FarmaYA')
+        ),
+        h('div', { class: 'disbursement-kpi-amount-row' },
+          h('strong', { class: 'disbursement-kpi-amount text-green' }, money(totalNet)),
+          h('span', { class: 'disbursement-kpi-currency' }, 'COP')
+        )
+      )
+    );
+
+    if (!allFinal.length) {
+      return h('div', { class: 'stack' },
+        kpis,
+        empty('Aún no tienes pedidos realizados', 'Cuando completes la entrega de pedidos a clientes, aparecerán aquí conectados con tus liquidaciones y predicción de demanda.')
+      );
+    }
+
+    const holder = h('div', { class: 'stack' });
+    const paginationHolder = h('div');
+    const titleEl = h('h3', { class: 'disbursement-table-heading', style: 'margin:0;' });
+
+    const searchInput = h('input', {
+      type: 'search',
+      class: 'disbursement-search-input',
+      placeholder: 'Buscar por código, cliente, medicamento o dirección...',
+      value: searchQ,
+      oninput: e => {
+        searchQ = e.target.value;
+        page = 1;
+        drawCompleted();
+      }
+    });
+
+    const tabDelivered = h('button', {
+      type: 'button',
+      class: 'btn small primary',
+      onclick: () => { filterMode = 'DELIVERED'; page = 1; syncTabs(); drawCompleted(); }
+    }, 'Entregados (' + delivered.length + ')');
+
+    const tabAllFinal = h('button', {
+      type: 'button',
+      class: 'btn small secondary',
+      onclick: () => { filterMode = 'ALL_FINAL'; page = 1; syncTabs(); drawCompleted(); }
+    }, 'Todos los finalizados (' + allFinal.length + ')');
+
+    function syncTabs() {
+      tabDelivered.className = 'btn small ' + (filterMode === 'DELIVERED' ? 'primary' : 'secondary');
+      tabAllFinal.className = 'btn small ' + (filterMode === 'ALL_FINAL' ? 'primary' : 'secondary');
+    }
+
+    function drawCompleted() {
+      const baseList = filterMode === 'DELIVERED' ? delivered : allFinal;
+      const q = searchQ.toLowerCase().trim();
+      const filtered = baseList.filter(o => {
+        if (!q) return true;
+        const itemsTxt = (o.confirmedItems || o.items || []).map(i => i.name).join(' ');
+        return [o.code, o.id, o.clientName, o.address, o.city, itemsTxt].filter(Boolean).join(' ').toLowerCase().includes(q);
+      });
+
+      titleEl.textContent = 'Pedidos Realizados (' + filtered.length + ')';
+
+      if (!filtered.length) {
+        holder.replaceChildren(empty('Sin coincidencias', 'No se encontraron pedidos realizados con ese criterio.'));
+        paginationHolder.replaceChildren();
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (page > totalPages) page = totalPages;
+      const start = (page - 1) * PAGE_SIZE;
+      const paged = filtered.slice(start, start + PAGE_SIZE);
+
+      holder.replaceChildren(ordersExcelTable(paged, { showClient: true }));
+      paginationHolder.replaceChildren(
+        fyPagination(filtered.length, page, PAGE_SIZE, p => {
+          page = p;
+          drawCompleted();
+        })
+      );
+    }
+
+    syncTabs();
+    drawCompleted();
+
+    return h('div', { class: 'stack' },
+      kpis,
+      h('div', { class: 'disbursement-table-card' },
+        h('div', { class: 'disbursement-table-toolbar' },
+          h('div', { class: 'disbursement-table-title-group' },
+            titleEl,
+            h('div', { style: 'display:inline-flex; gap:6px; flex-wrap:wrap;' }, tabDelivered, tabAllFinal)
+          ),
+          h('div', { class: 'disbursement-search-wrap', style: 'max-width:340px;' },
+            h('span', { class: 'disbursement-search-icon' }, icon('search')),
+            searchInput
+          )
+        ),
+        holder,
+        paginationHolder
+      )
+    );
+  }, 4000);
+}
+
+/**
  * Vista de Predicción de Demanda Mensual basada en Machine Learning y registros de MongoDB.
  * Clasifica la demanda de cada medicamento en ALTA, MEDIA y BAJA para optimizar compras y stock.
  */
@@ -798,6 +944,17 @@ function pharmacyDemandForecast() {
     const list = data.forecasts || [];
     const summary = data.summary || { totalMedicines: list.length, alta: 0, media: 0, baja: 0 };
     const period = data.period || 'Proximo Mes';
+    const phLabel = data.pharmacyName || state.user?.pharmacyName || 'Tu Farmacia';
+
+    if (!list.length) {
+      return h('div', { class: 'stack' },
+        notice('info',
+          'Predicción de Demanda Propia · ' + phLabel,
+          'Tu farmacia aún no registra pedidos o ventas completadas suficientes para entrenar tu modelo individual de demanda. Conforme realices entregas en FarmaYA, aquí aparecerá el pronóstico calculado exclusivamente con tus ventas.'
+        ),
+        empty('Sin historial de ventas propio todavía', 'Acepta solicitudes y completa entregas para generar tus proyecciones mensuales de inventario.')
+      );
+    }
 
     // Barra de KPI cards de Prediccion de Demanda (IA FarmaYA)
     const kpis = h('div', {
@@ -1129,8 +1286,8 @@ function pharmacyDemandForecast() {
     );
 
     const infoNotice = notice('info',
-      'Clasificacion predictiva de demanda (Machine Learning)',
-      'El modelo analiza los pedidos historicos de clientes en MongoDB, frecuencias de compra y estacionalidad. Ayuda a anticipar que medicamentos tendran mayor demanda para programar pedidos a proveedores y prevenir desabastecimiento o sobreinventario.'
+      'Predicción de Demanda Propia · ' + phLabel,
+      'Este modelo analiza exclusivamente los pedidos y ventas reales registrados por ' + phLabel + ' en FarmaYA, clasificando la rotación de tus medicamentos en ALTA, MEDIA y BAJA para el próximo mes.'
     );
 
     return h('div', { class: 'stack' },
@@ -1404,9 +1561,43 @@ function pharmacyDisbursementsView() {
 
       renderHistory();
 
+      const pendingOrdersList = data.pendingOrders || [];
+      const pendingOrdersCard = h('div', { class: 'disbursement-table-card', style: 'margin-bottom: 18px;' },
+        h('div', { class: 'disbursement-table-toolbar' },
+          h('div', { class: 'disbursement-table-title-group' },
+            h('h3', { class: 'disbursement-table-heading' }, 'Pedidos Realizados Pendientes de Liquidación'),
+            h('span', { class: 'disbursement-table-badge' }, pendingOrdersList.length + ' entregados')
+          )
+        ),
+        pendingOrdersList.length
+          ? excelTable(
+              ['Código', 'Cliente', 'Fecha Entrega', { label: 'Venta Bruta (100%)', class: 'text-right' }, { label: 'Comisión 5%', class: 'text-right' }, { label: 'Neto a Recibir (95%)', class: 'text-right' }, { label: 'Detalle', class: 'text-right' }],
+              pendingOrdersList.map(o => h('tr', null,
+                h('td', { class: 'col-code' }, h('strong', { class: 'code font-mono', style: 'color:var(--primary);' }, o.code)),
+                h('td', null,
+                  h('strong', { class: 'block-line', style: 'font-size:13px;' }, o.clientName || 'Cliente FarmaYA'),
+                  o.address ? h('small', { class: 'muted block-line' }, o.address + (o.city ? ' · ' + o.city : '')) : null
+                ),
+                h('td', null, h('span', { class: 'muted small' }, o.deliveredAt ? new Date(o.deliveredAt).toLocaleDateString('es-CO') : '—')),
+                h('td', { class: 'text-right' }, money(o.total)),
+                h('td', { class: 'text-right', style: 'color:#991b1b; font-weight:600;' }, '- ' + money(o.fee5)),
+                h('td', { class: 'text-right font-bold', style: 'color:#166534;' }, money(o.net95) + ' COP'),
+                h('td', { class: 'text-right' },
+                  h('button', {
+                    type: 'button',
+                    class: 'btn secondary small',
+                    onclick: () => (window.openOrderDetail || openOrderDetail)(o.id)
+                  }, 'Ver pedido')
+                )
+              )),
+              { tableClass: 'fy-compact-excel-table' }
+            )
+          : empty('No tienes pedidos entregados pendientes de liquidación', 'Todos tus pedidos completados han sido liquidados o aún no registras entregas finalizadas.')
+      );
+
       const elements = [header];
       if (bankNotice) elements.push(bankNotice);
-      elements.push(kpis, historyContainer);
+      elements.push(kpis, pendingOrdersCard, historyCard);
 
       container.replaceChildren(...elements);
     } catch (err) {

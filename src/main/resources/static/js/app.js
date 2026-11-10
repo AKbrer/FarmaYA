@@ -3,6 +3,7 @@ const ROUTES = { CLIENTE: '#client', FARMACIA: '#pharmacy', REPARTIDOR: '#courie
 function routeForRole(role) { return ROUTES[role] || '#login'; }
 
 function renderNavbar() {
+  if (typeof window.syncChatbotVisibility === 'function') window.syncChatbotVisibility();
   const nav = document.getElementById('navHeaderActions');
   if (!nav) return;
   nav.replaceChildren();

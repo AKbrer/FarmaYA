@@ -237,21 +237,42 @@ public class DisbursementService {
             throw ApiException.forbidden("Debes iniciar sesión como farmacia.");
         }
 
-        // Pedidos pendientes de liquidar
+        // Pedidos entregados pendientes de liquidar para esta farmacia
         Query q = new Query(Criteria.where("status").is(OrderStatus.ENTREGADO)
                 .and("pharmacyId").is(pharmacy.id)
                 .and("disbursed").ne(true)
                 .and("total").gt(0.0));
-        q.fields().include("id", "code", "total");
+        q.with(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "deliveredAt", "createdAt"));
         List<Order> pendingOrders = mongo.find(q, Order.class, "pedidos");
 
         double pendingGross = 0.0;
+        List<Map<String, Object>> pendingOrderRows = new ArrayList<>();
         for (Order o : pendingOrders) {
-            pendingGross += (o.total != null ? o.total : 0.0);
+            double total = o.total != null ? o.total : 0.0;
+            double fee5 = Math.round(total * 0.05 * 100.0) / 100.0;
+            double net95 = Math.round((total - fee5) * 100.0) / 100.0;
+            pendingGross += total;
+
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", o.id);
+            row.put("code", o.code);
+            row.put("clientName", o.clientName != null ? o.clientName : "Cliente FarmaYA");
+            row.put("address", o.address != null ? o.address : "");
+            row.put("city", o.city != null ? o.city : "");
+            row.put("total", total);
+            row.put("fee5", fee5);
+            row.put("net95", net95);
+            row.put("deliveredAt", o.deliveredAt != null ? o.deliveredAt : o.createdAt);
+            pendingOrderRows.add(row);
         }
         double pendingGrossRounded = Math.round(pendingGross * 100.0) / 100.0;
         double pendingFee = Math.round(pendingGrossRounded * 0.05 * 100.0) / 100.0;
         double pendingNet = Math.round((pendingGrossRounded - pendingFee) * 100.0) / 100.0;
+
+        long completedOrdersCount = mongo.count(
+                new Query(Criteria.where("status").is(OrderStatus.ENTREGADO).and("pharmacyId").is(pharmacy.id)),
+                "pedidos"
+        );
 
         List<Disbursement> history = disbursements.findByPharmacyIdOrderByCreatedAtDesc(pharmacy.id);
 
@@ -262,9 +283,11 @@ public class DisbursementService {
 
         Map<String, Object> res = new LinkedHashMap<>();
         res.put("pendingOrdersCount", pendingOrders.size());
+        res.put("completedOrdersCount", completedOrdersCount);
         res.put("pendingGross", pendingGrossRounded);
         res.put("pendingFee", pendingFee);
         res.put("pendingNet", pendingNet);
+        res.put("pendingOrders", pendingOrderRows);
         res.put("totalDisbursedHistoric", Math.round(totalDisbursedHistoric * 100.0) / 100.0);
         res.put("bankConfigured", pharmacy.accountNumber != null && !pharmacy.accountNumber.isBlank());
         res.put("bankName", pharmacy.bankName);

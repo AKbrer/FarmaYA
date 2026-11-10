@@ -30,8 +30,26 @@ public class DemandPredictionController {
 
     @GetMapping
     public Map<String, Object> getForecast(@RequestAttribute("user") User user) {
-        List<DemandForecast> forecasts = demandService.getForecasts();
-        
+        boolean isPharmacy = user != null && user.role == Role.FARMACIA;
+        List<DemandForecast> forecasts = isPharmacy
+                ? demandService.getForecastsForPharmacy(user)
+                : demandService.getForecasts();
+        return buildResponse(forecasts, user, isPharmacy, null);
+    }
+
+    @PostMapping("/recalculate")
+    public Map<String, Object> recalculate(@RequestAttribute("user") User user) {
+        boolean isPharmacy = user != null && user.role == Role.FARMACIA;
+        List<DemandForecast> updated = isPharmacy
+                ? demandService.getForecastsForPharmacy(user)
+                : demandService.recalculateForecasts();
+        String msg = isPharmacy
+                ? "Pronóstico actualizado con las ventas reales de tu farmacia."
+                : "Pronóstico y series temporales actualizados exitosamente a partir de los pedidos de MongoDB.";
+        return buildResponse(updated, user, isPharmacy, msg);
+    }
+
+    private Map<String, Object> buildResponse(List<DemandForecast> forecasts, User user, boolean isPharmacy, String message) {
         long countAlta = forecasts.stream().filter(f -> "ALTA".equalsIgnoreCase(f.category)).count();
         long countMedia = forecasts.stream().filter(f -> "MEDIA".equalsIgnoreCase(f.category)).count();
         long countBaja = forecasts.stream().filter(f -> "BAJA".equalsIgnoreCase(f.category)).count();
@@ -47,30 +65,13 @@ public class DemandPredictionController {
         response.put("period", !forecasts.isEmpty() ? forecasts.get(0).forecastPeriod : "Próximo Mes");
         response.put("generatedAt", !forecasts.isEmpty() ? forecasts.get(0).generatedAt : null);
         response.put("chartSeries", demandService.buildAggregatedChartSeries(forecasts));
-        
-        return response;
-    }
-
-    @PostMapping("/recalculate")
-    public Map<String, Object> recalculate(@RequestAttribute("user") User user) {
-        List<DemandForecast> updated = demandService.recalculateForecasts();
-        
-        long countAlta = updated.stream().filter(f -> "ALTA".equalsIgnoreCase(f.category)).count();
-        long countMedia = updated.stream().filter(f -> "MEDIA".equalsIgnoreCase(f.category)).count();
-        long countBaja = updated.stream().filter(f -> "BAJA".equalsIgnoreCase(f.category)).count();
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("forecasts", updated);
-        response.put("summary", Map.of(
-            "totalMedicines", updated.size(),
-            "alta", countAlta,
-            "media", countMedia,
-            "baja", countBaja
-        ));
-        response.put("period", !updated.isEmpty() ? updated.get(0).forecastPeriod : "Próximo Mes");
-        response.put("generatedAt", !updated.isEmpty() ? updated.get(0).generatedAt : null);
-        response.put("chartSeries", demandService.buildAggregatedChartSeries(updated));
-        response.put("message", "Pronóstico y series temporales actualizados exitosamente a partir de los pedidos de MongoDB.");
+        response.put("scopedToPharmacy", isPharmacy);
+        if (isPharmacy && user != null) {
+            response.put("pharmacyName", user.pharmacyName != null ? user.pharmacyName : user.name);
+        }
+        if (message != null) {
+            response.put("message", message);
+        }
         return response;
     }
 }

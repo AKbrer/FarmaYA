@@ -26,6 +26,7 @@
     const root = document.createElement('div');
     root.id = 'farmabot-root';
     root.className = 'farmabot-container';
+    root.style.display = (typeof state !== 'undefined' && state.user && state.user.role === 'CLIENTE') ? '' : 'none';
 
     // Botón flotante para abrir el chat con la foto de perfil en lugar de la cruz
     const launcher = document.createElement('button');
@@ -435,10 +436,31 @@
     return Math.round(Number(n) || 0).toLocaleString('es-CO');
   }
 
+  function syncChatbotVisibility() {
+    const root = document.getElementById('farmabot-root');
+    if (!root) return;
+    const isClient = Boolean(typeof state !== 'undefined' && state.user && state.user.role === 'CLIENTE');
+    if (isClient) {
+      root.style.display = '';
+    } else {
+      root.style.display = 'none';
+      if (isOpen) {
+        isOpen = false;
+        const panel = document.getElementById('farmabot-panel');
+        if (panel) {
+          panel.style.display = 'none';
+          panel.setAttribute('aria-hidden', 'true');
+        }
+      }
+    }
+  }
+  window.syncChatbotVisibility = syncChatbotVisibility;
+
   // Inicializar al cargar el DOM
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initChatbot);
+    document.addEventListener('DOMContentLoaded', () => { initChatbot(); syncChatbotVisibility(); });
   } else {
     initChatbot();
+    syncChatbotVisibility();
   }
 })();

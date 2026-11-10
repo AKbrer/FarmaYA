@@ -294,7 +294,7 @@ public class OrderService {
     }
 
     public List<Order> mineForPharmacy(User ph) {
-        Query q = new Query(where("pharmacyId").is(ph.id)).with(Sort.by(Sort.Direction.DESC, "updatedAt")).limit(100);
+        Query q = new Query(where("pharmacyId").is(ph.id)).with(Sort.by(Sort.Direction.DESC, "updatedAt")).limit(500);
         return mongo.find(q, Order.class).stream().map(o -> present(o, ph)).toList();
     }
 
