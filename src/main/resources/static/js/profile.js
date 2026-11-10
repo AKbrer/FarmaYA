@@ -535,7 +535,7 @@ function clientOrdersView() {
               ),
               h('span', { class: 'small muted desktop-only' }, 'Actualización automática en vivo')
             ),
-            h('div', { class: 'active-orders-cards-list', style: 'display: grid; gap: 16px;' },
+            h('div', { class: 'active-orders-cards-list' },
               activeOrders.map(o => {
                 const isQuoted = o.status === 'PRECIO_POR_ACEPTAR';
                 const isSearching = o.status === 'BUSCANDO_FARMACIA' || o.status === 'SOLICITUD_ENVIADA';

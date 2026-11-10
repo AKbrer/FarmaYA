@@ -1479,7 +1479,7 @@ function adminVerificationCenter() {
     );
 
     // 2. Tarjetas para Vista Flutter (Dispositivos Moviles <= 768px)
-    const mobileCards = h('div', { class: 'mobile-only stack' }, paged.map(u => {
+    const mobileCards = h('div', { class: 'mobile-only verification-mobile-list' }, paged.map(u => {
       const isPh = u.role === 'FARMACIA';
       const docs = u.verificationDocuments || [];
 

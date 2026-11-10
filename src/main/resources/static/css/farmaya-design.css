@@ -13748,3 +13748,354 @@ body, button, input, select, textarea {
     box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35) !important;
   }
 }
+
+/* ==========================================================================
+   61. LISTAS PROTOTIPO FILA EN TODAS LAS VISTAS (SIN RECUADROS) Y FLUTTER
+   Aplica uniformemente en Cliente, Farmacia, Admin y Repartidores (Desktop + Movil)
+   ========================================================================== */
+
+/* Contenedores unificados de listas (borde exterior unico, filas divididas por linea) */
+.list,
+.orders-list,
+.offers-list,
+.active-orders-cards-list,
+.powerbi-mobile-cards-wrap,
+.disbursement-mobile-cards-wrap,
+.verification-mobile-list,
+.doc-pdf-list,
+.courier-ledger,
+.pbi-rank {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  width: 100% !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.list:empty,
+.active-orders-cards-list:empty,
+.powerbi-mobile-cards-wrap:empty,
+.disbursement-mobile-cards-wrap:empty,
+.verification-mobile-list:empty {
+  display: none !important;
+  border: none !important;
+}
+
+/* Cabecera de titulo dentro de una lista */
+.list > .list-title {
+  margin: 0 !important;
+  padding: 13px 18px !important;
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: var(--muted) !important;
+  background: var(--surface-soft) !important;
+  border-bottom: 1px solid var(--line) !important;
+}
+
+/* Sublistas dentro de tarjetas existentes (Carrito, Modal detalle, Timeline, PowerBI) */
+.cart-items,
+.cart-preview-items,
+.order-requested-items-list,
+.payment-products-list,
+ol.timeline,
+.timeline,
+.powerbi-bars-container {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  padding: 0 !important;
+  margin: 8px 0 !important;
+  background: transparent !important;
+  border-top: 1px solid var(--line) !important;
+  border-bottom: 1px solid var(--line) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
+  list-style: none !important;
+}
+
+/* Cada elemento de lista convertido en fila limpia (cero recuadros individuales) */
+.list > .order-row,
+.list > .offer,
+.list > .activity-row,
+.active-orders-cards-list > .active-order-item-card,
+.verification-mobile-list > .verification-flutter-card,
+.disbursement-mobile-cards-wrap > .disbursement-flutter-card,
+.powerbi-mobile-cards-wrap > .powerbi-flutter-card,
+.cart-items > .cart-item,
+.cart-preview-items > .cart-preview-item,
+.order-requested-items-list > .order-requested-item-card,
+.payment-products-list > .payment-product-item,
+.doc-pdf-list > .doc-pdf-item,
+ol.timeline > li,
+.timeline > .timeline-item,
+.courier-ledger > .courier-ledger-row,
+.pbi-rank > .pbi-rank-row,
+.powerbi-bars-container > .powerbi-bar-item {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border: none !important;
+  border-bottom: 1px solid var(--line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  background: transparent !important;
+  transform: none !important;
+  transition: background 0.15s ease !important;
+}
+
+.list > .order-row:last-child,
+.list > .offer:last-child,
+.list > .activity-row:last-child,
+.active-orders-cards-list > .active-order-item-card:last-child,
+.verification-mobile-list > .verification-flutter-card:last-child,
+.disbursement-mobile-cards-wrap > .disbursement-flutter-card:last-child,
+.powerbi-mobile-cards-wrap > .powerbi-flutter-card:last-child,
+.cart-items > .cart-item:last-child,
+.cart-preview-items > .cart-preview-item:last-child,
+.order-requested-items-list > .order-requested-item-card:last-child,
+.payment-products-list > .payment-product-item:last-child,
+.doc-pdf-list > .doc-pdf-item:last-child,
+ol.timeline > li:last-child,
+.timeline > .timeline-item:last-child,
+.courier-ledger > .courier-ledger-row:last-child,
+.pbi-rank > .pbi-rank-row:last-child,
+.powerbi-bars-container > .powerbi-bar-item:last-child {
+  border-bottom: none !important;
+}
+
+/* Hover sutil tipo fila de tabla / lista */
+.list > .order-row:hover,
+.list > .offer:hover,
+.list > .activity-row:hover,
+.active-orders-cards-list > .active-order-item-card:hover,
+.courier-ledger > .courier-ledger-row:hover,
+.pbi-rank > .pbi-rank-row:hover,
+.powerbi-bars-container > .powerbi-bar-item:hover {
+  background: rgba(22, 134, 93, 0.035) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+[data-theme="dark"] .list > .order-row:hover,
+[data-theme="dark"] .list > .offer:hover,
+[data-theme="dark"] .list > .activity-row:hover,
+[data-theme="dark"] .active-orders-cards-list > .active-order-item-card:hover,
+[data-theme="dark"] .courier-ledger > .courier-ledger-row:hover {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Disposicion horizontal limpia para filas de pedidos (.order-row) en Escritorio */
+.list > .order-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 14px 20px !important;
+}
+
+.list > .order-row > .bar {
+  display: none !important;
+}
+
+.list > .order-row .row-main {
+  flex: 1 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 3px !important;
+}
+
+.list > .order-row .row-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  flex-wrap: wrap !important;
+}
+
+.list > .order-row .row-side {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-shrink: 0 !important;
+  text-align: right !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Filas de solicitudes/ofertas en Farmacia y Repartidores (.offer) */
+.list > .offer {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  padding: 16px 20px !important;
+}
+
+.list > .offer.fresh {
+  border-left: 4px solid var(--primary) !important;
+  background: rgba(22, 134, 93, 0.045) !important;
+}
+
+.list > .offer dl.facts {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px 24px !important;
+  padding: 8px 0 !important;
+  margin: 2px 0 !important;
+  border-top: 1px dashed var(--line) !important;
+  border-bottom: 1px dashed var(--line) !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.list > .offer dl.facts > div {
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  min-width: 150px;
+}
+
+.list > .offer .courier-offer-payout-highlight {
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  background: rgba(22, 134, 93, 0.06) !important;
+  border: none !important;
+  border-left: 3px solid var(--primary) !important;
+}
+
+/* Filas de pedidos activos en Cliente (.active-order-item-card) y Actividad (.activity-row) */
+.active-orders-cards-list > .active-order-item-card {
+  padding: 16px 20px !important;
+}
+
+.list > .activity-row {
+  padding: 12px 18px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+/* Filas de Carrito, Productos Solicitados, Expediente PDF, Ranking y Kardex */
+.cart-items > .cart-item,
+.cart-preview-items > .cart-preview-item,
+.order-requested-items-list > .order-requested-item-card,
+.payment-products-list > .payment-product-item,
+.doc-pdf-list > .doc-pdf-item {
+  padding: 11px 12px !important;
+}
+
+ol.timeline > li,
+.timeline > .timeline-item {
+  padding: 11px 12px !important;
+}
+
+.courier-ledger > .courier-ledger-row,
+.pbi-rank > .pbi-rank-row,
+.powerbi-bars-container > .powerbi-bar-item {
+  padding: 12px 16px !important;
+}
+
+/* ==========================================================================
+   ADAPTACION VISTA FLUTTER (MOVIL <= 768px) - PROTOTIPO FILA LIMPIO
+   ========================================================================== */
+@media (max-width: 768px) {
+  .list,
+  .orders-list,
+  .offers-list,
+  .active-orders-cards-list,
+  .powerbi-mobile-cards-wrap,
+  .disbursement-mobile-cards-wrap,
+  .verification-mobile-list,
+  .doc-pdf-list,
+  .courier-ledger,
+  .pbi-rank {
+    gap: 0 !important;
+    border-radius: 14px !important;
+    border: 1px solid var(--line) !important;
+    background: var(--surface) !important;
+    overflow: hidden !important;
+  }
+
+  .list > .list-title {
+    padding: 11px 14px !important;
+    font-size: 11.5px !important;
+  }
+
+  /* Todas las filas en vista Flutter: divisores hairline continuos, sin recuadros */
+  .list > .order-row,
+  .list > .offer,
+  .list > .activity-row,
+  .active-orders-cards-list > .active-order-item-card,
+  .verification-mobile-list > .verification-flutter-card,
+  .disbursement-mobile-cards-wrap > .disbursement-flutter-card,
+  .powerbi-mobile-cards-wrap > .powerbi-flutter-card {
+    padding: 14px 14px !important;
+    border: none !important;
+    border-bottom: 1px solid var(--line) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    background: transparent !important;
+    gap: 8px !important;
+  }
+
+  .list > .offer.fresh {
+    border-left: 4px solid var(--primary) !important;
+    background: rgba(22, 134, 93, 0.045) !important;
+  }
+
+  .list > .order-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .list > .order-row .row-side {
+    width: 100% !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    text-align: left !important;
+    margin-top: 4px !important;
+    padding-top: 8px !important;
+    border-top: 1px dashed var(--line) !important;
+  }
+
+  /* Limpiar sub-recuadros internos dentro de filas Flutter */
+  .verification-flutter-meta-list,
+  .disbursement-flutter-bank-box,
+  .powerbi-flutter-card-fin,
+  .disbursement-flutter-fin-grid {
+    background: transparent !important;
+    border: none !important;
+    border-top: 1px dashed var(--line) !important;
+    border-radius: 0 !important;
+    padding: 8px 0 0 0 !important;
+    margin-top: 2px !important;
+  }
+
+  .disbursement-flutter-fin-item {
+    background: transparent !important;
+    border: none !important;
+    padding: 4px 0 !important;
+  }
+
+  .list > .activity-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+}
