@@ -99,6 +99,46 @@ function adminPowerBiDashboard() {
       const avgEarnings = avgCommission;
 
       // Banner superior Power BI
+      function downloadAdminDashboardPdf() {
+        if (typeof fyDownloadAdminDashboardPdf !== 'function') {
+          if (typeof toast === 'function') toast('El generador de PDF aun se esta inicializando.', 'warn');
+          else alert('Generador de PDF no disponible');
+          return;
+        }
+        const periodMap = {
+          'ALL': 'Historico Completo',
+          'TODAY': 'Hoy',
+          '7D': 'Ultimos 7 Dias',
+          '30D': 'Ultimos 30 Dias'
+        };
+        const statusMap = {
+          'ALL_PAID': 'Todos los Monetizados (Pagados)',
+          'ENTREGADO': 'Solo Entregados con Exito',
+          'IN_PROGRESS': 'En Curso (En preparacion / En camino)'
+        };
+        const genDate = new Intl.DateTimeFormat('es-CO', {
+          dateStyle: 'long',
+          timeStyle: 'short',
+          timeZone: 'America/Bogota'
+        }).format(new Date());
+
+        fyDownloadAdminDashboardPdf({
+          periodLabel: periodMap[powerBiPeriod] || powerBiPeriod,
+          pharmacyLabel: (!powerBiPharmacy || powerBiPharmacy === 'ALL') ? 'Todas las Farmacias Aliadas' : powerBiPharmacy,
+          statusLabel: statusMap[powerBiStatus] || powerBiStatus,
+          totalGross,
+          totalEarnings,
+          totalPharmacyNet,
+          totalOrdersCount,
+          avgTicket,
+          avgEarnings,
+          pharmacyRanking,
+          orders: filtered,
+          generated: genDate
+        });
+        if (typeof toast === 'function') toast('Informe PDF del Dashboard generado exitosamente.', 'success');
+      }
+
       const headerBanner = h('div', { class: 'powerbi-banner' },
         h('div', { class: 'powerbi-banner-left' },
           h('div', { class: 'powerbi-banner-title-row' },
@@ -118,7 +158,13 @@ function adminPowerBiDashboard() {
             h('span', { class: 'callout-label' }, 'Comision FarmaYA'),
             h('strong', { class: 'callout-rate' }, '5%'),
             h('span', { class: 'callout-sub' }, 'Retencion por pedido')
-          )
+          ),
+          h('button', {
+            type: 'button',
+            class: 'btn primary small powerbi-export-pdf-btn',
+            style: 'margin-top: 8px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-weight: 700; box-shadow: 0 2px 6px rgba(0,78,70,0.18);',
+            onclick: () => downloadAdminDashboardPdf()
+          }, icon('file-down'), h('span', null, 'Descargar Informe PDF'))
         )
       );
 
@@ -636,9 +682,17 @@ function adminPowerBiDashboard() {
             h('h3', { class: 'powerbi-matrix-title' }, 'Matriz Detallada de Liquidación (Comisión 5% FarmaYA)'),
             matrixSubtitle
           ),
-          h('div', { class: 'powerbi-card-search-wrap', style: 'margin:0; min-width:260px;' },
-            h('span', { class: 'search-ico' }, icon('search')),
-            matrixSearchInput
+          h('div', { style: 'display:flex; align-items:center; gap:8px; flex-wrap:wrap;' },
+            h('button', {
+              type: 'button',
+              class: 'btn secondary small',
+              style: 'display:inline-flex; align-items:center; gap:6px; font-weight:600; white-space:nowrap;',
+              onclick: () => downloadAdminDashboardPdf()
+            }, icon('file-down'), 'Exportar PDF'),
+            h('div', { class: 'powerbi-card-search-wrap', style: 'margin:0; min-width:240px;' },
+              h('span', { class: 'search-ico' }, icon('search')),
+              matrixSearchInput
+            )
           )
         ),
         // Tabla Excel unificada (Escritorio + Flutter Movil)

@@ -764,6 +764,308 @@ function fyDownloadOrderInvoicePdf(o) {
   fyDownloadBytes(bytes, 'FarmaYa_Factura_' + (o.code || o.id || 'pedido') + '.pdf', 'application/pdf');
 }
 
+/**
+ * Construye el informe ejecutivo del Dashboard de Administrador en PDF con logo institucional,
+ * KPIs de ganancia 5% FarmaYA, distribucion por farmacias y matriz de liquidacion.
+ */
+function fyBuildAdminDashboardPdf(d, helpers = {}) {
+  const pdf = fyPdfDoc();
+  const M = 40, CW = pdf.W - 2 * M;
+  const C = {
+    primary: '#004e46',
+    primarySoft: '#e2f7eb',
+    lime: '#74c043',
+    blue: '#0a5ca8',
+    blueSoft: '#f0f7ff',
+    purple: '#6b21a8',
+    purpleSoft: '#faf5ff',
+    amber: '#d97706',
+    amberSoft: '#fffbeb',
+    dark: '#0f172a',
+    muted: '#5d6f65',
+    line: '#dbe6df',
+    white: '#ffffff',
+    rowEven: '#f8fafc'
+  };
+
+  const fmtM = helpers.money || ((v) => '$' + Math.round(Number(v) || 0).toLocaleString('es-CO'));
+  const fmtD = helpers.date || ((iso) => iso ? new Date(iso).toLocaleDateString('es-CO') : '-');
+
+  const orders = Array.isArray(d.orders) ? d.orders : [];
+  const ranking = Array.isArray(d.pharmacyRanking) ? d.pharmacyRanking : [];
+  const totalGross = Number(d.totalGross) || 0;
+  const totalEarnings = Number(d.totalEarnings) || 0;
+  const totalNet = Number(d.totalPharmacyNet) || 0;
+  const totalCount = Number(d.totalOrdersCount) || orders.length;
+  const avgTicket = Number(d.avgTicket) || (totalCount > 0 ? Math.round(totalGross / totalCount) : 0);
+
+  /* ========================================================
+     PAGINA 1: RESUMEN EJECUTIVO FINANCIERO Y ANALITICA
+     ======================================================== */
+  pdf.page();
+
+  // Header superior blanco con doble ribete esmeralda y lima
+  pdf.rect(0, 0, pdf.W, 76, C.white);
+  pdf.rect(0, 76, pdf.W, 2.5, C.primary);
+  pdf.rect(0, 78.5, pdf.W, 2.5, C.lime);
+
+  // Logo oficial FarmaYA (PNG transparente con mascara alfa SMask)
+  pdf.logo(M, 16, 140, 24.2);
+
+  // Subtitulo bajo el logo
+  pdf.text('Consolidado Ejecutivo - Panel Central de Administracion', M, 58, { size: 9, bold: true, color: C.muted });
+
+  // Informacion a la derecha
+  pdf.text('INFORME FINANCIERO Y ANALITICA', pdf.W - M, 34, { size: 12, bold: true, color: C.primary, align: 'right' });
+  pdf.text('Generado el ' + (d.generated || fmtD(new Date())), pdf.W - M, 49, { size: 9, color: C.muted, align: 'right' });
+  pdf.text('FarmaYA S.A.S. - NIT 901.849.201-4', pdf.W - M, 63, { size: 8, color: C.muted, align: 'right' });
+
+  // Cinta de Parametros y Filtros
+  let y = 92;
+  pdf.rect(M, y, CW, 24, '#f8fafc');
+  pdf.line(M, y, M + CW, y, C.line);
+  pdf.line(M, y + 24, M + CW, y + 24, C.line);
+  pdf.text('PARAMETROS:', M + 10, y + 15, { size: 8, bold: true, color: C.primary });
+  const paramText = 'Periodo: ' + (d.periodLabel || 'Historico') + '   |   Farmacia: ' + (d.pharmacyLabel || 'Todas') + '   |   Estado: ' + (d.statusLabel || 'Monetizados');
+  pdf.text(pdf.fit(paramText, CW - 100, 8.5, false), M + 80, y + 15, { size: 8.5, color: C.dark });
+
+  // 4 KPI Tiles Ejecutivos
+  y = 126;
+  const kw = (CW - 30) / 4;
+  const kpis = [
+    { title: 'GANANCIA FARMAYA (5%)', val: fmtM(totalEarnings), sub: 'Retencion 5.0% neta', bg: C.primarySoft, border: C.primary, col: C.primary },
+    { title: 'VENTAS TOTALES (GMV)', val: fmtM(totalGross), sub: '100% Volumen bruto', bg: C.blueSoft, border: C.blue, col: C.blue },
+    { title: 'LIQUIDACION ALIADOS (95%)', val: fmtM(totalNet), sub: '95.0% Transferido', bg: C.purpleSoft, border: C.purple, col: C.purple },
+    { title: 'PEDIDOS MONETIZADOS', val: String(totalCount), sub: 'Ticket prom: ' + fmtM(avgTicket), bg: C.amberSoft, border: C.amber, col: C.amber }
+  ];
+
+  kpis.forEach((k, i) => {
+    const kx = M + i * (kw + 10);
+    pdf.rect(kx, y, kw, 54, k.bg);
+    pdf.rect(kx, y, 4, 54, k.border);
+    pdf.text(k.title, kx + 10, y + 17, { size: 7.5, bold: true, color: C.muted });
+    pdf.text(pdf.fit(k.val, kw - 16, 13, true), kx + 10, y + 36, { size: 13, bold: true, color: k.col });
+    pdf.text(k.sub, kx + 10, y + 48, { size: 7, color: C.muted });
+  });
+
+  // Visual A: Ranking de Farmacias Aliadas por Ventas y Comision
+  y = 196;
+  pdf.text('Rendimiento y Liquidacion por Farmacia Aliada', M, y, { size: 11.5, bold: true, color: C.primary });
+  pdf.text('Desglose de participacion comercial y comision del 5% retenida por FarmaYA', M, y + 14, { size: 8.5, color: C.muted });
+  pdf.line(M, y + 20, M + CW, y + 20, C.line);
+
+  let ry = y + 26;
+  // Encabezados tabla farmacias
+  pdf.rect(M, ry, CW, 18, C.primary);
+  pdf.text('Farmacia Aliada', M + 8, ry + 12.5, { size: 8, bold: true, color: C.white });
+  pdf.text('Pedidos', M + 210, ry + 12.5, { size: 8, bold: true, color: C.white, align: 'right' });
+  pdf.text('Venta Bruta (GMV)', M + 310, ry + 12.5, { size: 8, bold: true, color: C.white, align: 'right' });
+  pdf.text('Comision 5%', M + 410, ry + 12.5, { size: 8, bold: true, color: C.white, align: 'right' });
+  pdf.text('Neto Aliado (95%)', M + CW - 8, ry + 12.5, { size: 8, bold: true, color: C.white, align: 'right' });
+  ry += 18;
+
+  const topPharmacies = ranking.slice(0, 7);
+  if (!topPharmacies.length) {
+    pdf.text('No hay farmacias aliadas registradas para los filtros aplicados.', M + 8, ry + 16, { size: 9, color: C.muted });
+    ry += 28;
+  } else {
+    topPharmacies.forEach((p, idx) => {
+      if (idx % 2 === 1) pdf.rect(M, ry, CW, 18, C.rowEven);
+      pdf.line(M, ry + 18, M + CW, ry + 18, C.line, 0.3);
+      pdf.text(pdf.fit(p.name, 190, 8.5, false), M + 8, ry + 12.5, { size: 8.5, color: C.dark });
+      pdf.text(String(p.count || 0), M + 210, ry + 12.5, { size: 8.5, color: C.dark, align: 'right' });
+      pdf.text(fmtM(p.gross || 0), M + 310, ry + 12.5, { size: 8.5, bold: true, color: C.primary, align: 'right' });
+      pdf.text(fmtM(p.earnings || Math.round((p.gross || 0) * 0.05)), M + 410, ry + 12.5, { size: 8.5, bold: true, color: C.amber, align: 'right' });
+      const pNet = Math.max(0, (p.gross || 0) - (p.earnings || Math.round((p.gross || 0) * 0.05)));
+      pdf.text(fmtM(pNet), M + CW - 8, ry + 12.5, { size: 8.5, bold: true, color: C.primary, align: 'right' });
+      ry += 18;
+    });
+  }
+
+  // Visual B: Desglose por Medios de Pago y Estado
+  y = ry + 16;
+  pdf.text('Canales de Pago y Estado de Cumplimiento', M, y, { size: 11.5, bold: true, color: C.primary });
+  pdf.line(M, y + 8, M + CW, y + 8, C.line);
+
+  const methodsMap = {};
+  const statusMap = {};
+  orders.forEach(o => {
+    const m = o.paymentMethod || o.method || 'Pasarela Wompi';
+    methodsMap[m] = (methodsMap[m] || 0) + (Number(o.total) || 0);
+    const st = o.status || 'PROCESADO';
+    statusMap[st] = (statusMap[st] || 0) + 1;
+  });
+
+  const gw = (CW - 16) / 2;
+  // Tarjeta 1: Medios de Pago
+  pdf.rect(M, y + 16, gw, 114, '#f8fafc');
+  pdf.line(M, y + 16, M + gw, y + 16, C.blue, 2);
+  pdf.text('RECAUDO POR CANAL DE PAGO', M + 12, y + 32, { size: 8, bold: true, color: C.muted });
+  let my = y + 48;
+  const methodKeys = Object.keys(methodsMap);
+  if (!methodKeys.length) {
+    pdf.text('Sin registros de pago.', M + 12, my, { size: 8.5, color: C.muted });
+  } else {
+    methodKeys.slice(0, 4).forEach(mk => {
+      const v = methodsMap[mk];
+      const pct = totalGross > 0 ? Math.round(v * 100 / totalGross) : 0;
+      pdf.text(pdf.fit(mk, gw - 110, 8, false), M + 12, my, { size: 8, color: C.dark });
+      pdf.text(fmtM(v) + ' (' + pct + '%)', M + gw - 12, my, { size: 8, bold: true, color: C.primary, align: 'right' });
+      my += 16;
+    });
+  }
+
+  // Tarjeta 2: Cumplimiento y Estados de Operacion
+  const bx2 = M + gw + 16;
+  pdf.rect(bx2, y + 16, gw, 114, '#f8fafc');
+  pdf.line(bx2, y + 16, bx2 + gw, y + 16, C.lime, 2);
+  pdf.text('ESTADO DE LOS PEDIDOS', bx2 + 12, y + 32, { size: 8, bold: true, color: C.muted });
+  let sy = y + 48;
+  const statusKeys = Object.keys(statusMap);
+  if (!statusKeys.length) {
+    pdf.text('Sin pedidos registrados.', bx2 + 12, sy, { size: 8.5, color: C.muted });
+  } else {
+    statusKeys.slice(0, 4).forEach(sk => {
+      const cnt = statusMap[sk];
+      const pct = totalCount > 0 ? Math.round(cnt * 100 / totalCount) : 0;
+      pdf.text(pdf.fit(sk, gw - 100, 8, false), bx2 + 12, sy, { size: 8, color: C.dark });
+      pdf.text(cnt + ' pedidos (' + pct + '%)', bx2 + gw - 12, sy, { size: 8, bold: true, color: C.dark, align: 'right' });
+      sy += 16;
+    });
+  }
+
+  // Footer institucional de Pagina 1
+  pdf.line(M, 808, M + CW, 808, C.lime, 1);
+  pdf.text('FarmaYA S.A.S. - NIT 901.849.201-4 - Plataforma Tecnologica y de Salud a Domicilio', M, 824, { size: 8, color: C.muted });
+  pdf.text('Pagina 1', M + CW, 824, { size: 8, color: C.muted, align: 'right' });
+
+  /* ========================================================
+     PAGINA 2+: MATRIZ DETALLADA DE LIQUIDACION Y PEDIDOS
+     ======================================================== */
+  if (orders.length > 0) {
+    pdf.page();
+
+    function drawSubPageHeader(title) {
+      pdf.rect(0, 0, pdf.W, 46, C.white);
+      pdf.rect(0, 46, pdf.W, 2, C.primary);
+      pdf.rect(0, 48, pdf.W, 2, C.lime);
+      pdf.logo(M, 11, 112, 19.4);
+      pdf.text(title, M + 130, 27, { size: 10, bold: true, color: C.primary });
+    }
+
+    drawSubPageHeader('Matriz Detallada de Liquidacion y Pedidos - ' + (d.periodLabel || 'Consolidado'));
+
+    pdf.text('Auditoria de Transacciones y Liquidaciones', M, 72, { size: 12.5, bold: true, color: C.primary });
+    pdf.text('Mostrando ' + orders.length + ' pedidos monetizados con retencion del 5% FarmaYA', M, 86, { size: 8.5, color: C.muted });
+
+    const cols = [
+      { t: 'Codigo', w: 72 },
+      { t: 'Fecha', w: 60 },
+      { t: 'Farmacia Aliada', w: 110 },
+      { t: 'Cliente', w: 90 },
+      { t: 'Medio', w: 60 },
+      { t: 'Bruto (100%)', w: 62, right: true },
+      { t: '5% FarmaYA', w: 61, right: true }
+    ];
+
+    function tableHead(hy) {
+      pdf.rect(M, hy, CW, 18, C.primary);
+      let cx = M;
+      cols.forEach(c => {
+        if (c.right) pdf.text(c.t, cx + c.w - 6, hy + 12.5, { size: 7.5, bold: true, color: C.white, align: 'right' });
+        else pdf.text(c.t, cx + 6, hy + 12.5, { size: 7.5, bold: true, color: C.white });
+        cx += c.w;
+      });
+    }
+
+    let ty = 98;
+    tableHead(ty);
+    ty += 18;
+
+    let pageNum = 2;
+    orders.forEach((o, i) => {
+      if (ty + 18 > 790) {
+        // Footer de la pagina actual
+        pdf.line(M, 808, M + CW, 808, C.lime, 1);
+        pdf.text('FarmaYA S.A.S. - NIT 901.849.201-4 - Auditoria de Liquidaciones', M, 824, { size: 8, color: C.muted });
+        pdf.text('Pagina ' + pageNum, M + CW, 824, { size: 8, color: C.muted, align: 'right' });
+
+        pdf.page();
+        pageNum++;
+        drawSubPageHeader('Matriz Detallada de Liquidacion (continuacion)');
+        ty = 60;
+        tableHead(ty);
+        ty += 18;
+      }
+
+      if (i % 2 === 1) pdf.rect(M, ty, CW, 18, C.rowEven);
+      pdf.line(M, ty + 18, M + CW, ty + 18, C.line, 0.3);
+
+      const oGross = Number(o.total) || 0;
+      const oFee = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(oGross * 0.05);
+
+      const cells = [
+        o.code || o.id || '-',
+        fmtD(o.createdAt || o.deliveredAt),
+        o.pharmacyName || 'Sin asignar',
+        o.clientName || 'Cliente FarmaYA',
+        o.paymentMethod || o.method || 'Wompi',
+        fmtM(oGross),
+        fmtM(oFee)
+      ];
+
+      let cx = M;
+      cols.forEach((c, k) => {
+        const txt = pdf.fit(cells[k], c.w - 10, 7.5, false);
+        if (c.right) {
+          pdf.text(txt, cx + c.w - 6, ty + 12, {
+            size: 7.5,
+            align: 'right',
+            bold: k >= 5,
+            color: k === 6 ? C.amber : (k === 5 ? C.primary : C.dark)
+          });
+        } else {
+          pdf.text(txt, cx + 6, ty + 12, {
+            size: 7.5,
+            color: k === 0 ? C.primary : C.dark,
+            bold: k === 0
+          });
+        }
+        cx += c.w;
+      });
+
+      ty += 18;
+    });
+
+    // Fila de Totales en la ultima pagina
+    if (ty + 30 > 790) {
+      pdf.page();
+      pageNum++;
+      drawSubPageHeader('Resumen de Totales Generales');
+      ty = 60;
+    }
+    pdf.rect(M, ty + 4, CW, 22, C.primarySoft);
+    pdf.line(M, ty + 4, M + CW, ty + 4, C.primary, 1.5);
+    pdf.text('TOTAL CONSOLIDADO (' + orders.length + ' PEDIDOS):', M + 14, ty + 18, { size: 8.5, bold: true, color: C.primary });
+    pdf.text('Bruto: ' + fmtM(totalGross), M + CW - 180, ty + 18, { size: 9, bold: true, color: C.primary, align: 'right' });
+    pdf.text('FarmaYA (5%): ' + fmtM(totalEarnings), M + CW - 10, ty + 18, { size: 9, bold: true, color: C.amber, align: 'right' });
+
+    // Footer de la ultima pagina
+    pdf.line(M, 808, M + CW, 808, C.lime, 1);
+    pdf.text('FarmaYA S.A.S. - NIT 901.849.201-4 - Documento Oficial Certificado', M, 824, { size: 8, color: C.muted });
+    pdf.text('Pagina ' + pageNum, M + CW, 824, { size: 8, color: C.muted, align: 'right' });
+  }
+
+  return pdf.build('Informe FarmaYA Admin - ' + (d.periodLabel || 'General'));
+}
+
+function fyDownloadAdminDashboardPdf(d, helpers) {
+  const bytes = fyBuildAdminDashboardPdf(d, helpers);
+  const nowStr = new Date().toISOString().slice(0, 10);
+  const safeLabel = String(d.periodLabel || 'Consolidado').replace(/[^\w\d-_]+/g, '_');
+  fyDownloadBytes(bytes, 'FarmaYa_Informe_Admin_' + safeLabel + '_' + nowStr + '.pdf', 'application/pdf');
+}
+
 
 /** Descarga un arreglo de bytes como archivo. */
 function fyDownloadBytes(bytes, filename, mime) {
