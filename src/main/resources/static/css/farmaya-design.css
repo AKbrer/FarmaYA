@@ -163,9 +163,11 @@ button, input, textarea, select {
 }
 
 body:has(.side-nav-layout) .app-container {
-  width: calc(100% - 250px);
-  max-width: 1600px;
-  margin: 0 0 0 250px;
+  width: calc(100% - 250px) !important;
+  max-width: calc(100% - 250px) !important;
+  margin: 0 0 0 250px !important;
+  padding: 22px 32px 60px 32px !important;
+  box-sizing: border-box !important;
 }
 
 .page-title, h1, h2, h3 {
@@ -201,8 +203,8 @@ a {
    4. HEADER — Altura y presencia generosa, logo nítido y acciones amplias
    ========================================================================== */
 .site-header {
-  padding: 16px clamp(20px, 4vw, 64px);
-  min-height: 82px;
+  padding: 6px clamp(16px, 3.5vw, 40px);
+  min-height: 54px;
   background: rgba(255, 255, 255, .94);
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
@@ -223,19 +225,23 @@ a {
 
 .brand {
   color: var(--text);
-  font-size: 26px;
-  gap: 14px;
+  font-size: 24px;
+  gap: 12px;
 }
 
 .brand-image {
-  width: 210px;
-  height: 60px;
+  width: auto;
+  max-width: 220px;
+  height: 38px;
+  max-height: 38px;
   display: flex;
   align-items: center;
 }
 .brand-image img {
-  width: 100%;
-  height: 100%;
+  width: auto;
+  max-width: 220px;
+  height: 38px;
+  max-height: 38px;
   object-fit: contain;
   object-position: left center;
 }
@@ -2180,8 +2186,10 @@ dialog.sheet.drawer::backdrop {
    ========================================================================== */
 .brand-image,
 [data-theme="dark"] .brand-image {
-  width: 210px !important;
-  height: 60px !important;
+  width: auto !important;
+  max-width: 220px !important;
+  height: 38px !important;
+  max-height: 38px !important;
   display: flex !important;
   align-items: center !important;
   background: transparent !important;
@@ -2193,8 +2201,10 @@ dialog.sheet.drawer::backdrop {
 
 .brand-image img,
 [data-theme="dark"] .brand-image img {
-  width: 100% !important;
-  height: 100% !important;
+  width: auto !important;
+  max-width: 220px !important;
+  height: 38px !important;
+  max-height: 38px !important;
   display: block !important;
   background: transparent !important;
   border: 0 !important;
@@ -3621,17 +3631,17 @@ dialog.sheet.drawer::backdrop {
 /* --- 48.11 KPIs Administrativos Centrales (Stitch Screen 11) --- */
 .stitch-admin-kpis-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  margin-bottom: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
 }
 
 .stitch-admin-kpi-card {
-  padding: 16px;
-  border-radius: 14px;
+  padding: 20px 22px;
+  border-radius: 16px;
   background: var(--surface);
   border: 1px solid var(--line);
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
 }
 
 .kpi-top {
@@ -5160,15 +5170,15 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
     width: auto !important;
     flex: 0 0 auto !important;
     white-space: nowrap !important;
-    padding: 8px 14px !important;
+    padding: 9px 16px !important;
     border-radius: 999px !important;
-    font-size: 12.5px !important;
+    font-size: 13.5px !important;
     font-weight: 700 !important;
     background: var(--surface-soft) !important;
     border: 1px solid var(--line) !important;
     color: var(--muted) !important;
-    gap: 6px !important;
-    min-height: 38px !important;
+    gap: 7px !important;
+    min-height: 40px !important;
     transition: all 0.15s ease !important;
   }
 
@@ -6340,7 +6350,7 @@ body:has(.side-nav-layout) #fy_global_footer {
 .farmaya-split-footer {
   margin: 0 !important;
   width: 100% !important;
-  min-height: clamp(240px, 28vh, 320px) !important;
+  min-height: auto !important;
   position: relative !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
@@ -6365,8 +6375,32 @@ body:has(.side-nav-layout) #fy_global_footer {
   box-sizing: border-box !important;
 }
 
+@media (max-width: 1100px) {
+  .farmaya-split-container {
+    grid-template-columns: 1fr !important;
+  }
+  .split-half.left-half {
+    border-right: none !important;
+    border-bottom: 1px solid var(--line) !important;
+  }
+}
+
+body:has(.side-nav-layout) .farmaya-split-container {
+  grid-template-columns: 1fr 1fr !important;
+}
+
+@media (max-width: 1260px) {
+  body:has(.side-nav-layout) .farmaya-split-container {
+    grid-template-columns: 1fr !important;
+  }
+  body:has(.side-nav-layout) .split-half.left-half {
+    border-right: none !important;
+    border-bottom: 1px solid var(--line) !important;
+  }
+}
+
 .split-half {
-  padding: 24px clamp(20px, 4vw, 56px) !important;
+  padding: 30px clamp(20px, 4vw, 56px) !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
@@ -6433,38 +6467,38 @@ body:has(.side-nav-layout) #fy_global_footer {
 }
 
 .split-heading {
-  font-size: clamp(18px, 1.8vw, 23px) !important;
+  font-size: clamp(20px, 2.2vw, 25px) !important;
   font-weight: 800 !important;
-  margin: 0 0 4px 0 !important;
+  margin: 0 0 6px 0 !important;
   color: var(--text) !important;
   letter-spacing: -0.02em !important;
   line-height: 1.25 !important;
 }
 
 .split-desc {
-  font-size: 13px !important;
+  font-size: 14px !important;
   color: var(--muted) !important;
-  line-height: 1.45 !important;
-  margin: 0 0 12px 0 !important;
-  max-width: 620px !important;
+  line-height: 1.55 !important;
+  margin: 0 0 16px 0 !important;
+  max-width: 680px !important;
 }
 
 .split-cards-row {
   display: grid !important;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
-  gap: 12px !important;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)) !important;
+  gap: 14px !important;
   width: 100% !important;
 }
 
 .split-contact-card {
   display: flex !important;
   align-items: flex-start !important;
-  gap: 12px !important;
-  padding: 12px 16px !important;
-  border-radius: 12px !important;
+  gap: 14px !important;
+  padding: 16px 18px !important;
+  border-radius: 14px !important;
   background: var(--surface) !important;
   border: 1px solid var(--line) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
   box-sizing: border-box !important;
   width: 100% !important;
 }
@@ -6476,9 +6510,9 @@ body:has(.side-nav-layout) #fy_global_footer {
 }
 
 .split-ico-circle {
-  width: 38px !important;
-  height: 38px !important;
-  border-radius: 10px !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 12px !important;
   background: rgba(22, 134, 93, 0.14) !important;
   color: #16865d !important;
   display: grid !important;
@@ -6503,23 +6537,23 @@ body:has(.side-nav-layout) #fy_global_footer {
 
 .split-ico-circle svg,
 .split-mini-ico svg {
-  width: 20px !important;
-  height: 20px !important;
+  width: 22px !important;
+  height: 22px !important;
 }
 
 .split-label {
   display: block !important;
-  font-size: 11px !important;
+  font-size: 11.5px !important;
   text-transform: uppercase !important;
   letter-spacing: 0.05em !important;
   font-weight: 700 !important;
   color: var(--muted) !important;
-  margin-bottom: 2px !important;
+  margin-bottom: 3px !important;
 }
 
 .split-val {
   display: block !important;
-  font-size: 15.5px !important;
+  font-size: 16.5px !important;
   font-weight: 800 !important;
   color: #16865d !important;
   text-decoration: none !important;
@@ -6539,9 +6573,9 @@ body:has(.side-nav-layout) #fy_global_footer {
 
 .split-sub {
   display: block !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   color: var(--muted) !important;
-  margin-top: 2px !important;
+  margin-top: 3px !important;
 }
 
 @media (max-width: 900px) {
@@ -6557,7 +6591,7 @@ body:has(.side-nav-layout) #fy_global_footer {
 .farmaya-split-footer-bar {
   border-top: 1px solid var(--line);
   background: var(--surface);
-  padding: 16px 5vw;
+  padding: 18px 5vw;
 }
 
 .split-footer-bar-inner {
@@ -6565,10 +6599,10 @@ body:has(.side-nav-layout) #fy_global_footer {
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
-  max-width: 1280px;
+  gap: 14px;
+  max-width: 1400px;
   margin: 0 auto;
-  font-size: 13.5px;
+  font-size: 14px;
 }
 
 .brand-mini-row {
@@ -8795,21 +8829,22 @@ ol.timeline small {
 /* 4 Power BI KPI Tiles */
 .powerbi-kpis-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
 }
 
 .powerbi-kpi-card {
-  padding: 18px 20px;
+  padding: 22px 24px;
   background: var(--surface);
-  border-radius: 14px;
+  border-radius: 16px;
   border: 1px solid var(--line);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 125px;
 }
 
 .powerbi-kpi-card::before {
@@ -8835,7 +8870,7 @@ ol.timeline small {
 }
 
 .powerbi-kpi-title {
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -8843,9 +8878,9 @@ ol.timeline small {
 }
 
 .powerbi-kpi-chip {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 6px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -8864,20 +8899,20 @@ ol.timeline small {
 }
 
 .powerbi-kpi-value {
-  font-size: 1.65rem;
+  font-size: 2.1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
 
 .powerbi-kpi-curr {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--muted);
 }
 
 .powerbi-kpi-sub {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--muted);
   line-height: 1.4;
 }
@@ -8886,7 +8921,13 @@ ol.timeline small {
 .powerbi-visuals-grid {
   display: grid;
   grid-template-columns: 1.35fr 1fr;
-  gap: 16px;
+  gap: 20px;
+}
+
+@media (max-width: 1200px) {
+  .powerbi-visuals-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .powerbi-visual-card {
@@ -9462,11 +9503,12 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 .landing-page {
   display: flex;
   flex-direction: column;
-  gap: 60px;
+  gap: 64px;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 10px 0 40px;
+  padding: 14px 0 60px;
+  box-sizing: border-box;
 }
 
 /* 1. HERO SECTION */
@@ -9474,8 +9516,8 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   display: grid;
   grid-template-columns: 1.25fr 1fr;
   align-items: center;
-  gap: 40px;
-  padding: 30px 0 20px;
+  gap: 48px;
+  padding: 24px 0 24px;
 }
 
 .landing-hero-badge-row {
@@ -9486,11 +9528,11 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 6px 14px;
+  padding: 7px 16px;
   border-radius: 999px;
   background: var(--surface-soft, #eef7f2);
   color: #0b8457;
@@ -9512,11 +9554,11 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 }
 
 .landing-hero-title {
-  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-size: clamp(2.4rem, 4.4vw, 3.6rem);
   font-weight: 900;
   line-height: 1.15;
   letter-spacing: -0.03em;
-  margin: 0 0 16px 0;
+  margin: 0 0 18px 0;
   color: var(--text);
 }
 
@@ -9527,19 +9569,19 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 }
 
 .landing-hero-description {
-  font-size: clamp(15px, 1.8vw, 17px);
-  line-height: 1.65;
+  font-size: clamp(16.5px, 1.8vw, 19px);
+  line-height: 1.7;
   color: var(--muted);
-  margin: 0 0 28px 0;
-  max-width: 580px;
+  margin: 0 0 30px 0;
+  max-width: 660px;
 }
 
 .landing-hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 30px;
+  gap: 14px;
+  margin-bottom: 32px;
 }
 
 .landing-btn-cta {
@@ -9775,59 +9817,60 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 .landing-section {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-  padding: 20px 0;
+  gap: 36px;
+  padding: 30px 0;
 }
 
 .landing-section-head {
   text-align: center;
-  max-width: 680px;
+  max-width: 780px;
   margin: 0 auto;
 }
 
 .landing-section-eyebrow {
   display: block;
-  font-size: 11.5px;
+  font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.09em;
   color: #0b8457;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .landing-section-title {
-  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  font-size: clamp(2.1rem, 3.4vw, 2.7rem);
   font-weight: 900;
   letter-spacing: -0.025em;
-  margin: 0 0 12px 0;
+  margin: 0 0 14px 0;
   color: var(--text);
 }
 
 .landing-section-subtitle {
-  font-size: clamp(14px, 1.6vw, 16px);
+  font-size: clamp(15.5px, 1.8vw, 17.5px);
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.65;
   margin: 0;
 }
 
 /* Pasos Como Funciona */
 .landing-steps-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
 }
 
 .landing-step-card {
-  padding: 26px 22px;
+  padding: 30px 26px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  border-radius: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   position: relative;
   overflow: hidden;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
+  min-height: 250px;
 }
 
 .landing-step-card:hover {
@@ -9845,16 +9888,16 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 }
 
 .landing-step-card-title {
-  font-size: 16px;
+  font-size: 1.25rem;
   font-weight: 800;
-  margin: 0 0 8px 0;
+  margin: 0 0 10px 0;
   color: var(--text);
   line-height: 1.35;
 }
 
 .landing-step-card-desc {
-  font-size: 13.5px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.6;
   color: var(--muted);
   margin: 0 0 16px 0;
   flex-grow: 1;
@@ -9875,12 +9918,12 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 /* 3. ECOSISTEMA FARMAYA */
 .landing-eco-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 26px;
 }
 
 .landing-eco-card {
-  padding: 28px 24px;
+  padding: 32px 28px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -10247,11 +10290,12 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 
 /* Todos los botones de la barra superior con exactamente la misma medida y estilo */
 .site-header {
-  min-height: 64px !important;
+  min-height: 54px !important;
+  height: 54px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  padding: 10px clamp(16px, 4vw, 48px) !important;
+  padding: 6px clamp(16px, 3.5vw, 40px) !important;
 }
 
 .nav-right {
@@ -10262,15 +10306,15 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   flex-wrap: nowrap !important;
 }
 
-/* Todos los botones de la barra superior con exactamente la misma medida de 42px y estilo pill */
+/* Todos los botones de la barra superior con medida compacta de 38px y estilo pill */
 .nav-header-pill,
 .header-cart-pill,
 .nav-header-orders-btn,
 .user-pill-btn,
 .header-auth-btn {
-  height: 42px !important;
-  min-height: 42px !important;
-  max-height: 42px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
   border-radius: 999px !important;
   border: 1.5px solid var(--line, #e2eae5) !important;
   background: var(--surface, #ffffff) !important;
@@ -10282,7 +10326,7 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 0 16px !important;
+  padding: 0 14px !important;
   gap: 8px !important;
   box-sizing: border-box !important;
   cursor: pointer !important;
@@ -10320,15 +10364,15 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   color: #ffffff !important;
 }
 
-/* Boton Hamburguesa unificado a exactamente 42px circular */
+/* Boton Hamburguesa unificado a 38px circular */
 .nav-header-btn.hamburger-btn,
 .hamburger-btn {
-  width: 42px !important;
-  height: 42px !important;
-  min-width: 42px !important;
-  max-width: 42px !important;
-  min-height: 42px !important;
-  max-height: 42px !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
   border-radius: 50% !important;
   border: 1.5px solid var(--line, #e2eae5) !important;
   background: var(--surface, #ffffff) !important;
@@ -11263,10 +11307,10 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
    ========================================================================== */
 @media (max-width: 768px) {
   .site-header {
-    min-height: 52px !important;
-    height: 52px !important;
-    padding: 6px 14px !important;
-    padding-top: calc(6px + env(safe-area-inset-top, 0px)) !important;
+    min-height: 48px !important;
+    height: 48px !important;
+    padding: 4px 12px !important;
+    padding-top: calc(4px + env(safe-area-inset-top, 0px)) !important;
     box-sizing: border-box !important;
     display: flex !important;
     flex-direction: row !important;
@@ -11281,9 +11325,9 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   .brand-image,
   [data-theme="dark"] .brand-image {
     width: auto !important;
-    max-width: 120px !important;
-    height: 32px !important;
-    max-height: 32px !important;
+    max-width: 165px !important;
+    height: 30px !important;
+    max-height: 30px !important;
     flex-shrink: 0 !important;
     display: flex !important;
     align-items: center !important;
@@ -11293,10 +11337,10 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 
   .brand-image img,
   [data-theme="dark"] .brand-image img {
-    height: 32px !important;
-    max-height: 32px !important;
+    height: 30px !important;
+    max-height: 30px !important;
     width: auto !important;
-    max-width: 120px !important;
+    max-width: 165px !important;
     object-fit: contain !important;
     object-position: left center !important;
     display: block !important;
@@ -14034,9 +14078,6 @@ body, button, input, select, textarea {
 .orders-list,
 .offers-list,
 .active-orders-cards-list,
-.powerbi-mobile-cards-wrap,
-.disbursement-mobile-cards-wrap,
-.verification-mobile-list,
 .doc-pdf-list,
 .courier-ledger,
 .pbi-rank {
@@ -14054,10 +14095,7 @@ body, button, input, select, textarea {
 }
 
 .list:empty,
-.active-orders-cards-list:empty,
-.powerbi-mobile-cards-wrap:empty,
-.disbursement-mobile-cards-wrap:empty,
-.verification-mobile-list:empty {
+.active-orders-cards-list:empty {
   display: none !important;
   border: none !important;
 }
@@ -14102,9 +14140,6 @@ ol.timeline,
 .list > .offer,
 .list > .activity-row,
 .active-orders-cards-list > .active-order-item-card,
-.verification-mobile-list > .verification-flutter-card,
-.disbursement-mobile-cards-wrap > .disbursement-flutter-card,
-.powerbi-mobile-cards-wrap > .powerbi-flutter-card,
 .cart-items > .cart-item,
 .cart-preview-items > .cart-preview-item,
 .order-requested-items-list > .order-requested-item-card,
@@ -14131,9 +14166,6 @@ ol.timeline > li,
 .list > .offer:last-child,
 .list > .activity-row:last-child,
 .active-orders-cards-list > .active-order-item-card:last-child,
-.verification-mobile-list > .verification-flutter-card:last-child,
-.disbursement-mobile-cards-wrap > .disbursement-flutter-card:last-child,
-.powerbi-mobile-cards-wrap > .powerbi-flutter-card:last-child,
 .cart-items > .cart-item:last-child,
 .cart-preview-items > .cart-preview-item:last-child,
 .order-requested-items-list > .order-requested-item-card:last-child,
@@ -14292,9 +14324,6 @@ ol.timeline > li,
   .orders-list,
   .offers-list,
   .active-orders-cards-list,
-  .powerbi-mobile-cards-wrap,
-  .disbursement-mobile-cards-wrap,
-  .verification-mobile-list,
   .doc-pdf-list,
   .courier-ledger,
   .pbi-rank {
@@ -14310,14 +14339,11 @@ ol.timeline > li,
     font-size: 11.5px !important;
   }
 
-  /* Todas las filas en vista Flutter: divisores hairline continuos, sin recuadros */
+  /* Todas las filas de pedidos y ofertas: divisores hairline continuos */
   .list > .order-row,
   .list > .offer,
   .list > .activity-row,
-  .active-orders-cards-list > .active-order-item-card,
-  .verification-mobile-list > .verification-flutter-card,
-  .disbursement-mobile-cards-wrap > .disbursement-flutter-card,
-  .powerbi-mobile-cards-wrap > .powerbi-flutter-card {
+  .active-orders-cards-list > .active-order-item-card {
     padding: 14px 14px !important;
     border: none !important;
     border-bottom: 1px solid var(--line) !important;
@@ -14326,6 +14352,73 @@ ol.timeline > li,
     margin: 0 !important;
     background: transparent !important;
     gap: 8px !important;
+  }
+
+  /* Contenedores y Tarjetas Flutter nativas para el panel de Administrador en movil */
+  .powerbi-mobile-cards-wrap,
+  .disbursement-mobile-cards-wrap,
+  .verification-mobile-list,
+  .forecast-mobile-cards-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin-top: 10px !important;
+  }
+
+  .powerbi-flutter-card,
+  .disbursement-flutter-card,
+  .verification-flutter-card,
+  .demand-flutter-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 18px 18px !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
+    margin: 0 0 14px 0 !important;
+  }
+
+  .powerbi-flutter-card-code,
+  .demand-flutter-name,
+  .disbursement-flutter-code {
+    font-size: 16px !important;
+    font-weight: 800 !important;
+    color: var(--text) !important;
+  }
+
+  .powerbi-flutter-card-fin,
+  .disbursement-flutter-fin-grid,
+  .disbursement-flutter-bank-box,
+  .demand-flutter-metrics-grid {
+    background: var(--surface-soft) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 12px !important;
+    padding: 12px 14px !important;
+    gap: 8px !important;
+  }
+
+  .demand-flutter-metric strong,
+  .disbursement-flutter-fin-col strong {
+    font-size: 15.5px !important;
+    font-weight: 800 !important;
+  }
+
+  .demand-flutter-action-row .btn,
+  .disbursement-flutter-actions .btn,
+  .powerbi-flutter-card-actions .btn {
+    min-height: 44px !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
   }
 
   .list > .offer.fresh {
