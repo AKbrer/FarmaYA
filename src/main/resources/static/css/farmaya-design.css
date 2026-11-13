@@ -11677,14 +11677,16 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 
 /* Linea para desplazar en la vista computador */
 .farmabot-scroll-track-wrap {
+  display: block !important;
   width: 100%;
-  padding: 4px 4px 2px 4px;
+  padding: 5px 6px 4px 6px;
   box-sizing: border-box;
 }
 
 .farmabot-scroll-track {
+  display: block !important;
   width: 100%;
-  height: 5px;
+  height: 6px;
   background: var(--surface-soft, #E2E8F0);
   border-radius: 999px;
   position: relative;
@@ -11694,7 +11696,7 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 }
 
 .farmabot-scroll-track:hover {
-  height: 7px;
+  height: 8px;
   background: #CBD5E1;
 }
 
@@ -11703,10 +11705,12 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   top: 0;
   left: 0;
   height: 100%;
-  width: 60px;
-  background: var(--primary, #004e46);
+  min-width: 50px;
+  width: 35%;
+  background: #004e46;
   border-radius: 999px;
   cursor: grab;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   transition: background-color 0.15s ease;
 }
 

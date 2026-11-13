@@ -20,13 +20,23 @@
     'Suero oral y deshidratación'
   ];
 
+  function isClientView() {
+    if (typeof state === 'undefined' || !state.user) {
+      // Visitante o cliente navegando catalogo publico
+      return true;
+    }
+    const role = state.user.role;
+    // Ocultar solo si es rol interno de operacion (FARMACIA, REPARTIDOR, ADMIN)
+    return role === 'CLIENTE';
+  }
+
   function initChatbot() {
     if (document.getElementById('farmabot-root')) return;
 
     const root = document.createElement('div');
     root.id = 'farmabot-root';
     root.className = 'farmabot-container';
-    root.style.display = (typeof state !== 'undefined' && state.user && state.user.role === 'CLIENTE') ? '' : 'none';
+    root.style.display = isClientView() ? '' : 'none';
 
     // Botón flotante para abrir el chat con la foto de perfil en lugar de la cruz
     const launcher = document.createElement('button');
@@ -135,7 +145,10 @@
         if (inp) inp.focus();
         scrollChatToBottom();
         updateScrollLine();
-      }, 100);
+      }, 50);
+      setTimeout(() => {
+        updateScrollLine();
+      }, 300);
     } else {
       panel.style.display = 'none';
       panel.setAttribute('aria-hidden', 'true');
@@ -309,22 +322,22 @@
     const thumb = document.getElementById('farmabot-scroll-thumb');
     if (!container || !track || !thumb) return;
 
+    if (trackWrap) trackWrap.style.display = 'block';
+
     const scrollWidth = container.scrollWidth;
     const clientWidth = container.clientWidth;
     const maxScroll = scrollWidth - clientWidth;
 
-    if (maxScroll <= 2) {
-      if (trackWrap) trackWrap.style.display = 'none';
+    const trackWidth = track.clientWidth || track.offsetWidth;
+    if (trackWidth <= 0 || maxScroll <= 0) {
+      thumb.style.width = '35%';
+      thumb.style.transform = 'translateX(0px)';
       return;
     }
-    if (trackWrap) trackWrap.style.display = 'block';
 
-    const trackWidth = track.clientWidth || track.offsetWidth;
-    if (trackWidth <= 0) return;
-
-    // Calcular ancho proporcional de la linea deslizante (minimo 45px, maximo 120px)
+    // Calcular ancho proporcional de la linea deslizante (entre 45px y 130px)
     const ratio = clientWidth / scrollWidth;
-    const thumbWidth = Math.max(45, Math.min(120, trackWidth * ratio));
+    const thumbWidth = Math.max(45, Math.min(130, trackWidth * ratio));
     thumb.style.width = thumbWidth + 'px';
 
     // Posicion de desplazamiento proporcional
@@ -601,8 +614,7 @@
   function syncChatbotVisibility() {
     const root = document.getElementById('farmabot-root');
     if (!root) return;
-    const isClient = Boolean(typeof state !== 'undefined' && state.user && state.user.role === 'CLIENTE');
-    if (isClient) {
+    if (isClientView()) {
       root.style.display = '';
     } else {
       root.style.display = 'none';
