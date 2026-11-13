@@ -281,8 +281,36 @@ function toast(msg, kind = 'ok') {
 
 function openDialog(content, opts = {}) {
   const d = h('dialog', { class: 'sheet' + (opts.wide ? ' wide' : '') + (opts.drawer ? ' drawer' : '') }, content);
-  d.addEventListener('close', () => { d.remove(); if (opts.onClose) opts.onClose(); });
-  d.addEventListener('click', e => { if (e.target === d) d.close(); });
+  let isClosing = false;
+  const originalClose = d.close.bind(d);
+
+  d.closeWithAnimation = function(returnValue) {
+    if (isClosing) return;
+    isClosing = true;
+    d.classList.add('is-closing');
+    const animDuration = opts.drawer ? 220 : 190;
+    setTimeout(() => {
+      try { originalClose(returnValue); } catch (_) {}
+    }, animDuration);
+  };
+
+  // Asignar el cierre animado para cualquier invocación a d.close()
+  d.close = d.closeWithAnimation;
+
+  d.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    d.close();
+  });
+
+  d.addEventListener('close', () => {
+    d.remove();
+    if (opts.onClose) opts.onClose();
+  });
+
+  d.addEventListener('click', e => {
+    if (e.target === d) d.close();
+  });
+
   document.body.append(d);
   d.showModal();
   return d;
@@ -517,7 +545,13 @@ function sideNavigation(items, start = 0) {
   const panel = h('section', { class: 'side-nav-content', 'aria-live': 'polite' });
   function select(i) {
     buttons.forEach((b, j) => { b.classList.toggle('active', i === j); b.setAttribute('aria-current', i === j ? 'page' : 'false'); });
-    panel.replaceChildren(items[i].render());
+    const rendered = items[i].render();
+    if (rendered && rendered.classList) {
+      rendered.classList.remove('fy-view-transition');
+      void rendered.offsetWidth;
+      rendered.classList.add('fy-view-transition');
+    }
+    panel.replaceChildren(rendered);
   }
   nav.append(h('nav', { class: 'side-nav-items' }, buttons));
   const root = h('div', { class: 'side-nav-layout' }, nav, panel);

@@ -210,11 +210,11 @@ function adminPowerBiDashboard() {
         'aria-label': 'Desplegar lista de farmacias',
         onclick: (e) => {
           e.stopPropagation();
-          if (suggestionsList.style.display === 'block') {
-            suggestionsList.style.display = 'none';
+          if (suggestionsList.style.display === 'block' && !suggestionsList.classList.contains('is-closing')) {
+            hideSuggestions();
           } else {
             renderSuggestions('');
-            suggestionsList.style.display = 'block';
+            showSuggestions();
             pharmacySearchInput.focus();
           }
         }
@@ -226,6 +226,20 @@ function adminPowerBiDashboard() {
         class: 'powerbi-pharmacy-suggestions',
         style: 'display: none;'
       });
+
+      function showSuggestions() {
+        suggestionsList.classList.remove('is-closing');
+        suggestionsList.style.display = 'block';
+      }
+
+      function hideSuggestions() {
+        if (suggestionsList.style.display === 'none' || suggestionsList.classList.contains('is-closing')) return;
+        suggestionsList.classList.add('is-closing');
+        setTimeout(() => {
+          suggestionsList.style.display = 'none';
+          suggestionsList.classList.remove('is-closing');
+        }, 150);
+      }
 
       function renderSuggestions(query = '') {
         const q = (query || '').toLowerCase().trim();
@@ -269,12 +283,12 @@ function adminPowerBiDashboard() {
 
       pharmacySearchInput.addEventListener('focus', () => {
         renderSuggestions(pharmacySearchInput.value);
-        suggestionsList.style.display = 'block';
+        showSuggestions();
       });
 
       pharmacySearchInput.addEventListener('input', (e) => {
         renderSuggestions(e.target.value);
-        suggestionsList.style.display = 'block';
+        showSuggestions();
       });
 
       pharmacySearchInput.addEventListener('keydown', (e) => {
@@ -284,7 +298,7 @@ function adminPowerBiDashboard() {
           powerBiPharmacy = val || 'ALL';
           draw();
         } else if (e.key === 'Escape') {
-          suggestionsList.style.display = 'none';
+          hideSuggestions();
         }
       });
 
@@ -298,7 +312,7 @@ function adminPowerBiDashboard() {
 
       const handleOutsideClick = (e) => {
         if (!pharmacySearchWrap.contains(e.target)) {
-          suggestionsList.style.display = 'none';
+          hideSuggestions();
         }
       };
       setTimeout(() => document.addEventListener('click', handleOutsideClick), 0);

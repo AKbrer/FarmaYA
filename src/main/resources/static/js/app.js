@@ -176,6 +176,7 @@ async function renderApp() {
       }
     }
     mountGlobalFooter();
+    applyViewTransition();
     return;
   }
   const expected = routeForRole(state.user.role);
@@ -187,13 +188,21 @@ async function renderApp() {
       renderPaymentPage(orderId);
       mountGlobalFooter();
       renderNavbar();
+      applyViewTransition();
       return;
     } else {
       location.hash = '#orders';
       return;
     }
   }
-  if (route === '#orders') { document.title = 'FarmaYa · Pedidos'; renderOrdersPage(); mountGlobalFooter(); renderNavbar(); return; }
+  if (route === '#orders') {
+    document.title = 'FarmaYa · Pedidos';
+    renderOrdersPage();
+    mountGlobalFooter();
+    renderNavbar();
+    applyViewTransition();
+    return;
+  }
   if (route !== expected) { location.hash = expected; return; }
   document.title = 'FarmaYa · ' + (state.user.name || 'Inicio');
   if (state.user.role === 'CLIENTE') { renderClientDashboard(); }
@@ -209,7 +218,18 @@ async function renderApp() {
   if (typeof window.syncChatbotVisibility === 'function') {
     window.syncChatbotVisibility();
   }
+  applyViewTransition();
 }
+
+function applyViewTransition() {
+  const app = document.getElementById('app-container');
+  if (app && app.firstElementChild) {
+    app.firstElementChild.classList.remove('fy-view-transition');
+    void app.firstElementChild.offsetWidth;
+    app.firstElementChild.classList.add('fy-view-transition');
+  }
+}
+window.applyViewTransition = applyViewTransition;
 
 /* Altura real de la cabecera: el menú lateral fijo se ubica justo debajo. */
 function syncHeaderHeight() {

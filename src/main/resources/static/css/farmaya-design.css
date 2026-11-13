@@ -7099,6 +7099,26 @@ body:has(.side-nav-layout) #fy_global_footer {
   }
 }
 
+#fy_cart_preview_card.is-closing {
+  animation: cartPreviewSlideOut 0.17s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+#fy_cart_preview_backdrop.is-closing {
+  opacity: 0 !important;
+  transition: opacity 0.17s ease !important;
+}
+
+@keyframes cartPreviewSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+}
+
 [data-theme="dark"] #fy_cart_preview_card {
   background: #182030 !important;
   border-color: rgba(255, 255, 255, 0.12) !important;
@@ -11328,6 +11348,16 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+.farmabot-panel.is-closing,
+#farmabot-panel.is-closing {
+  animation: farmabotSlideDown 0.19s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+@keyframes farmabotSlideDown {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(16px) scale(0.96); }
+}
+
 .farmabot-header {
   display: flex;
   align-items: center;
@@ -13804,6 +13834,13 @@ body, button, input, select, textarea {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
   z-index: 1000;
   padding: 6px 0;
+  transform-origin: top center;
+  animation: fydDropdownIn 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.powerbi-pharmacy-suggestions.is-closing {
+  animation: fydDropdownOut 140ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
 }
 
 [data-theme="dark"] .powerbi-pharmacy-suggestions {
@@ -14499,5 +14536,259 @@ ol.timeline > li,
 
   .fy-compact-excel-table {
     min-width: 100% !important;
+  }
+}
+
+/* ==========================================================================
+   SUITE UNIVERSAL DE ANIMACIONES Y TRANSICIONES SUAVES FARMAYA
+   Apertura y Cierre Animado (Modales, Desplegables, Drawers, Sheets, Toasts, Vistas)
+   ========================================================================== */
+
+/* 1. Modales y Dialogos Principales (dialog.sheet) */
+dialog.sheet:not(.drawer):not(.mobile-cart-bottom-dialog) {
+  animation: fyDialogEnter 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  will-change: transform, opacity;
+}
+
+dialog.sheet:not(.drawer):not(.mobile-cart-bottom-dialog).is-closing {
+  animation: fyDialogExit 170ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+dialog.sheet::backdrop {
+  animation: fyBackdropEnter 220ms ease forwards !important;
+}
+
+dialog.sheet.is-closing::backdrop {
+  animation: fyBackdropExit 170ms ease forwards !important;
+}
+
+/* 2. Panel Lateral Desplegable (Drawer) */
+dialog.sheet.drawer {
+  animation: slideDrawerIn 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  will-change: transform, opacity;
+}
+
+dialog.sheet.drawer.is-closing {
+  animation: slideDrawerOut 180ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+/* 3. Bottom Sheets Moviles */
+dialog.sheet.mobile-cart-bottom-dialog.is-closing,
+.mobile-cart-bottom-dialog.is-closing {
+  animation: mobileSheetSlideDown 180ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+}
+
+@media (max-width: 768px) {
+  dialog.sheet:not(.drawer).is-closing,
+  .sheet:not(.drawer).is-closing {
+    animation: mobileSheetSlideDown 180ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  }
+}
+
+/* 4. Notificaciones Toast */
+.toast {
+  animation: fyToastEnter 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  transition: opacity 190ms cubic-bezier(0.4, 0, 1, 1), transform 190ms cubic-bezier(0.4, 0, 1, 1), max-height 190ms ease, margin 190ms ease !important;
+  will-change: transform, opacity;
+}
+
+.toast.out {
+  animation: fyToastExit 190ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  pointer-events: none !important;
+}
+
+/* 5. Transicion Fluida entre Vistas y Rutas */
+.fy-view-transition {
+  animation: fyViewGlide 220ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  will-change: transform, opacity;
+}
+
+.page-view-exit {
+  animation: fyViewExit 160ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  pointer-events: none !important;
+}
+
+/* 6. Micro-interacciones Tactiles en Botones y Chips */
+.btn:not(:disabled):active {
+  transform: scale(0.975) !important;
+  transition: transform 70ms ease !important;
+}
+
+.nav-header-pill:active,
+.nav-header-btn:active,
+.hamburger-btn:active,
+.icon-button:active {
+  transform: scale(0.94) !important;
+  transition: transform 70ms ease !important;
+}
+
+.side-nav-item:active {
+  transform: scale(0.98) !important;
+  transition: transform 70ms ease !important;
+}
+
+.category-chip:active {
+  transform: scale(0.96) !important;
+  transition: transform 70ms ease !important;
+}
+
+/* 7. Definicion de Keyframes Universales */
+@keyframes fyDialogEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fyDialogExit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+}
+
+@keyframes fyBackdropEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fyBackdropExit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDrawerIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDrawerOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes mobileSheetSlideDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fydDropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fydDropdownOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+
+@keyframes fyToastEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fyToastExit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.95);
+  }
+}
+
+@keyframes fyViewGlide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fyViewExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+/* 8. Respeto de Accesibilidad (Prefers-Reduced-Motion) */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .fy-view-transition,
+  .page-view-exit,
+  dialog.sheet,
+  dialog.sheet.drawer,
+  .farmabot-panel,
+  #fy_cart_preview_card,
+  .powerbi-pharmacy-suggestions,
+  .toast {
+    animation: none !important;
+    transform: none !important;
   }
 }

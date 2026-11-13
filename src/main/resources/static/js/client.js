@@ -582,15 +582,15 @@ function renderClientDashboard() {
     });
 
     function closeCartPreview() {
-
       const c = document.getElementById('fy_cart_preview_card');
-
       const b = document.getElementById('fy_cart_preview_backdrop');
-
-      if (c) c.remove();
-
-      if (b) b.remove();
-
+      if (!c && !b) return;
+      if (c) c.classList.add('is-closing');
+      if (b) b.classList.add('is-closing');
+      setTimeout(() => {
+        if (c && c.parentNode) c.remove();
+        if (b && b.parentNode) b.remove();
+      }, 180);
     }
 
     function refreshPreview() {

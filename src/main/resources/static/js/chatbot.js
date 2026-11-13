@@ -149,6 +149,7 @@
     if (!panel || !launcher) return;
 
     if (isOpen) {
+      panel.classList.remove('is-closing');
       panel.style.display = 'flex';
       panel.setAttribute('aria-hidden', 'false');
       launcher.classList.add('is-open');
@@ -162,9 +163,15 @@
         updateSliderUI();
       }, 300);
     } else {
-      panel.style.display = 'none';
-      panel.setAttribute('aria-hidden', 'true');
       launcher.classList.remove('is-open');
+      panel.classList.add('is-closing');
+      setTimeout(() => {
+        if (!isOpen) {
+          panel.style.display = 'none';
+          panel.classList.remove('is-closing');
+          panel.setAttribute('aria-hidden', 'true');
+        }
+      }, 190);
     }
   }
 
