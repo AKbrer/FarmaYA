@@ -85,8 +85,16 @@
       </div>
 
       <div class="farmabot-chips-wrapper" id="farmabot-chips-wrapper">
-        <div class="farmabot-quick-chips" id="farmabot-chips" role="region" aria-label="Preguntas rapidas">
-          <!-- Chips rapidos -->
+        <div class="farmabot-chips-nav-row">
+          <button type="button" class="farmabot-chips-arrow farmabot-chips-prev" id="farmabot-chips-prev" aria-label="Deslizar a la izquierda" title="Desplazar a la izquierda">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div class="farmabot-quick-chips" id="farmabot-chips" role="region" aria-label="Preguntas rapidas">
+            <!-- Chips rapidos -->
+          </div>
+          <button type="button" class="farmabot-chips-arrow farmabot-chips-next" id="farmabot-chips-next" aria-label="Deslizar a la derecha" title="Desplazar a la derecha">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
         </div>
         <div class="farmabot-scroll-track-wrap" id="farmabot-scroll-track-wrap">
           <div class="farmabot-scroll-track" id="farmabot-scroll-track" title="Desliza para ver mas preguntas">
@@ -144,10 +152,10 @@
         const inp = document.getElementById('farmabot-input');
         if (inp) inp.focus();
         scrollChatToBottom();
-        updateScrollLine();
+        updateSliderUI();
       }, 50);
       setTimeout(() => {
-        updateScrollLine();
+        updateSliderUI();
       }, 300);
     } else {
       panel.style.display = 'none';
@@ -185,7 +193,9 @@
       chip.type = 'button';
       chip.className = 'farmabot-chip';
       chip.textContent = q;
-      chip.onclick = () => {
+      chip.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         if (chipsContainer.dataset.wasDragging === 'true') {
           return;
         }
@@ -194,30 +204,63 @@
           input.value = q;
           handleUserSubmit();
         }
-      };
+      });
       chipsContainer.appendChild(chip);
     });
 
-    setTimeout(updateScrollLine, 50);
+    setTimeout(updateSliderUI, 50);
   }
 
   function setupChipsInteractions() {
     const container = document.getElementById('farmabot-chips');
+    const prevBtn = document.getElementById('farmabot-chips-prev');
+    const nextBtn = document.getElementById('farmabot-chips-next');
     const track = document.getElementById('farmabot-scroll-track');
     const thumb = document.getElementById('farmabot-scroll-thumb');
     if (!container) return;
 
-    // 1. Desplazamiento horizontal con la rueda del raton en computador
+    function scrollChipsBy(delta) {
+      if (!container) return;
+      if (typeof container.scrollBy === 'function') {
+        try {
+          container.scrollBy({ left: delta, behavior: 'smooth' });
+        } catch (err) {
+          container.scrollLeft += delta;
+        }
+      } else {
+        container.scrollLeft += delta;
+      }
+      setTimeout(updateSliderUI, 200);
+    }
+
+    // 1. Botones de flecha izquierda y derecha
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollChipsBy(-180);
+      });
+    }
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        scrollChipsBy(180);
+      });
+    }
+
+    // 2. Desplazamiento horizontal con la rueda del raton en computador
     container.addEventListener('wheel', (e) => {
       if (Math.abs(e.deltaY) > 0 || Math.abs(e.deltaX) > 0) {
         e.preventDefault();
         const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
         container.scrollLeft += delta;
-        updateScrollLine();
+        updateSliderUI();
       }
     }, { passive: false });
 
-    // 2. Arrastre directo con raton (drag-to-scroll) sobre las preguntas
+    // 3. Arrastre directo con raton (drag-to-scroll) sobre las preguntas
     let isDown = false;
     let startX = 0;
     let scrollLeftStart = 0;
@@ -227,7 +270,6 @@
       if (e.button !== 0) return;
       isDown = true;
       hasMoved = false;
-      container.classList.add('is-dragging');
       startX = e.pageX - container.offsetLeft;
       scrollLeftStart = container.scrollLeft;
       container.dataset.wasDragging = 'false';
@@ -237,11 +279,14 @@
       if (!isDown) return;
       const x = e.pageX - container.offsetLeft;
       const walk = (x - startX);
-      if (Math.abs(walk) > 4) {
-        hasMoved = true;
-        container.dataset.wasDragging = 'true';
+      if (Math.abs(walk) > 6) {
+        if (!hasMoved) {
+          hasMoved = true;
+          container.classList.add('is-dragging');
+          container.dataset.wasDragging = 'true';
+        }
         container.scrollLeft = scrollLeftStart - walk;
-        updateScrollLine();
+        updateSliderUI();
       }
     });
 
@@ -252,13 +297,13 @@
       if (hasMoved) {
         setTimeout(() => {
           if (container) container.dataset.wasDragging = 'false';
-        }, 120);
+        }, 150);
       }
     };
 
     window.addEventListener('mouseup', finishDrag);
 
-    // 3. Linea para desplazar en la vista computador: clic en pista y arrastre de la barra
+    // 4. Linea para desplazar en la vista computador: clic en pista y arrastre de la barra
     if (track && thumb) {
       let isThumbDragging = false;
       let thumbStartX = 0;
@@ -275,6 +320,7 @@
         const targetRatio = maxTravel > 0 ? Math.max(0, Math.min(1, (clickX - thumbW / 2) / maxTravel)) : 0;
         const maxScroll = container.scrollWidth - container.clientWidth;
         container.scrollTo({ left: targetRatio * maxScroll, behavior: 'smooth' });
+        setTimeout(updateSliderUI, 200);
       });
 
       // Arrastre manual del indicador deslizante (thumb)
@@ -298,7 +344,7 @@
         if (maxTravel > 0 && maxScroll > 0) {
           const scrollDelta = (deltaX / maxTravel) * maxScroll;
           container.scrollLeft = Math.max(0, Math.min(maxScroll, initialScroll + scrollDelta));
-          updateScrollLine();
+          updateSliderUI();
         }
       });
 
@@ -311,40 +357,51 @@
     }
 
     container.addEventListener('scroll', () => {
-      updateScrollLine();
+      updateSliderUI();
     }, { passive: true });
   }
 
-  function updateScrollLine() {
+  function updateSliderUI() {
     const container = document.getElementById('farmabot-chips');
+    const prevBtn = document.getElementById('farmabot-chips-prev');
+    const nextBtn = document.getElementById('farmabot-chips-next');
     const trackWrap = document.getElementById('farmabot-scroll-track-wrap');
     const track = document.getElementById('farmabot-scroll-track');
     const thumb = document.getElementById('farmabot-scroll-thumb');
-    if (!container || !track || !thumb) return;
+    if (!container) return;
 
     if (trackWrap) trackWrap.style.display = 'block';
 
     const scrollWidth = container.scrollWidth;
     const clientWidth = container.clientWidth;
-    const maxScroll = scrollWidth - clientWidth;
+    const maxScroll = Math.max(0, scrollWidth - clientWidth);
+    const currentScroll = container.scrollLeft;
 
-    const trackWidth = track.clientWidth || track.offsetWidth;
-    if (trackWidth <= 0 || maxScroll <= 0) {
-      thumb.style.width = '35%';
-      thumb.style.transform = 'translateX(0px)';
-      return;
+    // Actualizar estado de los botones de flecha
+    if (prevBtn) {
+      prevBtn.disabled = (currentScroll <= 4);
+    }
+    if (nextBtn) {
+      nextBtn.disabled = (currentScroll >= maxScroll - 4);
     }
 
-    // Calcular ancho proporcional de la linea deslizante (entre 45px y 130px)
-    const ratio = clientWidth / scrollWidth;
-    const thumbWidth = Math.max(45, Math.min(130, trackWidth * ratio));
-    thumb.style.width = thumbWidth + 'px';
+    // Actualizar linea deslizante
+    if (track && thumb) {
+      const trackWidth = track.clientWidth || track.offsetWidth;
+      if (trackWidth > 0 && maxScroll > 0) {
+        const ratio = clientWidth / scrollWidth;
+        const thumbWidth = Math.max(45, Math.min(130, trackWidth * ratio));
+        thumb.style.width = thumbWidth + 'px';
 
-    // Posicion de desplazamiento proporcional
-    const maxThumbTravel = trackWidth - thumbWidth;
-    const scrollRatio = maxScroll > 0 ? (container.scrollLeft / maxScroll) : 0;
-    const thumbLeft = Math.max(0, Math.min(maxThumbTravel, scrollRatio * maxThumbTravel));
-    thumb.style.transform = `translateX(${thumbLeft}px)`;
+        const maxTravel = trackWidth - thumbWidth;
+        const scrollRatio = currentScroll / maxScroll;
+        const thumbLeft = Math.max(0, Math.min(maxTravel, scrollRatio * maxTravel));
+        thumb.style.transform = `translateX(${thumbLeft}px)`;
+      } else {
+        thumb.style.width = '35%';
+        thumb.style.transform = 'translateX(0px)';
+      }
+    }
   }
 
   async function handleUserSubmit() {

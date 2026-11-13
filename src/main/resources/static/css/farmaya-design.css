@@ -11641,17 +11641,61 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 8px 10px 6px 10px;
+  padding: 8px 8px 6px 8px;
   background: var(--surface, #FFFFFF);
   border-top: 1px solid var(--line, #E2E8F0);
-  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.farmabot-chips-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.farmabot-chips-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line, #CBD5E1);
+  background: var(--surface-soft, #F8FAFC);
+  color: var(--primary, #004e46);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  z-index: 5;
+  padding: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+}
+
+.farmabot-chips-arrow:hover:not(:disabled) {
+  background: #004e46;
+  color: #FFFFFF;
+  border-color: #004e46;
+  transform: scale(1.08);
+}
+
+.farmabot-chips-arrow:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.farmabot-chips-arrow:disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
 }
 
 .farmabot-quick-chips {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   display: flex;
   gap: 6px;
-  padding: 2px 2px 6px 2px;
+  padding: 4px 2px 4px 2px;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
@@ -11671,15 +11715,11 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   scroll-behavior: auto;
 }
 
-.farmabot-quick-chips.is-dragging .farmabot-chip {
-  pointer-events: none;
-}
-
 /* Linea para desplazar en la vista computador */
 .farmabot-scroll-track-wrap {
   display: block !important;
   width: 100%;
-  padding: 5px 6px 4px 6px;
+  padding: 5px 36px 4px 36px;
   box-sizing: border-box;
 }
 
@@ -11705,7 +11745,7 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   top: 0;
   left: 0;
   height: 100%;
-  min-width: 50px;
+  min-width: 45px;
   width: 35%;
   background: #004e46;
   border-radius: 999px;
@@ -11859,6 +11899,18 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 [data-theme="dark"] .farmabot-footer-disclaimer {
   background: #0F172A;
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .farmabot-chips-arrow {
+  background: #1E293B;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #5EEAD4;
+}
+
+[data-theme="dark"] .farmabot-chips-arrow:hover:not(:disabled) {
+  background: #004e46;
+  border-color: #5EEAD4;
+  color: #FFFFFF;
 }
 
 [data-theme="dark"] .farmabot-scroll-track {
