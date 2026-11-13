@@ -206,6 +206,9 @@ async function renderApp() {
     document.getElementById('fy_mobile_cart_bar')?.remove();
   }
   syncHeaderHeight();
+  if (typeof window.syncChatbotVisibility === 'function') {
+    window.syncChatbotVisibility();
+  }
 }
 
 /* Altura real de la cabecera: el menú lateral fijo se ubica justo debajo. */

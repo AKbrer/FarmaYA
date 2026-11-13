@@ -21,13 +21,17 @@
   ];
 
   function isClientView() {
-    if (typeof state === 'undefined' || !state.user) {
-      // Visitante o cliente navegando catalogo publico
-      return true;
+    const hash = (window.location.hash || '').split('?')[0].toLowerCase();
+    // Vistas operativas donde JAMAS debe salir el chatbot
+    if (hash === '#pharmacy' || hash === '#courier' || hash === '#admin') {
+      return false;
     }
-    const role = state.user.role;
-    // Ocultar solo si es rol interno de operacion (FARMACIA, REPARTIDOR, ADMIN)
-    return role === 'CLIENTE';
+    if (typeof state !== 'undefined' && state && state.user && state.user.role) {
+      // Ocultar siempre si es rol interno de operacion (FARMACIA, REPARTIDOR, ADMIN)
+      return state.user.role === 'CLIENTE';
+    }
+    // Para visitantes no autenticados: solo en catalogo/inicio/pedidos
+    return !['#pharmacy', '#courier', '#admin'].includes(hash);
   }
 
   function initChatbot() {
@@ -671,21 +675,26 @@
   function syncChatbotVisibility() {
     const root = document.getElementById('farmabot-root');
     if (!root) return;
-    if (isClientView()) {
+    const show = isClientView();
+    if (show) {
+      root.style.removeProperty('display');
       root.style.display = '';
     } else {
-      root.style.display = 'none';
+      root.style.setProperty('display', 'none', 'important');
       if (isOpen) {
         isOpen = false;
         const panel = document.getElementById('farmabot-panel');
         if (panel) {
-          panel.style.display = 'none';
+          panel.style.setProperty('display', 'none', 'important');
           panel.setAttribute('aria-hidden', 'true');
         }
       }
     }
   }
   window.syncChatbotVisibility = syncChatbotVisibility;
+  window.addEventListener('hashchange', syncChatbotVisibility);
+  window.addEventListener('popstate', syncChatbotVisibility);
+  setInterval(syncChatbotVisibility, 600);
 
   // Inicializar al cargar el DOM
   if (document.readyState === 'loading') {
