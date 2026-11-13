@@ -1153,16 +1153,7 @@ function pharmacyDemandForecast() {
       type: 'search',
       placeholder: 'Buscar medicamentos por nombre comercial, principio activo o indicación clínica...',
       value: __pharmacyDemandSearch,
-      style: 'width: 100%; font-size: 0.95rem; padding: 0.7rem 1.1rem; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--text);',
-      oninput: e => {
-        __pharmacyDemandSearch = e.target.value;
-        const term = __pharmacyDemandSearch.toLowerCase().trim();
-        const rows = document.querySelectorAll('.pharmacy-forecast-row');
-        rows.forEach(r => {
-          const name = (r.getAttribute('data-name') || '').toLowerCase();
-          r.style.display = (!term || name.includes(term)) ? '' : 'none';
-        });
-      }
+      style: 'width: 100%; font-size: 0.95rem; padding: 0.7rem 1.1rem; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--text);'
     });
 
     const recalculateBtn = h('button', {
@@ -1186,12 +1177,15 @@ function pharmacyDemandForecast() {
       )
     );
 
-    // Filtrar lista
-    const filtered = list.filter(item => {
-      const matchCat = __pharmacyDemandFilter === 'TODAS' || (item.category || '').toUpperCase() === __pharmacyDemandFilter;
-      const matchSearch = !__pharmacyDemandSearch || (item.medicineName || '').toLowerCase().includes(__pharmacyDemandSearch.toLowerCase().trim());
-      return matchCat && matchSearch;
-    });
+    let currentPage = 1;
+    const PAGE_SIZE = 30;
+    const listHolder = h('div', { class: 'stack forecast-list-holder' });
+
+    searchInput.oninput = e => {
+      __pharmacyDemandSearch = e.target.value;
+      currentPage = 1;
+      updateTableView();
+    };
 
     // Badge helper sin emojis
     const categoryBadge = cat => {
@@ -1236,54 +1230,104 @@ function pharmacyDemandForecast() {
       )
     );
 
-    const tableRows = filtered.map(item => {
-      const isSelected = pharmacySelectedMedName === item.medicineName;
-      const selectBtn = h('button', {
-        class: 'btn ' + (isSelected ? 'primary' : 'secondary'),
-        style: 'font-size: 0.75rem; padding: 0.25rem 0.55rem; width: 100%; text-align: center;',
-        onclick: e => {
-          e.stopPropagation();
-          pharmacySelectedMedName = isSelected ? '' : item.medicineName;
-          refreshAll();
-        }
-      }, isSelected ? 'Graficado' : 'Graficar');
+    function updateTableView() {
+      // Filtrar lista
+      const filtered = list.filter(item => {
+        const matchCat = __pharmacyDemandFilter === 'TODAS' || (item.category || '').toUpperCase() === __pharmacyDemandFilter;
+        const matchSearch = !__pharmacyDemandSearch || (item.medicineName || '').toLowerCase().includes(__pharmacyDemandSearch.toLowerCase().trim());
+        return matchCat && matchSearch;
+      });
 
-      return h('tr', {
-        class: 'pharmacy-forecast-row',
-        'data-name': item.medicineName,
-        style: 'border-bottom: 1px solid var(--line); cursor: pointer; transition: background 0.15s;' + (isSelected ? ' background: var(--primary-soft); font-weight: 600;' : ''),
-        onclick: () => {
-          pharmacySelectedMedName = isSelected ? '' : item.medicineName;
-          refreshAll();
-        }
+      if (!filtered.length) {
+        listHolder.replaceChildren(empty('Sin coincidencias', 'No se encontraron medicamentos para el criterio seleccionado.'));
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+
+      const startIdx = (currentPage - 1) * PAGE_SIZE;
+      const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
+
+      const tableRows = paged.map(item => {
+        const isSelected = pharmacySelectedMedName === item.medicineName;
+        const selectBtn = h('button', {
+          class: 'btn ' + (isSelected ? 'primary' : 'secondary'),
+          style: 'font-size: 0.75rem; padding: 0.25rem 0.55rem; width: 100%; text-align: center;',
+          onclick: e => {
+            e.stopPropagation();
+            pharmacySelectedMedName = isSelected ? '' : item.medicineName;
+            refreshAll();
+          }
+        }, isSelected ? 'Graficado' : 'Graficar');
+
+        return h('tr', {
+          class: 'pharmacy-forecast-row',
+          'data-name': item.medicineName,
+          style: 'border-bottom: 1px solid var(--line); cursor: pointer; transition: background 0.15s;' + (isSelected ? ' background: var(--primary-soft); font-weight: 600;' : ''),
+          onclick: () => {
+            pharmacySelectedMedName = isSelected ? '' : item.medicineName;
+            refreshAll();
+          }
+        },
+          h('td', { style: 'padding: 0.6rem 0.5rem; text-align: center;' }, selectBtn),
+          h('td', { style: 'padding: 0.75rem 1rem; font-weight: 600;' }, item.medicineName),
+          h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, categoryBadge(item.category)),
+          h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem; font-weight: 600;' }, String(item.estimatedOrders || 0)),
+          h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem;' }, String(item.predictedUnits || 0) + ' uds'),
+          h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem; font-weight: 700; color: var(--primary);' }, String(item.recommendedStock || 0) + ' uds'),
+          h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, trendBadge(item.historicalTrend)),
+          h('td', { style: 'padding: 0.75rem 1rem; font-size: 0.85rem;', class: 'muted' }, item.actionRecommendation || '')
+        );
+      });
+
+      // Tabla desktop estructurada
+      const desktopTableFrame = h('div', {
+        class: 'card forecast-table-frame forecast-table-frame-desktop desktop-only',
+        style: 'padding: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow-sm, 0 2px 6px rgba(0,0,0,0.04)); margin-top: 1rem; width: 100%;'
       },
-        h('td', { style: 'padding: 0.6rem 0.5rem; text-align: center;' }, selectBtn),
-        h('td', { style: 'padding: 0.75rem 1rem; font-weight: 600;' }, item.medicineName),
-        h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, categoryBadge(item.category)),
-        h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem; font-weight: 600;' }, String(item.estimatedOrders || 0)),
-        h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem;' }, String(item.predictedUnits || 0) + ' uds'),
-        h('td', { style: 'text-align: right; padding: 0.75rem 0.75rem; font-weight: 700; color: var(--primary);' }, String(item.recommendedStock || 0) + ' uds'),
-        h('td', { style: 'text-align: center; padding: 0.75rem 0.5rem;' }, trendBadge(item.historicalTrend)),
-        h('td', { style: 'padding: 0.75rem 1rem; font-size: 0.85rem;', class: 'muted' }, item.actionRecommendation || '')
-      );
-    });
-
-    // Tabla dentro de un recuadro compatible con tema oscuro y todo el ancho
-    const tableFrame = h('div', {
-      class: 'card forecast-table-frame',
-      style: 'padding: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow-sm, 0 2px 6px rgba(0,0,0,0.04)); margin-top: 1rem; width: 100%;'
-    },
-      h('div', { class: 'forecast-table-head', style: 'padding: 0.9rem 1.25rem; background: var(--surface-soft); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;' },
-        h('strong', { style: 'font-size: 0.95rem; color: var(--text);' }, 'Planificacion y Clasificacion de Existencias'),
-        h('span', { class: 'muted text-xs' }, 'Mostrando ' + filtered.length + ' de ' + list.length + ' medicamentos')
-      ),
-      h('div', { style: 'overflow-x: auto; width: 100%;' },
-        h('table', { class: 'data-table grid-bordered fy-excel-table forecast-table', style: 'width: 100%;' },
-          tableHeader,
-          h('tbody', null, ...tableRows)
+        h('div', { class: 'forecast-table-head', style: 'padding: 0.9rem 1.25rem; background: var(--surface-soft); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;' },
+          h('strong', { style: 'font-size: 0.95rem; color: var(--text);' }, 'Planificacion y Clasificacion de Existencias'),
+          h('span', { class: 'muted text-xs' }, 'Mostrando ' + (startIdx + 1) + '-' + Math.min(startIdx + PAGE_SIZE, filtered.length) + ' de ' + filtered.length + ' medicamentos')
+        ),
+        h('div', { style: 'overflow-x: auto; width: 100%;' },
+          h('table', { class: 'data-table grid-bordered fy-excel-table forecast-table', style: 'width: 100%;' },
+            tableHeader,
+            h('tbody', null, ...tableRows)
+          )
         )
-      )
-    );
+      );
+
+      // Tarjetas para vista móvil estilo Flutter
+      const mobileCardsList = paged.map(item => {
+        const isSelected = pharmacySelectedMedName === item.medicineName;
+        return demandFlutterCard(item, isSelected, () => {
+          pharmacySelectedMedName = isSelected ? '' : item.medicineName;
+          refreshAll();
+        });
+      });
+
+      const mobileCardsWrap = h('div', { class: 'forecast-mobile-cards-wrap mobile-only', style: 'margin-top: 1rem;' },
+        h('div', { class: 'forecast-mobile-header', style: 'display: flex; justify-content: space-between; align-items: center; padding: 4px 6px 10px;' },
+          h('strong', { style: 'font-size: 13.5px; color: var(--text);' }, 'Medicamentos y Proyecciones IA (Vista Flutter)'),
+          h('span', { class: 'muted text-xs' }, (startIdx + 1) + '-' + Math.min(startIdx + PAGE_SIZE, filtered.length) + ' de ' + filtered.length)
+        ),
+        ...mobileCardsList
+      );
+
+      // Paginacion universal (maximo 30 por pagina)
+      const paginationControl = fyPagination(filtered.length, currentPage, PAGE_SIZE, (newPage) => {
+        currentPage = newPage;
+        updateTableView();
+        const searchAnchor = document.querySelector('.forecast-search-bar-wrap');
+        if (searchAnchor) searchAnchor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+
+      listHolder.replaceChildren(desktopTableFrame, mobileCardsWrap, paginationControl || h('span'));
+    }
+
+    updateTableView();
 
     const infoNotice = notice('info',
       'Predicción de Demanda Propia · ' + phLabel,
@@ -1295,8 +1339,10 @@ function pharmacyDemandForecast() {
       kpis,
       chartCard,
       toolbar,
-      filtered.length ? tableFrame : empty('Sin registros', 'No se encontraron medicamentos en esta categoria.')
+      listHolder
     );
+  });
+}
   });
 }
 

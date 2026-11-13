@@ -158,6 +158,10 @@ async function renderApp() {
   }
   const hash = location.hash || (state.user ? routeForRole(state.user.role) : '#home');
   if (state.user && ['#home', '#login', '#register', ''].includes(hash)) location.hash = routeForRole(state.user.role);
+  document.querySelectorAll('dialog').forEach(d => {
+    try { d.close(); } catch (_) {}
+    d.remove();
+  });
   const route = location.hash || hash;
   renderNavbar();
   if (!state.user || state.user.role !== 'CLIENTE') {
@@ -224,9 +228,17 @@ async function renderApp() {
 function applyViewTransition() {
   const app = document.getElementById('app-container');
   if (app && app.firstElementChild) {
-    app.firstElementChild.classList.remove('fy-view-transition');
-    void app.firstElementChild.offsetWidth;
-    app.firstElementChild.classList.add('fy-view-transition');
+    const el = app.firstElementChild;
+    if (el.querySelector && el.querySelector('.side-nav-layout')) {
+      el.classList.remove('fy-view-transition');
+      return;
+    }
+    el.classList.remove('fy-view-transition');
+    void el.offsetWidth;
+    el.classList.add('fy-view-transition');
+    el.addEventListener('animationend', () => {
+      el.classList.remove('fy-view-transition');
+    }, { once: true });
   }
 }
 window.applyViewTransition = applyViewTransition;

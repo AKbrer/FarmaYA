@@ -899,11 +899,6 @@ async function handleLoginSubmit(event) {
     }
     API.setToken(data.token);
     state.user = data.user;
-    const authContainer = document.getElementById('authLayout') || document.querySelector('.auth-unified-layout');
-    if (authContainer) {
-      authContainer.classList.add('page-view-exit');
-      await new Promise(r => setTimeout(r, 160));
-    }
     location.hash = routeForRole(data.user.role);
     renderApp();
     return data;
@@ -975,11 +970,6 @@ async function handleRegisterSubmit(event) {
       API.setToken(data.token);
       state.user = data.user;
       toast(role === 'CLIENTE' ? 'Cuenta creada y correo verificado. FarmaYa te da la bienvenida.' : 'Cuenta creada y correo verificado. Quedará pendiente de verificación.');
-      const authContainer = document.getElementById('authLayout') || document.querySelector('.auth-unified-layout');
-      if (authContainer) {
-        authContainer.classList.add('page-view-exit');
-        await new Promise(r => setTimeout(r, 160));
-      }
       location.hash = routeForRole(data.user.role);
       renderApp();
       return data;

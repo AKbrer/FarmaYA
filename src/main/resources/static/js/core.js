@@ -288,13 +288,15 @@ function openDialog(content, opts = {}) {
     if (isClosing) return;
     isClosing = true;
     d.classList.add('is-closing');
-    const animDuration = opts.drawer ? 220 : 190;
     setTimeout(() => {
       try { originalClose(returnValue); } catch (_) {}
-    }, animDuration);
+      if (d.parentNode) d.remove();
+      if (opts.onClose) {
+        try { opts.onClose(); } catch (_) {}
+      }
+    }, 120);
   };
 
-  // Asignar el cierre animado para cualquier invocación a d.close()
   d.close = d.closeWithAnimation;
 
   d.addEventListener('cancel', (e) => {
@@ -303,8 +305,10 @@ function openDialog(content, opts = {}) {
   });
 
   d.addEventListener('close', () => {
-    d.remove();
-    if (opts.onClose) opts.onClose();
+    if (d.parentNode) d.remove();
+    if (opts.onClose) {
+      try { opts.onClose(); } catch (_) {}
+    }
   });
 
   d.addEventListener('click', e => {
@@ -546,11 +550,6 @@ function sideNavigation(items, start = 0) {
   function select(i) {
     buttons.forEach((b, j) => { b.classList.toggle('active', i === j); b.setAttribute('aria-current', i === j ? 'page' : 'false'); });
     const rendered = items[i].render();
-    if (rendered && rendered.classList) {
-      rendered.classList.remove('fy-view-transition');
-      void rendered.offsetWidth;
-      rendered.classList.add('fy-view-transition');
-    }
     panel.replaceChildren(rendered);
   }
   nav.append(h('nav', { class: 'side-nav-items' }, buttons));
@@ -740,6 +739,71 @@ window.openOrderDetail = function(id) {
   console.warn('Detalle de pedido invocado antes de que el módulo esté listo:', id);
 };
 
+/**
+ * Tarjeta de Medicamento en Modelo Predictivo de Demanda (Estilo Flutter Movil)
+ */
+function demandFlutterCard(item, isSelected, onSelect) {
+  const c = (item.category || '').toUpperCase();
+  let bg = 'rgba(100, 116, 139, 0.15)', color = '#475569', label = 'BAJA';
+  if (c === 'ALTA') {
+    bg = 'rgba(217, 56, 58, 0.15)'; color = '#c5221f'; label = 'ALTA';
+  } else if (c === 'MEDIA') {
+    bg = 'rgba(2, 132, 199, 0.15)'; color = '#0284c7'; label = 'MEDIA';
+  }
+
+  const t = item.historicalTrend || 'Estable';
+  let trendIcon = '[=] Estable';
+  if (t === 'Creciente') trendIcon = '[+] Creciente';
+  else if (t === 'Decreciente') trendIcon = '[-] Decreciente';
+
+  return h('div', {
+    class: 'demand-flutter-card' + (isSelected ? ' is-selected' : ''),
+    onclick: onSelect
+  },
+    h('div', { class: 'demand-flutter-card-top' },
+      h('strong', { class: 'demand-flutter-name' }, item.medicineName),
+      h('span', {
+        class: 'tag',
+        style: 'background: ' + bg + '; color: ' + color + '; font-weight: 700; border-radius: 999px; padding: 0.2rem 0.65rem; font-size: 0.75rem;'
+      }, label)
+    ),
+    h('div', { class: 'demand-flutter-metrics-grid' },
+      h('div', { class: 'demand-flutter-metric' },
+        h('span', { class: 'muted text-xs' }, 'Solicitudes Est.'),
+        h('strong', null, String(item.estimatedOrders || 0))
+      ),
+      h('div', { class: 'demand-flutter-metric' },
+        h('span', { class: 'muted text-xs' }, 'Unidades Proy.'),
+        h('strong', null, String(item.predictedUnits || 0) + ' uds')
+      ),
+      h('div', { class: 'demand-flutter-metric highlight' },
+        h('span', { class: 'text-xs', style: 'color: var(--primary); font-weight: 600;' }, 'Stock Sugerido'),
+        h('strong', { style: 'color: var(--primary); font-weight: 800;' }, String(item.recommendedStock || 0) + ' uds')
+      ),
+      h('div', { class: 'demand-flutter-metric' },
+        h('span', { class: 'muted text-xs' }, 'Confianza'),
+        h('span', { class: 'text-xs font-bold' }, (item.confidence ? item.confidence.toFixed(1) : '90.0') + '%')
+      ),
+      h('div', { class: 'demand-flutter-metric' },
+        h('span', { class: 'muted text-xs' }, 'Tendencia'),
+        h('span', { class: 'text-xs muted' }, trendIcon)
+      )
+    ),
+    item.actionRecommendation ? h('div', { class: 'demand-flutter-rec-box' },
+      h('small', { class: 'muted' }, item.actionRecommendation)
+    ) : null,
+    h('div', { class: 'demand-flutter-action-row' },
+      h('button', {
+        class: 'btn ' + (isSelected ? 'primary' : 'secondary') + ' small block',
+        type: 'button',
+        onclick: (e) => {
+          e.stopPropagation();
+          onSelect();
+        }
+      }, isSelected ? 'Graficado en pantalla' : 'Graficar medicamento')
+    )
+  );
+}
 
 /**
  * Componente universal de paginación FarmaYA (máximo 30 elementos por lista con saltos de página)

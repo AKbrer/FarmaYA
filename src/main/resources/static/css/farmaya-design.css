@@ -9178,6 +9178,99 @@ ol.timeline small {
   border-top: 1px dashed var(--line);
 }
 
+/* Tarjetas de Medicamentos en Modelo Predictivo (Estilo Flutter Movil) */
+.demand-flutter-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  cursor: pointer;
+}
+
+.demand-flutter-card.is-selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.demand-flutter-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.demand-flutter-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.demand-flutter-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.demand-flutter-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.demand-flutter-rec-box {
+  padding: 8px 11px;
+  border-left: 3px solid var(--primary);
+  background: rgba(22, 134, 93, 0.06);
+  border-radius: 0 8px 8px 0;
+  font-size: 12px;
+}
+
+.demand-flutter-action-row {
+  margin-top: 4px;
+}
+
+[data-theme="dark"] .demand-flutter-card {
+  background: var(--surface);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .demand-flutter-card.is-selected {
+  border-color: var(--primary);
+  background: rgba(22, 134, 93, 0.15);
+}
+
+[data-theme="dark"] .demand-flutter-metrics-grid {
+  background: var(--surface-soft);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+@media (min-width: 769px) {
+  .forecast-mobile-cards-wrap {
+    display: none !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .forecast-table-frame-desktop {
+    display: none !important;
+  }
+  .forecast-mobile-cards-wrap {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+}
+
 .powerbi-flutter-fin-col {
   display: flex;
   flex-direction: column;
@@ -13841,7 +13934,6 @@ body, button, input, select, textarea {
 .powerbi-pharmacy-suggestions.is-closing {
   animation: fydDropdownOut 140ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
 }
-}
 
 [data-theme="dark"] .powerbi-pharmacy-suggestions {
   background: var(--surface, #1e293b);
@@ -14599,12 +14691,12 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
 
 /* 5. Transicion Fluida entre Vistas y Rutas */
 .fy-view-transition {
-  animation: fyViewGlide 220ms cubic-bezier(0.16, 1, 0.3, 1) both !important;
-  will-change: transform, opacity;
+  animation: fyViewFade 180ms ease-out both !important;
 }
 
 .page-view-exit {
-  animation: fyViewExit 160ms cubic-bezier(0.4, 0, 1, 1) forwards !important;
+  opacity: 0 !important;
+  transition: opacity 120ms ease !important;
   pointer-events: none !important;
 }
 
@@ -14750,25 +14842,12 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   }
 }
 
-@keyframes fyViewGlide {
+@keyframes fyViewFade {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes fyViewExit {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.985);
   }
 }
 
