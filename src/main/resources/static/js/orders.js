@@ -502,7 +502,18 @@ function orderDetail(o, viewer) {
               toast('Factura enviada a tu correo electronico.');
             });
           }
-        }, icon('mail'), h('span', null, 'Reenviar Factura a mi Correo')) : null
+        }, icon('mail'), h('span', null, 'Reenviar Factura a mi Correo')) : null,
+
+        (o.paymentStatus === 'PAGADO_FARMAYA') ? h('button', {
+          class: 'btn primary small',
+          style: 'display: inline-flex; align-items: center; gap: 6px; font-weight: 700; margin-top: 4px;',
+          type: 'button',
+          onclick: () => {
+            if (typeof fyDownloadOrderInvoicePdf === 'function') {
+              fyDownloadOrderInvoicePdf(o);
+            }
+          }
+        }, icon('file-down'), h('span', null, 'Descargar Factura PDF')) : null
 
       ),
 

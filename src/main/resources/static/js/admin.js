@@ -2594,10 +2594,7 @@ function renderDisbursementReceiptModal(d) {
   const content = h('div', { class: 'receipt-modal-content', style: 'padding:14px 8px; font-family:system-ui, -apple-system, sans-serif;' },
     // Cabecera institucional FarmaYA
     h('div', { style: 'text-align:center; padding-bottom:16px; border-bottom:2px dashed #cbd5e1; margin-bottom:18px;' },
-      h('div', { style: 'display:inline-flex; align-items:center; gap:8px; margin-bottom:6px;' },
-        h('span', { style: 'font-weight:900; font-size:24px; color:var(--primary); letter-spacing:-0.5px;' }, 'Farma'),
-        h('span', { style: 'font-weight:900; font-size:24px; color:var(--teal); letter-spacing:-0.5px;' }, 'YA')
-      ),
+      h('img', { src: '/images/farmaya-logo.png', alt: 'FarmaYA', style: 'height:36px; width:auto; display:inline-block; margin-bottom:6px;' }),
       h('h2', { style: 'margin:4px 0 2px; font-size:18px; color:#0f172a; text-transform:uppercase; letter-spacing:0.5px;' }, 'Comprobante Oficial de Liquidación'),
       h('p', { class: 'muted', style: 'font-size:12px; margin:0;' }, 'FarmaYA S.A.S. · NIT 901.849.201-4 · Pasarela Bancaria Wompi'),
       h('div', { style: 'display:inline-block; margin-top:8px; background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; font-size:12px; font-weight:700; padding:4px 14px; border-radius:999px;' },
@@ -2653,17 +2650,30 @@ function renderDisbursementReceiptModal(d) {
     d.notes ? h('p', { class: 'muted small', style: 'margin:0 0 16px; font-style:italic;' }, 'Notas: ' + d.notes) : null,
 
     // Acciones
-    h('div', { style: 'display:flex; justify-content:space-between; align-items:center;' },
+    h('div', { style: 'display:flex; justify-content:space-between; align-items:center; gap:8px;' },
       h('button', {
         class: 'btn secondary',
         type: 'button',
         onclick: () => dialog.close()
       }, 'Cerrar'),
-      h('button', {
-        class: 'btn primary',
-        type: 'button',
-        onclick: () => window.print()
-      }, 'Imprimir Comprobante')
+      h('div', { style: 'display:flex; gap:8px;' },
+        h('button', {
+          class: 'btn primary',
+          type: 'button',
+          onclick: () => {
+            if (typeof fyDownloadDisbursementPdf === 'function') {
+              fyDownloadDisbursementPdf(d);
+            } else {
+              window.print();
+            }
+          }
+        }, icon('file-down'), ' Descargar PDF'),
+        h('button', {
+          class: 'btn secondary',
+          type: 'button',
+          onclick: () => window.print()
+        }, 'Imprimir')
+      )
     )
   );
 
