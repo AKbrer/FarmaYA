@@ -26,12 +26,13 @@
     if (hash === '#pharmacy' || hash === '#courier' || hash === '#admin') {
       return false;
     }
-    if (typeof state !== 'undefined' && state && state.user && state.user.role) {
+    const currentUser = (window.state && window.state.user) || (typeof state !== 'undefined' ? state.user : null);
+    if (currentUser && currentUser.role) {
       // Ocultar siempre si es rol interno de operacion (FARMACIA, REPARTIDOR, ADMIN)
-      return state.user.role === 'CLIENTE';
+      return currentUser.role === 'CLIENTE';
     }
-    // Para visitantes no autenticados: solo en catalogo/inicio/pedidos
-    return !['#pharmacy', '#courier', '#admin'].includes(hash);
+    // Para visitantes no autenticados: solo en catalogo/inicio/pedidos (ocultar en login y register)
+    return !['#pharmacy', '#courier', '#admin', '#login', '#register'].includes(hash);
   }
 
   function initChatbot() {
@@ -550,31 +551,55 @@
         addBtn.textContent = 'Agregar a la canasta';
 
         addBtn.onclick = () => {
-          const user = window.state && window.state.user;
+          const user = (window.state && window.state.user) || (typeof state !== 'undefined' ? state.user : null);
 
           // 1. Si no ha iniciado sesión:
           if (!user) {
-            // Guardar producto en la canasta para que persista
+            // Guardar producto en la canasta para que persista al iniciar sesión
             if (typeof window.addClientProduct === 'function') {
               window.addClientProduct({
                 name: prod.name,
                 price: prod.price,
                 rx: !!prod.rx
               });
+            } else if (typeof addClientProduct === 'function') {
+              addClientProduct({
+                name: prod.name,
+                price: prod.price,
+                rx: !!prod.rx
+              });
             }
+
+            const noticeMsg = 'Debes iniciar sesión o crear tu cuenta para ver tu canasta y completar tu pedido de ' + prod.name + '.';
             if (typeof window.toast === 'function') {
-              window.toast('Inicia sesión o crea tu cuenta para ver tu canasta y completar tu pedido de ' + prod.name + '.', 'warn');
+              window.toast(noticeMsg, 'warn');
+            } else if (typeof toast === 'function') {
+              toast(noticeMsg, 'warn');
             }
+
+            // Mensaje visible en el chat de FarmaBot
+            appendBotMessage({
+              reply: 'Para agregar **' + prod.name + '** a tu canasta y pedirlo a domicilio, debes iniciar sesión o crear tu cuenta en FarmaYA.'
+            });
+            scrollChatToBottom();
+
             // Redirigir a login para que inicie sesión y vea su canasta cargada
-            window.location.hash = '#login';
+            setTimeout(() => {
+              window.location.hash = '#login';
+            }, 600);
             return;
           }
 
           // 2. Si está autenticado pero con otro rol (FARMACIA o REPARTIDOR):
           if (user.role !== 'CLIENTE') {
+            const roleMsg = 'Tu cuenta es de tipo ' + (user.role || 'aliado') + '. Para hacer pedidos a farmacias, ingresa con una cuenta de Cliente.';
             if (typeof window.toast === 'function') {
-              window.toast('Tu cuenta es de tipo ' + (user.role || 'aliado') + '. Para hacer pedidos a farmacias, ingresa con una cuenta de Cliente.', 'warn');
+              window.toast(roleMsg, 'warn');
+            } else if (typeof toast === 'function') {
+              toast(roleMsg, 'warn');
             }
+            appendBotMessage({ reply: roleMsg });
+            scrollChatToBottom();
             return;
           }
 
@@ -585,15 +610,28 @@
               price: prod.price,
               rx: !!prod.rx
             });
+          } else if (typeof addClientProduct === 'function') {
+            addClientProduct({
+              name: prod.name,
+              price: prod.price,
+              rx: !!prod.rx
+            });
           }
 
           if (typeof window.syncClientCartUI === 'function') {
             window.syncClientCartUI();
           }
 
+          const addedMsg = prod.name + ' añadido a tu canasta FarmaYA.';
           if (typeof window.toast === 'function') {
-            window.toast(prod.name + ' añadido a tu canasta FarmaYA.');
+            window.toast(addedMsg);
+          } else if (typeof toast === 'function') {
+            toast(addedMsg);
           }
+          appendBotMessage({
+            reply: '¡Listo! He agregado **' + prod.name + '** a tu canasta. Puedes revisar tu pedido en la parte superior.'
+          });
+          scrollChatToBottom();
         };
 
         actionRow.appendChild(priceSpan);

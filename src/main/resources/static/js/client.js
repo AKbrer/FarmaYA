@@ -1680,6 +1680,7 @@ function addClientProduct(p) {
   persistClientCart();
   syncClientCartUI();
 }
+window.addClientProduct = addClientProduct;
 
 function removeClientProduct(p) {
 
@@ -1699,6 +1700,8 @@ function removeClientProduct(p) {
   persistClientCart();
   syncClientCartUI();
 }
+window.removeClientProduct = removeClientProduct;
+window.renderClientDashboard = renderClientDashboard;
 
 /**
 

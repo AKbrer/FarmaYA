@@ -5,6 +5,7 @@ const FY_CROSS_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAAEZCAYA
 
 const CONFIG = { currency: 'COP', locale: 'es-CO' }; // cambia la moneda aquí
 const state = { user: null, meta: { statuses: {}, demo: false } };
+window.state = state;
 const ROLE_NAMES = { CLIENTE: 'Cliente', FARMACIA: 'Farmacia', REPARTIDOR: 'Repartidor', ADMIN: 'Administrador' };
 
 /* ---------- Temas (Claro / Oscuro / Automático) ---------- */
@@ -150,6 +151,7 @@ const API = {
   put(path, body) { return this.call('PUT', path, body); },
   delete(path) { return this.call('DELETE', path); }
 };
+window.API = API;
 
 /* ---------- DOM ---------- */
 function h(tag, props, ...kids) {
@@ -909,3 +911,12 @@ function excelTable(headers, bodyRows, opts = {}) {
   );
 }
 window.excelTable = excelTable;
+window.toast = toast;
+window.h = h;
+window.icon = icon;
+window.money = money;
+window.openDialog = openDialog;
+window.confirmBox = confirmBox;
+window.act = act;
+window.demandFlutterCard = demandFlutterCard;
+window.fyPagination = fyPagination;

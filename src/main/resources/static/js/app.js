@@ -156,13 +156,18 @@ async function renderApp() {
   if (bootstrapTasks.length) {
     await Promise.all(bootstrapTasks);
   }
-  const hash = location.hash || (state.user ? routeForRole(state.user.role) : '#home');
-  if (state.user && ['#home', '#login', '#register', ''].includes(hash)) location.hash = routeForRole(state.user.role);
+  let route = location.hash || (state.user ? routeForRole(state.user.role) : '#home');
+  if (state.user && ['#home', '#login', '#register', '', '#'].includes(route)) {
+    const roleTarget = routeForRole(state.user.role);
+    if (location.hash !== roleTarget) {
+      location.hash = roleTarget;
+    }
+    route = roleTarget;
+  }
   document.querySelectorAll('dialog').forEach(d => {
     try { d.close(); } catch (_) {}
     d.remove();
   });
-  const route = location.hash || hash;
   renderNavbar();
   if (!state.user || state.user.role !== 'CLIENTE') {
     document.getElementById('fy_mobile_cart_bar')?.remove();
@@ -207,7 +212,10 @@ async function renderApp() {
     applyViewTransition();
     return;
   }
-  if (route !== expected) { location.hash = expected; return; }
+  if (route !== expected) {
+    if (location.hash !== expected) location.hash = expected;
+    route = expected;
+  }
   document.title = 'FarmaYa · ' + (state.user.name || 'Inicio');
   if (state.user.role === 'CLIENTE') { renderClientDashboard(); }
   else if (state.user.role === 'FARMACIA') app.replaceChildren(pharmacyView(state.user));
@@ -224,6 +232,7 @@ async function renderApp() {
   }
   applyViewTransition();
 }
+window.renderApp = renderApp;
 
 function applyViewTransition() {
   const app = document.getElementById('app-container');

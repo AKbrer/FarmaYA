@@ -269,12 +269,16 @@ function openGoogleOAuthConnectModal() {
 
 
 function buildLoginCard() {
+  const cartItems = (typeof clientCart !== 'undefined' && clientCart) || (typeof window.clientCart !== 'undefined' && window.clientCart) || [];
+  const hasCart = cartItems.length > 0;
+
   const card = h('section', { class: 'auth-card', id: 'cardLogin' },
     h('div', { class: 'auth-card-heading' },
       h('span', { class: 'auth-icon auth-cross-box' }, h('img', { class: 'auth-cross-img', src: '/images/farmaya-cross.png?v=1', alt: 'FarmaYA' })),
       h('h2', null, '¡Qué bueno tenerte aquí!'),
-      h('p', null, 'Inicia sesión para continuar con FarmaYA')
+      h('p', null, hasCart ? 'Inicia sesión para completar tu pedido con los productos seleccionados' : 'Inicia sesión para continuar con FarmaYA')
     ),
+    hasCart ? notice('info', 'Canasta activa', 'Tienes ' + cartItems.length + (cartItems.length === 1 ? ' producto listo' : ' productos listos') + ' en tu canasta. Inicia sesión para solicitar tu domicilio.') : null,
     h('form', { id: 'loginForm', class: 'form-stack' },
       field('Correo electrónico', h('input', { id: 'loginEmail', type: 'email', autocomplete: 'username', placeholder: 'tu@correo.com', required: true })),
       field('Contraseña', h('input', { id: 'loginPassword', type: 'password', autocomplete: 'current-password', placeholder: 'Tu contraseña', required: true })),
