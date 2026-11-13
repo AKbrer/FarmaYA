@@ -11637,30 +11637,97 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   background: #006b5f;
 }
 
-.farmabot-quick-chips {
+.farmabot-chips-wrapper {
+  position: relative;
   display: flex;
-  gap: 6px;
-  padding: 8px 14px;
-  overflow-x: auto;
-  white-space: nowrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
   background: var(--surface, #FFFFFF);
   border-top: 1px solid var(--line, #E2E8F0);
-  scrollbar-width: none;
+  overflow: hidden;
+}
+
+.farmabot-quick-chips {
+  flex: 1;
+  display: flex;
+  gap: 6px;
+  padding: 4px 2px 6px 2px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  user-select: none;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 78, 70, 0.25) transparent;
+}
+
+.farmabot-quick-chips.is-dragging {
+  cursor: grabbing !important;
+  scroll-behavior: auto;
 }
 
 .farmabot-quick-chips::-webkit-scrollbar {
-  display: none;
+  height: 4px;
+}
+
+.farmabot-quick-chips::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.farmabot-quick-chips::-webkit-scrollbar-thumb {
+  background: rgba(0, 78, 70, 0.25);
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.farmabot-quick-chips:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 78, 70, 0.55);
+}
+
+.farmabot-chips-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--line, #CBD5E1);
+  background: var(--surface-soft, #F8FAFC);
+  color: var(--primary, #004e46);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  z-index: 2;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.farmabot-chips-arrow:hover {
+  background: #004e46;
+  color: #FFFFFF;
+  border-color: #004e46;
+  transform: scale(1.06);
+}
+
+.farmabot-chips-arrow:active {
+  transform: scale(0.94);
 }
 
 .farmabot-chip {
   background: var(--surface-soft, #F1F5F9);
   border: 1px solid var(--line, #E2E8F0);
-  padding: 5px 10px;
+  padding: 5px 11px;
   border-radius: 14px;
   font-size: 11.5px;
   font-weight: 600;
   color: var(--primary, #004e46);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
@@ -11780,11 +11847,36 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   color: #F8FAFC;
 }
 
+[data-theme="dark"] .farmabot-chips-wrapper,
 [data-theme="dark"] .farmabot-quick-chips,
 [data-theme="dark"] .farmabot-input-area,
 [data-theme="dark"] .farmabot-footer-disclaimer {
   background: #0F172A;
   border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .farmabot-chips-arrow {
+  background: #1E293B;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #5EEAD4;
+}
+
+[data-theme="dark"] .farmabot-chips-arrow:hover {
+  background: #004e46;
+  border-color: #5EEAD4;
+  color: #FFFFFF;
+}
+
+[data-theme="dark"] .farmabot-quick-chips {
+  scrollbar-color: rgba(94, 234, 212, 0.3) transparent;
+}
+
+[data-theme="dark"] .farmabot-quick-chips::-webkit-scrollbar-thumb {
+  background: rgba(94, 234, 212, 0.3);
+}
+
+[data-theme="dark"] .farmabot-quick-chips:hover::-webkit-scrollbar-thumb {
+  background: rgba(94, 234, 212, 0.6);
 }
 
 [data-theme="dark"] .farmabot-chip {

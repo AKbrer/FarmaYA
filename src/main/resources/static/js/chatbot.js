@@ -71,11 +71,19 @@
       </header>
 
       <div id="farmabot-messages" class="farmabot-messages" role="log" aria-live="polite">
-        <!-- Mensajes renderizados aquí -->
+        <!-- Mensajes renderizados aqui -->
       </div>
 
-      <div class="farmabot-quick-chips" id="farmabot-chips">
-        <!-- Chips rápidos -->
+      <div class="farmabot-chips-wrapper" id="farmabot-chips-wrapper">
+        <button type="button" class="farmabot-chips-arrow farmabot-chips-prev" id="farmabot-chips-prev" aria-label="Desplazar a la izquierda" title="Desplazar izquierda">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+        </button>
+        <div class="farmabot-quick-chips" id="farmabot-chips" role="region" aria-label="Preguntas rapidas">
+          <!-- Chips rapidos -->
+        </div>
+        <button type="button" class="farmabot-chips-arrow farmabot-chips-next" id="farmabot-chips-next" aria-label="Desplazar a la derecha" title="Desplazar derecha">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </button>
       </div>
 
       <form id="farmabot-form" class="farmabot-input-area" novalidate>
@@ -110,6 +118,7 @@
 
     renderInitialWelcome();
     renderQuickChips();
+    setupChipsInteractions();
   }
 
   function toggleChat() {
@@ -126,6 +135,7 @@
         const inp = document.getElementById('farmabot-input');
         if (inp) inp.focus();
         scrollChatToBottom();
+        updateChipsArrows();
       }, 100);
     } else {
       panel.style.display = 'none';
@@ -138,6 +148,8 @@
     chatHistory = [];
     const container = document.getElementById('farmabot-messages');
     if (container) container.innerHTML = '';
+    const chipsWrapper = document.getElementById('farmabot-chips-wrapper') || document.getElementById('farmabot-chips');
+    if (chipsWrapper) chipsWrapper.style.display = '';
     renderInitialWelcome();
     renderQuickChips();
   }
@@ -162,6 +174,9 @@
       chip.className = 'farmabot-chip';
       chip.textContent = q;
       chip.onclick = () => {
+        if (chipsContainer.dataset.wasDragging === 'true') {
+          return;
+        }
         const input = document.getElementById('farmabot-input');
         if (input) {
           input.value = q;
@@ -170,6 +185,118 @@
       };
       chipsContainer.appendChild(chip);
     });
+
+    setTimeout(updateChipsArrows, 50);
+  }
+
+  function setupChipsInteractions() {
+    const container = document.getElementById('farmabot-chips');
+    const prevBtn = document.getElementById('farmabot-chips-prev');
+    const nextBtn = document.getElementById('farmabot-chips-next');
+    if (!container) return;
+
+    // 1. Mouse wheel translation: deslizar con la rueda del raton en computador
+    container.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) > 0 || Math.abs(e.deltaX) > 0) {
+        e.preventDefault();
+        const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+        container.scrollLeft += delta;
+        updateChipsArrows();
+      }
+    }, { passive: false });
+
+    // 2. Botones de flecha para navegacion en computador
+    if (prevBtn) {
+      prevBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        container.scrollBy({ left: -180, behavior: 'smooth' });
+        setTimeout(updateChipsArrows, 260);
+      });
+    }
+    if (nextBtn) {
+      nextBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        container.scrollBy({ left: 180, behavior: 'smooth' });
+        setTimeout(updateChipsArrows, 260);
+      });
+    }
+
+    // 3. Arrastre con mouse (drag-to-scroll) para pantallas de computador
+    let isDown = false;
+    let startX = 0;
+    let scrollLeftStart = 0;
+    let hasMoved = false;
+
+    container.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      isDown = true;
+      hasMoved = false;
+      container.classList.add('is-dragging');
+      startX = e.pageX - container.offsetLeft;
+      scrollLeftStart = container.scrollLeft;
+      container.dataset.wasDragging = 'false';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const x = e.pageX - container.offsetLeft;
+      const walk = (x - startX);
+      if (Math.abs(walk) > 4) {
+        hasMoved = true;
+        container.dataset.wasDragging = 'true';
+        container.scrollLeft = scrollLeftStart - walk;
+        updateChipsArrows();
+      }
+    });
+
+    const finishDrag = () => {
+      if (!isDown) return;
+      isDown = false;
+      container.classList.remove('is-dragging');
+      if (hasMoved) {
+        setTimeout(() => {
+          if (container) container.dataset.wasDragging = 'false';
+        }, 120);
+      }
+    };
+
+    window.addEventListener('mouseup', finishDrag);
+
+    container.addEventListener('scroll', () => {
+      updateChipsArrows();
+    }, { passive: true });
+  }
+
+  function updateChipsArrows() {
+    const container = document.getElementById('farmabot-chips');
+    const prevBtn = document.getElementById('farmabot-chips-prev');
+    const nextBtn = document.getElementById('farmabot-chips-next');
+    if (!container || !prevBtn || !nextBtn) return;
+
+    const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
+    if (maxScroll <= 4) {
+      prevBtn.style.opacity = '0';
+      prevBtn.style.pointerEvents = 'none';
+      nextBtn.style.opacity = '0';
+      nextBtn.style.pointerEvents = 'none';
+      return;
+    }
+
+    if (container.scrollLeft <= 4) {
+      prevBtn.style.opacity = '0.35';
+      prevBtn.style.pointerEvents = 'none';
+    } else {
+      prevBtn.style.opacity = '1';
+      prevBtn.style.pointerEvents = 'auto';
+    }
+
+    if (container.scrollLeft >= maxScroll - 4) {
+      nextBtn.style.opacity = '0.35';
+      nextBtn.style.pointerEvents = 'none';
+    } else {
+      nextBtn.style.opacity = '1';
+      nextBtn.style.pointerEvents = 'auto';
+    }
   }
 
   async function handleUserSubmit() {
@@ -184,8 +311,8 @@
     chatHistory.push({ role: 'user', text: text });
 
     // Ocultar chips tras primera interacción para dejar espacio al chat
-    const chips = document.getElementById('farmabot-chips');
-    if (chips) chips.style.display = 'none';
+    const chipsWrapper = document.getElementById('farmabot-chips-wrapper') || document.getElementById('farmabot-chips');
+    if (chipsWrapper) chipsWrapper.style.display = 'none';
 
     // Mostrar indicador de escribiendo
     showTypingIndicator();
