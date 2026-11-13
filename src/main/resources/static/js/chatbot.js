@@ -75,15 +75,14 @@
       </div>
 
       <div class="farmabot-chips-wrapper" id="farmabot-chips-wrapper">
-        <button type="button" class="farmabot-chips-arrow farmabot-chips-prev" id="farmabot-chips-prev" aria-label="Desplazar a la izquierda" title="Desplazar izquierda">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-        </button>
         <div class="farmabot-quick-chips" id="farmabot-chips" role="region" aria-label="Preguntas rapidas">
           <!-- Chips rapidos -->
         </div>
-        <button type="button" class="farmabot-chips-arrow farmabot-chips-next" id="farmabot-chips-next" aria-label="Desplazar a la derecha" title="Desplazar derecha">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-        </button>
+        <div class="farmabot-scroll-track-wrap" id="farmabot-scroll-track-wrap">
+          <div class="farmabot-scroll-track" id="farmabot-scroll-track" title="Desliza para ver mas preguntas">
+            <div class="farmabot-scroll-thumb" id="farmabot-scroll-thumb"></div>
+          </div>
+        </div>
       </div>
 
       <form id="farmabot-form" class="farmabot-input-area" novalidate>
@@ -135,7 +134,7 @@
         const inp = document.getElementById('farmabot-input');
         if (inp) inp.focus();
         scrollChatToBottom();
-        updateChipsArrows();
+        updateScrollLine();
       }, 100);
     } else {
       panel.style.display = 'none';
@@ -186,42 +185,26 @@
       chipsContainer.appendChild(chip);
     });
 
-    setTimeout(updateChipsArrows, 50);
+    setTimeout(updateScrollLine, 50);
   }
 
   function setupChipsInteractions() {
     const container = document.getElementById('farmabot-chips');
-    const prevBtn = document.getElementById('farmabot-chips-prev');
-    const nextBtn = document.getElementById('farmabot-chips-next');
+    const track = document.getElementById('farmabot-scroll-track');
+    const thumb = document.getElementById('farmabot-scroll-thumb');
     if (!container) return;
 
-    // 1. Mouse wheel translation: deslizar con la rueda del raton en computador
+    // 1. Desplazamiento horizontal con la rueda del raton en computador
     container.addEventListener('wheel', (e) => {
       if (Math.abs(e.deltaY) > 0 || Math.abs(e.deltaX) > 0) {
         e.preventDefault();
         const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
         container.scrollLeft += delta;
-        updateChipsArrows();
+        updateScrollLine();
       }
     }, { passive: false });
 
-    // 2. Botones de flecha para navegacion en computador
-    if (prevBtn) {
-      prevBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        container.scrollBy({ left: -180, behavior: 'smooth' });
-        setTimeout(updateChipsArrows, 260);
-      });
-    }
-    if (nextBtn) {
-      nextBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        container.scrollBy({ left: 180, behavior: 'smooth' });
-        setTimeout(updateChipsArrows, 260);
-      });
-    }
-
-    // 3. Arrastre con mouse (drag-to-scroll) para pantallas de computador
+    // 2. Arrastre directo con raton (drag-to-scroll) sobre las preguntas
     let isDown = false;
     let startX = 0;
     let scrollLeftStart = 0;
@@ -245,7 +228,7 @@
         hasMoved = true;
         container.dataset.wasDragging = 'true';
         container.scrollLeft = scrollLeftStart - walk;
-        updateChipsArrows();
+        updateScrollLine();
       }
     });
 
@@ -262,41 +245,93 @@
 
     window.addEventListener('mouseup', finishDrag);
 
+    // 3. Linea para desplazar en la vista computador: clic en pista y arrastre de la barra
+    if (track && thumb) {
+      let isThumbDragging = false;
+      let thumbStartX = 0;
+      let initialScroll = 0;
+
+      // Clic directo en cualquier punto de la linea para saltar alli
+      track.addEventListener('mousedown', (e) => {
+        if (e.target === thumb) return;
+        const rect = track.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const trackW = track.offsetWidth;
+        const thumbW = thumb.offsetWidth;
+        const maxTravel = trackW - thumbW;
+        const targetRatio = maxTravel > 0 ? Math.max(0, Math.min(1, (clickX - thumbW / 2) / maxTravel)) : 0;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        container.scrollTo({ left: targetRatio * maxScroll, behavior: 'smooth' });
+      });
+
+      // Arrastre manual del indicador deslizante (thumb)
+      thumb.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+        isThumbDragging = true;
+        thumbStartX = e.clientX;
+        initialScroll = container.scrollLeft;
+        thumb.classList.add('is-dragging');
+        e.stopPropagation();
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isThumbDragging) return;
+        const deltaX = e.clientX - thumbStartX;
+        const trackW = track.offsetWidth;
+        const thumbW = thumb.offsetWidth;
+        const maxTravel = trackW - thumbW;
+        const maxScroll = container.scrollWidth - container.clientWidth;
+        if (maxTravel > 0 && maxScroll > 0) {
+          const scrollDelta = (deltaX / maxTravel) * maxScroll;
+          container.scrollLeft = Math.max(0, Math.min(maxScroll, initialScroll + scrollDelta));
+          updateScrollLine();
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isThumbDragging) {
+          isThumbDragging = false;
+          thumb.classList.remove('is-dragging');
+        }
+      });
+    }
+
     container.addEventListener('scroll', () => {
-      updateChipsArrows();
+      updateScrollLine();
     }, { passive: true });
   }
 
-  function updateChipsArrows() {
+  function updateScrollLine() {
     const container = document.getElementById('farmabot-chips');
-    const prevBtn = document.getElementById('farmabot-chips-prev');
-    const nextBtn = document.getElementById('farmabot-chips-next');
-    if (!container || !prevBtn || !nextBtn) return;
+    const trackWrap = document.getElementById('farmabot-scroll-track-wrap');
+    const track = document.getElementById('farmabot-scroll-track');
+    const thumb = document.getElementById('farmabot-scroll-thumb');
+    if (!container || !track || !thumb) return;
 
-    const maxScroll = Math.max(0, container.scrollWidth - container.clientWidth);
-    if (maxScroll <= 4) {
-      prevBtn.style.opacity = '0';
-      prevBtn.style.pointerEvents = 'none';
-      nextBtn.style.opacity = '0';
-      nextBtn.style.pointerEvents = 'none';
+    const scrollWidth = container.scrollWidth;
+    const clientWidth = container.clientWidth;
+    const maxScroll = scrollWidth - clientWidth;
+
+    if (maxScroll <= 2) {
+      if (trackWrap) trackWrap.style.display = 'none';
       return;
     }
+    if (trackWrap) trackWrap.style.display = 'block';
 
-    if (container.scrollLeft <= 4) {
-      prevBtn.style.opacity = '0.35';
-      prevBtn.style.pointerEvents = 'none';
-    } else {
-      prevBtn.style.opacity = '1';
-      prevBtn.style.pointerEvents = 'auto';
-    }
+    const trackWidth = track.clientWidth || track.offsetWidth;
+    if (trackWidth <= 0) return;
 
-    if (container.scrollLeft >= maxScroll - 4) {
-      nextBtn.style.opacity = '0.35';
-      nextBtn.style.pointerEvents = 'none';
-    } else {
-      nextBtn.style.opacity = '1';
-      nextBtn.style.pointerEvents = 'auto';
-    }
+    // Calcular ancho proporcional de la linea deslizante (minimo 45px, maximo 120px)
+    const ratio = clientWidth / scrollWidth;
+    const thumbWidth = Math.max(45, Math.min(120, trackWidth * ratio));
+    thumb.style.width = thumbWidth + 'px';
+
+    // Posicion de desplazamiento proporcional
+    const maxThumbTravel = trackWidth - thumbWidth;
+    const scrollRatio = maxScroll > 0 ? (container.scrollLeft / maxScroll) : 0;
+    const thumbLeft = Math.max(0, Math.min(maxThumbTravel, scrollRatio * maxThumbTravel));
+    thumb.style.transform = `translateX(${thumbLeft}px)`;
   }
 
   async function handleUserSubmit() {

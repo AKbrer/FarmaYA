@@ -11640,19 +11640,18 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
 .farmabot-chips-wrapper {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 10px;
+  flex-direction: column;
+  padding: 8px 10px 6px 10px;
   background: var(--surface, #FFFFFF);
   border-top: 1px solid var(--line, #E2E8F0);
   overflow: hidden;
 }
 
 .farmabot-quick-chips {
-  flex: 1;
+  width: 100%;
   display: flex;
   gap: 6px;
-  padding: 4px 2px 6px 2px;
+  padding: 2px 2px 6px 2px;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
@@ -11660,8 +11659,11 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   -webkit-overflow-scrolling: touch;
   cursor: grab;
   user-select: none;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(0, 78, 70, 0.25) transparent;
+  scrollbar-width: none;
+}
+
+.farmabot-quick-chips::-webkit-scrollbar {
+  display: none;
 }
 
 .farmabot-quick-chips.is-dragging {
@@ -11669,52 +11671,52 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   scroll-behavior: auto;
 }
 
-.farmabot-quick-chips::-webkit-scrollbar {
-  height: 4px;
+.farmabot-quick-chips.is-dragging .farmabot-chip {
+  pointer-events: none;
 }
 
-.farmabot-quick-chips::-webkit-scrollbar-track {
-  background: transparent;
+/* Linea para desplazar en la vista computador */
+.farmabot-scroll-track-wrap {
+  width: 100%;
+  padding: 4px 4px 2px 4px;
+  box-sizing: border-box;
 }
 
-.farmabot-quick-chips::-webkit-scrollbar-thumb {
-  background: rgba(0, 78, 70, 0.25);
+.farmabot-scroll-track {
+  width: 100%;
+  height: 5px;
+  background: var(--surface-soft, #E2E8F0);
   border-radius: 999px;
-  transition: background 0.15s ease;
-}
-
-.farmabot-quick-chips:hover::-webkit-scrollbar-thumb {
-  background: rgba(0, 78, 70, 0.55);
-}
-
-.farmabot-chips-arrow {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
-  border-radius: 50%;
-  border: 1px solid var(--line, #CBD5E1);
-  background: var(--surface-soft, #F8FAFC);
-  color: var(--primary, #004e46);
+  position: relative;
   cursor: pointer;
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-  z-index: 2;
-  padding: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: height 0.15s ease, background 0.15s ease;
+  user-select: none;
 }
 
-.farmabot-chips-arrow:hover {
-  background: #004e46;
-  color: #FFFFFF;
-  border-color: #004e46;
-  transform: scale(1.06);
+.farmabot-scroll-track:hover {
+  height: 7px;
+  background: #CBD5E1;
 }
 
-.farmabot-chips-arrow:active {
-  transform: scale(0.94);
+.farmabot-scroll-thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 60px;
+  background: var(--primary, #004e46);
+  border-radius: 999px;
+  cursor: grab;
+  transition: background-color 0.15s ease;
+}
+
+.farmabot-scroll-thumb:hover {
+  background: #006b5f;
+}
+
+.farmabot-scroll-thumb.is-dragging {
+  cursor: grabbing !important;
+  background: #003630;
 }
 
 .farmabot-chip {
@@ -11855,28 +11857,24 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-[data-theme="dark"] .farmabot-chips-arrow {
-  background: #1E293B;
-  border-color: rgba(255, 255, 255, 0.15);
-  color: #5EEAD4;
+[data-theme="dark"] .farmabot-scroll-track {
+  background: #334155;
 }
 
-[data-theme="dark"] .farmabot-chips-arrow:hover {
-  background: #004e46;
-  border-color: #5EEAD4;
-  color: #FFFFFF;
+[data-theme="dark"] .farmabot-scroll-track:hover {
+  background: #475569;
 }
 
-[data-theme="dark"] .farmabot-quick-chips {
-  scrollbar-color: rgba(94, 234, 212, 0.3) transparent;
+[data-theme="dark"] .farmabot-scroll-thumb {
+  background: #14B8A6;
 }
 
-[data-theme="dark"] .farmabot-quick-chips::-webkit-scrollbar-thumb {
-  background: rgba(94, 234, 212, 0.3);
+[data-theme="dark"] .farmabot-scroll-thumb:hover {
+  background: #2DD4BF;
 }
 
-[data-theme="dark"] .farmabot-quick-chips:hover::-webkit-scrollbar-thumb {
-  background: rgba(94, 234, 212, 0.6);
+[data-theme="dark"] .farmabot-scroll-thumb.is-dragging {
+  background: #5EEAD4;
 }
 
 [data-theme="dark"] .farmabot-chip {
