@@ -2120,7 +2120,7 @@ function adminCatalogManager() {
           )
         ),
         h('tbody', null, paged.map(p => {
-          const imgSrc = customImages[p.id] || p.img || (typeof getProductImagePlaceholder === 'function' ? getProductImagePlaceholder(p.name, p.cat) : '');
+          const imgSrc = customImages[p.id] || customImages[p.name] || p.imageUrl || p.img || (typeof getProductTransparentPng === 'function' ? getProductTransparentPng(p) : (typeof getProductImagePlaceholder === 'function' ? getProductImagePlaceholder(p.name, p.cat) : ''));
           return h('tr', null,
             h('td', { class: 'catalog-thumb-cell' },
               h('div', { class: 'admin-prod-thumb-wrap' },

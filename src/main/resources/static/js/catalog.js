@@ -2264,7 +2264,7 @@ function productArt(p) {
   span.className = 'p-art';
   span.setAttribute('aria-hidden', 'true');
 
-  const customImg = p.imageUrl || getCustomProductImages()[p.name];
+  const customImg = p.imageUrl || getCustomProductImages()[p.name] || (typeof getProductTransparentPng === 'function' ? getProductTransparentPng(p) : null);
   if (customImg) {
     span.classList.add('p-art-has-photo');
     const img = document.createElement('img');
