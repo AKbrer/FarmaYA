@@ -128,7 +128,14 @@ const API = {
     if (!res.ok) {
       const msg = (data && data.error) || 'No pudimos completar la accion. Intenta de nuevo.';
       const lost = res.status === 401 || (res.status === 403 && /deshabilitada/.test(msg));
-      if (lost && this.token) { this.setToken(null); state.user = null; if (typeof renderApp === 'function') renderApp(); }
+      if (lost && this.token) {
+        if (typeof window.clearClientCartSession === 'function') {
+          window.clearClientCartSession();
+        }
+        this.setToken(null);
+        state.user = null;
+        if (typeof renderApp === 'function') renderApp();
+      }
       throw new Error(msg);
     }
     if (method === 'GET') {

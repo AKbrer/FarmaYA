@@ -177,6 +177,9 @@ function launchGoogleOAuthPopup(clientId) {
 
             API.setToken(authRes.token);
             state.user = authRes.user;
+            if (typeof window.loadClientCart === 'function') {
+              window.loadClientCart(authRes.user);
+            }
             toast('Bienvenido, ' + authRes.user.name + '. Has iniciado sesión con Google.');
             location.hash = routeForRole(authRes.user.role);
             renderApp();
@@ -903,6 +906,9 @@ async function handleLoginSubmit(event) {
     }
     API.setToken(data.token);
     state.user = data.user;
+    if (typeof window.loadClientCart === 'function') {
+      window.loadClientCart(data.user);
+    }
     location.hash = routeForRole(data.user.role);
     renderApp();
     return data;
@@ -973,6 +979,9 @@ async function handleRegisterSubmit(event) {
       const data = await API.post('/auth/register', body);
       API.setToken(data.token);
       state.user = data.user;
+      if (typeof window.loadClientCart === 'function') {
+        window.loadClientCart(data.user);
+      }
       toast(role === 'CLIENTE' ? 'Cuenta creada y correo verificado. FarmaYa te da la bienvenida.' : 'Cuenta creada y correo verificado. Quedará pendiente de verificación.');
       location.hash = routeForRole(data.user.role);
       renderApp();

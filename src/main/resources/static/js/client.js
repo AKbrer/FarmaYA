@@ -4,21 +4,94 @@
 
    Conserva 100% de la funcionalidad reactiva (API, Carrito, Leaflet Maps, Perfil, Estados). */
 
-let clientCart = []; persistClientCart(); syncClientCartUI();
-try {
-  const _savedCart = localStorage.getItem('farmaya_client_cart');
-  if (_savedCart) {
-    const _parsed = JSON.parse(_savedCart);
-    if (Array.isArray(_parsed)) clientCart = _parsed;
+let clientCart = [];
+
+function getCartStorageKey(u) {
+  const targetUser = u !== undefined ? u : (typeof state !== 'undefined' ? state.user : null);
+  if (targetUser) {
+    const id = targetUser.id != null ? targetUser.id : (targetUser.email || 'authenticated');
+    return 'farmaya_cart_user_' + id;
   }
-} catch (_) {
-  clientCart = [];
+  return 'farmaya_cart_guest';
 }
 
-function persistClientCart() {
+function persistClientCart(u) {
   try {
-    localStorage.setItem('farmaya_client_cart', JSON.stringify(clientCart));
+    const key = getCartStorageKey(u);
+    localStorage.setItem(key, JSON.stringify(clientCart));
+    window.clientCart = clientCart;
   } catch (_) {}
+}
+
+function loadClientCart(u) {
+  const targetUser = u !== undefined ? u : (typeof state !== 'undefined' ? state.user : null);
+  try {
+    if (targetUser) {
+      const userKey = getCartStorageKey(targetUser);
+      const userRaw = localStorage.getItem(userKey);
+      let userItems = [];
+      if (userRaw) {
+        try {
+          const parsed = JSON.parse(userRaw);
+          if (Array.isArray(parsed)) userItems = parsed;
+        } catch (_) {}
+      }
+
+      // Si existian productos en la canasta de invitado o en la clave legacy,
+      // se transfieren a la canasta del usuario activo que acaba de iniciar sesion
+      const guestRaw = localStorage.getItem('farmaya_cart_guest') || localStorage.getItem('farmaya_client_cart');
+      if (guestRaw) {
+        try {
+          const guestItems = JSON.parse(guestRaw);
+          if (Array.isArray(guestItems) && guestItems.length > 0) {
+            guestItems.forEach(gItem => {
+              const existing = userItems.find(x => x.name === gItem.name);
+              if (existing) {
+                existing.quantity = Math.min(99, (existing.quantity || 1) + (gItem.quantity || 1));
+              } else {
+                userItems.push(gItem);
+              }
+            });
+          }
+        } catch (_) {}
+        try {
+          localStorage.removeItem('farmaya_cart_guest');
+          localStorage.removeItem('farmaya_client_cart');
+        } catch (_) {}
+      }
+
+      clientCart = userItems;
+      localStorage.setItem(userKey, JSON.stringify(clientCart));
+    } else {
+      const guestRaw = localStorage.getItem('farmaya_cart_guest') || localStorage.getItem('farmaya_client_cart');
+      if (guestRaw) {
+        try {
+          const parsed = JSON.parse(guestRaw);
+          clientCart = Array.isArray(parsed) ? parsed : [];
+        } catch (_) {
+          clientCart = [];
+        }
+      } else {
+        clientCart = [];
+      }
+    }
+  } catch (_) {
+    clientCart = [];
+  }
+
+  window.clientCart = clientCart;
+  syncClientCartUI();
+  return clientCart;
+}
+
+function clearClientCartSession() {
+  clientCart = [];
+  window.clientCart = [];
+  try {
+    localStorage.removeItem('farmaya_cart_guest');
+    localStorage.removeItem('farmaya_client_cart');
+  } catch (_) {}
+  syncClientCartUI();
 }
 
 function syncClientCartUI() {
@@ -36,15 +109,25 @@ function syncClientCartUI() {
     else headerPill.classList.remove('has-items');
   }
 
-  if (typeof drawCart === 'function') {
-    try { drawCart(); } catch (_) {}
+  const dc = window.drawCart || (typeof drawCart === 'function' ? drawCart : null);
+  if (dc) {
+    try { dc(); } catch (_) {}
   }
-  if (typeof drawProducts === 'function') {
-    try { drawProducts(); } catch (_) {}
+  const dp = window.drawProducts || (typeof drawProducts === 'function' ? drawProducts : null);
+  if (dp) {
+    try { dp(); } catch (_) {}
   }
 }
+
+window.getCartStorageKey = getCartStorageKey;
 window.persistClientCart = persistClientCart;
+window.loadClientCart = loadClientCart;
+window.clearClientCartSession = clearClientCartSession;
 window.syncClientCartUI = syncClientCartUI;
+window.clientCart = clientCart;
+
+// Inicializacion inmediata segun la sesion actual
+loadClientCart(typeof state !== 'undefined' ? state.user : null);
 
 let clientCategory = '';
 
@@ -433,8 +516,8 @@ function renderClientDashboard() {
                     onclick: () => {
                       item.quantity--;
                       if (item.quantity <= 0) clientCart = clientCart.filter(x => x !== item);
-                      drawCart();
-                      drawProducts();
+                      persistClientCart();
+                      syncClientCartUI();
                     }
                   }, '−'),
                   h('span', null, item.quantity),
@@ -444,8 +527,8 @@ function renderClientDashboard() {
                     'aria-label': 'Agregar uno',
                     onclick: () => {
                       item.quantity = Math.min(99, item.quantity + 1);
-                      drawCart();
-                      drawProducts();
+                      persistClientCart();
+                      syncClientCartUI();
                     }
                   }, '+')
                 )
@@ -668,9 +751,9 @@ function renderClientDashboard() {
                     e.stopPropagation();
                     item.quantity--;
                     if (item.quantity <= 0) clientCart = clientCart.filter(x => x !== item);
+                    persistClientCart();
+                    syncClientCartUI();
                     refreshPreview();
-                    drawCart();
-                    drawProducts();
                   }
                 }, '−'),
                 h('span', { class: 'cart-preview-qty-num' }, item.quantity),
@@ -681,9 +764,9 @@ function renderClientDashboard() {
                   onclick: (e) => {
                     e.stopPropagation();
                     item.quantity = Math.min(99, item.quantity + 1);
+                    persistClientCart();
+                    syncClientCartUI();
                     refreshPreview();
-                    drawCart();
-                    drawProducts();
                   }
                 }, '+')
               )
@@ -1025,14 +1108,9 @@ city: cityInput.value.trim() || user.city || '',
           if (result) {
 
             clientCart = [];
-
+            persistClientCart();
+            syncClientCartUI();
             d.close();
-
-            refreshAll();
-
-            drawCart();
-
-            drawProducts();
 
             location.hash = '#orders';
             const viewFn = window.openOrderDetail || (typeof openOrderDetail === 'function' ? openOrderDetail : null);
@@ -1618,8 +1696,9 @@ city: cityInput.value.trim() || user.city || '',
 
   );
 
+  window.drawProducts = drawProducts;
+  window.drawCart = drawCart;
   drawProducts();
-
   drawCart();
 
   // Escuchar cambios de catálogo y fotos de medicamentos desde admin
@@ -1880,9 +1959,8 @@ function openProductModal(p) {
               }
 
               d.close();
-
-              refreshAll();
-
+              persistClientCart();
+              syncClientCartUI();
               toast(p.name + ' agregado (' + modalQty + ')');
 
             }

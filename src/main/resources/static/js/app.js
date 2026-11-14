@@ -126,6 +126,14 @@ function renderNavbar() {
 }
 
 async function logoutCurrent() {
+  try {
+    if (typeof window.persistClientCart === 'function' && state.user) {
+      window.persistClientCart(state.user);
+    }
+    if (typeof window.clearClientCartSession === 'function') {
+      window.clearClientCartSession();
+    }
+  } catch (_) {}
   try { if (API.token) await API.post('/auth/logout'); } catch (_) { /* se limpia localmente incluso si expiró */ }
   API.setToken(null); state.user = null; location.hash = '#login'; renderApp();
 }
@@ -149,8 +157,19 @@ async function renderApp() {
   if (API.token && !state.user) {
     bootstrapTasks.push(
       API.get('/auth/me')
-        .then(u => { state.user = u; })
-        .catch(() => { API.setToken(null); state.user = null; })
+        .then(u => {
+          state.user = u;
+          if (typeof window.loadClientCart === 'function') {
+            window.loadClientCart(u);
+          }
+        })
+        .catch(() => {
+          API.setToken(null);
+          state.user = null;
+          if (typeof window.clearClientCartSession === 'function') {
+            window.clearClientCartSession();
+          }
+        })
     );
   }
   if (bootstrapTasks.length) {
