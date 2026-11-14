@@ -51,24 +51,6 @@ function openProfile(initialView = 'menu') {
       opts.danger ? null : icon('chevR', 'mi-chev'));
   }
 
-  function themeSwitcher() {
-    const cur = theme.current;
-    const btn = (mode, label, icoName) => h('button', {
-      type: 'button',
-      class: 'theme-pill-btn' + (cur === mode ? ' active' : ''),
-      onclick: () => {
-        theme.apply(mode);
-        draw();
-        toast('Tema ' + label.toLowerCase() + ' activado');
-      }
-    }, icon(icoName), h('span', null, label));
-
-    return h('div', { class: 'theme-switcher-box' },
-      btn('light', 'Claro', 'sun'),
-      btn('dark', 'Oscuro', 'moon'),
-      btn('auto', 'Auto', 'device'));
-  }
-
   function item(label, value) {
     if (value == null || value === '') return null;
     return h('div', null, h('dt', null, label), h('dd', null, value));
@@ -378,14 +360,7 @@ function openProfile(initialView = 'menu') {
     const u = user();
     return h('section', { class: 'profile-section settings-view' },
       h('h3', null, 'Configuración'),
-      h('p', { class: 'muted' }, 'Personaliza la apariencia y preferencias de tu cuenta FarmaYa.'),
-
-      // Cambiar tema de la página
-      h('div', { class: 'settings-option', style: 'flex-direction:column;align-items:stretch;' },
-        h('div', null,
-          h('strong', null, 'Tema de la página'),
-          h('p', { class: 'muted small' }, 'Selecciona el aspecto visual de FarmaYa en tu pantalla.')),
-        themeSwitcher()),
+      h('p', { class: 'muted' }, 'Personaliza las preferencias de tu cuenta FarmaYa.'),
 
       // Acceso directo a datos y número
       u && h('div', { class: 'settings-option' },
@@ -422,12 +397,7 @@ function openProfile(initialView = 'menu') {
         h('nav', { class: 'menu-group', 'aria-label': 'Acceso' },
           h('h3', null, 'Bienvenido a FarmaYa'),
           menuItem('user', 'Iniciar sesión', () => { d.close(); location.hash = '#login'; }),
-          menuItem('pencil', 'Crear una cuenta', () => { d.close(); location.hash = '#register'; })),
-        h('nav', { class: 'menu-group', 'aria-label': 'Configuración' },
-          h('h3', null, 'Apariencia'),
-          h('div', { style: 'padding: 0 4px;' },
-            h('p', { class: 'muted small' }, 'Cambiar tema de la página:'),
-            themeSwitcher())));
+          menuItem('pencil', 'Crear una cuenta', () => { d.close(); location.hash = '#register'; })));
     }
 
     const sectionsNav = () => {
@@ -456,7 +426,7 @@ function openProfile(initialView = 'menu') {
         h('h3', null, 'Mi cuenta y configuración'),
         menuItem('user', 'Mi perfil', go('profile')),
         menuItem('pencil', 'Editar datos / Cambiar número', go('edit'), { badge: pharmacyEditNotice }),
-        menuItem('settings', 'Configuración y tema', go('settings')),
+        menuItem('settings', 'Configuración', go('settings')),
         menuItem('lock', 'Cambiar contraseña', go('password'))),
 
       h('nav', { class: 'menu-group', 'aria-label': 'Sesión' },

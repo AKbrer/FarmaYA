@@ -8,30 +8,20 @@ const state = { user: null, meta: { statuses: {}, demo: false } };
 window.state = state;
 const ROLE_NAMES = { CLIENTE: 'Cliente', FARMACIA: 'Farmacia', REPARTIDOR: 'Repartidor', ADMIN: 'Administrador' };
 
-/* ---------- Temas (Claro / Oscuro / Automático) ---------- */
+/* ---------- Modo de visualización (Tema Claro fijado) ---------- */
 const theme = {
   get current() {
-    return localStorage.getItem('farmaya_theme') || 'auto';
+    return 'light';
   },
-  apply(val) {
-    if (!['light', 'dark', 'auto'].includes(val)) val = 'auto';
-    localStorage.setItem('farmaya_theme', val);
-    let effective = val;
-    if (val === 'auto') {
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      effective = prefersDark ? 'dark' : 'light';
-    }
-    document.documentElement.setAttribute('data-theme', effective);
-    if (document.body) document.body.setAttribute('data-theme', effective);
-    document.dispatchEvent(new CustomEvent('fy:theme-change', { detail: { theme: val, effective } }));
+  apply() {
+    try {
+      localStorage.removeItem('farmaya_theme');
+    } catch (_) {}
+    document.documentElement.removeAttribute('data-theme');
+    if (document.body) document.body.removeAttribute('data-theme');
   },
   init() {
-    this.apply(this.current);
-    if (window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-        if (this.current === 'auto') this.apply('auto');
-      });
-    }
+    this.apply();
   }
 };
 theme.init();
