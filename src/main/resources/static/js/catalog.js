@@ -2161,7 +2161,11 @@ function saveProductImage(productName, imageUrl) {
     } else {
       delete map[productName];
     }
-    localStorage.setItem('farmaya_product_images', JSON.stringify(map));
+    try {
+      localStorage.setItem('farmaya_product_images', JSON.stringify(map));
+    } catch (quotaErr) {
+      console.warn('Almacenamiento local completo, manteniendo imagen en memoria:', quotaErr);
+    }
     const prod = CATALOG.find(p => p.name === productName);
     if (prod) {
       prod.imageUrl = (imageUrl && imageUrl.trim()) ? imageUrl.trim() : null;

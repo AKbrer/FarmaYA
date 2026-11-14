@@ -91,15 +91,51 @@ function zoneSelect(name, current) {
   );
 }
 
+/* ---------- Sanitización de almacenamiento y protección de cuota ---------- */
+(function() {
+  try {
+    const rawImgs = localStorage.getItem('farmaya_product_images');
+    if (rawImgs && (rawImgs.length > 250_000 || Object.keys(JSON.parse(rawImgs)).length > 10)) {
+      // Depurar mapa de imágenes inflado para garantizar espacio a tokens y pedidos
+      localStorage.removeItem('farmaya_product_images');
+    }
+  } catch (_) {
+    try { localStorage.removeItem('farmaya_product_images'); } catch (__) {}
+  }
+})();
+
 /* ---------- API ---------- */
 const API_CACHE = new Map();
 
 const API = {
-  token: localStorage.getItem('fy_token'),
+  token: (() => {
+    try {
+      return localStorage.getItem('fy_token') || sessionStorage.getItem('fy_token');
+    } catch (_) {
+      return null;
+    }
+  })(),
   setToken(t) {
     this.token = t;
     API_CACHE.clear();
-    if (t) localStorage.setItem('fy_token', t); else localStorage.removeItem('fy_token');
+    if (!t) {
+      try { localStorage.removeItem('fy_token'); } catch (_) {}
+      try { sessionStorage.removeItem('fy_token'); } catch (_) {}
+      return;
+    }
+    try {
+      localStorage.setItem('fy_token', t);
+    } catch (e) {
+      // Si la cuota de almacenamiento fue excedida por datos locales previos, liberar espacio y reintentar
+      try {
+        localStorage.removeItem('farmaya_product_images');
+        localStorage.setItem('fy_token', t);
+      } catch (_) {
+        try {
+          sessionStorage.setItem('fy_token', t);
+        } catch (_) {}
+      }
+    }
   },
   clearCache(prefix) {
     if (prefix) {
