@@ -1791,191 +1791,118 @@ window.renderClientDashboard = renderClientDashboard;
  */
 
 function openProductModal(p) {
-
   let modalQty = 1;
-
   const inCart = clientCart.find(i => i.name === p.name);
-
   if (inCart) modalQty = inCart.quantity;
 
   const qtyDisplay = h('span', { class: 'stitch-modal-qty' }, modalQty);
+  const footerPriceVal = h('strong', { class: 'stitch-modal-footer-price' }, money(p.price * modalQty));
+  const addBtnLabel = h('span', { class: 'stitch-modal-add-label' }, `Agregar • ${money(p.price * modalQty)}`);
+
+  const updateModalState = () => {
+    qtyDisplay.textContent = modalQty;
+    footerPriceVal.textContent = money(p.price * modalQty);
+    addBtnLabel.textContent = `Agregar • ${money(p.price * modalQty)}`;
+  };
+
+  const addBtn = h('button', {
+    class: 'btn primary stitch-modal-add-btn',
+    type: 'button',
+    onclick: () => {
+      const existing = clientCart.find(i => i.name === p.name);
+      if (existing) {
+        existing.quantity = modalQty;
+      } else {
+        clientCart.push({ name: p.name, price: p.price, quantity: modalQty, rx: !!p.rx });
+      }
+      d.close();
+      persistClientCart();
+      syncClientCartUI();
+      toast(`${p.name} agregado (${modalQty})`);
+    }
+  }, icon('cart') || null, addBtnLabel);
 
   const content = h('div', { class: 'stitch-product-detail-modal' },
-
-    // Cabecera del modal
-
+    // Cabecera fija
     h('header', { class: 'stitch-modal-head' },
-
-      h('div', null,
-
+      h('div', { class: 'stitch-modal-badges-row' },
         p.rx
-
           ? h('span', { class: 'badge-rx' }, 'Requiere Fórmula Médica')
-
           : h('span', { class: 'badge-otc' }, 'Venta Libre (OTC)'),
-
-        h('span', { class: 'badge-invima' }, p.invima || 'Registro Sanitario INVIMA Vigente')
-
+        h('span', { class: 'badge-invima' }, p.invima || 'Registro INVIMA Vigente')
       ),
-
-      h('button', { class: 'close-btn', type: 'button', onclick: () => d.close() }, '×')
-
+      h('button', { class: 'close-btn', type: 'button', 'aria-label': 'Cerrar', onclick: () => d.close() }, '×')
     ),
 
-    // Cuerpo en 2 columnas estilo Stitch
-
-    h('div', { class: 'stitch-modal-body-grid' },
-
-      // Columna izquierda: Ilustración e indicador de temperatura
-
-      h('div', { class: 'stitch-modal-art-col' },
-
-        h('div', { class: 'stitch-modal-art-frame' }, productArt(p)),
-
-        h('div', { class: 'stitch-modal-storage-card' },
-
-          h('span', { class: 'storage-icon' }, icon('shield')),
-
-          h('div', null,
-
-            h('strong', null, 'Conservación Farmacéutica'),
-
-            h('p', null, p.storage || 'Almacenamiento a temperatura ambiente controlada (15°C a 25°C). Proteger de la humedad.')
-
+    // Cuerpo con scroll independiente
+    h('div', { class: 'stitch-modal-scroll-body' },
+      h('div', { class: 'stitch-modal-body-grid' },
+        // Columna izquierda: Imagen destacada e indicador de conservación
+        h('div', { class: 'stitch-modal-art-col' },
+          h('div', { class: 'stitch-modal-art-frame' }, productArt(p)),
+          h('div', { class: 'stitch-modal-storage-card' },
+            h('span', { class: 'storage-icon' }, icon('shield')),
+            h('div', null,
+              h('strong', null, 'Conservación Farmacéutica'),
+              h('p', null, p.storage || 'Almacenamiento a temperatura ambiente controlada (15°C a 25°C). Proteger de la humedad.')
+            )
           )
-
-        )
-
-      ),
-
-      // Columna derecha: Datos clínicos y compra
-
-      h('div', { class: 'stitch-modal-info-col' },
-
-        h('span', { class: 'stitch-modal-lab' }, p.lab || 'Laboratorio Farmacéutico'),
-
-        h('h2', { class: 'stitch-modal-title' }, p.name),
-
-        h('p', { class: 'stitch-modal-pres' }, p.presentation || 'Presentación oficial'),
-
-        h('div', { class: 'stitch-modal-pill-info' },
-
-          h('div', null,
-
-            h('strong', null, 'Principio Activo:'),
-
-            h('p', null, p.active || p.name)
-
-          ),
-
-          h('div', null,
-
-            h('strong', null, 'Indicación Terapéutica:'),
-
-            h('p', null, p.indication || 'Consulte a su médico o al farmacéutico antes de consumir este medicamento.')
-
-          )
-
         ),
 
-        // Precio y compra
-
-        h('div', { class: 'stitch-modal-buy-box' },
-
-          h('div', null,
-
-            h('span', { class: 'price-label' }, 'Precio sugerido'),
-
-            h('strong', { class: 'stitch-modal-price' }, money(p.price))
-
-          ),
-
-          h('div', { class: 'stitch-modal-stepper' },
-
-            h('button', {
-
-              type: 'button',
-
-              class: 'qty-btn',
-
-              onclick: () => {
-
-                if (modalQty > 1) {
-
-                  modalQty--;
-
-                  qtyDisplay.textContent = modalQty;
-
-                }
-
-              }
-
-            }, '−'),
-
-            qtyDisplay,
-
-            h('button', {
-
-              type: 'button',
-
-              class: 'qty-btn',
-
-              onclick: () => {
-
-                modalQty = Math.min(99, modalQty + 1);
-
-                qtyDisplay.textContent = modalQty;
-
-              }
-
-            }, '+')
-
+        // Columna derecha: Datos clínicos y ficha
+        h('div', { class: 'stitch-modal-info-col' },
+          h('span', { class: 'stitch-modal-lab' }, p.lab || 'Laboratorio Farmacéutico'),
+          h('h2', { class: 'stitch-modal-title' }, p.name),
+          h('p', { class: 'stitch-modal-pres' }, p.presentation || 'Presentación oficial'),
+          h('div', { class: 'stitch-modal-pill-info' },
+            h('div', null,
+              h('strong', null, 'Principio Activo:'),
+              h('p', null, p.active || p.name)
+            ),
+            h('div', null,
+              h('strong', null, 'Indicación Terapéutica:'),
+              h('p', null, p.indication || 'Consulte a su médico o al farmacéutico antes de consumir este medicamento.')
+            )
           )
-
-        ),
-
-        // Botones de acción
-
-        h('div', { class: 'stitch-modal-actions' },
-
-          h('button', {
-
-            class: 'btn primary block',
-
-            type: 'button',
-
-            onclick: () => {
-
-              const existing = clientCart.find(i => i.name === p.name);
-
-              if (existing) {
-
-                existing.quantity = modalQty;
-
-              } else {
-
-                clientCart.push({ name: p.name, price: p.price, quantity: modalQty, rx: !!p.rx });
-
-              }
-
-              d.close();
-              persistClientCart();
-              syncClientCartUI();
-              toast(p.name + ' agregado (' + modalQty + ')');
-
-            }
-
-          }, 'Agregar al pedido (' + money(p.price * modalQty) + ')')
-
         )
-
       )
+    ),
 
+    // Footer fijo inferior con precio, stepper y botón agregar al pedido
+    h('footer', { class: 'stitch-modal-footer' },
+      h('div', { class: 'stitch-modal-footer-left' },
+        h('span', { class: 'stitch-modal-footer-label' }, 'Precio Unitario: ' + money(p.price)),
+        footerPriceVal
+      ),
+      h('div', { class: 'stitch-modal-footer-right' },
+        h('div', { class: 'stitch-modal-stepper' },
+          h('button', {
+            type: 'button',
+            class: 'qty-btn',
+            'aria-label': 'Disminuir',
+            onclick: () => {
+              if (modalQty > 1) {
+                modalQty--;
+                updateModalState();
+              }
+            }
+          }, '−'),
+          qtyDisplay,
+          h('button', {
+            type: 'button',
+            class: 'qty-btn',
+            'aria-label': 'Aumentar',
+            onclick: () => {
+              modalQty = Math.min(99, modalQty + 1);
+              updateModalState();
+            }
+          }, '+')
+        ),
+        addBtn
+      )
     )
-
   );
 
   const d = openDialog(content, { wide: true });
-
 }
 
