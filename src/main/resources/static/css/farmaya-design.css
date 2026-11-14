@@ -4881,16 +4881,29 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
     box-shadow: 0 1px 4px rgba(0,0,0,0.08) !important;
   }
   .product-art-wrap {
-    min-height: 75px !important;
-    max-height: 75px !important;
-    height: 75px !important;
-    border-radius: 8px !important;
-    margin-bottom: 4px !important;
-    background: var(--surface-soft) !important;
+    min-height: 135px !important;
+    max-height: 155px !important;
+    height: 135px !important;
+    border-radius: 10px !important;
+    margin-bottom: 6px !important;
+    background: transparent !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
   .p-art {
-    width: 60px !important;
-    height: 52px !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .p-art svg {
+    max-height: 125px !important;
+  }
+  .p-art .product-custom-photo {
+    max-width: 95% !important;
+    max-height: 125px !important;
   }
   .product-meta-block {
     margin-bottom: 2px !important;
@@ -11744,6 +11757,27 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   box-sizing: border-box;
 }
 
+.bot-product-art-wrap {
+  width: 100%;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  margin-bottom: 4px;
+}
+
+.bot-product-art-wrap .p-art {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.bot-product-art-wrap .product-custom-photo {
+  max-height: 80px !important;
+  max-width: 90% !important;
+  object-fit: contain !important;
+}
+
 .bot-product-card .card-info {
   display: flex;
   flex-direction: column;
@@ -14963,4 +14997,167 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
     animation: none !important;
     transform: none !important;
   }
+}
+
+/* ==========================================================================
+   IMÁGENES DE PRODUCTO CON IA FONDO PNG Y DIMENSIONES AMPLIADAS (FarmaYA)
+   ========================================================================== */
+.product-art-wrap,
+.product-art-wrap.stitch-art,
+.product-card .product-art-wrap {
+  min-height: 195px !important;
+  height: 195px !important;
+  max-height: 220px !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: none !important;
+  margin-bottom: 12px !important;
+  padding: 6px !important;
+  overflow: visible !important;
+}
+
+.p-art,
+.p-art-has-photo {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.p-art svg {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 180px !important;
+}
+
+.product-custom-photo {
+  max-width: 96% !important;
+  max-height: 185px !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  background: transparent !important;
+  border-radius: 10px !important;
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.10)) !important;
+}
+
+.product-card:hover .product-custom-photo {
+  transform: scale(1.08) translateY(-2px) !important;
+}
+
+/* Modal Stitch de detalle farmacéutico */
+.stitch-modal-art-frame {
+  min-height: 260px !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  padding: 18px !important;
+}
+
+.stitch-modal-art-frame .p-art {
+  width: 100% !important;
+  height: 260px !important;
+}
+
+.stitch-modal-art-frame .product-custom-photo {
+  max-width: 100% !important;
+  max-height: 270px !important;
+  filter: drop-shadow(0 12px 30px rgba(15, 23, 42, 0.15)) !important;
+}
+
+/* Vista flotter / mobile responsive */
+@media (max-width: 768px) {
+  .product-art-wrap,
+  .product-art-wrap.stitch-art,
+  .product-card .product-art-wrap {
+    min-height: 145px !important;
+    height: 145px !important;
+    max-height: 165px !important;
+    margin-bottom: 8px !important;
+    background: transparent !important;
+  }
+  .p-art,
+  .p-art-has-photo {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .p-art svg {
+    max-height: 135px !important;
+  }
+  .product-custom-photo {
+    max-width: 95% !important;
+    max-height: 135px !important;
+    filter: drop-shadow(0 5px 12px rgba(15, 23, 42, 0.09)) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-art-wrap,
+  .product-art-wrap.stitch-art,
+  .product-card .product-art-wrap {
+    min-height: 135px !important;
+    height: 135px !important;
+    max-height: 150px !important;
+  }
+  .p-art,
+  .p-art-has-photo {
+    width: 100% !important;
+    height: 100% !important;
+  }
+  .p-art svg {
+    max-height: 125px !important;
+  }
+  .product-custom-photo {
+    max-width: 95% !important;
+    max-height: 125px !important;
+  }
+}
+
+/* Vista Admin: miniaturas nítidas y ampliadas */
+.admin-product-thumb {
+  width: 86px !important;
+  height: 72px !important;
+  background: #f8fafc !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 4px !important;
+}
+
+.admin-product-thumb .p-art,
+.admin-product-thumb .product-custom-photo {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 64px !important;
+  object-fit: contain !important;
+}
+
+/* Cuadrícula de transparencia en modales de edición de imagen */
+.image-modal-preview,
+.image-modal-preview-box,
+.admin-preview-img-box {
+  background-color: #f8fafc;
+  background-image:
+    linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+    linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+    linear-gradient(-45deg, transparent 75%, #e2e8f0 75%) !important;
+  background-size: 16px 16px !important;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px !important;
+  border-radius: 14px !important;
+  border: 1.5px dashed #cbd5e1 !important;
+  padding: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 170px !important;
 }

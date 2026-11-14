@@ -2190,6 +2190,30 @@ function adminCatalogManager() {
     );
   };
 
+  const aiPngAllBtn = h('button', {
+    class: 'btn secondary btn-ai-png-all',
+    type: 'button',
+    title: 'Aplicar IA de fondo PNG transparente a las fotos del catálogo',
+    onclick: async () => {
+      aiPngAllBtn.disabled = true;
+      aiPngAllBtn.textContent = 'Procesando IA...';
+      try {
+        if (typeof window.processIntegratedProductImagesWithAI === 'function') {
+          const count = await window.processIntegratedProductImagesWithAI((curr, total) => {
+            aiPngAllBtn.textContent = `IA: ${curr}/${total}...`;
+          });
+          toast(`Se procesaron ${count} imágenes del catálogo con IA a fondo PNG transparente`);
+          draw();
+        }
+      } catch (e) {
+        toast('No fue posible procesar las imágenes con IA', 'error');
+      } finally {
+        aiPngAllBtn.disabled = false;
+        aiPngAllBtn.replaceChildren(icon('pencil'), h('span', null, 'IA Fondo PNG'));
+      }
+    }
+  }, icon('pencil'), h('span', null, 'IA Fondo PNG'));
+
   const addBtn = h('button', {
     class: 'btn primary btn-create-prod',
     type: 'button',
@@ -2200,6 +2224,7 @@ function adminCatalogManager() {
     h('div', { class: 'catalog-search-wrap' }, search),
     catSelect,
     countPill,
+    aiPngAllBtn,
     addBtn
   );
 
@@ -2313,12 +2338,26 @@ function openAdminProductModal(p, onSaved) {
     type: 'file',
     accept: 'image/*',
     style: 'display:none',
-    onchange: e => {
+    onchange: async e => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
-      if (file.size > 4 * 1024 * 1024) {
-        toast('La fotografía no debe superar 4MB', 'error');
+      if (file.size > 8 * 1024 * 1024) {
+        toast('La fotografía no debe superar 8MB', 'error');
         return;
+      }
+      previewBox.innerHTML = '<div style="padding:12px;font-size:12px;color:var(--primary);font-weight:700;">Removiendo fondo con IA (PNG transparente)...</div>';
+      try {
+        if (typeof window.removeImageBackgroundWithAI === 'function') {
+          const pngUrl = await window.removeImageBackgroundWithAI(file);
+          if (pngUrl) {
+            imgUrlInput.value = '';
+            updateImagePreview(pngUrl);
+            toast('Fondo removido con IA: formato PNG transparente aplicado.');
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Fallo proceso IA background:', err);
       }
       const reader = new FileReader();
       reader.onload = ev => {
@@ -2329,11 +2368,39 @@ function openAdminProductModal(p, onSaved) {
     }
   });
 
+  const aiConvertBtn = h('button', {
+    class: 'btn ghost small',
+    type: 'button',
+    title: 'Remover fondo de la imagen seleccionada con IA a formato PNG transparente',
+    onclick: async () => {
+      if (!currentImageUrl) {
+        toast('Carga o selecciona una imagen primero', 'warn');
+        return;
+      }
+      aiConvertBtn.disabled = true;
+      aiConvertBtn.textContent = 'Procesando IA...';
+      try {
+        if (typeof window.removeImageBackgroundWithAI === 'function') {
+          const pngUrl = await window.removeImageBackgroundWithAI(currentImageUrl);
+          if (pngUrl) {
+            updateImagePreview(pngUrl);
+            toast('Fondo removido con IA (PNG transparente).');
+          }
+        }
+      } catch (e) {
+        toast('No fue posible remover el fondo con IA', 'error');
+      } finally {
+        aiConvertBtn.disabled = false;
+        aiConvertBtn.textContent = 'IA Fondo PNG';
+      }
+    }
+  }, 'IA Fondo PNG');
+
   const uploadBtn = h('button', {
     class: 'btn secondary small',
     type: 'button',
     onclick: () => fileInput.click()
-  }, 'Subir foto desde archivo');
+  }, 'Subir foto con IA');
 
   // Presets rápidos
   const presets = [
@@ -2501,7 +2568,10 @@ function openAdminProductModal(p, onSaved) {
             previewBox
           ),
           h('div', { class: 'form-stack' },
-            uploadBtn,
+            h('div', { style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;' },
+              uploadBtn,
+              aiConvertBtn
+            ),
             fileInput,
             h('div', { style: 'margin-top:8px;' },
               h('span', { class: 'small muted' }, 'O escribe la URL directa:'),
@@ -2593,12 +2663,26 @@ function openProductImageModal(p, onSaved) {
     type: 'file',
     accept: 'image/*',
     style: 'display:none',
-    onchange: e => {
+    onchange: async e => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
-      if (file.size > 4 * 1024 * 1024) {
-        toast('La imagen no debe superar 4MB', 'error');
+      if (file.size > 8 * 1024 * 1024) {
+        toast('La imagen no debe superar 8MB', 'error');
         return;
+      }
+      previewImg.innerHTML = '<div style="padding:16px;text-align:center;font-size:12px;color:var(--primary);font-weight:700;">Removiendo fondo con IA (PNG transparente)...</div>';
+      try {
+        if (typeof window.removeImageBackgroundWithAI === 'function') {
+          const pngUrl = await window.removeImageBackgroundWithAI(file);
+          if (pngUrl) {
+            urlInput.value = '';
+            updatePreview(pngUrl);
+            toast('Fondo removido con IA: formato PNG transparente aplicado.');
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('Fallo proceso IA background:', err);
       }
       const reader = new FileReader();
       reader.onload = ev => {
@@ -2610,11 +2694,39 @@ function openProductImageModal(p, onSaved) {
     }
   });
 
+  const aiConvertBtn = h('button', {
+    class: 'btn secondary small',
+    type: 'button',
+    title: 'Remover fondo con IA sobre la imagen seleccionada',
+    onclick: async () => {
+      if (!selectedUrl) {
+        toast('Carga o selecciona una imagen primero', 'warn');
+        return;
+      }
+      aiConvertBtn.disabled = true;
+      aiConvertBtn.textContent = 'Procesando IA...';
+      try {
+        if (typeof window.removeImageBackgroundWithAI === 'function') {
+          const pngUrl = await window.removeImageBackgroundWithAI(selectedUrl);
+          if (pngUrl) {
+            updatePreview(pngUrl);
+            toast('Fondo removido con IA (PNG transparente).');
+          }
+        }
+      } catch (e) {
+        toast('No se pudo procesar la imagen con IA', 'error');
+      } finally {
+        aiConvertBtn.disabled = false;
+        aiConvertBtn.textContent = 'Remover fondo con IA (PNG)';
+      }
+    }
+  }, 'Remover fondo con IA (PNG)');
+
   const uploadBtn = h('button', {
-    class: 'btn secondary',
+    class: 'btn primary small',
     type: 'button',
     onclick: () => fileInput.click()
-  }, 'Subir foto desde archivo');
+  }, 'Subir foto con IA');
 
   // Galería de fotos médicas preconfiguradas
   const presets = [
@@ -2648,7 +2760,10 @@ function openProductImageModal(p, onSaved) {
       h('div', { class: 'image-modal-controls-box form-stack' },
         h('div', { class: 'field' },
           h('label', { class: 'field-label' }, 'Opción 1: Cargar desde tu archivo local'),
-          uploadBtn,
+          h('div', { style: 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;' },
+            uploadBtn,
+            aiConvertBtn
+          ),
           fileInput
         ),
         h('div', { class: 'field' },

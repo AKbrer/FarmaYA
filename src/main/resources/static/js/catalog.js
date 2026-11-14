@@ -2228,6 +2228,13 @@ if (typeof window !== 'undefined') {
   setTimeout(syncCatalogWithBackend, 50);
   window.addEventListener('farmaya:product-images-updated', syncCatalogWithBackend);
   window.addEventListener('farmaya:catalog-refresh', syncCatalogWithBackend);
+
+  // Conversion automatica en segundo plano con IA para imagenes integradas existentes
+  setTimeout(() => {
+    if (typeof window.processIntegratedProductImagesWithAI === 'function') {
+      window.processIntegratedProductImagesWithAI();
+    }
+  }, 1200);
 }
 
 /* ---------- Ilustraciones y fotos de producto ---------- */

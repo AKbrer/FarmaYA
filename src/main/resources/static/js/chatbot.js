@@ -531,6 +531,13 @@
         const card = document.createElement('div');
         card.className = 'bot-product-card';
 
+        if (typeof productArt === 'function') {
+          const artWrap = document.createElement('div');
+          artWrap.className = 'bot-product-art-wrap';
+          artWrap.appendChild(productArt(prod));
+          card.appendChild(artWrap);
+        }
+
         const info = document.createElement('div');
         info.className = 'card-info';
         info.innerHTML = `
