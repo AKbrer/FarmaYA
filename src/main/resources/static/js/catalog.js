@@ -2178,8 +2178,11 @@ function syncCatalogImages() {
   try {
     const map = getCustomProductImages();
     CATALOG.forEach(p => {
-      if (map[p.name]) {
-        p.imageUrl = map[p.name];
+      if (!p) return;
+      if (map[p.name] || (p.id && map[p.id])) {
+        p.imageUrl = map[p.name] || map[p.id];
+      } else if (!p.imageUrl && typeof getProductTransparentPng === 'function') {
+        p.imageUrl = getProductTransparentPng(p);
       }
     });
   } catch (_) {}
@@ -2237,50 +2240,37 @@ if (typeof window !== 'undefined') {
   }, 1200);
 }
 
-/* ---------- Ilustraciones y fotos de producto ---------- */
+/* ---------- Fotos y empaques de producto ---------- */
 function productArt(p) {
-  const c = p.color || '#16865d';
-  const shadow = '<ellipse cx="60" cy="83" rx="36" ry="4.5" fill="rgba(13,47,92,.13)"/>';
-  const art = {
-    box: '<rect x="22" y="20" width="76" height="58" rx="5" fill="#fff" stroke="#c8d6e6"/><path d="M22 25a5 5 0 0 1 5-5h66a5 5 0 0 1 5 5v13H22z" fill="' + c + '"/>' +
-      '<rect x="32" y="48" width="34" height="5" rx="2.5" fill="#cfdaea"/><rect x="32" y="58" width="48" height="4" rx="2" fill="#e1e9f3"/>' +
-      '<rect x="72" y="46" width="18" height="9" rx="4.5" fill="' + c + '" transform="rotate(-35 81 50)"/>',
-    jar: '<rect x="27" y="31" width="66" height="45" rx="11" fill="#e9f1fb" stroke="#c8d6e6"/><rect x="23" y="20" width="74" height="17" rx="6" fill="' + c + '"/>' +
-      '<rect x="38" y="46" width="44" height="16" rx="4" fill="#fff"/><rect x="44" y="52" width="32" height="4" rx="2" fill="' + c + '" opacity=".7"/>',
-    bottle: '<rect x="47" y="7" width="26" height="14" rx="3" fill="#0d3f7a"/><rect x="39" y="19" width="42" height="62" rx="11" fill="' + c + '"/>' +
-      '<rect x="44" y="38" width="32" height="28" rx="3" fill="#fff"/><circle cx="60" cy="52" r="7.5" fill="' + c + '"/>',
-    tube: '<g transform="rotate(-16 60 46)"><rect x="26" y="34" width="68" height="25" rx="8" fill="#fff" stroke="#c8d6e6"/>' +
-      '<rect x="26" y="34" width="22" height="25" rx="7" fill="' + c + '"/><rect x="88" y="39" width="12" height="15" rx="3" fill="#0d3f7a"/>' +
-      '<rect x="55" y="42" width="26" height="4" rx="2" fill="' + c + '"/><rect x="55" y="50" width="17" height="3" rx="1.5" fill="#cfdaea"/></g>',
-    pack: '<rect x="25" y="16" width="70" height="63" rx="13" fill="' + c + '"/><circle cx="60" cy="40" r="13" fill="#fff"/>' +
-      '<circle cx="55.5" cy="38" r="1.7" fill="#0d2f5c"/><circle cx="64.5" cy="38" r="1.7" fill="#0d2f5c"/>' +
-      '<path d="M55 44q5 4 10 0" stroke="#0d2f5c" fill="none" stroke-width="1.7" stroke-linecap="round"/><rect x="37" y="61" width="46" height="5" rx="2.5" fill="#fff" opacity=".85"/>',
-    baby: '<rect x="52" y="5" width="16" height="13" rx="7" fill="#f6c3d0"/><rect x="45" y="16" width="30" height="9" rx="3" fill="' + c + '"/>' +
-      '<rect x="41" y="24" width="38" height="57" rx="11" fill="#e9f1fb" stroke="#c8d6e6"/><path d="M41 42h9M41 54h9M41 66h9" stroke="#8aa3c0" stroke-width="2"/>' +
-      '<rect x="53" y="46" width="14" height="22" rx="7" fill="' + c + '" opacity=".35"/>'
-  }[p.art] || '';
-
   const span = document.createElement('span');
-  span.className = 'p-art';
+  span.className = 'p-art p-art-has-photo';
   span.setAttribute('aria-hidden', 'true');
 
-  const customImg = p.imageUrl || getCustomProductImages()[p.name] || (typeof getProductTransparentPng === 'function' ? getProductTransparentPng(p) : null);
-  if (customImg) {
-    span.classList.add('p-art-has-photo');
-    const img = document.createElement('img');
-    img.src = customImg;
-    img.alt = p.name;
-    img.className = 'product-custom-photo';
-    img.loading = 'lazy';
-    img.onerror = () => {
-      // Si la imagen falla al cargar, vuelve al SVG limpio
-      span.innerHTML = '<svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg">' + shadow + art + '</svg>';
-    };
-    span.appendChild(img);
-    return span;
+  const customImages = typeof getCustomProductImages === 'function' ? getCustomProductImages() : {};
+  let imgSrc = '';
+  if (p) {
+    imgSrc = p.imageUrl || customImages[p.id] || customImages[p.name];
+    if (!imgSrc && typeof getProductTransparentPng === 'function') {
+      imgSrc = getProductTransparentPng(p);
+      p.imageUrl = imgSrc;
+    }
   }
 
-  span.innerHTML = '<svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg">' + shadow + art + '</svg>';
+  const img = document.createElement('img');
+  img.src = imgSrc || '';
+  img.alt = (p && p.name) || 'Medicamento FarmaYA';
+  img.className = 'product-custom-photo';
+  img.decoding = 'async';
+  img.onerror = () => {
+    // Si la imagen falla o es una URL externa rota, reasignar inmediatamente el PNG transparente
+    if (typeof getProductTransparentPng === 'function') {
+      const fallback = getProductTransparentPng(p);
+      if (fallback && img.src !== fallback) {
+        img.src = fallback;
+      }
+    }
+  };
+  span.appendChild(img);
   return span;
 }
 

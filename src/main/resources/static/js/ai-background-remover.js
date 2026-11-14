@@ -5,34 +5,7 @@
 (function(window) {
   'use strict';
 
-  let imglyModule = null;
-  let imglyLoading = false;
   const PNG_CACHE = Object.create(null);
-
-  /* Carga dinámica del modelo neuronal IMG.LY si hay conexión a internet */
-  async function loadImglyNeuralModel() {
-    if (imglyModule) return imglyModule;
-    if (imglyLoading) {
-      return new Promise(resolve => {
-        const check = setInterval(() => {
-          if (imglyModule || !imglyLoading) {
-            clearInterval(check);
-            resolve(imglyModule);
-          }
-        }, 100);
-      });
-    }
-    imglyLoading = true;
-    try {
-      imglyModule = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.0/+esm');
-      imglyLoading = false;
-      return imglyModule;
-    } catch (err) {
-      console.warn('Módulo neuronal CDN no disponible o bloqueado, se usará visión por segmentación canvas:', err);
-      imglyLoading = false;
-      return null;
-    }
-  }
 
   function loadImageElement(src) {
     return new Promise((resolve, reject) => {
@@ -278,26 +251,11 @@
     if (!imgElement) return null;
 
     try {
-      const imgly = await loadImglyNeuralModel();
-      if (imgly && typeof imgly.removeBackground === 'function') {
-        const inputSource = source instanceof Blob ? source : imgElement.src;
-        const resultBlob = await imgly.removeBackground(inputSource, {
-          progress: (key, current, total) => {
-            if (options && typeof options.onProgress === 'function') {
-              options.onProgress(Math.round((current / (total || 1)) * 100));
-            }
-          }
-        });
-        if (resultBlob) {
-          const pngUrl = await blobToDataUrl(resultBlob);
-          return pngUrl;
-        }
-      }
-    } catch (e) {
-      console.warn('Fallo el modelo neuronal @imgly, usando motor de vision AI canvas:', e);
+      return removeBackgroundWithVisionAI(imgElement, options);
+    } catch (err) {
+      console.warn('Fallo visión canvas local:', err);
+      return typeof source === 'string' ? source : (imgElement.src || null);
     }
-
-    return removeBackgroundWithVisionAI(imgElement, options);
   }
 
   /* ==========================================================================
@@ -839,24 +797,12 @@
       let transparentPng = null;
       const existingPhoto = p.imageUrl || customImages[p.name];
 
-      if (existingPhoto && !existingPhoto.startsWith('data:image/png')) {
-        // Tiene foto externa o JPEG: aplicar remoción de fondo con IA
-        try {
-          transparentPng = await removeImageBackgroundWithAI(existingPhoto);
-        } catch (err) {
-          console.warn('Fallo al remover fondo de foto existente para', p.name, err);
-        }
-      }
-
-      // Si no tenía foto o falló la remoción de fondo, generar empaque farmacéutico transparente PNG
       if (!transparentPng) {
-        transparentPng = generateProductTransparentPng(p);
+        transparentPng = existingPhoto || generateProductTransparentPng(p);
       }
 
       if (transparentPng) {
         p.imageUrl = transparentPng;
-        customImages[p.name] = transparentPng;
-        if (p.id) customImages[p.id] = transparentPng;
         processedCount++;
       }
 
@@ -865,12 +811,7 @@
       }
     }
 
-    try {
-      localStorage.setItem('farmaya_product_images', JSON.stringify(customImages));
-    } catch (_) {}
-
     window.dispatchEvent(new CustomEvent('farmaya:product-images-updated'));
-    window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
     return processedCount;
   }
 
@@ -882,15 +823,14 @@
   window.applyAiTransparentPngToAllIntegratedProducts = applyAiTransparentPngToAllIntegratedProducts;
   window.processIntegratedProductImagesWithAI = applyAiTransparentPngToAllIntegratedProducts;
 
-  // Ejecución inmediata para que todos los productos ya integrados tengan su PNG transparente
-  if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        applyAiTransparentPngToAllIntegratedProducts();
-      });
-    } else {
-      setTimeout(() => applyAiTransparentPngToAllIntegratedProducts(), 50);
-    }
+  // Ejecución inmediata síncrona
+  if (typeof CATALOG !== 'undefined' && Array.isArray(CATALOG)) {
+    applyAiTransparentPngToAllIntegratedProducts();
+  }
+  if (typeof window !== 'undefined') {
+    window.addEventListener('farmaya:catalog-loaded', () => {
+      applyAiTransparentPngToAllIntegratedProducts();
+    });
   }
 
 })(window);
