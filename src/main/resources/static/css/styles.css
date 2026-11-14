@@ -1800,3 +1800,45 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
 .product-custom-photo {
   background: transparent !important;
 }
+
+
+/* Miniaturas de catálogo administrativo con dimensiones fijas */
+.admin-catalog-table th.col-thumb,
+.admin-catalog-table td.catalog-thumb-cell,
+.catalog-thumb-cell {
+  width: 74px !important;
+  min-width: 74px !important;
+  max-width: 74px !important;
+  text-align: center !important;
+  padding: 6px !important;
+  vertical-align: middle !important;
+}
+
+.admin-prod-thumb-wrap {
+  width: 58px !important;
+  height: 58px !important;
+  min-width: 58px !important;
+  min-height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
+  margin: 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  border: 1px solid var(--line, #e2e8f0) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  padding: 3px !important;
+}
+
+.admin-prod-thumb {
+  width: auto !important;
+  height: auto !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
+  object-fit: contain !important;
+  display: block !important;
+  margin: 0 auto !important;
+}

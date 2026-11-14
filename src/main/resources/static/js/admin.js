@@ -2127,19 +2127,20 @@ function adminCatalogManager() {
         h('tbody', null, paged.map(p => {
           const imgSrc = customImages[p.id] || customImages[p.name] || p.imageUrl || p.img || (typeof getProductTransparentPng === 'function' ? getProductTransparentPng(p) : (typeof getProductImagePlaceholder === 'function' ? getProductImagePlaceholder(p.name, p.cat) : ''));
           return h('tr', null,
-            h('td', { class: 'catalog-thumb-cell' },
-              h('div', { class: 'admin-prod-thumb-wrap' },
+            h('td', { class: 'catalog-thumb-cell', style: 'width: 70px; min-width: 70px; max-width: 70px; padding: 6px; text-align: center; vertical-align: middle;' },
+              h('div', { class: 'admin-prod-thumb-wrap', style: 'width: 58px; height: 58px; min-width: 58px; min-height: 58px; max-width: 58px; max-height: 58px; margin: 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; overflow: hidden; padding: 3px; box-sizing: border-box;' },
                 imgSrc ? h('img', {
                   src: imgSrc,
                   alt: p.name,
                   class: 'admin-prod-thumb',
+                  style: 'width: auto; height: auto; max-width: 50px; max-height: 50px; object-fit: contain; display: block; margin: 0 auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));',
                   loading: 'lazy',
                   onerror: (e) => {
                     e.currentTarget.style.display = 'none';
                     if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
                   }
                 }) : null,
-                h('div', { class: 'admin-prod-thumb-fallback', style: imgSrc ? 'display:none;' : 'display:flex;' },
+                h('div', { class: 'admin-prod-thumb-fallback', style: imgSrc ? 'display:none;' : 'display:flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #94a3b8;' },
                   icon('capsule')
                 )
               )
@@ -2411,12 +2412,14 @@ function openAdminProductModal(p, onSaved) {
     onclick: () => fileInput.click()
   }, 'Subir foto con IA');
 
-  // Presets rápidos
+  // Presets farmacéuticos con IA PNG transparente
   const presets = [
-    { label: 'Cápsulas blandas', url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=360&auto=format&fit=crop&q=80' },
-    { label: 'Caja tabletas', url: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=360&auto=format&fit=crop&q=80' },
-    { label: 'Jarabe', url: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=360&auto=format&fit=crop&q=80' },
-    { label: 'Crema / Pomada', url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=360&auto=format&fit=crop&q=80' }
+    { label: 'Cápsulas blandas', art: 'capsule', color: '#16865d' },
+    { label: 'Caja tabletas', art: 'box', color: '#0284c7' },
+    { label: 'Jarabe frasco', art: 'bottle', color: '#d97706' },
+    { label: 'Crema / Tubo', art: 'tube', color: '#7c3aed' },
+    { label: 'Gotas oftálmicas', art: 'dropper', color: '#059669' },
+    { label: 'Efervescente', art: 'box', color: '#ea580c' }
   ];
 
   const presetRow = h('div', { class: 'preset-pills-row' },
@@ -2424,8 +2427,12 @@ function openAdminProductModal(p, onSaved) {
       type: 'button',
       class: 'btn ghost small preset-pill-btn',
       onclick: () => {
-        imgUrlInput.value = item.url;
-        updateImagePreview(item.url);
+        const dummyProd = { name: (p && p.name) || item.label, art: item.art, color: item.color, presentation: (p && p.presentation) || '' };
+        const transparentPng = typeof generateProductTransparentPng === 'function' ? generateProductTransparentPng(dummyProd) : '';
+        if (transparentPng) {
+          imgUrlInput.value = '';
+          updateImagePreview(transparentPng);
+        }
       }
     }, item.label))
   );
@@ -2737,14 +2744,14 @@ function openProductImageModal(p, onSaved) {
     onclick: () => fileInput.click()
   }, 'Subir foto con IA');
 
-  // Galería de fotos médicas preconfiguradas
+  // Galería de fotos médicas preconfiguradas con IA PNG transparente
   const presets = [
-    { label: 'Cápsulas blandas', url: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=360&auto=format&fit=crop&q=80' },
-    { label: 'Caja de tabletas', url: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=360&auto=format&fit=crop&q=80' },
-    { label: 'Frasco jarabe', url: 'https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=360&auto=format&fit=crop&q=80' },
-    { label: 'Crema / Ungüento', url: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=360&auto=format&fit=crop&q=80' },
-    { label: 'Suero oral', url: 'https://images.unsplash.com/photo-1559757175-5700dde675bc?w=360&auto=format&fit=crop&q=80' },
-    { label: 'Vitamina C efervescente', url: 'https://images.unsplash.com/photo-1576602976047-174e57a47881?w=360&auto=format&fit=crop&q=80' }
+    { label: 'Cápsulas blandas', art: 'capsule', color: '#16865d' },
+    { label: 'Caja de tabletas', art: 'box', color: '#0284c7' },
+    { label: 'Frasco jarabe', art: 'bottle', color: '#d97706' },
+    { label: 'Crema / Ungüento', art: 'tube', color: '#7c3aed' },
+    { label: 'Gotas oftálmicas', art: 'dropper', color: '#059669' },
+    { label: 'Vitamina C efervescente', art: 'box', color: '#ea580c' }
   ];
 
   const presetList = h('div', { class: 'preset-pills-row' },
@@ -2752,8 +2759,12 @@ function openProductImageModal(p, onSaved) {
       type: 'button',
       class: 'btn ghost small preset-pill-btn',
       onclick: () => {
-        urlInput.value = item.url;
-        updatePreview(item.url);
+        const dummyProd = { name: p.name, art: item.art, color: item.color, presentation: p.presentation };
+        const transparentPng = typeof generateProductTransparentPng === 'function' ? generateProductTransparentPng(dummyProd) : '';
+        if (transparentPng) {
+          urlInput.value = '';
+          updatePreview(transparentPng);
+        }
       }
     }, item.label))
   );

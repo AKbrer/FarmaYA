@@ -4384,40 +4384,42 @@ dialog.sheet:has(.stitch-product-detail-modal) {
 
 /* Celdas de imagen en miniatura */
 .catalog-thumb-cell {
-  width: 84px !important;
-  min-width: 84px !important;
-  max-width: 84px !important;
+  width: 74px !important;
+  min-width: 74px !important;
+  max-width: 74px !important;
   text-align: center !important;
-  padding: 8px 10px !important;
+  padding: 6px !important;
+  vertical-align: middle !important;
 }
 
 .admin-prod-thumb-wrap {
-  width: 64px !important;
-  height: 64px !important;
-  min-width: 64px !important;
-  min-height: 64px !important;
-  max-width: 64px !important;
-  max-height: 64px !important;
+  width: 58px !important;
+  height: 58px !important;
+  min-width: 58px !important;
+  min-height: 58px !important;
+  max-width: 58px !important;
+  max-height: 58px !important;
   margin: 0 auto !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  border-radius: 12px !important;
+  border-radius: 10px !important;
   background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f6f8fb 100%) !important;
-  border: 1px solid var(--line) !important;
+  border: 1px solid var(--line, #e2e8f0) !important;
   box-sizing: border-box !important;
   overflow: hidden !important;
-  padding: 4px !important;
+  padding: 3px !important;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) !important;
 }
 
 .admin-prod-thumb {
   width: auto !important;
   height: auto !important;
-  max-width: 56px !important;
-  max-height: 56px !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
   object-fit: contain !important;
   display: block !important;
+  margin: 0 auto !important;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08)) !important;
 }
 

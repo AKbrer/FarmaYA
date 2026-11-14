@@ -40,18 +40,20 @@
     });
   }
 
-  /* Motor de visión artificial canvas: segmentación perimetral, flood-fill y suavizado de bordes */
+  /* Motor de visión artificial canvas: segmentación perimetral por esquinas, umbral de estudio, barrera de gradiente y feathering */
   function removeBackgroundWithVisionAI(img, options) {
     const opts = options || {};
-    const maxDimension = opts.maxDimension || 800;
+    const maxDimension = opts.maxDimension || 500; // tamaño balanceado para alta nitidez y mínimo peso PNG
 
     let w = img.naturalWidth || img.width;
     let h = img.naturalHeight || img.height;
 
+    if (!w || !h) return null;
+
     if (w > maxDimension || h > maxDimension) {
       const scale = Math.min(maxDimension / w, maxDimension / h);
-      w = Math.round(w * scale);
-      h = Math.round(h * scale);
+      w = Math.max(32, Math.round(w * scale));
+      h = Math.max(32, Math.round(h * scale));
     }
 
     const canvas = document.createElement('canvas');
@@ -63,95 +65,135 @@
     const imgData = ctx.getImageData(0, 0, w, h);
     const data = imgData.data;
 
-    // 1. Muestreo de color de fondo en bordes (margen de 4% en el perímetro)
-    const marginX = Math.max(2, Math.floor(w * 0.04));
-    const marginY = Math.max(2, Math.floor(h * 0.04));
-
-    let bgR = 0, bgG = 0, bgB = 0, sampleCount = 0;
-    const borderSamples = [];
-
-    function addSample(x, y) {
+    function getPixelRGB(x, y) {
       const idx = (y * w + x) * 4;
-      const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-      borderSamples.push([r, g, b]);
-      bgR += r;
-      bgG += g;
-      bgB += b;
-      sampleCount++;
+      return [data[idx], data[idx + 1], data[idx + 2]];
     }
 
-    for (let x = 0; x < w; x += 3) {
-      for (let y = 0; y < marginY; y += 2) addSample(x, y);
-      for (let y = h - marginY; y < h; y += 2) addSample(x, y);
-    }
-    for (let y = marginY; y < h - marginY; y += 3) {
-      for (let x = 0; x < marginX; x += 2) addSample(x, y);
-      for (let x = w - marginX; x < w; x += 2) addSample(x, y);
+    function colorDist(r1, g1, b1, r2, g2, b2) {
+      const dr = r1 - r2;
+      const dg = g1 - g2;
+      const db = b1 - b2;
+      return Math.sqrt(2 * dr * dr + 4 * dg * dg + 3 * db * db);
     }
 
-    if (sampleCount === 0) sampleCount = 1;
-    const meanR = bgR / sampleCount;
-    const meanG = bgG / sampleCount;
-    const meanB = bgB / sampleCount;
+    // 1. Muestreo inteligente de las 4 esquinas exteriores en parches
+    const patchSize = Math.max(3, Math.min(12, Math.floor(Math.min(w, h) * 0.05)));
+    const corners = [
+      { x0: 0, y0: 0 },
+      { x0: w - patchSize, y0: 0 },
+      { x0: 0, y0: h - patchSize },
+      { x0: w - patchSize, y0: h - patchSize }
+    ];
 
-    let varSum = 0;
-    for (let i = 0; i < borderSamples.length; i++) {
-      const s = borderSamples[i];
-      const dr = s[0] - meanR;
-      const dg = s[1] - meanG;
-      const db = s[2] - meanB;
-      varSum += Math.sqrt(dr * dr + dg * dg + db * db);
+    const cornerClusters = [];
+
+    corners.forEach(c => {
+      let rSum = 0, gSum = 0, bSum = 0, count = 0;
+      for (let y = c.y0; y < c.y0 + patchSize; y++) {
+        for (let x = c.x0; x < c.x0 + patchSize; x++) {
+          if (x >= 0 && x < w && y >= 0 && y < h) {
+            const rgb = getPixelRGB(x, y);
+            rSum += rgb[0];
+            gSum += rgb[1];
+            bSum += rgb[2];
+            count++;
+          }
+        }
+      }
+      if (count > 0) {
+        cornerClusters.push({
+          r: rSum / count,
+          g: gSum / count,
+          b: bSum / count
+        });
+      }
+    });
+
+    // Encontrar el color de fondo dominante mediante acuerdo entre esquinas
+    let bestCluster = cornerClusters[0] || { r: 255, g: 255, b: 255 };
+    let maxClusterAgreement = 0;
+    for (let i = 0; i < cornerClusters.length; i++) {
+      let agreement = 0;
+      for (let j = 0; j < cornerClusters.length; j++) {
+        const d = colorDist(
+          cornerClusters[i].r, cornerClusters[i].g, cornerClusters[i].b,
+          cornerClusters[j].r, cornerClusters[j].g, cornerClusters[j].b
+        );
+        if (d < 50) agreement++;
+      }
+      if (agreement > maxClusterAgreement) {
+        maxClusterAgreement = agreement;
+        bestCluster = cornerClusters[i];
+      }
     }
-    const stdDist = varSum / (borderSamples.length || 1);
-    const tolerance = Math.max(26, Math.min(65, stdDist * 2.2 + 22));
-    const featherRadius = 18;
+
+    const bgR = bestCluster.r;
+    const bgG = bestCluster.g;
+    const bgB = bestCluster.b;
+
+    // Detectar si el fondo es estudio claro (fondo blanco, gris neutro, mesa clara)
+    const bgLuminance = 0.299 * bgR + 0.587 * bgG + 0.114 * bgB;
+    const bgSaturation = Math.max(bgR, bgG, bgB) - Math.min(bgR, bgG, bgB);
+    const isStudioLight = bgLuminance > 185 && bgSaturation < 42;
+
+    const tolerance = isStudioLight ? 44 : 38;
+    const stepTolerance = isStudioLight ? 22 : 28; // barrera de gradiente local para no invadir cajas blancas
 
     const isBackground = new Uint8Array(w * h);
     const queue = new Int32Array(w * h);
     let head = 0, tail = 0;
 
-    function colorDist(r, g, b, targetR, targetG, targetB) {
-      const dr = r - targetR;
-      const dg = g - targetG;
-      const db = b - targetB;
-      return Math.sqrt(2 * dr * dr + 4 * dg * dg + 3 * db * db);
+    function isBgMatch(r, g, b) {
+      if (isStudioLight) {
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        const sat = Math.max(r, g, b) - Math.min(r, g, b);
+        if (lum > 205 && sat < 35) return true;
+      }
+      return colorDist(r, g, b, bgR, bgG, bgB) <= tolerance;
     }
 
+    // 2. Sembrar desde el perímetro exterior
     for (let x = 0; x < w; x++) {
       const topIdx = x;
-      const botIdx = (h - 1) * w + x;
-      const topP = topIdx * 4;
-      const botP = botIdx * 4;
-
-      if (colorDist(data[topP], data[topP + 1], data[topP + 2], meanR, meanG, meanB) <= tolerance * 1.35) {
+      const pTop = topIdx * 4;
+      if (isBgMatch(data[pTop], data[pTop + 1], data[pTop + 2])) {
         isBackground[topIdx] = 1;
         queue[tail++] = topIdx;
       }
-      if (colorDist(data[botP], data[botP + 1], data[botP + 2], meanR, meanG, meanB) <= tolerance * 1.35) {
+      const botIdx = (h - 1) * w + x;
+      const pBot = botIdx * 4;
+      if (isBgMatch(data[pBot], data[pBot + 1], data[pBot + 2])) {
         isBackground[botIdx] = 1;
         queue[tail++] = botIdx;
       }
     }
+
     for (let y = 0; y < h; y++) {
       const leftIdx = y * w;
-      const rightIdx = y * w + (w - 1);
-      const leftP = leftIdx * 4;
-      const rightP = rightIdx * 4;
-
-      if (isBackground[leftIdx] === 0 && colorDist(data[leftP], data[leftP + 1], data[leftP + 2], meanR, meanG, meanB) <= tolerance * 1.35) {
+      const pLeft = leftIdx * 4;
+      if (isBackground[leftIdx] === 0 && isBgMatch(data[pLeft], data[pLeft + 1], data[pLeft + 2])) {
         isBackground[leftIdx] = 1;
         queue[tail++] = leftIdx;
       }
-      if (isBackground[rightIdx] === 0 && colorDist(data[rightP], data[rightP + 1], data[rightP + 2], meanR, meanG, meanB) <= tolerance * 1.35) {
+      const rightIdx = y * w + (w - 1);
+      const pRight = rightIdx * 4;
+      if (isBackground[rightIdx] === 0 && isBgMatch(data[pRight], data[pRight + 1], data[pRight + 2])) {
         isBackground[rightIdx] = 1;
         queue[tail++] = rightIdx;
       }
     }
 
+    // 3. Flood-fill BFS con barrera de borde
     while (head < tail) {
       const curr = queue[head++];
       const cx = curr % w;
       const cy = Math.floor(curr / w);
+
+      const currPx = curr * 4;
+      const cR = data[currPx];
+      const cG = data[currPx + 1];
+      const cB = data[currPx + 2];
 
       const neighbors = [
         cx > 0 ? curr - 1 : -1,
@@ -165,18 +207,23 @@
         if (next < 0 || isBackground[next] === 1) continue;
 
         const nextPx = next * 4;
-        const r = data[nextPx];
-        const g = data[nextPx + 1];
-        const b = data[nextPx + 2];
+        const nR = data[nextPx];
+        const nG = data[nextPx + 1];
+        const nB = data[nextPx + 2];
 
-        const dist = colorDist(r, g, b, meanR, meanG, meanB);
-        if (dist <= tolerance) {
+        // Barrera de gradiente local
+        const stepDist = colorDist(cR, cG, cB, nR, nG, nB);
+        if (stepDist > stepTolerance) continue;
+
+        if (isBgMatch(nR, nG, nB)) {
           isBackground[next] = 1;
           queue[tail++] = next;
         }
       }
     }
 
+    // 4. Suavizado de bordes (Feathering) y transparencia pura
+    const featherRadius = 14;
     let minX = w, maxX = 0, minY = h, maxY = 0;
 
     for (let y = 0; y < h; y++) {
@@ -188,16 +235,16 @@
           data[pIdx + 3] = 0;
         } else {
           const r = data[pIdx], g = data[pIdx + 1], b = data[pIdx + 2];
-          const dist = colorDist(r, g, b, meanR, meanG, meanB);
+          const dist = colorDist(r, g, b, bgR, bgG, bgB);
 
           if (dist < tolerance + featherRadius) {
-            const factor = Math.max(0, Math.min(1, (dist - tolerance) / featherRadius));
+            const factor = Math.max(0.12, Math.min(1, (dist - tolerance) / featherRadius));
             data[pIdx + 3] = Math.round(255 * factor);
           } else {
             data[pIdx + 3] = 255;
           }
 
-          if (data[pIdx + 3] > 20) {
+          if (data[pIdx + 3] > 30) {
             if (x < minX) minX = x;
             if (x > maxX) maxX = x;
             if (y < minY) minY = y;
@@ -209,23 +256,24 @@
 
     ctx.putImageData(imgData, 0, 0);
 
-    if (minX <= maxX && minY <= maxY) {
+    // 5. Centrado y recorte con margen estético proporcional
+    if (minX < maxX && minY < maxY) {
       const boxW = maxX - minX + 1;
       const boxH = maxY - minY + 1;
-      const padding = Math.max(12, Math.round(Math.max(boxW, boxH) * 0.05));
+      const pad = Math.max(10, Math.round(Math.max(boxW, boxH) * 0.05));
 
-      const croppedCanvas = document.createElement('canvas');
-      croppedCanvas.width = boxW + padding * 2;
-      croppedCanvas.height = boxH + padding * 2;
-      const croppedCtx = croppedCanvas.getContext('2d');
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = boxW + pad * 2;
+      outCanvas.height = boxH + pad * 2;
+      const outCtx = outCanvas.getContext('2d');
 
-      croppedCtx.drawImage(
+      outCtx.drawImage(
         canvas,
         minX, minY, boxW, boxH,
-        padding, padding, boxW, boxH
+        pad, pad, boxW, boxH
       );
 
-      return croppedCanvas.toDataURL('image/png');
+      return outCanvas.toDataURL('image/png');
     }
 
     return canvas.toDataURL('image/png');
@@ -239,22 +287,26 @@
 
     let imgElement = null;
 
-    if (typeof source === 'string') {
-      imgElement = await loadImageElement(source);
-    } else if (source instanceof File || source instanceof Blob) {
-      const dataUrl = await fileToDataUrl(source);
-      imgElement = await loadImageElement(dataUrl);
-    } else if (source instanceof HTMLImageElement) {
-      imgElement = source;
-    }
-
-    if (!imgElement) return null;
-
     try {
-      return removeBackgroundWithVisionAI(imgElement, options);
-    } catch (err) {
-      console.warn('Fallo visión canvas local:', err);
+      if (typeof source === 'string') {
+        imgElement = await loadImageElement(source);
+      } else if (source instanceof File || source instanceof Blob) {
+        const dataUrl = await fileToDataUrl(source);
+        imgElement = await loadImageElement(dataUrl);
+      } else if (source instanceof HTMLImageElement) {
+        imgElement = source;
+      }
+
+      if (!imgElement) return null;
+
+      const resultPng = removeBackgroundWithVisionAI(imgElement, options);
+      if (resultPng && resultPng.startsWith('data:image/png')) {
+        return resultPng;
+      }
       return typeof source === 'string' ? source : (imgElement.src || null);
+    } catch (err) {
+      console.warn('Fallo proceso IA background:', err);
+      return typeof source === 'string' ? source : null;
     }
   }
 
@@ -794,15 +846,26 @@
       const p = catalogList[i];
       if (!p || !p.name) continue;
 
+      const existingPhoto = customImages[p.id] || customImages[p.name] || p.imageUrl || p.img;
       let transparentPng = null;
-      const existingPhoto = p.imageUrl || customImages[p.name];
+
+      if (existingPhoto && typeof existingPhoto === 'string' && existingPhoto.trim()) {
+        try {
+          transparentPng = await removeImageBackgroundWithAI(existingPhoto);
+        } catch (_) {
+          transparentPng = null;
+        }
+      }
 
       if (!transparentPng) {
-        transparentPng = existingPhoto || generateProductTransparentPng(p);
+        transparentPng = generateProductTransparentPng(p);
       }
 
       if (transparentPng) {
         p.imageUrl = transparentPng;
+        if (typeof saveProductImage === 'function') {
+          saveProductImage(p.name, transparentPng);
+        }
         processedCount++;
       }
 
@@ -812,6 +875,7 @@
     }
 
     window.dispatchEvent(new CustomEvent('farmaya:product-images-updated'));
+    window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
     return processedCount;
   }
 
