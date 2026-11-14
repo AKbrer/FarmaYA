@@ -61,7 +61,9 @@ function loadClientCart(u) {
       }
 
       clientCart = userItems;
-      localStorage.setItem(userKey, JSON.stringify(clientCart));
+      try {
+        localStorage.setItem(userKey, JSON.stringify(clientCart));
+      } catch (_) {}
     } else {
       const guestRaw = localStorage.getItem('farmaya_cart_guest') || localStorage.getItem('farmaya_client_cart');
       if (guestRaw) {

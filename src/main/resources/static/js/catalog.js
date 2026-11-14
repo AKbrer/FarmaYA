@@ -2155,20 +2155,17 @@ function getCustomProductImages() {
 
 function saveProductImage(productName, imageUrl) {
   try {
-    const map = getCustomProductImages();
-    if (imageUrl && imageUrl.trim()) {
-      map[productName] = imageUrl.trim();
-    } else {
-      delete map[productName];
-    }
-    try {
-      localStorage.setItem('farmaya_product_images', JSON.stringify(map));
-    } catch (quotaErr) {
-      console.warn('Almacenamiento local completo, manteniendo imagen en memoria:', quotaErr);
-    }
     const prod = CATALOG.find(p => p.name === productName);
     if (prod) {
       prod.imageUrl = (imageUrl && imageUrl.trim()) ? imageUrl.trim() : null;
+    }
+    // Si la imagen es una URL externa corta, se puede guardar en local
+    if (imageUrl && !imageUrl.startsWith('data:image')) {
+      try {
+        const map = getCustomProductImages();
+        map[productName] = imageUrl.trim();
+        localStorage.setItem('farmaya_product_images', JSON.stringify(map));
+      } catch (_) {}
     }
     window.dispatchEvent(new CustomEvent('farmaya:product-images-updated', { detail: { productName, imageUrl } }));
     return true;
