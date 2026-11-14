@@ -2063,7 +2063,7 @@ function adminCatalogManager() {
     type: 'search',
     placeholder: 'Buscar medicamento por nombre, componente o laboratorio...',
     'aria-label': 'Buscar medicamento',
-    style: 'border: 1.5px solid var(--line);',
+    class: 'catalog-search-input',
     oninput: () => {
       query = search.value.trim().toLowerCase();
       catalogPage = 1;
@@ -2071,9 +2071,14 @@ function adminCatalogManager() {
     }
   });
 
+  const searchWrap = h('div', { class: 'catalog-search-wrap' },
+    h('span', { class: 'search-lens-icon', 'aria-hidden': 'true' }, icon('search')),
+    search
+  );
+
   const catSelect = h('select', {
     'aria-label': 'Filtrar por categoría',
-    style: 'border: 1.5px solid var(--line);',
+    class: 'catalog-filter-select',
     onchange: () => {
       category = catSelect.value;
       catalogPage = 1;
@@ -2111,12 +2116,12 @@ function adminCatalogManager() {
       h('table', { class: 'users admin-catalog-table' },
         h('thead', null,
           h('tr', null,
-            h('th', { style: 'width:90px' }, 'Imagen'),
-            h('th', null, 'Medicamento / Ficha Técnica'),
-            h('th', null, 'Categoría'),
-            h('th', null, 'Registro INVIMA'),
-            h('th', { class: 'text-right' }, 'Precio Referencia'),
-            h('th', { class: 'text-center' }, 'Acciones')
+            h('th', { class: 'col-thumb' }, 'Imagen'),
+            h('th', { class: 'col-info' }, 'Medicamento / Ficha Técnica'),
+            h('th', { class: 'col-cat' }, 'Categoría'),
+            h('th', { class: 'col-invima' }, 'Registro INVIMA'),
+            h('th', { class: 'col-price text-right' }, 'Precio Referencia'),
+            h('th', { class: 'col-actions text-center' }, 'Acciones')
           )
         ),
         h('tbody', null, paged.map(p => {
@@ -2221,11 +2226,15 @@ function adminCatalogManager() {
   }, icon('package'), h('span', null, 'Nuevo Medicamento'));
 
   const toolbar = h('div', { class: 'catalog-manager-toolbar' },
-    h('div', { class: 'catalog-search-wrap' }, search),
-    catSelect,
-    countPill,
-    aiPngAllBtn,
-    addBtn
+    h('div', { class: 'catalog-toolbar-filters' },
+      searchWrap,
+      catSelect,
+      countPill
+    ),
+    h('div', { class: 'catalog-toolbar-actions' },
+      aiPngAllBtn,
+      addBtn
+    )
   );
 
   draw();
