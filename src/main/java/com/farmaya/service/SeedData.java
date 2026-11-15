@@ -82,15 +82,29 @@ public class SeedData implements ApplicationRunner {
         // Eliminar la categoría antigua de ofertas para que no siga apareciendo en la base de datos.
         categories.findByCode("promo").ifPresent(categories::delete);
         Object[][] defaults = {
-            {"meds", "Medicamentos", "Medicamentos de venta libre y productos farmacéuticos", 1},
-            {"care", "Cuidado Personal", "Higiene y cuidado personal", 2},
-            {"baby", "Bebé e Infantil", "Productos para bebés y niños", 3},
-            {"sexual", "Salud Sexual y Bienestar", "Preservativos, lubricantes y bienestar íntimo", 4}
+            {"meds", "Medicamentos y Salud", "Medicamentos de venta libre y productos farmacéuticos", 1},
+            {"care", "Cuidado Personal y Piel", "Higiene y cuidado personal", 2},
+            {"baby", "Bebé, Mamá e Infantil", "Productos para bebés y niños", 3},
+            {"gastro", "Gastroenterología", "Antiácidos, digestivos y salud estomacal", 4},
+            {"derm", "Dermatología", "Cuidado dermatológico especializado y de la piel", 5},
+            {"vital", "Vitaminas y Nutrición", "Suplementos, vitaminas y bienestar nutricional", 6},
+            {"sexual", "Salud Sexual y Bienestar", "Preservativos, lubricantes y bienestar íntimo", 7}
         };
         for (Object[] row : defaults) {
             String code = (String) row[0];
-            if (categories.findByCode(code).isEmpty()) {
-                categories.save(new Category(code, (String) row[1], (String) row[2], (Integer) row[3]));
+            String name = (String) row[1];
+            String desc = (String) row[2];
+            int order = (Integer) row[3];
+            var opt = categories.findByCode(code);
+            if (opt.isEmpty()) {
+                categories.save(new Category(code, name, desc, order));
+            } else {
+                Category cat = opt.get();
+                cat.name = name;
+                cat.description = desc;
+                cat.sortOrder = order;
+                cat.active = true;
+                categories.save(cat);
             }
         }
     }

@@ -2059,6 +2059,11 @@ function adminCatalogManager() {
   const PAGE_SIZE = 30;
   const holder = h('div', { class: 'stack' });
 
+  const getCatCount = (catId) => {
+    if (!catId) return typeof CATALOG !== 'undefined' ? CATALOG.length : 0;
+    return typeof CATALOG !== 'undefined' ? CATALOG.filter(p => p && p.cat === catId).length : 0;
+  };
+
   const search = h('input', {
     type: 'search',
     placeholder: 'Buscar medicamento por nombre, componente o laboratorio...',
@@ -2084,14 +2089,48 @@ function adminCatalogManager() {
       catalogPage = 1;
       draw();
     }
-  },
-    h('option', { value: '' }, 'Todas las categorías'),
-    CATEGORIES.map(c => h('option', { value: c.id }, c.label))
-  );
+  });
+
+  const categoryChipsBar = h('div', { class: 'catalog-category-chips-bar' });
+
+  const updateCategoryControls = () => {
+    // Sincronizar selector desplegable con cantidades
+    catSelect.replaceChildren(
+      h('option', { value: '' }, `Todas las categorías (${getCatCount('')})`),
+      ...CATEGORIES.map(c => h('option', { value: c.id, selected: c.id === category }, `${c.label} (${getCatCount(c.id)})`))
+    );
+    catSelect.value = category;
+
+    // Sincronizar chips interactivos con cantidades
+    const allChips = [
+      { id: '', label: 'Todas las categorías', iconName: 'capsule' },
+      ...CATEGORIES.map(c => ({ id: c.id, label: c.label, iconName: c.icon || 'capsule' }))
+    ];
+
+    categoryChipsBar.replaceChildren(...allChips.map(c => {
+      const isSelected = category === c.id;
+      const cnt = getCatCount(c.id);
+      return h('button', {
+        type: 'button',
+        class: 'catalog-cat-chip' + (isSelected ? ' active' : ''),
+        onclick: () => {
+          category = c.id;
+          catSelect.value = c.id;
+          catalogPage = 1;
+          draw();
+        }
+      },
+        icon(c.iconName),
+        h('span', null, c.label),
+        h('span', { class: 'chip-count' }, String(cnt))
+      );
+    }));
+  };
 
   const countPill = h('span', { class: 'product-counter-pill' }, 'Cargando catálogo...');
 
   const draw = () => {
+    updateCategoryControls();
     const customImages = typeof getCustomProductImages === 'function' ? getCustomProductImages() : {};
     const filtered = CATALOG.filter(p => {
       const matchCat = !category || p.cat === category;
@@ -2239,7 +2278,7 @@ function adminCatalogManager() {
   );
 
   draw();
-  return h('div', { class: 'stack admin-catalog-root' }, toolbar, holder);
+  return h('div', { class: 'stack admin-catalog-root' }, toolbar, categoryChipsBar, holder);
 }
 
 function openAdminProductModal(p, onSaved) {

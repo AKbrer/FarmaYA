@@ -181,11 +181,15 @@ const API = {
         }
         this.setToken(null);
         state.user = null;
-        if (typeof renderApp === 'function') renderApp();
+        if (!['#login', '#register', '#home', ''].includes(location.hash)) {
+          setTimeout(() => {
+            if (typeof renderApp === 'function') renderApp();
+          }, 0);
+        }
       }
       throw new Error(msg);
     }
-    if (method === 'GET') {
+    if (method === 'GET' && !path.startsWith('/auth/')) {
       API_CACHE.set(path, { data, time: Date.now() });
     }
     return data;

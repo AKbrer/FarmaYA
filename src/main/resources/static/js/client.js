@@ -1302,9 +1302,16 @@ city: cityInput.value.trim() || user.city || '',
 
           },
 
-            h('option', { value: '' }, 'Todas las categorías'),
-
-            clientCategories.map(c => h('option', { value: c.id, selected: c.id === clientCategory }, c.label))
+            (() => {
+              const totalCnt = typeof CATALOG !== 'undefined' ? CATALOG.length : 0;
+              return [
+                h('option', { value: '' }, `Todas las categorías (${totalCnt})`),
+                ...clientCategories.map(c => {
+                  const cnt = typeof CATALOG !== 'undefined' ? CATALOG.filter(p => p && p.cat === c.id).length : 0;
+                  return h('option', { value: c.id, selected: c.id === clientCategory }, `${c.label} (${cnt})`);
+                })
+              ];
+            })()
 
           );
 
@@ -1534,9 +1541,16 @@ city: cityInput.value.trim() || user.city || '',
 
           },
 
-            h('option', { value: '' }, 'Todas las categorías'),
-
-            clientCategories.map(c => h('option', { value: c.id }, c.label))
+            (() => {
+              const totalCnt = typeof CATALOG !== 'undefined' ? CATALOG.length : 0;
+              return [
+                h('option', { value: '' }, `Todas las categorías (${totalCnt})`),
+                ...clientCategories.map(c => {
+                  const cnt = typeof CATALOG !== 'undefined' ? CATALOG.filter(p => p && p.cat === c.id).length : 0;
+                  return h('option', { value: c.id, selected: c.id === clientCategory }, `${c.label} (${cnt})`);
+                })
+              ];
+            })()
 
           );
 
@@ -1714,33 +1728,28 @@ city: cityInput.value.trim() || user.city || '',
   // Sincronización con colección de categorías de la base de datos
 
   API.get('/categories').then(rows => {
-
     if (!Array.isArray(rows) || !rows.length) return;
-
-    clientCategories = rows.filter(c => c && c.active !== false && c.code && c.name)
-
+    const fromApi = rows.filter(c => c && c.active !== false && c.code && c.name)
       .map(c => ({ id: c.code, label: c.name }));
-
+    const set = new Set(fromApi.map(c => c.id));
+    CATEGORIES.forEach(c => {
+      if (!set.has(c.id)) fromApi.push({ id: c.id, label: c.label });
+    });
+    clientCategories = fromApi;
     if (clientCategory && !clientCategories.some(c => c.id === clientCategory)) clientCategory = '';
-
     const select = window.clientCategorySelect;
-
     if (select) {
-
       const current = clientCategory;
-
+      const totalCnt = typeof CATALOG !== 'undefined' ? CATALOG.length : 0;
       select.replaceChildren(
-
-        h('option', { value: '' }, 'Todas las categorías'),
-
-        ...clientCategories.map(c => h('option', { value: c.id }, c.label))
-
+        h('option', { value: '' }, `Todas las categorías (${totalCnt})`),
+        ...clientCategories.map(c => {
+          const cnt = typeof CATALOG !== 'undefined' ? CATALOG.filter(p => p && p.cat === c.id).length : 0;
+          return h('option', { value: c.id, selected: c.id === current }, `${c.label} (${cnt})`);
+        })
       );
-
       select.value = current;
-
     }
-
   }).catch(err => console.warn('Categorías de base de datos no cargadas, se mantiene el catálogo predeterminado.', err));
 
 }

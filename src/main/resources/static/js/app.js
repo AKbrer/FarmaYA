@@ -173,7 +173,8 @@ async function renderApp() {
     );
   }
   if (bootstrapTasks.length) {
-    await Promise.all(bootstrapTasks);
+    const timeoutPromise = new Promise(resolve => setTimeout(resolve, 3500));
+    await Promise.race([Promise.all(bootstrapTasks), timeoutPromise]);
   }
   let route = location.hash || (state.user ? routeForRole(state.user.role) : '#home');
   if (state.user && ['#home', '#login', '#register', '', '#'].includes(route)) {
@@ -236,10 +237,21 @@ async function renderApp() {
     route = expected;
   }
   document.title = 'FarmaYa · ' + (state.user.name || 'Inicio');
-  if (state.user.role === 'CLIENTE') { renderClientDashboard(); }
-  else if (state.user.role === 'FARMACIA') app.replaceChildren(pharmacyView(state.user));
-  else if (state.user.role === 'REPARTIDOR') app.replaceChildren(courierView(state.user));
-  else if (state.user.role === 'ADMIN') app.replaceChildren(adminView(state.user));
+  try {
+    if (state.user.role === 'CLIENTE') { renderClientDashboard(); }
+    else if (state.user.role === 'FARMACIA') app.replaceChildren(pharmacyView(state.user));
+    else if (state.user.role === 'REPARTIDOR') app.replaceChildren(courierView(state.user));
+    else if (state.user.role === 'ADMIN') app.replaceChildren(adminView(state.user));
+  } catch (err) {
+    console.error('Error al renderizar vista:', err);
+    app.replaceChildren(
+      h('div', { class: 'empty-state-card', style: 'margin: 40px auto; max-width: 500px; text-align: center; padding: 30px;' },
+        h('h3', null, 'Cargando FarmaYA...'),
+        h('p', { class: 'muted' }, 'Ocurrió una pausa en la carga de la vista. Haz clic en el botón para reintentar.'),
+        h('button', { class: 'btn primary', type: 'button', onclick: () => { location.reload(); } }, 'Reintentar')
+      )
+    );
+  }
   mountGlobalFooter();
   renderNavbar();
   if (!state.user || state.user.role !== 'CLIENTE') {
