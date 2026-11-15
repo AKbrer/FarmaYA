@@ -2141,7 +2141,53 @@ const CATALOG = [
   }
 ];
 
-const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+/* ---------- Registro de productos eliminados ---------- */
+const DELETED_PRODUCTS_KEY = 'farmaya_deleted_product_names';
+
+function getDeletedProducts() {
+  try {
+    const raw = localStorage.getItem(DELETED_PRODUCTS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function markProductDeleted(nameOrId) {
+  if (!nameOrId) return;
+  try {
+    const set = getDeletedProducts();
+    set.add(norm(nameOrId));
+    localStorage.setItem(DELETED_PRODUCTS_KEY, JSON.stringify(Array.from(set)));
+  } catch (_) {}
+}
+
+function unmarkProductDeleted(nameOrId) {
+  if (!nameOrId) return;
+  try {
+    const set = getDeletedProducts();
+    set.delete(norm(nameOrId));
+    localStorage.setItem(DELETED_PRODUCTS_KEY, JSON.stringify(Array.from(set)));
+  } catch (_) {}
+}
+
+window.markProductDeleted = markProductDeleted;
+window.unmarkProductDeleted = unmarkProductDeleted;
+
+// Purga inmediata de productos eliminados previamente
+(function purgeDeletedAtStartup() {
+  const set = getDeletedProducts();
+  if (set.size > 0) {
+    for (let i = CATALOG.length - 1; i >= 0; i--) {
+      const p = CATALOG[i];
+      if (set.has(norm(p.name)) || (p.id && set.has(norm(p.id)))) {
+        CATALOG.splice(i, 1);
+      }
+    }
+  }
+})();
 
 /* ---------- Gestión de imágenes de medicamentos (Admin & Catálogo) ---------- */
 function getCustomProductImages() {
@@ -2194,8 +2240,31 @@ async function syncCatalogWithBackend() {
   try {
     if (typeof API !== 'undefined' && API.get) {
       const list = await API.get('/products');
-      if (Array.isArray(list) && list.length > 0) {
+      if (Array.isArray(list)) {
+        const deletedSet = getDeletedProducts();
+        const backendMap = new Map();
+        list.forEach(rp => {
+          if (!rp.rx) {
+            backendMap.set(norm(rp.name), rp);
+            if (rp.id) backendMap.set(String(rp.id), rp);
+          }
+        });
+
+        // 1. Si el backend envió lista, remover de CATALOG cualquier producto que ya fue eliminado en base de datos o marcado
+        for (let i = CATALOG.length - 1; i >= 0; i--) {
+          const p = CATALOG[i];
+          const isMarkedDeleted = deletedSet.has(norm(p.name)) || (p.id && deletedSet.has(norm(p.id)));
+          const existsInBackend = backendMap.has(norm(p.name)) || (p.id && backendMap.has(String(p.id)));
+          if (isMarkedDeleted || (list.length > 0 && !existsInBackend)) {
+            CATALOG.splice(i, 1);
+          }
+        }
+
+        // 2. Insertar o actualizar productos vigentes del backend
         list.filter(rp => !rp.rx).forEach(rp => {
+          if (deletedSet.has(norm(rp.name)) || (rp.id && deletedSet.has(norm(rp.id)))) {
+            return;
+          }
           const idx = CATALOG.findIndex(p => (rp.id && p.id === rp.id) || norm(p.name) === norm(rp.name));
           if (idx >= 0) {
             CATALOG[idx] = Object.assign(CATALOG[idx], rp);

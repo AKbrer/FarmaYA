@@ -2517,6 +2517,10 @@ function openAdminProductModal(p, onSaved) {
             saveProductImage(fullProduct.name, payload.imageUrl);
           }
 
+          if (typeof unmarkProductDeleted === 'function') {
+            unmarkProductDeleted(payload.name);
+          }
+
           toast(`Producto "${payload.name}" ingresado exitosamente al catálogo.`);
         }
 
@@ -2616,6 +2620,27 @@ function openAdminProductModal(p, onSaved) {
           });
           if (!ok) return;
 
+          // 1. Marcar como eliminado para prevenir cualquier reaparición en catálogo
+          if (typeof markProductDeleted === 'function') {
+            markProductDeleted(p.name);
+            if (p.id) markProductDeleted(p.id);
+          }
+
+          // 2. Eliminar de CATALOG en memoria inmediatamente
+          for (let i = CATALOG.length - 1; i >= 0; i--) {
+            const item = CATALOG[i];
+            if (item === p || (p.id && item.id === p.id) || norm(item.name) === norm(p.name)) {
+              CATALOG.splice(i, 1);
+            }
+          }
+          if (typeof saveProductImage === 'function') saveProductImage(p.name, null);
+
+          // 3. Limpiar caché de API para asegurar llamadas frescas
+          if (typeof API !== 'undefined' && API.clearCache) {
+            API.clearCache();
+          }
+
+          // 4. Eliminar en el backend de MongoDB
           try {
             const targetId = p.id || encodeURIComponent(p.name);
             await API.delete('/products/' + targetId);
@@ -2623,14 +2648,10 @@ function openAdminProductModal(p, onSaved) {
             console.debug('Error deleting product from backend:', err);
           }
 
-          const idx = CATALOG.findIndex(item => item === p || (p.id && item.id === p.id) || norm(item.name) === norm(p.name));
-          if (idx >= 0) CATALOG.splice(idx, 1);
-          if (typeof saveProductImage === 'function') saveProductImage(p.name, null);
-
           toast(`Producto "${p.name}" eliminado del catálogo.`);
-          window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
           d.close();
           if (onSaved) onSaved();
+          window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
         }
       }, 'Eliminar Producto'),
       h('button', { class: 'btn primary', type: 'submit' }, isEditing ? 'Guardar Cambios' : 'Ingresar al Catálogo')
