@@ -413,7 +413,10 @@ function adminPowerBiDashboard() {
             h('span', { class: 'powerbi-kpi-curr' }, 'pedidos')
           ),
           h('div', { class: 'powerbi-kpi-sub' },
-            h('span', null, 'Ticket: <strong>' + money(avgTicket) + '</strong> · Ganancia/ped: <strong>' + money(avgEarnings) + '</strong>')
+            h('span', null, 'Ticket: '),
+            h('strong', null, money(avgTicket)),
+            h('span', null, ' · Ganancia/ped: '),
+            h('strong', { class: 'text-green font-bold' }, money(avgEarnings))
           )
         )
       );
@@ -451,7 +454,7 @@ function adminPowerBiDashboard() {
         const pagedPharmaRank = filteredPharmaRank.slice(startPharmaIdx, startPharmaIdx + 30);
 
         if (pagedPharmaRank.length) {
-          pharmaBarsHolder.replaceChildren(
+          const desktopTable = h('div', { class: 'desktop-only' },
             excelTable(
               ['Farmacia Aliada', { label: 'Pedidos', class: 'text-center' }, { label: 'Bruto (100%)', class: 'text-right' }, { label: '95% Aliado', class: 'text-right' }, { label: '5% FarmaYA', class: 'text-right' }],
               pagedPharmaRank.map(item => {
@@ -467,6 +470,42 @@ function adminPowerBiDashboard() {
               { tableClass: 'fy-compact-excel-table' }
             )
           );
+
+          const mobileCards = h('div', { class: 'mobile-only powerbi-pharma-cards-wrap' },
+            pagedPharmaRank.map(item => {
+              const pharmaNet = Math.max(0, item.gross - item.earnings);
+              return h('div', { class: 'powerbi-pharma-flutter-card' },
+                h('div', { class: 'powerbi-pharma-card-header' },
+                  h('div', { class: 'powerbi-pharma-name-wrap' },
+                    h('span', { class: 'powerbi-pharma-icon', 'aria-hidden': 'true' }, icon('store')),
+                    h('strong', { class: 'powerbi-pharma-name' }, item.name)
+                  ),
+                  h('span', { class: 'powerbi-pharma-orders-pill' }, item.count + (item.count === 1 ? ' pedido' : ' pedidos'))
+                ),
+                h('div', { class: 'powerbi-pharma-card-stats' },
+                  h('div', { class: 'powerbi-pharma-stat' },
+                    h('span', { class: 'stat-label' }, 'Bruto'),
+                    h('span', { class: 'stat-val font-bold' }, money(item.gross))
+                  ),
+                  h('div', { class: 'powerbi-pharma-stat' },
+                    h('span', { class: 'stat-label' }, '95% Aliado'),
+                    h('span', { class: 'stat-val muted' }, money(pharmaNet))
+                  ),
+                  h('div', { class: 'powerbi-pharma-stat text-right' },
+                    h('span', { class: 'stat-label text-green font-bold' }, '5% FarmaYA'),
+                    h('span', { class: 'stat-val text-green font-bold' }, '+ ' + money(item.earnings))
+                  )
+                ),
+                h('div', { class: 'powerbi-bar-track', 'aria-hidden': 'true' },
+                  h('div', { class: 'powerbi-bar-fill-pharmacy', style: 'width: 100%;' },
+                    h('div', { class: 'powerbi-bar-fill-farmaya', style: 'width: 5%;' })
+                  )
+                )
+              );
+            })
+          );
+
+          pharmaBarsHolder.replaceChildren(desktopTable, mobileCards);
         } else {
           pharmaBarsHolder.replaceChildren(h('div', { class: 'muted small text-center p-4' }, 'No se encontraron farmacias con ese criterio de búsqueda.'));
         }
@@ -709,8 +748,8 @@ function adminPowerBiDashboard() {
             )
           )
         ),
-        // Tabla Excel unificada (Escritorio + Flutter Movil)
-        h('div', { class: 'table-wrap fy-excel-wrap powerbi-table-wrap' },
+        // Tabla Excel Escritorio
+        h('div', { class: 'table-wrap fy-excel-wrap powerbi-table-wrap desktop-only' },
           h('table', { class: 'data-table grid-bordered fy-excel-table powerbi-table' },
             h('thead', null,
               h('tr', null,
@@ -726,7 +765,7 @@ function adminPowerBiDashboard() {
             matrixTbody
           )
         ),
-
+        matrixMobileCardsHolder,
         matrixPaginationHolder
       );
 
@@ -1496,8 +1535,8 @@ function adminVerificationCenter() {
     const startIdx = (verifyPage - 1) * PAGE_SIZE;
     const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
-    // 1. Tabla Excel Unificada (Escritorio + Flutter Movil)
-    const desktopTable = h('div', { class: 'table-wrap fy-excel-wrap' },
+    // 1. Tabla Excel Escritorio
+    const desktopTable = h('div', { class: 'table-wrap fy-excel-wrap desktop-only' },
       h('table', { class: 'data-table grid-bordered fy-excel-table verification-table' },
         h('thead', null,
           h('tr', null,
@@ -1647,7 +1686,7 @@ function adminVerificationCenter() {
       );
     }));
 
-    resultsHolder.replaceChildren(desktopTable);
+    resultsHolder.replaceChildren(desktopTable, mobileCards);
 
     paginationHolder.replaceChildren(
       fyPagination(filtered.length, verifyPage, PAGE_SIZE, (p) => {
