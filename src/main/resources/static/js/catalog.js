@@ -2142,6 +2142,7 @@ const CATALOG = [
 ];
 
 const norm = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+window.norm = norm;
 
 /* ---------- Registro de productos eliminados ---------- */
 const DELETED_PRODUCTS_KEY = 'farmaya_deleted_product_names';

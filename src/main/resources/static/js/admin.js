@@ -2052,6 +2052,63 @@ function openCreateAdminModal(onCreated) {
 /* ==========================================================================
    Gestión de Catálogo e Imágenes de Medicamentos (Admin)
    ========================================================================== */
+async function deleteProductPermanently(p, onDone) {
+  if (!p) return;
+  const ok = await confirmBox({
+    title: 'Eliminar medicamento',
+    message: `¿Estás seguro de que deseas eliminar permanentemente "${p.name}" del catálogo institucional y de la base de datos? Esta acción reducirá la cantidad del catálogo.`,
+    ok: 'Eliminar permanentemente',
+    danger: true
+  });
+  if (!ok) return;
+
+  const normalizeStr = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const targetNorm = normalizeStr(p.name);
+  const targetId = p.id || p._id || '';
+
+  // 1. Marcar como eliminado para persistencia en almacenamiento local
+  if (typeof markProductDeleted === 'function') {
+    markProductDeleted(p.name);
+    if (targetId) markProductDeleted(targetId);
+  }
+
+  // 2. Eliminar de CATALOG en memoria inmediatamente (todas las coincidencias)
+  if (typeof CATALOG !== 'undefined' && Array.isArray(CATALOG)) {
+    for (let i = CATALOG.length - 1; i >= 0; i--) {
+      const item = CATALOG[i];
+      if (!item) continue;
+      const itemId = item.id || item._id || '';
+      if (item === p || (targetId && itemId === targetId) || normalizeStr(item.name) === targetNorm) {
+        CATALOG.splice(i, 1);
+      }
+    }
+  }
+
+  // 3. Eliminar imágenes personalizadas asociadas
+  if (typeof saveProductImage === 'function') {
+    saveProductImage(p.name, null);
+    if (targetId) saveProductImage(targetId, null);
+  }
+
+  // 4. Limpiar caché en memoria de la API
+  if (typeof API !== 'undefined' && API.clearCache) {
+    API.clearCache();
+  }
+
+  // 5. Eliminar en el backend de MongoDB
+  try {
+    const deleteParam = targetId || encodeURIComponent(p.name);
+    await API.delete('/products/' + deleteParam);
+  } catch (err) {
+    console.warn('Advertencia al eliminar en backend:', err);
+  }
+
+  toast(`Producto "${p.name}" eliminado permanentemente.`);
+  if (typeof onDone === 'function') onDone();
+  window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
+}
+window.deleteProductPermanently = deleteProductPermanently;
+
 function adminCatalogManager() {
   let query = '';
   let category = '';
@@ -2218,7 +2275,14 @@ function adminCatalogManager() {
                   class: 'btn secondary small icon-only',
                   title: 'Editar información del medicamento',
                   onclick: () => openAdminProductModal(p, () => draw())
-                }, icon('settings'))
+                }, icon('settings')),
+                h('button', {
+                  type: 'button',
+                  class: 'btn danger-ghost small icon-only btn-table-delete-prod',
+                  title: 'Eliminar producto permanentemente',
+                  style: 'color: var(--danger, #dc2626);',
+                  onclick: () => deleteProductPermanently(p, () => draw())
+                }, icon('trash'))
               )
             )
           );
@@ -2235,30 +2299,6 @@ function adminCatalogManager() {
     );
   };
 
-  const aiPngAllBtn = h('button', {
-    class: 'btn secondary btn-ai-png-all',
-    type: 'button',
-    title: 'Aplicar IA de fondo PNG transparente a las fotos del catálogo',
-    onclick: async () => {
-      aiPngAllBtn.disabled = true;
-      aiPngAllBtn.textContent = 'Procesando IA...';
-      try {
-        if (typeof window.processIntegratedProductImagesWithAI === 'function') {
-          const count = await window.processIntegratedProductImagesWithAI((curr, total) => {
-            aiPngAllBtn.textContent = `IA: ${curr}/${total}...`;
-          });
-          toast(`Se procesaron ${count} imágenes del catálogo con IA a fondo PNG transparente`);
-          draw();
-        }
-      } catch (e) {
-        toast('No fue posible procesar las imágenes con IA', 'error');
-      } finally {
-        aiPngAllBtn.disabled = false;
-        aiPngAllBtn.replaceChildren(icon('pencil'), h('span', null, 'IA Fondo PNG'));
-      }
-    }
-  }, icon('pencil'), h('span', null, 'IA Fondo PNG'));
-
   const addBtn = h('button', {
     class: 'btn primary btn-create-prod',
     type: 'button',
@@ -2272,10 +2312,15 @@ function adminCatalogManager() {
       countPill
     ),
     h('div', { class: 'catalog-toolbar-actions' },
-      aiPngAllBtn,
       addBtn
     )
   );
+
+  const onCatalogUpdate = () => {
+    if (holder.isConnected) draw();
+  };
+  window.addEventListener('farmaya:catalog-refresh', onCatalogUpdate);
+  window.addEventListener('farmaya:catalog-synced', onCatalogUpdate);
 
   draw();
   return h('div', { class: 'stack admin-catalog-root' }, toolbar, categoryChipsBar, holder);
@@ -2650,48 +2695,10 @@ function openAdminProductModal(p, onSaved) {
       isEditing && h('button', {
         class: 'btn danger-ghost',
         type: 'button',
-        onclick: async () => {
-          const ok = await confirmBox({
-            title: 'Eliminar producto',
-            message: `¿Estás seguro de que deseas eliminar permanentemente "${p.name}" del catálogo institucional y de la base de datos?`,
-            ok: 'Eliminar permanentemente',
-            danger: true
-          });
-          if (!ok) return;
-
-          // 1. Marcar como eliminado para prevenir cualquier reaparición en catálogo
-          if (typeof markProductDeleted === 'function') {
-            markProductDeleted(p.name);
-            if (p.id) markProductDeleted(p.id);
-          }
-
-          // 2. Eliminar de CATALOG en memoria inmediatamente
-          for (let i = CATALOG.length - 1; i >= 0; i--) {
-            const item = CATALOG[i];
-            if (item === p || (p.id && item.id === p.id) || norm(item.name) === norm(p.name)) {
-              CATALOG.splice(i, 1);
-            }
-          }
-          if (typeof saveProductImage === 'function') saveProductImage(p.name, null);
-
-          // 3. Limpiar caché de API para asegurar llamadas frescas
-          if (typeof API !== 'undefined' && API.clearCache) {
-            API.clearCache();
-          }
-
-          // 4. Eliminar en el backend de MongoDB
-          try {
-            const targetId = p.id || encodeURIComponent(p.name);
-            await API.delete('/products/' + targetId);
-          } catch (err) {
-            console.debug('Error deleting product from backend:', err);
-          }
-
-          toast(`Producto "${p.name}" eliminado del catálogo.`);
+        onclick: () => deleteProductPermanently(p, () => {
           d.close();
           if (onSaved) onSaved();
-          window.dispatchEvent(new CustomEvent('farmaya:catalog-refresh'));
-        }
+        })
       }, 'Eliminar Producto'),
       h('button', { class: 'btn primary', type: 'submit' }, isEditing ? 'Guardar Cambios' : 'Ingresar al Catálogo')
     )

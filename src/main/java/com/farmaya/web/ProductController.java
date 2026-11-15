@@ -102,12 +102,41 @@ public class ProductController {
     @Roles(Role.ADMIN)
     @DeleteMapping("/{id}")
     public void delete(@PathVariable(name = "id") String id, @RequestAttribute(value = "user", required = false) User me) {
-        products.findById(id)
-            .or(() -> products.findByNameIgnoreCase(id))
-            .ifPresent(p -> {
+        String cleanId = id != null ? id.trim() : "";
+        if (cleanId.isEmpty()) return;
+
+        // 1. Intentar por ID único en MongoDB
+        var byId = products.findById(cleanId);
+        if (byId.isPresent()) {
+            Product p = byId.get();
+            products.delete(p);
+            invalidateCatalogCache();
+            movements.record("ADMIN_PRODUCTO", "Eliminó el producto " + p.name + " del catálogo", me, null);
+            return;
+        }
+
+        // 2. Intentar por coincidencia de nombre (decodificando posibles caracteres de URL)
+        List<Product> matches = products.findAllByNameIgnoreCase(cleanId);
+        if (matches.isEmpty() && cleanId.contains("%")) {
+            try {
+                String decoded = java.net.URLDecoder.decode(cleanId, java.nio.charset.StandardCharsets.UTF_8);
+                matches = products.findAllByNameIgnoreCase(decoded);
+            } catch (Exception ignored) {}
+        }
+
+        // 3. Si no hubo coincidencia directa, buscar por coincidencia en catálogo
+        if (matches.isEmpty()) {
+            matches = products.findAll().stream()
+                .filter(p -> p.name != null && (p.name.equalsIgnoreCase(cleanId) || p.name.trim().equalsIgnoreCase(cleanId)))
+                .toList();
+        }
+
+        if (!matches.isEmpty()) {
+            for (Product p : matches) {
                 products.delete(p);
-                invalidateCatalogCache();
-                movements.record("ADMIN_PRODUCTO", "Elimino el producto " + p.name + " del catalogo", me, null);
-            });
+                movements.record("ADMIN_PRODUCTO", "Eliminó el producto " + p.name + " del catálogo", me, null);
+            }
+            invalidateCatalogCache();
+        }
     }
 }

@@ -253,12 +253,14 @@ public class SeedData implements ApplicationRunner {
             new Product("Condones Piel Texturizados Caja x 3", "sexual", 13500, "box", "#7c3aed", false, false, "Profamilia Colombia", "Caja x 3 preservativos", "INVIMA 2017DM-0001892-R2", "Látex natural texturizado y lubricado", "Protección segura con puntos y estrías para mayor estimulación.", "Lugar fresco y seco", null),
             new Product("Pruebas de Ovulación Digital x 5 tiras", "sexual", 36900, "box", "#db2777", false, false, "Clearblue", "Caja x 5 varillas de prueba", "INVIMA 2019RD-0005521", "Detector de pico de hormona LH en orina", "Identifica los días más fértiles del ciclo menstrual con alta precisión.", "Lugar fresco", null)
         );
-        for (Product p : defaults) {
-            if (products.findAllByNameIgnoreCase(p.name).isEmpty()) {
+        if (products.count() == 0) {
+            for (Product p : defaults) {
                 products.save(p);
             }
+            log.info("Catálogo inicial cargado en base de datos. Total: {}", products.count());
+        } else {
+            log.info("Catálogo activo en base de datos. Total: {}", products.count());
         }
-        log.info("Catálogo completo verificado en colección 'productos'. Total en BD: {}", products.count());
     }
 
     private User base(String name, String email, String phone, Role role, String password) {

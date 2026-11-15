@@ -1912,3 +1912,9 @@ body:has(.side-nav-layout) .app-container{width:calc(100% - 224px);max-width:138
   background: rgba(255, 255, 255, 0.3) !important;
   color: #ffffff !important;
 }
+
+.btn-table-delete-prod:hover {
+  background: #fee2e2 !important;
+  color: #b91c1c !important;
+  border-color: #fca5a5 !important;
+}
