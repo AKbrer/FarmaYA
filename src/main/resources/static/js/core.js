@@ -585,21 +585,6 @@ const hhmm = iso => new Date(iso).toLocaleTimeString(CONFIG.locale, { hour: '2-d
 function sideNavigation(items, start = 0) {
   const nav = h('aside', { class: 'side-nav', 'aria-label': 'Navegación del panel' });
 
-  // Selector rápido para vista móvil (Flutter / Smartphone)
-  const mobileSelect = h('select', {
-    class: 'side-nav-mobile-select',
-    'aria-label': 'Seleccionar sección del panel',
-    onchange: e => select(parseInt(e.target.value, 10))
-  }, items.map((it, i) => h('option', { value: i, selected: i === start }, (it.badge ? '[' + it.badge + '] ' : '') + it.label)));
-
-  const mobileBar = h('div', { class: 'side-nav-mobile-bar' },
-    h('div', { class: 'side-nav-mobile-title' },
-      h('span', { class: 'side-nav-mobile-icon', 'aria-hidden': 'true' }, icon('layers')),
-      h('span', null, 'Sección:')
-    ),
-    mobileSelect
-  );
-
   const buttons = items.map((it, i) => {
     const ico = it.customIcon || icon(it.icon || 'circle');
     const labelSpan = h('span', { class: 'side-nav-label' }, it.label);
@@ -624,9 +609,6 @@ function sideNavigation(items, start = 0) {
       b.classList.toggle('active', i === j);
       b.setAttribute('aria-current', i === j ? 'page' : 'false');
     });
-    if (mobileSelect) {
-      mobileSelect.value = i;
-    }
     if (buttons[i]) {
       try {
         buttons[i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -635,7 +617,7 @@ function sideNavigation(items, start = 0) {
     const rendered = items[i].render();
     panel.replaceChildren(rendered);
   }
-  nav.append(mobileBar, h('nav', { class: 'side-nav-items' }, buttons));
+  nav.append(h('nav', { class: 'side-nav-items' }, buttons));
   const root = h('div', { class: 'side-nav-layout' }, nav, panel);
   root.select = select;
   select(start);
