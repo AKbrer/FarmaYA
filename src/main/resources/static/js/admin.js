@@ -2125,7 +2125,7 @@ function adminCatalogManager() {
           )
         ),
         h('tbody', null, paged.map(p => {
-          const imgSrc = customImages[p.id] || customImages[p.name] || p.imageUrl || p.img || (typeof getProductTransparentPng === 'function' ? getProductTransparentPng(p) : (typeof getProductImagePlaceholder === 'function' ? getProductImagePlaceholder(p.name, p.cat) : ''));
+          const imgSrc = customImages[p.id] || customImages[p.name] || p.imageUrl || p.img || (typeof getProductTransparentPng === 'function' ? (p.imageUrl = getProductTransparentPng(p)) : '');
           return h('tr', null,
             h('td', { class: 'catalog-thumb-cell', style: 'width: 70px; min-width: 70px; max-width: 70px; padding: 6px; text-align: center; vertical-align: middle;' },
               h('div', { class: 'admin-prod-thumb-wrap', style: 'width: 58px; height: 58px; min-width: 58px; min-height: 58px; max-width: 58px; max-height: 58px; margin: 0 auto; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; overflow: hidden; padding: 3px; box-sizing: border-box;' },

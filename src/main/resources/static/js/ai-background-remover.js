@@ -343,15 +343,28 @@
     ctx.closePath();
   }
 
+  let sharedGenCanvas = null;
+  let sharedGenCtx = null;
+
   function generateProductTransparentPng(product) {
     if (!product || !product.name) return '';
+    if (product.imageUrl && typeof product.imageUrl === 'string' && product.imageUrl.startsWith('data:image/png')) {
+      return product.imageUrl;
+    }
     const cacheKey = product.name;
-    if (PNG_CACHE[cacheKey]) return PNG_CACHE[cacheKey];
+    if (PNG_CACHE[cacheKey]) {
+      product.imageUrl = PNG_CACHE[cacheKey];
+      return PNG_CACHE[cacheKey];
+    }
 
-    const canvas = document.createElement('canvas');
-    canvas.width = 400;
-    canvas.height = 400;
-    const ctx = canvas.getContext('2d');
+    if (!sharedGenCanvas) {
+      sharedGenCanvas = document.createElement('canvas');
+      sharedGenCanvas.width = 400;
+      sharedGenCanvas.height = 400;
+      sharedGenCtx = sharedGenCanvas.getContext('2d');
+    }
+    const canvas = sharedGenCanvas;
+    const ctx = sharedGenCtx;
 
     // Fondo transparente puro
     ctx.clearRect(0, 0, 400, 400);
@@ -887,22 +900,5 @@
   window.generateProductTransparentPng = generateProductTransparentPng;
   window.applyAiTransparentPngToAllIntegratedProducts = applyAiTransparentPngToAllIntegratedProducts;
   window.processIntegratedProductImagesWithAI = applyAiTransparentPngToAllIntegratedProducts;
-
-  // Asignación inmediata en memoria (sin escribir en localStorage)
-  function initializeCatalogPngsInMemory() {
-    if (typeof CATALOG !== 'undefined' && Array.isArray(CATALOG)) {
-      for (let i = 0; i < CATALOG.length; i++) {
-        const p = CATALOG[i];
-        if (p && !p.imageUrl) {
-          p.imageUrl = generateProductTransparentPng(p);
-        }
-      }
-    }
-  }
-
-  initializeCatalogPngsInMemory();
-  if (typeof window !== 'undefined') {
-    window.addEventListener('farmaya:catalog-loaded', initializeCatalogPngsInMemory);
-  }
 
 })(window);

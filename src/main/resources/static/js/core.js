@@ -95,6 +95,13 @@ function zoneSelect(name, current) {
 (function() {
   try {
     localStorage.removeItem('farmaya_product_images');
+    localStorage.removeItem('farmaya_theme');
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('farmaya_product_images') || k.startsWith('img_cache_') || k.startsWith('png_cache_'))) {
+        localStorage.removeItem(k);
+      }
+    }
   } catch (_) {}
 })();
 
@@ -183,7 +190,13 @@ const API = {
     }
     return data;
   },
-  get(path) { return this.call('GET', path); },
+  get(path, forceFresh = false) {
+    if (!forceFresh) {
+      const cached = this.getCached(path);
+      if (cached !== null) return Promise.resolve(cached);
+    }
+    return this.call('GET', path);
+  },
   post(path, body) { return this.call('POST', path, body === undefined ? {} : body); },
   put(path, body) { return this.call('PUT', path, body); },
   delete(path) { return this.call('DELETE', path); }

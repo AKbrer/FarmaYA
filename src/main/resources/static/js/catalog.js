@@ -2193,7 +2193,15 @@ window.unmarkProductDeleted = unmarkProductDeleted;
 function getCustomProductImages() {
   try {
     const raw = localStorage.getItem('farmaya_product_images');
-    return raw ? JSON.parse(raw) : {};
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    const clean = {};
+    for (const [k, v] of Object.entries(parsed)) {
+      if (typeof v === 'string' && (v.startsWith('http://') || v.startsWith('https://') || v.startsWith('/images/')) && v.length < 300) {
+        clean[k] = v;
+      }
+    }
+    return clean;
   } catch (_) {
     return {};
   }
@@ -2205,8 +2213,7 @@ function saveProductImage(productName, imageUrl) {
     if (prod) {
       prod.imageUrl = (imageUrl && imageUrl.trim()) ? imageUrl.trim() : null;
     }
-    // Si la imagen es una URL externa corta, se puede guardar en local
-    if (imageUrl && !imageUrl.startsWith('data:image')) {
+    if (imageUrl && typeof imageUrl === 'string' && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://') || imageUrl.startsWith('/images/')) && imageUrl.length < 300) {
       try {
         const map = getCustomProductImages();
         map[productName] = imageUrl.trim();
@@ -2228,8 +2235,6 @@ function syncCatalogImages() {
       if (!p) return;
       if (map[p.name] || (p.id && map[p.id])) {
         p.imageUrl = map[p.name] || map[p.id];
-      } else if (!p.imageUrl && typeof getProductTransparentPng === 'function') {
-        p.imageUrl = getProductTransparentPng(p);
       }
     });
   } catch (_) {}
@@ -2301,13 +2306,6 @@ if (typeof window !== 'undefined') {
   setTimeout(syncCatalogWithBackend, 50);
   window.addEventListener('farmaya:product-images-updated', syncCatalogWithBackend);
   window.addEventListener('farmaya:catalog-refresh', syncCatalogWithBackend);
-
-  // Conversion automatica en segundo plano con IA para imagenes integradas existentes
-  setTimeout(() => {
-    if (typeof window.processIntegratedProductImagesWithAI === 'function') {
-      window.processIntegratedProductImagesWithAI();
-    }
-  }, 1200);
 }
 
 /* ---------- Fotos y empaques de producto ---------- */
