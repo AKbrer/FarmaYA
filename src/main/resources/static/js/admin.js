@@ -2162,7 +2162,7 @@ function adminCatalogManager() {
 
   const search = h('input', {
     type: 'search',
-    placeholder: 'Buscar medicamento por nombre, componente o laboratorio...',
+    placeholder: 'Buscar por nombre, componente o lab...',
     'aria-label': 'Buscar medicamento',
     class: 'catalog-search-input',
     oninput: () => {
@@ -2247,7 +2247,7 @@ function adminCatalogManager() {
     const startIdx = (catalogPage - 1) * PAGE_SIZE;
     const paged = filtered.slice(startIdx, startIdx + PAGE_SIZE);
 
-    const tableWrap = h('div', { class: 'table-wrap stitch-admin-catalog-wrap' },
+    const tableWrap = h('div', { class: 'table-wrap stitch-admin-catalog-wrap desktop-only' },
       h('table', { class: 'users admin-catalog-table' },
         h('thead', null,
           h('tr', null,
@@ -2329,8 +2329,74 @@ function adminCatalogManager() {
       )
     );
 
+    const mobileCards = h('div', { class: 'mobile-catalog-cards mobile-only' },
+      paged.map(p => {
+        const imgSrc = customImages[p.id] || customImages[p.name] || p.imageUrl || p.img || (typeof getProductTransparentPng === 'function' ? (p.imageUrl = getProductTransparentPng(p)) : '');
+        return h('div', { class: 'mobile-catalog-card' },
+          h('div', { class: 'mobile-catalog-card-header' },
+            h('div', { class: 'admin-prod-thumb-wrap', style: 'width: 54px; height: 54px; min-width: 54px; min-height: 54px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; overflow: hidden; padding: 3px; box-sizing: border-box;' },
+              imgSrc ? h('img', {
+                src: imgSrc,
+                alt: p.name,
+                class: 'admin-prod-thumb',
+                style: 'width: auto; height: auto; max-width: 48px; max-height: 48px; object-fit: contain;',
+                loading: 'lazy',
+                onerror: (e) => {
+                  e.currentTarget.style.display = 'none';
+                  if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
+                }
+              }) : null,
+              h('div', { class: 'admin-prod-thumb-fallback', style: imgSrc ? 'display:none;' : 'display:flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #94a3b8;' },
+                icon('capsule')
+              )
+            ),
+            h('div', { class: 'mobile-catalog-card-info' },
+              h('div', { class: 'prod-title-line' },
+                h('strong', { class: 'prod-name' }, p.name),
+                p.rx ? h('span', { class: 'tag tone-amber rx-mini-pill', title: 'Requiere Fórmula Médica' }, 'Rx') : null
+              ),
+              p.active ? h('span', { class: 'prod-active muted small block-line' }, p.active) : null,
+              h('span', { class: 'prod-meta muted small block-line' }, [p.presentation, p.lab].filter(Boolean).join(' • '))
+            )
+          ),
+          h('div', { class: 'mobile-catalog-card-tags' },
+            h('span', { class: 'tag tone-teal cat-tag' }, (CATEGORIES.find(c => c.id === p.cat) || {}).label || p.cat),
+            h('span', { class: 'invima-pill' }, p.invima || 'Trámite INVIMA')
+          ),
+          h('div', { class: 'mobile-catalog-card-footer' },
+            h('div', { class: 'mobile-catalog-price-wrap' },
+              h('span', { class: 'mobile-catalog-price-label' }, 'Precio ref:'),
+              h('strong', { class: 'price-cell text-green' }, money(p.price))
+            ),
+            h('div', { class: 'btn-group-mini' },
+              h('button', {
+                type: 'button',
+                class: 'btn secondary small icon-only',
+                title: 'Cambiar imagen',
+                onclick: () => openProductImageModal(p, () => draw())
+              }, icon('pencil')),
+              h('button', {
+                type: 'button',
+                class: 'btn secondary small icon-only',
+                title: 'Editar información',
+                onclick: () => openAdminProductModal(p, () => draw())
+              }, icon('settings')),
+              h('button', {
+                type: 'button',
+                class: 'btn danger-ghost small icon-only btn-table-delete-prod',
+                title: 'Eliminar producto permanentemente',
+                style: 'color: var(--danger, #dc2626);',
+                onclick: () => deleteProductPermanently(p, () => draw())
+              }, icon('trash'))
+            )
+          )
+        );
+      })
+    );
+
     holder.replaceChildren(
       tableWrap,
+      mobileCards,
       fyPagination(filtered.length, catalogPage, PAGE_SIZE, (p) => {
         catalogPage = p;
         draw();
