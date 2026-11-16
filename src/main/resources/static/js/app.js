@@ -31,7 +31,7 @@ function renderNavbar() {
     navItems.push(
       h('button', {
         id: 'navHeaderFilterBtn',
-        class: 'btn ghost small mobile-header-filter-btn mobile-only',
+        class: 'nav-header-btn nav-header-filter-btn',
         type: 'button',
         title: 'Filtros y categorías del catálogo',
         'aria-label': 'Filtros de catálogo',
@@ -40,10 +40,7 @@ function renderNavbar() {
             window.openCatalogFiltersDrawer();
           }
         }
-      },
-        icon('filter'),
-        h('span', null, 'Filtros')
-      ),
+      }, icon('filter')),
       h('button', {
         id: 'navHeaderCartPill',
         class: 'nav-header-pill header-cart-pill',

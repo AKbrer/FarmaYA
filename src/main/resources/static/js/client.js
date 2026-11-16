@@ -1431,6 +1431,8 @@ city: cityInput.value.trim() || user.city || '',
 
       h('div', { class: 'stitch-search-box' },
 
+        h('span', { class: 'stitch-search-lens', 'aria-hidden': 'true' }, icon('search')),
+
         h('div', { class: 'stitch-search-input-wrap' },
 
           searchInput
@@ -1439,7 +1441,7 @@ city: cityInput.value.trim() || user.city || '',
 
         h('button', {
 
-          class: 'btn primary stitch-search-action',
+          class: 'stitch-search-action',
 
           type: 'button',
 
@@ -1449,7 +1451,7 @@ city: cityInput.value.trim() || user.city || '',
 
           onclick: () => drawProducts()
 
-        }, icon('search'), h('span', { class: 'search-btn-label' }, 'Buscar'))
+        }, h('span', { class: 'search-btn-label' }, 'Buscar'))
 
       )
 
@@ -1654,9 +1656,9 @@ city: cityInput.value.trim() || user.city || '',
 
           h('section', { class: 'block catalog-showcase-block' },
 
-            h('div', { class: 'catalog-header-card' },
+            h('div', { class: 'catalog-header-card catalog-header-simplified' },
 
-              h('div', { class: 'catalog-header-info' },
+              h('div', { class: 'catalog-header-info-compact' },
 
                 h('div', { class: 'catalog-header-pill' },
 
@@ -1666,17 +1668,13 @@ city: cityInput.value.trim() || user.city || '',
 
                 ),
 
-                h('h2', { class: 'catalog-title-main' }, 'Medicamentos y Cuidado de la Salud'),
-
-                h('p', { class: 'catalog-subtitle-desc' }, 'Productos originales con despacho prioritario garantizado por droguerías autorizadas.')
+                h('h2', { class: 'catalog-title-main' }, 'Medicamentos y Cuidado de la Salud')
 
               ),
 
-              h('div', { class: 'catalog-pricing-tag-box' },
+              h('div', { class: 'catalog-header-badge-side' },
 
-                h('span', { class: 'catalog-price-badge' }, icon('shopping-bag'), h('strong', null, 'Precios sugeridos')),
-
-                h('small', { class: 'catalog-price-hint' }, 'Confirmados directamente por la droguería asignada')
+                h('span', { class: 'catalog-price-badge' }, icon('shopping-bag'), h('span', null, 'Precios sugeridos'))
 
               )
 
