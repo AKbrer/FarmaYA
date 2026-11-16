@@ -2802,7 +2802,7 @@ dialog.sheet.drawer::backdrop {
   background: var(--line);
 }
 
-.invima-pill {
+.stitch-art .invima-pill {
   position: absolute;
   bottom: 6px;
   left: 6px;
@@ -2815,7 +2815,7 @@ dialog.sheet.drawer::backdrop {
   font-weight: 600;
 }
 
-[data-theme="dark"] .invima-pill {
+[data-theme="dark"] .stitch-art .invima-pill {
   background: rgba(15, 23, 42, 0.85);
   color: #94a3b8;
 }
@@ -4440,12 +4440,12 @@ dialog.sheet:has(.stitch-product-detail-modal) {
 }
 
 .admin-prod-thumb-fallback {
-  width: 100% !important;
-  height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  color: var(--muted) !important;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
 }
 
 .prod-title-line {
@@ -4510,11 +4510,125 @@ dialog.sheet:has(.stitch-product-detail-modal) {
   white-space: nowrap !important;
 }
 
+.btn-group-mini {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+}
+
 .actions-cell .btn-group-mini {
+  justify-content: center !important;
+}
+
+.btn.small.icon-only,
+.btn-group-mini .btn {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  max-width: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  border-radius: 10px !important;
+  box-sizing: border-box !important;
+  transition: all 0.18s ease-in-out !important;
+  cursor: pointer !important;
+  flex: 0 0 36px !important;
+}
+
+.btn.small.icon-only .ico,
+.btn-group-mini .btn .ico {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  line-height: 1 !important;
+}
+
+.btn.small.icon-only svg,
+.btn-group-mini .btn svg {
+  width: 17px !important;
+  height: 17px !important;
+  display: block !important;
+  stroke: currentColor !important;
+}
+
+.btn-group-mini .btn.secondary {
+  background: var(--surface) !important;
+  border: 1.5px solid var(--line) !important;
+  color: var(--text-secondary, #475569) !important;
+}
+
+.btn-group-mini .btn.secondary:hover {
+  background: var(--surface-soft, #f1f5f9) !important;
+  border-color: var(--line-strong, #cbd5e1) !important;
+  color: var(--text, #0f172a) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.btn.btn-table-delete-prod,
+.btn.danger-ghost.icon-only {
+  background: #fef2f2 !important;
+  border: 1.5px solid #fecaca !important;
+  color: #dc2626 !important;
+}
+
+.btn.btn-table-delete-prod:hover,
+.btn.danger-ghost.icon-only:hover {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+  color: #b91c1c !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.18) !important;
+}
+
+.btn.btn-table-delete-prod:active,
+.btn.danger-ghost.icon-only:active {
+  transform: translateY(0);
+}
+
+[data-theme="dark"] .btn.btn-table-delete-prod,
+[data-theme="dark"] .btn.danger-ghost.icon-only {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  color: #f87171 !important;
+}
+
+[data-theme="dark"] .btn.btn-table-delete-prod:hover,
+[data-theme="dark"] .btn.danger-ghost.icon-only:hover {
+  background: rgba(239, 68, 68, 0.22) !important;
+  border-color: #ef4444 !important;
+  color: #fca5a5 !important;
+}
+
+.btn-modal-delete-prod {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #fef2f2 !important;
+  border: 1.5px solid #fecaca !important;
+  color: #dc2626 !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  border-radius: 10px !important;
+}
+
+.btn-modal-delete-prod:hover {
+  background: #fee2e2 !important;
+  border-color: #f87171 !important;
+  color: #b91c1c !important;
+}
+
+[data-theme="dark"] .btn-modal-delete-prod {
+  background: rgba(239, 68, 68, 0.14) !important;
+  border-color: rgba(239, 68, 68, 0.35) !important;
+  color: #f87171 !important;
 }
 
 @media (max-width: 768px) {

@@ -2275,9 +2275,9 @@ function adminCatalogManager() {
                     if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
                   }
                 }) : null,
-                h('div', { class: 'admin-prod-thumb-fallback', style: imgSrc ? 'display:none;' : 'display:flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #94a3b8;' },
-                  icon('capsule')
-                )
+                !imgSrc ? h('div', { class: 'admin-prod-thumb-fallback', style: 'display:flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #94a3b8;' },
+                  icon('package')
+                ) : null
               )
             ),
             h('td', null,
@@ -2346,9 +2346,9 @@ function adminCatalogManager() {
                   if (e.currentTarget.nextElementSibling) e.currentTarget.nextElementSibling.style.display = 'flex';
                 }
               }) : null,
-              h('div', { class: 'admin-prod-thumb-fallback', style: imgSrc ? 'display:none;' : 'display:flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #94a3b8;' },
-                icon('capsule')
-              )
+              !imgSrc ? h('div', { class: 'admin-prod-thumb-fallback', style: 'display:flex; width: 100%; height: 100%; align-items: center; justify-content: center; color: #94a3b8;' },
+                icon('package')
+              ) : null
             ),
             h('div', { class: 'mobile-catalog-card-info' },
               h('div', { class: 'prod-title-line' },
@@ -2360,8 +2360,7 @@ function adminCatalogManager() {
             )
           ),
           h('div', { class: 'mobile-catalog-card-tags' },
-            h('span', { class: 'tag tone-teal cat-tag' }, (CATEGORIES.find(c => c.id === p.cat) || {}).label || p.cat),
-            h('span', { class: 'invima-pill' }, p.invima || 'Trámite INVIMA')
+            h('span', { class: 'tag tone-teal cat-tag' }, (CATEGORIES.find(c => c.id === p.cat) || {}).label || p.cat)
           ),
           h('div', { class: 'mobile-catalog-card-footer' },
             h('div', { class: 'mobile-catalog-price-wrap' },
@@ -2798,13 +2797,13 @@ function openAdminProductModal(p, onSaved) {
     h('div', { class: 'actions', style: 'margin-top:20px;' },
       h('button', { class: 'btn ghost', type: 'button', onclick: () => d.close() }, 'Cancelar'),
       isEditing && h('button', {
-        class: 'btn danger-ghost',
+        class: 'btn danger-ghost btn-modal-delete-prod',
         type: 'button',
         onclick: () => deleteProductPermanently(p, () => {
           d.close();
           if (onSaved) onSaved();
         })
-      }, 'Eliminar Producto'),
+      }, icon('trash'), h('span', null, 'Eliminar Producto')),
       h('button', { class: 'btn primary', type: 'submit' }, isEditing ? 'Guardar Cambios' : 'Ingresar al Catálogo')
     )
   );
