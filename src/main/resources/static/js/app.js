@@ -28,6 +28,13 @@ function renderNavbar() {
   const navItems = [];
 
   if (user.role === 'CLIENTE') {
+    const activeCart = Array.isArray(window.clientCart) && window.clientCart.length > 0
+      ? window.clientCart
+      : (typeof window.loadClientCart === 'function' ? window.loadClientCart(user) : []);
+    const cartQty = activeCart.reduce((n, i) => n + (i.quantity || 1), 0);
+    const cartTotal = activeCart.reduce((n, i) => n + (i.quantity || 1) * (i.price || 0), 0);
+    const formattedTotal = typeof money === 'function' ? money(cartTotal) : `$${cartTotal}`;
+
     navItems.push(
       h('button', {
         id: 'navHeaderFilterBtn',
@@ -36,17 +43,17 @@ function renderNavbar() {
         title: 'Filtros y categorías del catálogo',
         'aria-label': 'Filtros de catálogo',
         onclick: () => {
-          if (window.openCatalogFiltersDrawer) {
+          if (typeof window.openCatalogFiltersDrawer === 'function') {
             window.openCatalogFiltersDrawer();
           }
         }
       }, icon('filter')),
       h('button', {
         id: 'navHeaderCartPill',
-        class: 'nav-header-pill header-cart-pill',
+        class: 'nav-header-pill header-cart-pill' + (cartQty > 0 ? ' has-items' : ''),
         type: 'button',
-        title: 'Ver canasta de compras FarmaYA',
-        'aria-label': 'Canasta de compras',
+        title: 'Ver canasta de compras FarmaYA (' + cartQty + (cartQty === 1 ? ' producto' : ' productos') + ')',
+        'aria-label': 'Canasta de compras (' + cartQty + ')',
         onclick: () => {
           if (window.openCartPreviewOverlay) {
             window.openCartPreviewOverlay();
@@ -57,8 +64,8 @@ function renderNavbar() {
       },
         h('span', { class: 'header-cart-icon', innerHTML: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>' }),
         h('span', { class: 'header-cart-text desktop-only' }, 'Canasta'),
-        h('span', { id: 'navHeaderCartCount', class: 'header-cart-badge' }, '0'),
-        h('span', { id: 'navHeaderCartTotal', class: 'header-cart-total' }, '$0')
+        h('span', { id: 'navHeaderCartCount', class: 'header-cart-badge' }, String(cartQty)),
+        h('span', { id: 'navHeaderCartTotal', class: 'header-cart-total' }, formattedTotal)
       ),
       h('button', {
         id: 'navHeaderOrdersBtn',
@@ -120,6 +127,9 @@ function renderNavbar() {
   );
 
   nav.append(...navItems);
+  if (user && user.role === 'CLIENTE' && typeof window.syncClientCartUI === 'function') {
+    try { window.syncClientCartUI(); } catch (_) {}
+  }
 }
 
 async function logoutCurrent() {
@@ -235,7 +245,15 @@ async function renderApp() {
   }
   document.title = 'FarmaYa · ' + (state.user.name || 'Inicio');
   try {
-    if (state.user.role === 'CLIENTE') { renderClientDashboard(); }
+    if (state.user.role === 'CLIENTE') {
+      if (typeof window.loadClientCart === 'function') {
+        window.loadClientCart(state.user);
+      }
+      renderClientDashboard();
+      if (typeof window.syncClientCartUI === 'function') {
+        window.syncClientCartUI();
+      }
+    }
     else if (state.user.role === 'FARMACIA') app.replaceChildren(pharmacyView(state.user));
     else if (state.user.role === 'REPARTIDOR') app.replaceChildren(courierView(state.user));
     else if (state.user.role === 'ADMIN') app.replaceChildren(adminView(state.user));

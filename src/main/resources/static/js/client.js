@@ -109,6 +109,12 @@ function syncClientCartUI() {
   if (headerPill) {
     if (qty > 0) headerPill.classList.add('has-items');
     else headerPill.classList.remove('has-items');
+    headerPill.title = 'Ver canasta de compras FarmaYA (' + qty + (qty === 1 ? ' producto' : ' productos') + ')';
+    headerPill.setAttribute('aria-label', 'Canasta de compras (' + qty + ')');
+  }
+
+  if (typeof window.refreshCartPreview === 'function') {
+    try { window.refreshCartPreview(); } catch (_) {}
   }
 
   const dc = window.drawCart || (typeof drawCart === 'function' ? drawCart : null);
@@ -146,6 +152,12 @@ function renderClientDashboard() {
   const app = document.getElementById('app-container');
 
   const user = state.user;
+
+  // Carga y sincronizacion inmediata de la canasta para el usuario activo
+  if (user) {
+    loadClientCart(user);
+    syncClientCartUI();
+  }
 
   // Search input element
 
@@ -643,9 +655,14 @@ function renderClientDashboard() {
 
       if (existingBackdrop) existingBackdrop.remove();
 
+      window.refreshCartPreview = null;
+
       return;
 
     }
+
+    // Asegurar lectura fresca de la canasta al abrir el resumen flotante
+    loadClientCart(user);
 
     const backdrop = h('div', {
 
@@ -670,6 +687,7 @@ function renderClientDashboard() {
     });
 
     function closeCartPreview() {
+      window.refreshCartPreview = null;
       const c = document.getElementById('fy_cart_preview_card');
       const b = document.getElementById('fy_cart_preview_backdrop');
       if (!c && !b) return;
@@ -844,6 +862,8 @@ function renderClientDashboard() {
       card.replaceChildren(header, body, footer);
 
     }
+
+    window.refreshCartPreview = refreshPreview;
 
     refreshPreview();
 
@@ -1266,45 +1286,26 @@ city: cityInput.value.trim() || user.city || '',
   // --- SECCIÓN 2: Hero Banner Clínico con buscador FarmaYA (Stitch Screen 8) ---
 
   function openCatalogFiltersDrawer() {
-
+    let d;
     const drawerBody = h('div', { class: 'drawer-body client-filters-drawer-content' },
-
       h('div', { class: 'drawer-head', style: 'margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;' },
-
         h('div', null,
-
           h('span', { class: 'eyebrow' }, 'CATÁLOGO FARMAYA'),
-
           h('h3', { style: 'margin: 2px 0 0;' }, 'Filtros de Catálogo')
-
         ),
-
-        h('button', { class: 'close', type: 'button', 'aria-label': 'Cerrar', onclick: () => d.close() }, '×')
-
+        h('button', { class: 'close', type: 'button', 'aria-label': 'Cerrar', onclick: () => d && d.close() }, '×')
       ),
-
       h('div', { class: 'filter-drawer-group' },
-
         h('label', { class: 'small bold', style: 'display: block; margin-bottom: 6px; color: var(--text);' }, 'Categoría terapéutica'),
-
         (() => {
-
           const catSelect = h('select', {
-
             class: 'catalog-select',
-
             onchange: () => {
-
               clientCategory = catSelect.value; clientPage = 1;
-
               if (window.clientCategorySelect) window.clientCategorySelect.value = catSelect.value;
-
               drawProducts();
-
             }
-
           },
-
             (() => {
               const totalCnt = typeof CATALOG !== 'undefined' ? CATALOG.length : 0;
               return [
@@ -1315,105 +1316,60 @@ city: cityInput.value.trim() || user.city || '',
                 })
               ];
             })()
-
           );
-
           return catSelect;
-
         })()
-
       ),
-
       h('div', { class: 'filter-drawer-group', style: 'margin-top: 16px;' },
-
         h('label', { class: 'small bold', style: 'display: block; margin-bottom: 6px; color: var(--text);' }, 'Ordenar por'),
-
         (() => {
-
           const sortSelect = h('select', {
-
             class: 'catalog-select',
-
             onchange: () => {
-
               clientSort = sortSelect.value; clientPage = 1;
-
               if (window.clientSortSelect) window.clientSortSelect.value = sortSelect.value;
-
               drawProducts();
-
             }
-
           },
-
             h('option', { value: 'featured', selected: clientSort === 'featured' }, 'Destacados clínicos'),
-
             h('option', { value: 'priceAsc', selected: clientSort === 'priceAsc' }, 'Precio: menor a mayor'),
-
             h('option', { value: 'priceDesc', selected: clientSort === 'priceDesc' }, 'Precio: mayor a menor'),
-
             h('option', { value: 'nameAsc', selected: clientSort === 'nameAsc' }, 'Nombre: A–Z'),
-
             h('option', { value: 'nameDesc', selected: clientSort === 'nameDesc' }, 'Nombre: Z–A')
-
           );
-
           return sortSelect;
-
         })()
-
       ),
-
       h('div', { style: 'margin-top: 24px; display: flex; flex-direction: column; gap: 10px;' },
-
         h('button', {
-
           class: 'btn primary block',
-
           type: 'button',
-
-          onclick: () => d.close()
-
+          onclick: () => d && d.close()
         }, 'Ver medicamentos'),
-
         h('button', {
-
           class: 'btn ghost block',
-
           type: 'button',
-
           onclick: () => {
-
             clientCategory = '';
-
             clientSort = 'featured';
-
             clientSearch = '';
-
-            searchInput.value = '';
-
+            if (searchInput) searchInput.value = '';
+            const si = document.querySelector('.stitch-search-input');
+            if (si) si.value = '';
             if (window.clientCategorySelect) window.clientCategorySelect.value = '';
-
             if (window.clientSortSelect) window.clientSortSelect.value = 'featured';
-
             drawProducts();
-
-            d.close();
-
+            if (d) d.close();
             toast('Filtros restablecidos');
-
           }
-
         }, 'Limpiar filtros')
-
       )
-
     );
-
-    const d = openDialog(h('div', { class: 'sheet-body' }, drawerBody), { drawer: true });
-
+    d = openDialog(h('div', { class: 'sheet-body' }, drawerBody), { drawer: true });
+    return d;
   }
 
+  window._openCatalogFiltersDrawer = openCatalogFiltersDrawer;
   window.openCatalogFiltersDrawer = openCatalogFiltersDrawer;
 
   const heroSection = h('section', { class: 'welcome-banner stitch-hero' },
