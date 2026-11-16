@@ -161,6 +161,8 @@ function renderClientDashboard() {
 
     'aria-label': 'Buscar medicamentos o productos de cuidado personal',
 
+    style: 'border: none !important; border-width: 0 !important; outline: none !important; background: transparent !important; box-shadow: none !important; -webkit-appearance: none !important; appearance: none !important; border-radius: 0 !important; width: 100% !important; padding: 6px 4px !important; margin: 0 !important;',
+
     oninput: () => {
 
       clientSearch = searchInput.value;
@@ -201,6 +203,7 @@ function renderClientDashboard() {
     }
     return h('div', { style: 'display:none;' });
   }, 3500);
+  activeOrdersWatcher.style.display = 'none';
 
   function drawProducts() {
 

@@ -6893,13 +6893,14 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
   display: flex !important;
   align-items: center !important;
   justify-content: space-between !important;
-  gap: 14px !important;
-  padding: 12px 18px !important;
-  background: rgba(22, 134, 93, 0.05) !important;
-  border: 1.5px solid rgba(22, 134, 93, 0.15) !important;
-  border-radius: 14px !important;
-  margin-bottom: 18px !important;
+  gap: 12px !important;
+  padding: 4px 2px 8px 2px !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  margin-bottom: 10px !important;
   box-sizing: border-box !important;
+  box-shadow: none !important;
 }
 
 .catalog-header-info-compact {
@@ -6974,10 +6975,13 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
   .catalog-header-simplified {
     flex-direction: column !important;
     align-items: flex-start !important;
-    padding: 10px 14px !important;
+    padding: 4px 0 6px 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
     gap: 8px !important;
-    border-radius: 12px !important;
-    margin-bottom: 12px !important;
+    margin-bottom: 8px !important;
   }
   .catalog-header-info-compact {
     gap: 8px !important;
@@ -16513,4 +16517,159 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
 [data-theme="dark"] #navHeaderFilterBtn:hover {
   border-color: var(--primary, #22c55e) !important;
   color: var(--primary, #22c55e) !important;
+}
+
+
+/* ==========================================================================
+   ALINEACION PERFECTA DE HEADER: LOGO Y BOTONES CENTRADOS VERTICALMENTE
+   ========================================================================== */
+.site-header {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  min-height: 54px !important;
+  height: 54px !important;
+  padding: 0 clamp(16px, 3.5vw, 40px) !important;
+  box-sizing: border-box !important;
+}
+
+.brand.brand-image,
+.brand-image {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  height: 38px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+.brand.brand-image img,
+.brand-image img {
+  height: 32px !important;
+  max-height: 32px !important;
+  width: auto !important;
+  display: block !important;
+  object-fit: contain !important;
+  margin: auto 0 !important;
+}
+
+.nav-right,
+#navHeaderActions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  height: 38px !important;
+}
+
+#navHeaderFilterBtn,
+.nav-header-filter-btn {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  min-height: 38px !important;
+  max-height: 38px !important;
+  border-radius: 50% !important;
+  border: 1.5px solid var(--line, #e2eae5) !important;
+  background: var(--surface, #ffffff) !important;
+  color: var(--text, #18352b) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+  cursor: pointer !important;
+  vertical-align: middle !important;
+  flex-shrink: 0 !important;
+}
+
+#navHeaderFilterBtn .ico,
+.nav-header-filter-btn .ico {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+
+#navHeaderFilterBtn svg,
+.nav-header-filter-btn svg {
+  width: 18px !important;
+  height: 18px !important;
+  display: block !important;
+  margin: auto !important;
+  stroke: currentColor !important;
+}
+
+/* Reduccion del espacio vertical entre el buscador y el catalogo */
+.client-home.stack {
+  gap: 10px !important;
+}
+
+.stitch-hero {
+  padding: 14px clamp(16px, 3.5vw, 32px) 2px !important;
+  margin-bottom: 0 !important;
+}
+
+.stitch-hero p {
+  margin: 0 0 8px 0 !important;
+}
+
+.stitch-search-box {
+  margin-bottom: 2px !important;
+}
+
+.client-main-grid {
+  margin-top: 0 !important;
+  gap: 12px !important;
+}
+
+@media (max-width: 768px) {
+  .site-header {
+    min-height: 50px !important;
+    height: 50px !important;
+    padding: 0 12px !important;
+  }
+  .brand.brand-image,
+  .brand-image {
+    height: 34px !important;
+  }
+  .brand.brand-image img,
+  .brand-image img {
+    height: 28px !important;
+    max-height: 28px !important;
+  }
+  .nav-right,
+  #navHeaderActions {
+    height: 34px !important;
+    gap: 6px !important;
+  }
+  #navHeaderFilterBtn,
+  .nav-header-filter-btn {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    max-width: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+  }
+  .client-home.stack {
+    gap: 8px !important;
+  }
+  .stitch-hero {
+    padding: 0 !important;
+    margin-bottom: 2px !important;
+  }
+  .stitch-search-box {
+    margin-bottom: 2px !important;
+  }
+  .client-main-grid {
+    gap: 8px !important;
+  }
 }
