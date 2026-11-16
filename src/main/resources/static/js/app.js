@@ -288,6 +288,7 @@ function syncHeaderHeight() {
   const header = document.querySelector('.site-header');
   if (header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
 }
+syncHeaderHeight();
 window.addEventListener('resize', syncHeaderHeight);
 
 window.addEventListener('hashchange', () => { renderApp(); });
