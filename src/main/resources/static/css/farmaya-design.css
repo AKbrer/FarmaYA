@@ -6097,13 +6097,15 @@ dialog.sheet.mobile-cart-bottom-dialog::backdrop {
     left: 0 !important;
     right: 0 !important;
     bottom: auto !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 0 12px 0 !important;
-    padding: 8px 10px 10px 10px !important;
+    /* Recubrir completamente los costados de la pantalla (edge-to-edge) */
+    width: calc(100% + 24px) !important;
+    max-width: calc(100% + 24px) !important;
+    margin: 0 -12px 14px -12px !important;
+    padding: 8px 12px 10px 12px !important;
     min-height: 52px !important;
     height: auto !important;
     border: none !important;
+    border-top: 1px solid var(--line) !important;
     border-bottom: 1px solid var(--line) !important;
     border-radius: 0 !important;
     overflow-x: auto !important;
@@ -17265,14 +17267,25 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
     position: -webkit-sticky !important;
     position: sticky !important;
     top: var(--header-h, 50px) !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: calc(100% + 24px) !important;
+    max-width: calc(100% + 24px) !important;
+    margin: 0 -12px 14px -12px !important;
+    padding: 8px 12px 10px 12px !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: 1px solid var(--line, #e2e8f0) !important;
+    border-bottom: 1px solid var(--line, #e2e8f0) !important;
+    border-radius: 0 !important;
     z-index: 85 !important;
     background: var(--surface, #ffffff) !important;
-    border-bottom: 1px solid var(--line, #e2e8f0) !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
   }
 
   [data-theme="dark"] .side-nav {
     background: var(--surface, #1e293b) !important;
+    border-top-color: var(--line, #334155) !important;
     border-bottom-color: var(--line, #334155) !important;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
   }
