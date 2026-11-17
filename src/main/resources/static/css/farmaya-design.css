@@ -16376,18 +16376,18 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
 .product-art-wrap,
 .product-art-wrap.stitch-art,
 .product-card .product-art-wrap {
-  min-height: 180px !important;
-  height: 180px !important;
-  max-height: 195px !important;
+  min-height: 140px !important;
+  height: 140px !important;
+  max-height: 145px !important;
   width: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+  background: radial-gradient(ellipse at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
   border: 1px solid rgba(22, 134, 93, 0.14) !important;
   border-radius: 14px !important;
-  margin-bottom: 10px !important;
-  padding: 8px !important;
+  margin-bottom: 8px !important;
+  padding: 6px !important;
   box-sizing: border-box !important;
   position: relative !important;
   overflow: hidden !important;
@@ -16402,32 +16402,35 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   width: 100% !important;
   height: 100% !important;
   background: transparent !important;
+  overflow: hidden !important;
 }
 
 .p-art svg {
   width: 100% !important;
   height: 100% !important;
-  max-height: 160px !important;
+  max-height: 130px !important;
 }
 
 .product-custom-photo {
-  max-width: 90% !important;
-  max-height: 155px !important;
-  width: auto !important;
-  height: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 95% !important;
+  max-height: 94% !important;
   object-fit: contain !important;
   object-position: center center !important;
   margin: auto !important;
   display: block !important;
   background: transparent !important;
   border-radius: 8px !important;
+  transform: scale(1.08) !important;
+  transform-origin: center center !important;
   transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.12)) !important;
+  filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.12)) !important;
 }
 
 .product-card:hover .product-custom-photo {
-  transform: scale(1.06) translateY(-2px) !important;
-  filter: drop-shadow(0 12px 24px rgba(15, 23, 42, 0.18)) !important;
+  transform: scale(1.15) !important;
+  filter: drop-shadow(0 10px 20px rgba(15, 23, 42, 0.18)) !important;
 }
 
 /* Modal Stitch de detalle farmacéutico */
@@ -16437,7 +16440,7 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+  background: radial-gradient(ellipse at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
   border: 1px solid rgba(22, 134, 93, 0.14) !important;
   border-radius: 16px !important;
   padding: 18px !important;
@@ -16451,6 +16454,7 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
 .stitch-modal-art-frame .product-custom-photo {
   max-width: 100% !important;
   max-height: 270px !important;
+  transform: scale(1) !important;
   filter: drop-shadow(0 12px 30px rgba(15, 23, 42, 0.15)) !important;
 }
 
@@ -16459,12 +16463,12 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   .product-art-wrap,
   .product-art-wrap.stitch-art,
   .product-card .product-art-wrap {
-    min-height: 165px !important;
-    height: 165px !important;
-    max-height: 180px !important;
+    min-height: 140px !important;
+    height: 140px !important;
+    max-height: 145px !important;
     margin-bottom: 8px !important;
     padding: 6px !important;
-    background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+    background: radial-gradient(ellipse at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
     border: 1px solid rgba(22, 134, 93, 0.14) !important;
     border-radius: 12px !important;
   }
@@ -16474,8 +16478,11 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
     height: 100% !important;
   }
   .product-custom-photo {
-    max-width: 90% !important;
-    max-height: 140px !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 95% !important;
+    max-height: 94% !important;
+    transform: scale(1.08) !important;
     filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.12)) !important;
   }
 }
@@ -16484,12 +16491,12 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   .product-art-wrap,
   .product-art-wrap.stitch-art,
   .product-card .product-art-wrap {
-    min-height: 150px !important;
-    height: 150px !important;
-    max-height: 165px !important;
+    min-height: 130px !important;
+    height: 130px !important;
+    max-height: 135px !important;
     margin-bottom: 6px !important;
     padding: 5px !important;
-    background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+    background: radial-gradient(ellipse at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
     border: 1px solid rgba(22, 134, 93, 0.14) !important;
     border-radius: 10px !important;
   }
@@ -16499,8 +16506,12 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
     height: 100% !important;
   }
   .product-custom-photo {
-    max-width: 90% !important;
-    max-height: 125px !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 95% !important;
+    max-height: 94% !important;
+    transform: scale(1.06) !important;
+  }
   }
     max-height: 150px !important;
     filter: drop-shadow(0 5px 14px rgba(15, 23, 42, 0.11)) !important;
@@ -16776,7 +16787,7 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-    padding: 12px !important;
+    padding: 10px 10px 12px 10px !important;
     border-radius: 16px !important;
     box-sizing: border-box !important;
     height: 100% !important;
