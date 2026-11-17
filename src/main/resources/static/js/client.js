@@ -1378,13 +1378,35 @@ city: cityInput.value.trim() || user.city || '',
 
       h('div', { class: 'stitch-hero-kicker' },
 
-        h('span', null, 'Red de Domicilios Clínicos · Cadena de Frío Controlada')
+        h('span', { class: 'hero-kicker-dot' }),
+
+        h('span', null, 'Farmacia Digital Certificada · Envíos Prioritarios 24/7')
 
       ),
 
-      h('h1', null, 'Hola, ' + (user.name || 'bienvenido').split(' ')[0]),
+      h('h1', { class: 'stitch-hero-greeting' },
 
-      h('p', null, 'Tu farmacia de confianza directo a tu hogar. Medicamentos originales y despacho prioritario en tiempo real.'),
+        'Hola, ',
+
+        h('span', { class: 'hero-name-highlight' }, (user.name || 'bienvenido').split(' ')[0])
+
+      ),
+
+      h('p', { class: 'stitch-hero-desc' },
+
+        'Tu farmacia de confianza directo a tu hogar. Medicamentos 100% originales, inventario verificado y despacho prioritario en minutos.'
+
+      ),
+
+      h('div', { class: 'stitch-hero-badges' },
+
+        h('span', { class: 'hero-badge-pill' }, icon('shield'), h('span', null, 'Garantía INVIMA')),
+
+        h('span', { class: 'hero-badge-pill' }, icon('truck'), h('span', null, 'Despacho <45 min')),
+
+        h('span', { class: 'hero-badge-pill' }, icon('sparkles'), h('span', null, 'Cadena de frío controlada'))
+
+      ),
 
       // Buscador clínico con botón integrado a un lado
 
