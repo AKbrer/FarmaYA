@@ -12566,20 +12566,21 @@ h1, h2, h3, h4, h5, h6, .brand, .landing-hero-title, .landing-section-title {
   }
 }
 
-/* Quitar fondo verde de los productos en catálogo */
+/* Pedestal clinico refinado para imagen de productos en catalogo */
 .product-art-wrap,
 .product-art-wrap.stitch-art,
-.product-card .product-art-wrap,
-.stitch-modal-art-frame {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+.product-card .product-art-wrap {
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+  border: 1px solid rgba(22, 134, 93, 0.14) !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8), 0 2px 6px rgba(22, 134, 93, 0.04) !important;
 }
 
 [data-theme="dark"] .product-art-wrap,
 [data-theme="dark"] .product-art-wrap.stitch-art,
-[data-theme="dark"] .stitch-modal-art-frame {
-  background: transparent !important;
+[data-theme="dark"] .product-card .product-art-wrap {
+  background: radial-gradient(circle at 50% 50%, rgba(26, 44, 36, 0.85) 0%, rgba(18, 30, 25, 0.95) 70%, rgba(15, 23, 42, 0.9) 100%) !important;
+  border-color: rgba(22, 134, 93, 0.28) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
 }
 
 .p-art,
@@ -16375,18 +16376,22 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
 .product-art-wrap,
 .product-art-wrap.stitch-art,
 .product-card .product-art-wrap {
-  min-height: 195px !important;
-  height: 195px !important;
-  max-height: 220px !important;
+  min-height: 180px !important;
+  height: 180px !important;
+  max-height: 195px !important;
   width: 100% !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: transparent !important;
-  border: none !important;
-  margin-bottom: 12px !important;
-  padding: 6px !important;
-  overflow: visible !important;
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+  border: 1px solid rgba(22, 134, 93, 0.14) !important;
+  border-radius: 14px !important;
+  margin-bottom: 10px !important;
+  padding: 8px !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  overflow: hidden !important;
+  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.8), 0 2px 6px rgba(22, 134, 93, 0.04) !important;
 }
 
 .p-art,
@@ -16402,23 +16407,27 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
 .p-art svg {
   width: 100% !important;
   height: 100% !important;
-  max-height: 180px !important;
+  max-height: 160px !important;
 }
 
 .product-custom-photo {
-  max-width: 96% !important;
-  max-height: 185px !important;
+  max-width: 90% !important;
+  max-height: 155px !important;
   width: auto !important;
   height: auto !important;
   object-fit: contain !important;
+  object-position: center center !important;
+  margin: auto !important;
+  display: block !important;
   background: transparent !important;
-  border-radius: 10px !important;
+  border-radius: 8px !important;
   transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.10)) !important;
+  filter: drop-shadow(0 8px 18px rgba(15, 23, 42, 0.12)) !important;
 }
 
 .product-card:hover .product-custom-photo {
-  transform: scale(1.08) translateY(-2px) !important;
+  transform: scale(1.06) translateY(-2px) !important;
+  filter: drop-shadow(0 12px 24px rgba(15, 23, 42, 0.18)) !important;
 }
 
 /* Modal Stitch de detalle farmacéutico */
@@ -16428,7 +16437,9 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  background: transparent !important;
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+  border: 1px solid rgba(22, 134, 93, 0.14) !important;
+  border-radius: 16px !important;
   padding: 18px !important;
 }
 
@@ -16448,11 +16459,14 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   .product-art-wrap,
   .product-art-wrap.stitch-art,
   .product-card .product-art-wrap {
-    min-height: 175px !important;
-    height: 175px !important;
-    max-height: 195px !important;
-    margin-bottom: 10px !important;
-    background: transparent !important;
+    min-height: 165px !important;
+    height: 165px !important;
+    max-height: 180px !important;
+    margin-bottom: 8px !important;
+    padding: 6px !important;
+    background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+    border: 1px solid rgba(22, 134, 93, 0.14) !important;
+    border-radius: 12px !important;
   }
   .p-art,
   .p-art-has-photo {
@@ -16460,9 +16474,9 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
     height: 100% !important;
   }
   .product-custom-photo {
-    max-width: 96% !important;
-    max-height: 165px !important;
-    filter: drop-shadow(0 6px 16px rgba(15, 23, 42, 0.12)) !important;
+    max-width: 90% !important;
+    max-height: 140px !important;
+    filter: drop-shadow(0 6px 14px rgba(15, 23, 42, 0.12)) !important;
   }
 }
 
@@ -16470,10 +16484,14 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   .product-art-wrap,
   .product-art-wrap.stitch-art,
   .product-card .product-art-wrap {
-    min-height: 160px !important;
-    height: 160px !important;
-    max-height: 180px !important;
-    margin-bottom: 8px !important;
+    min-height: 150px !important;
+    height: 150px !important;
+    max-height: 165px !important;
+    margin-bottom: 6px !important;
+    padding: 5px !important;
+    background: radial-gradient(circle at 50% 50%, #ffffff 0%, #f7faf8 65%, #edf5f0 100%) !important;
+    border: 1px solid rgba(22, 134, 93, 0.14) !important;
+    border-radius: 10px !important;
   }
   .p-art,
   .p-art-has-photo {
@@ -16481,7 +16499,9 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
     height: 100% !important;
   }
   .product-custom-photo {
-    max-width: 96% !important;
+    max-width: 90% !important;
+    max-height: 125px !important;
+  }
     max-height: 150px !important;
     filter: drop-shadow(0 5px 14px rgba(15, 23, 42, 0.11)) !important;
   }
@@ -16747,8 +16767,19 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
   .stitch-products-grid {
     display: grid !important;
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    gap: 10px !important;
+    gap: 12px !important;
     width: 100% !important;
+    align-items: stretch !important;
+  }
+  .product-card,
+  .stitch-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    padding: 12px !important;
+    border-radius: 16px !important;
+    box-sizing: border-box !important;
+    height: 100% !important;
   }
 }
 
