@@ -225,9 +225,12 @@ function pharmacyView(user) {
     } catch (_) {}
   }, 4000);
 
-  return h('div', { class: 'stack pharmacy-root' },
+  const welcomeCard = h('div', { class: 'stack', style: 'gap: 12px; width: 100%;' },
     pharmacyHeaderCard(user),
-    !user.verified && notice('warn', 'Tu farmacia está pendiente de verificación sanitaria', 'Un administrador revisará tu licencia y documentación INVIMA. Hasta entonces no verás solicitudes.'),
+    !user.verified ? notice('warn', 'Tu farmacia está pendiente de verificación sanitaria', 'Un administrador revisará tu licencia y documentación INVIMA. Hasta entonces no verás solicitudes.') : null
+  );
+
+  return h('div', { class: 'stack pharmacy-root' },
     sideNavigation([
       { label: 'Dashboard & Ventas', icon: 'layout-dashboard', render: pharmacyDashboard },
       { label: 'Predicción de Demanda', icon: 'ai-prediction', badge: 'IA', render: pharmacyDemandForecast },
@@ -236,7 +239,8 @@ function pharmacyView(user) {
       { label: 'Pedidos realizados', icon: 'check', render: pharmacyCompletedOrders },
       { label: 'Kárdex de Movimientos', icon: 'history', render: () => movementHistory('/pharmacy/movements') },
       { label: 'Liquidaciones y Pagos', icon: 'wallet', badge: '95%', render: pharmacyDisbursementsView }
-    ], 0));
+    ], 0, welcomeCard)
+  );
 }
 
 function pharmacyRegulatoryRibbon() {

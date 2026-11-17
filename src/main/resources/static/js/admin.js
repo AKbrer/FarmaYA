@@ -687,7 +687,8 @@ function adminPowerBiDashboard() {
 
 function adminView(user) {
   let root;
-  root = h('div', { class: 'stack admin-root' }, adminHeaderCard(user), sideNavigation([
+  const headerCard = adminHeaderCard(user);
+  root = h('div', { class: 'stack admin-root' }, sideNavigation([
     { label: 'Dashboard Power BI', icon: 'layout-dashboard', badge: '5%', render: adminPowerBiDashboard },
     { label: 'Desembolsos a Farmacias', icon: 'wallet', render: adminDisbursementsView },
     { label: 'Predicción de Demanda', icon: 'ai-prediction', badge: 'IA', render: adminDemandForecast },
@@ -699,7 +700,7 @@ function adminView(user) {
     { label: 'Administradores', icon: 'shield', render: () => adminAdministratorsView(user) },
     { label: 'Catalogo de Productos', icon: 'capsule', render: adminCatalogManager },
     { label: 'Movimientos', icon: 'history', render: adminMovements }
-  ], 0));
+  ], 0, headerCard));
   return root;
 }
 

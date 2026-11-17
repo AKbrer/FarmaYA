@@ -583,7 +583,7 @@ const countdownEl = (iso, done) => ticking(() => {
 const hhmm = iso => new Date(iso).toLocaleTimeString(CONFIG.locale, { hour: '2-digit', minute: '2-digit' });
 
 /* Navegación lateral común para paneles internos. */
-function sideNavigation(items, start = 0) {
+function sideNavigation(items, start = 0, headerNode = null) {
   const nav = h('aside', { class: 'side-nav', 'aria-label': 'Navegación del panel' });
 
   const buttons = items.map((it, i) => {
@@ -619,7 +619,16 @@ function sideNavigation(items, start = 0) {
     panel.replaceChildren(rendered);
   }
   nav.append(h('nav', { class: 'side-nav-items' }, buttons));
-  const root = h('div', { class: 'side-nav-layout' }, nav, panel);
+  const children = [nav];
+  if (headerNode) {
+    if (Array.isArray(headerNode)) {
+      children.push(...headerNode.filter(Boolean));
+    } else {
+      children.push(headerNode);
+    }
+  }
+  children.push(panel);
+  const root = h('div', { class: 'side-nav-layout' }, ...children);
   root.select = select;
   select(start);
   return root;

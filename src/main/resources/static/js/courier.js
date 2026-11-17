@@ -38,14 +38,17 @@ function courierHeaderCard(user) {
 }
 
 function courierView(user) {
-  return h('div', { class: 'stack courier-root' },
+  const welcomeCard = h('div', { class: 'stack', style: 'gap: 12px; width: 100%;' },
     courierHeaderCard(user),
-    !user.verified && notice('warn', 'Tu cuenta está pendiente de verificación sanitaria', 'Un administrador revisará tu documentación y licencia vial. Hasta entonces no recibirás ofertas.'),
+    !user.verified ? notice('warn', 'Tu cuenta está pendiente de verificación sanitaria', 'Un administrador revisará tu documentación y licencia vial. Hasta entonces no recibirás ofertas.') : null
+  );
+
+  return h('div', { class: 'stack courier-root' },
     sideNavigation([
       { label: 'Dashboard & Billetera', icon: 'layout-dashboard', render: courierDashboard },
       { label: 'Entregas disponibles', icon: 'package-search', render: courierOffers },
       { label: 'Mis entregas activas', icon: 'truck', render: courierOrders }
-    ], 0)
+    ], 0, welcomeCard)
   );
 }
 
