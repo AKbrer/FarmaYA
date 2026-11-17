@@ -1380,7 +1380,7 @@ city: cityInput.value.trim() || user.city || '',
 
         h('span', { class: 'hero-kicker-dot' }),
 
-        h('span', null, 'Farmacia Digital Certificada · Envíos Prioritarios 24/7')
+        h('span', null, 'Farmacia Digital · Envíos Inmediatos')
 
       ),
 
@@ -1394,17 +1394,7 @@ city: cityInput.value.trim() || user.city || '',
 
       h('p', { class: 'stitch-hero-desc' },
 
-        'Tu farmacia de confianza directo a tu hogar. Medicamentos 100% originales, inventario verificado y despacho prioritario en minutos.'
-
-      ),
-
-      h('div', { class: 'stitch-hero-badges' },
-
-        h('span', { class: 'hero-badge-pill' }, icon('shield'), h('span', null, 'Garantía INVIMA')),
-
-        h('span', { class: 'hero-badge-pill' }, icon('truck'), h('span', null, 'Despacho <45 min')),
-
-        h('span', { class: 'hero-badge-pill' }, icon('sparkles'), h('span', null, 'Cadena de frío controlada'))
+        '¿Qué medicamentos o productos de salud necesitas hoy?'
 
       ),
 
@@ -1433,6 +1423,22 @@ city: cityInput.value.trim() || user.city || '',
           onclick: () => drawProducts()
 
         }, h('span', { class: 'search-btn-label' }, 'Buscar'))
+
+      ),
+
+      // Garantías institucionales en línea sobria y elegante
+
+      h('div', { class: 'stitch-hero-trust-row' },
+
+        h('span', { class: 'trust-row-item' }, icon('shield'), h('span', null, 'Garantía INVIMA')),
+
+        h('span', { class: 'trust-row-bullet' }, '·'),
+
+        h('span', { class: 'trust-row-item' }, icon('truck'), h('span', null, 'Despacho <45 min')),
+
+        h('span', { class: 'trust-row-bullet' }, '·'),
+
+        h('span', { class: 'trust-row-item' }, icon('check'), h('span', null, '100% Originales'))
 
       )
 
