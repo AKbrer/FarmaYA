@@ -627,20 +627,146 @@ function clientOrdersView() {
     /* 2. SECCIÓN DE HISTORIAL DE PEDIDOS FINALIZADOS */
     if (pastOrders.length > 0) {
       parts.push(
-        h('section', { class: 'block past-orders-section', style: 'margin-top: 14px;' },
-          h('div', { class: 'section-heading', style: 'margin-bottom: 14px;' },
+        h('section', { class: 'block past-orders-section' },
+          h('div', { class: 'section-heading' },
             h('div', null,
               h('span', { class: 'eyebrow' }, 'HISTORIAL DE COMPRAS'),
               h('h3', { style: 'margin: 2px 0 0 0; font-size: 18px; font-weight: 800;' }, 'Pedidos Finalizados (' + pastOrders.length + ')')
             )
           ),
-          ordersExcelTable(pastOrders, { showPharmacy: true })
+          renderClientPurchaseHistoryExcelTable(pastOrders)
         )
       );
     }
 
     return h('div', { class: 'stack', style: 'gap: 22px;' }, ...parts);
   }, 4000);
+}
+
+function repeatOrderItems(o) {
+  const rawItems = (o.confirmedItems && o.confirmedItems.length) ? o.confirmedItems : (o.items || []);
+  if (!rawItems.length) {
+    toast('No hay productos disponibles para repetir en este pedido');
+    return;
+  }
+  if (typeof window.loadClientCart === 'function') {
+    window.loadClientCart(state.user);
+  }
+  if (!Array.isArray(window.clientCart)) {
+    window.clientCart = [];
+  }
+  let added = 0;
+  rawItems.forEach(it => {
+    const name = it.name || it.productName;
+    if (!name) return;
+    const price = it.unitPrice || it.price || 0;
+    const qty = it.quantity || 1;
+    const existing = window.clientCart.find(x => x.name === name);
+    if (existing) {
+      existing.quantity = Math.min(99, (existing.quantity || 1) + qty);
+    } else {
+      window.clientCart.push({ name, price, quantity: qty, rx: !!it.rx });
+    }
+    added += qty;
+  });
+  if (typeof window.persistClientCart === 'function') window.persistClientCart();
+  if (typeof window.syncClientCartUI === 'function') window.syncClientCartUI();
+  toast(added + (added === 1 ? ' producto agregado a tu canasta' : ' productos agregados a tu canasta'));
+  location.hash = '#client';
+}
+
+function renderClientPurchaseHistoryExcelTable(pastOrders) {
+  const list = Array.isArray(pastOrders) ? pastOrders : [];
+  if (!list.length) {
+    return empty('No hay pedidos finalizados', 'Tus compras completadas aparecerán aquí organizadas.');
+  }
+
+  const headers = [
+    { label: 'CÓDIGO', class: 'col-code text-left' },
+    { label: 'ESTADO', class: 'col-status text-center' },
+    { label: 'LO QUE SE PIDIÓ', class: 'col-items text-left' },
+    { label: 'FARMACIA', class: 'col-address text-left desktop-only-cell' },
+    { label: 'TOTAL', class: 'col-total text-right' },
+    { label: 'ACCIONES', class: 'col-actions text-center' }
+  ];
+
+  const rows = list.map(o => {
+    const open = () => {
+      const fn = window.openOrderDetail || openOrderDetail;
+      if (typeof fn === 'function') fn(o.id);
+    };
+
+    const itemsSummaryText = (o.items && o.items.length)
+      ? o.items.map(i => (i.name || 'Medicamento') + ' ×' + (i.quantity || 1)).join(', ')
+      : (o.itemCount ? (o.itemCount + ' productos') : 'Productos solicitados');
+
+    const dateFormatted = relTime(o.updatedAt || o.createdAt);
+
+    return h('tr', {
+      class: 'fy-clickable-row fy-excel-row tone-' + statusTone(o.status),
+      tabindex: 0,
+      title: 'Haz clic para ver el detalle del pedido ' + (o.code || ''),
+      onclick: e => {
+        if (e.target && e.target.closest && e.target.closest('button, a, input, select')) return;
+        open();
+      },
+      onkeydown: e => {
+        if (e.key === 'Enter' && e.target === e.currentTarget) open();
+      }
+    },
+      h('td', { class: 'col-code' },
+        h('div', { class: 'excel-code-wrap' },
+          h('strong', { class: 'code font-mono excel-order-code' }, '#' + (o.code || (o.id || '').slice(-6))),
+          h('span', { class: 'excel-order-date muted small' }, dateFormatted)
+        )
+      ),
+      h('td', { class: 'col-status text-center' },
+        badge(o.status)
+      ),
+      h('td', { class: 'col-items' },
+        h('div', { class: 'excel-items-cell' },
+          h('span', { class: 'excel-items-text', title: itemsSummaryText }, itemsSummaryText),
+          o.pharmacyName ? h('small', { class: 'excel-pharmacy-sub mobile-only muted block-line' }, 'Farmacia: ' + o.pharmacyName) : null
+        )
+      ),
+      h('td', { class: 'col-address desktop-only-cell' },
+        o.pharmacyName ? h('strong', { class: 'block-line small' }, o.pharmacyName) : h('span', { class: 'muted small' }, 'Asignada por FarmaYa'),
+        o.address ? h('small', { class: 'muted block-line', style: 'margin-top:2px;' }, o.address) : null
+      ),
+      h('td', { class: 'col-total text-right' },
+        o.total != null
+          ? h('strong', { class: 'excel-money-val' }, money(o.total))
+          : h('span', { class: 'muted small' }, 'Por liquidar')
+      ),
+      h('td', { class: 'col-actions text-center', onclick: e => e.stopPropagation() },
+        h('div', { class: 'excel-actions-cell fy-order-action-buttons' },
+          h('button', {
+            type: 'button',
+            class: 'btn primary small fy-action-btn-detail',
+            title: 'Ver detalle completo del pedido ' + (o.code || ''),
+            onclick: open
+          },
+            h('span', { class: 'btn-icon', innerHTML: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' }),
+            h('span', { class: 'btn-label' }, 'Ver detalle')
+          ),
+          h('button', {
+            type: 'button',
+            class: 'btn secondary small fy-action-btn-repeat desktop-only',
+            title: 'Volver a pedir estos mismos medicamentos',
+            onclick: () => repeatOrderItems(o)
+          },
+            h('span', { class: 'btn-icon', innerHTML: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>' }),
+            h('span', { class: 'btn-label' }, 'Repetir')
+          )
+        )
+      )
+    );
+  });
+
+  return excelTable(headers, rows, {
+    tableClass: 'fy-orders-excel-table fy-client-history-excel-table',
+    wrapClass: 'fy-client-history-wrap'
+  });
 }
 
 function renderOrdersPage() {

@@ -16673,3 +16673,308 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
     gap: 8px !important;
   }
 }
+
+/* ==========================================================================
+   65. HISTORIAL DE PEDIDOS TIPO EXCEL (COMPUTADOR Y FLUTTER)
+   Optimización de espacio, celdas nítidas y botones claramente visibles
+   ========================================================================== */
+
+/* Contenedor de la sección de historial */
+.past-orders-section {
+  padding: 22px 24px !important;
+  border-radius: 18px !important;
+  background: var(--surface) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04) !important;
+  margin-top: 14px !important;
+  overflow: hidden !important;
+}
+
+[data-theme="dark"] .past-orders-section {
+  background: var(--surface) !important;
+  border-color: var(--line) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Envoltorio con scroll suave tipo Excel */
+.fy-client-history-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--line) !important;
+  background: var(--surface) !important;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Cuadrícula tipo hoja de cálculo Excel */
+.fy-client-history-excel-table {
+  width: 100% !important;
+  min-width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+  font-size: 13px !important;
+}
+
+/* Encabezados de Columna Tipo Excel */
+.fy-client-history-excel-table thead th {
+  background: #f1f6f3 !important;
+  color: var(--text) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  padding: 11px 12px !important;
+  border-bottom: 1.5px solid var(--line) !important;
+  border-right: 1px solid var(--line) !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+}
+
+[data-theme="dark"] .fy-client-history-excel-table thead th {
+  background: #14231b !important;
+  color: #c9dbd0 !important;
+  border-color: #23372c !important;
+}
+
+.fy-client-history-excel-table thead th:last-child {
+  border-right: none !important;
+}
+
+/* Celdas con delimitación Excel */
+.fy-client-history-excel-table tbody td {
+  padding: 11px 12px !important;
+  border-bottom: 1px solid var(--line) !important;
+  border-right: 1px solid var(--line) !important;
+  vertical-align: middle !important;
+  background: var(--surface) !important;
+  transition: background 0.15s ease !important;
+}
+
+[data-theme="dark"] .fy-client-history-excel-table tbody td {
+  border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+.fy-client-history-excel-table tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+.fy-client-history-excel-table tbody td:last-child {
+  border-right: none !important;
+}
+
+/* Filas alternadas suaves y resaltado hover */
+.fy-client-history-excel-table tbody tr:nth-child(even) td {
+  background: rgba(22, 134, 93, 0.018) !important;
+}
+
+[data-theme="dark"] .fy-client-history-excel-table tbody tr:nth-child(even) td {
+  background: rgba(255, 255, 255, 0.02) !important;
+}
+
+.fy-client-history-excel-table tbody tr:hover td {
+  background: rgba(22, 134, 93, 0.065) !important;
+  cursor: pointer !important;
+}
+
+[data-theme="dark"] .fy-client-history-excel-table tbody tr:hover td {
+  background: rgba(30, 162, 113, 0.13) !important;
+}
+
+/* Estilos de información interna */
+.excel-code-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+}
+
+.excel-order-code {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: var(--primary, #16865d) !important;
+  letter-spacing: -0.02em !important;
+}
+
+.excel-order-date {
+  font-size: 11.5px !important;
+  color: var(--muted) !important;
+}
+
+.excel-items-text {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.35 !important;
+  font-size: 13px !important;
+  color: var(--text) !important;
+}
+
+.excel-pharmacy-sub {
+  font-size: 11.5px !important;
+  color: var(--muted) !important;
+  margin-top: 3px !important;
+}
+
+.excel-money-val {
+  font-variant-numeric: tabular-nums !important;
+  font-weight: 800 !important;
+  font-size: 14px !important;
+  color: var(--text) !important;
+}
+
+/* Botones de acción claramente visibles y bien acomodados */
+.fy-order-action-buttons {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  flex-wrap: nowrap !important;
+}
+
+.fy-action-btn-detail {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 14px !important;
+  min-height: 36px !important;
+  border-radius: 9px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  letter-spacing: -0.01em !important;
+  white-space: nowrap !important;
+  background: var(--primary, #16865d) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--primary, #16865d) !important;
+  box-shadow: 0 2px 7px rgba(22, 134, 93, 0.22) !important;
+  cursor: pointer !important;
+  transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.fy-action-btn-detail:hover {
+  background: var(--primary-dark, #0d6c49) !important;
+  border-color: var(--primary-dark, #0d6c49) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(22, 134, 93, 0.32) !important;
+}
+
+.fy-action-btn-detail:active {
+  transform: scale(0.97) !important;
+}
+
+.fy-action-btn-repeat {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 8px 13px !important;
+  min-height: 36px !important;
+  border-radius: 9px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  white-space: nowrap !important;
+  background: var(--surface) !important;
+  color: var(--primary, #16865d) !important;
+  border: 1.5px solid rgba(22, 134, 93, 0.35) !important;
+  cursor: pointer !important;
+  transition: all 0.15s cubic-bezier(0.23, 1, 0.32, 1) !important;
+}
+
+.fy-action-btn-repeat:hover {
+  background: var(--primary-soft, #e0f5e9) !important;
+  border-color: var(--primary, #16865d) !important;
+  transform: translateY(-1px) !important;
+}
+
+.fy-action-btn-repeat:active {
+  transform: scale(0.97) !important;
+}
+
+/* ==========================================================================
+   ADAPTACIÓN VISTA FLUTTER / MÓVIL
+   Aprovechamiento total de pantalla y botones siempre accesibles
+   ========================================================================== */
+@media (max-width: 768px) {
+  .orders-page {
+    gap: 12px !important;
+  }
+  .orders-page-intro {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+  }
+  .empty-active-orders-card {
+    padding: 16px 12px !important;
+    border-radius: 14px !important;
+  }
+  .past-orders-section {
+    padding: 12px 6px 10px 6px !important;
+    border-radius: 14px !important;
+    margin-top: 8px !important;
+  }
+  .past-orders-section .section-heading {
+    padding: 0 6px !important;
+    margin-bottom: 10px !important;
+  }
+  .fy-client-history-wrap {
+    border-radius: 10px !important;
+  }
+  .desktop-only-cell {
+    display: none !important;
+  }
+  .fy-client-history-excel-table th,
+  .fy-client-history-excel-table td {
+    padding: 8px 6px !important;
+    font-size: 12px !important;
+  }
+  .fy-client-history-excel-table thead th {
+    font-size: 10px !important;
+    padding: 8px 6px !important;
+  }
+  .fy-client-history-excel-table .col-code {
+    width: 84px !important;
+    min-width: 84px !important;
+    max-width: 95px !important;
+  }
+  .fy-client-history-excel-table .col-status {
+    width: 78px !important;
+    min-width: 78px !important;
+    padding: 6px 2px !important;
+  }
+  .fy-client-history-excel-table .col-status .badge {
+    padding: 3px 6px !important;
+    font-size: 10px !important;
+    border-radius: 5px !important;
+  }
+  .fy-client-history-excel-table .col-items {
+    min-width: 105px !important;
+  }
+  .fy-client-history-excel-table .col-total {
+    width: 76px !important;
+    min-width: 76px !important;
+    font-size: 12px !important;
+  }
+  /* Columna de Acciones pegada a la derecha fija para que NUNCA quede oculta */
+  .fy-client-history-excel-table .col-actions {
+    position: sticky !important;
+    right: 0 !important;
+    z-index: 3 !important;
+    background: var(--surface) !important;
+    box-shadow: -4px 0 10px rgba(0, 0, 0, 0.08) !important;
+    padding: 6px 4px !important;
+    width: 92px !important;
+    min-width: 92px !important;
+  }
+  [data-theme="dark"] .fy-client-history-excel-table .col-actions {
+    background: var(--surface) !important;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.45) !important;
+  }
+  .fy-action-btn-detail {
+    padding: 6px 9px !important;
+    min-height: 32px !important;
+    font-size: 11px !important;
+    border-radius: 7px !important;
+    gap: 4px !important;
+  }
+}
