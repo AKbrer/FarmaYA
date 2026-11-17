@@ -13,10 +13,13 @@
 
   const QUICK_QUESTIONS = [
     'Tengo dolor de cabeza y fiebre',
+    '¿Diferencia entre paracetamol e ibuprofeno?',
+    '¿Puedo tomar alcohol con acetaminofén?',
     'Acidez y reflujo estomacal',
     'Gripe y congestión nasal',
-    '¿Por qué exigen fórmula médica?',
-    '¿Cómo funciona el pedido y pago?',
+    '¿Qué tomar para el insomnio y relajarme?',
+    '¿Por qué exigen fórmula médica (Rx)?',
+    '¿Cómo funciona el pedido y pago en Wompi?',
     'Suero oral y deshidratación'
   ];
 

@@ -13,13 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +31,9 @@ public class ChatbotService {
     @Value("${farmaya.gemini-api-key:${GEMINI_API_KEY:${GOOGLE_API_KEY:}}}")
     private String geminiApiKey;
 
+    @Value("${farmaya.gemini-model:${FARMAYA_GEMINI_MODEL:gemini-1.5-flash}}")
+    private String geminiModel;
+
     // Fármacos que requieren receta médica obligatoria (Rx) y sustancias controladas
     private static final Set<String> RX_KEYWORDS = new HashSet<>(Arrays.asList(
         "amoxicilina", "azitromicina", "ciprofloxacino", "cefalexina", "ampicilina",
@@ -46,17 +43,27 @@ public class ChatbotService {
         "tramadol", "clonazepam", "alprazolam", "lorazepam", "diazepam", "zolpidem",
         "midazolam", "rivotril", "xanax", "valium", "morfina", "oxicodona", "fentanilo",
         "codeina", "metadona", "hidrocodona", "tapentadol", "buprenorfina", "antidepresivo",
-        "psicotropico", "controlado", "estupefaciente", "sedante", "somnifero", "prednisona",
-        "prednisolona", "dexametasona", "betametasona", "hidrocortisona", "metformina",
-        "losartan", "enalapril", "amlodipino", "valsartan", "metoprolol", "hidroclorotiazida",
-        "atorvastatina", "rosuvastatina", "insulina", "warfarina", "clopidogrel", "sildenafil",
-        "tadalafil", "isotretinoina", "pregabalina", "gabapentina"
+        "antidepresivos", "psicotropico", "controlado", "estupefaciente", "sedante", "somnifero",
+        "prednisona", "prednisolona", "dexametasona", "betametasona", "hidrocortisona",
+        "metformina", "losartan", "enalapril", "amlodipino", "valsartan", "metoprolol",
+        "hidroclorotiazida", "atorvastatina", "rosuvastatina", "insulina", "warfarina",
+        "clopidogrel", "sildenafil", "tadalafil", "isotretinoina", "pregabalina", "gabapentina"
+    ));
+
+    private static final Set<String> STOP_WORDS = new HashSet<>(Arrays.asList(
+        "de", "la", "el", "los", "las", "un", "una", "unos", "unas", "y", "o", "en",
+        "para", "por", "con", "sin", "sobre", "que", "como", "cuando", "donde", "quien",
+        "cual", "cuales", "es", "son", "fue", "era", "ser", "estar", "tiene", "tienen",
+        "hay", "puedo", "puede", "pueden", "tomar", "servir", "sirve", "sirven", "recomiendas",
+        "recomiendan", "tienes", "quiero", "saber", "siento", "tengo", "favor", "ayuda",
+        "hola", "buenos", "dias", "tardes", "noches", "saludos", "gracias", "algo", "algun",
+        "alguna", "algunos", "algunas", "mucho", "mucha", "poco", "muy", "mas", "menos"
     ));
 
     private static final String MEDICAL_DISCLAIMER =
-        "\n\nImportante: Esta recomendación es estrictamente orientativa y educativa. " +
-        "No sustituye la valoración médica ni la prescripción de tu doctor de confianza. " +
-        "Si los síntomas persisten por más de 48 horas, se intensifican o presentas signos de alarma, consulta a tu médico.";
+        "\n\nImportante: Esta orientación es exclusivamente educativa y referencial. " +
+        "No sustituye el diagnóstico ni la prescripción de tu médico tratante. " +
+        "Si los síntomas persisten por más de 48 horas, se intensifican o presentas signos de alarma, consulta a un profesional de la salud.";
 
     public ChatbotService(ProductRepository productRepo) {
         this.productRepo = productRepo;
@@ -70,7 +77,7 @@ public class ChatbotService {
         String query = req != null && req.message() != null ? req.message().trim() : "";
         if (query.isEmpty()) {
             return new ChatResponse(
-                "Hola, soy FarmaBot, tu asistente farmacéutico operativo en FarmaYA. ¿Qué malestares o síntomas tienes hoy con los que te pueda colaborar?",
+                "Hola, soy FarmaBot, tu orientador farmacéutico y operativo en FarmaYA. ¿En qué tema de salud, medicamentos de venta libre o pedido puedo colaborarte hoy?",
                 Collections.emptyList(),
                 "GENERAL",
                 false
@@ -79,16 +86,16 @@ public class ChatbotService {
 
         String normalized = normalize(query);
 
-        // 1. Verificación de Medicamentos con Receta Obligatoria (Rx)
+        // 1. Verificación estricta de medicamentos con receta obligatoria (Rx)
         String matchedRx = findMatchedRx(normalized);
         if (matchedRx != null) {
             return buildRxRefusalResponse(matchedRx);
         }
 
-        // 2. Si cuenta con Gemini API Key configurada, consultar a Gemini
+        // 2. Si cuenta con Gemini API Key configurada, consultar motor LLM
         if (geminiApiKey != null && !geminiApiKey.trim().isEmpty()) {
             try {
-                ChatResponse geminiResp = callGemini(query, req.history(), normalized);
+                ChatResponse geminiResp = callGemini(query, req != null ? req.history() : null, normalized);
                 if (geminiResp != null) {
                     return geminiResp;
                 }
@@ -97,7 +104,7 @@ public class ChatbotService {
             }
         }
 
-        // 3. Motor Inteligente de Soporte, Operaciones y Orientación Clínica FarmaYA
+        // 3. Motor Clínico Autónomo y Comprensión Semántica Avanzada
         return runIntelligentEngine(query, normalized);
     }
 
@@ -122,13 +129,13 @@ public class ChatbotService {
 
     private ChatResponse buildRxRefusalResponse(String substance) {
         String capitalized = Character.toUpperCase(substance.charAt(0)) + substance.substring(1);
-        String reply = "Aviso Sanitario y de Seguridad Clínica:\n\n" +
-            "El medicamento o sustancia que mencionas (" + capitalized + ") requiere fórmula médica obligatoria expedida por un profesional de la salud facultado, en cumplimiento del Decreto 780 de 2016 y las directrices sanitarias del INVIMA y el Ministerio de Salud de Colombia.\n\n" +
-            "¿Por qué no es posible recomendarlo ni despacharlo sin prescripción?\n" +
-            "1. Seguridad del Paciente: Los antibióticos, corticoides y fármacos bajo control médico conllevan riesgos graves si se utilizan sin evaluación profesional, tales como resistencia bacteriana, toxicidad hepática o renal, interacciones medicamentosas y dependencia.\n" +
-            "2. Diagnóstico Oportuno: Automedicarse puede enmascarar síntomas de infecciones o enfermedades subyacentes que requieren análisis clínico o exámenes de laboratorio.\n" +
-            "3. Política Ética FarmaYA: Nuestra plataforma opera exclusivamente bajo principios de farmacovigilancia y dispensación segura de medicamentos de venta libre (OTC).\n\n" +
-            "Recomendación: Te aconsejamos acudir a tu centro de salud o consultar con tu médico tratante para recibir un diagnóstico formal y la fórmula médica correspondiente.";
+        String reply = "Aviso Sanitario y de Seguridad Farmacológica:\n\n" +
+            "El medicamento o principio activo que mencionas (" + capitalized + ") requiere fórmula médica obligatoria expedida por un profesional de la salud facultado, en cumplimiento del Decreto 780 de 2016 y las directrices sanitarias del INVIMA y el Ministerio de Salud de Colombia.\n\n" +
+            "Razones de seguridad clínica:\n" +
+            "• Prevención de resistencia bacteriana: El uso inadecuado de antibióticos crea cepas resistentes que inutilizan los tratamientos futuros.\n" +
+            "• Seguridad metabólica: Fármacos regulados, corticoides y sedantes conllevan riesgos de toxicidad hepática, renal, cardiovascular y dependencia.\n" +
+            "• Diagnóstico certero: Automedicarse enmascara síntomas de patologías subyacentes que demandan análisis clínico formal.\n\n" +
+            "Orientación: Te sugerimos consultar con tu médico tratante o acudir a tu centro de salud para obtener una valoración adecuada y la prescripción requerida.";
 
         return new ChatResponse(reply, Collections.emptyList(), "RX_REFUSAL", true);
     }
@@ -141,15 +148,19 @@ public class ChatbotService {
             log.error("Error al obtener catálogo de productos: {}", e.getMessage());
         }
 
+        List<SuggestedProductDto> suggestions = new ArrayList<>();
+        StringBuilder reply = new StringBuilder();
+
         // 1. SALUDOS Y CORTESÍAS
         if (text.matches("^(hola|buenos dias|buenas tardes|buenas noches|que tal|saludos).*")) {
             return new ChatResponse(
-                "Hola, un gusto saludarte. Soy FarmaBot, tu asistente farmacéutico y operativo en FarmaYA.\n\n" +
-                "¿En qué te puedo colaborar hoy? Puedes preguntarme sobre:\n" +
-                "• Síntomas leves (dolor de cabeza, fiebre, acidez, gripe, cólicos)\n" +
-                "• Opciones de medicamentos de venta libre (OTC)\n" +
-                "• Soporte y atención al cliente (teléfono, WhatsApp, pedidos)\n" +
-                "• Cómo funciona el pago por Wompi, el código PIN y las entregas",
+                "Hola, un gusto saludarte. Soy FarmaBot, tu asistente farmacéutico inteligente en FarmaYA.\n\n" +
+                "Estoy capacitado para orientarte con información precisa en:\n" +
+                "• Orientación clínica en medicamentos de venta libre (OTC)\n" +
+                "• Interacciones de fármacos con alcohol, alimentos u otros productos\n" +
+                "• Diferencias entre principios activos (ej. Acetaminofén vs Ibuprofeno)\n" +
+                "• Pautas de dosificación responsable y signos de alarma de salud\n" +
+                "• Soporte operativo: compras por Wompi, PIN de entrega y envíos prioritarios",
                 Collections.emptyList(),
                 "GREETING",
                 false
@@ -158,362 +169,307 @@ public class ChatbotService {
 
         if (text.contains("gracias") || text.contains("muchas gracias") || text.contains("agradezco")) {
             return new ChatResponse(
-                "Con todo el gusto. En FarmaYA estamos comprometidos con tu bienestar y seguridad.\n\n" +
-                "Si necesitas consultar sobre algún otro medicamento, síntoma o pedido, aquí estaré disponible para colaborarte.",
+                "Con todo gusto. En FarmaYA nuestra prioridad es tu bienestar y el uso seguro de los medicamentos.\n\n" +
+                "Si tienes alguna otra duda sobre tus tratamientos, síntomas o pedidos, aquí estoy para orientarte.",
                 Collections.emptyList(),
                 "COURTESY",
                 false
             );
         }
 
-        if (text.matches("^(chao|adios|hasta luego|hasta pronto|nos vemos).*")) {
-            return new ChatResponse(
-                "Que tengas un excelente día y mucha salud. Recuerda que en FarmaYA estamos para apoyarte cuando lo requieras.",
-                Collections.emptyList(),
-                "COURTESY",
-                false
-            );
+        // 2. INTERACCIONES CON ALCOHOL Y MEDICAMENTOS (Pregunta abierta muy común)
+        if ((text.contains("alcohol") || text.contains("cerveza") || text.contains("trago") || text.contains("licor") || text.contains("vino")) &&
+            (text.contains("tomar") || text.contains("mezclar") || text.contains("puedo") || text.contains("pastilla") || text.contains("medicamento") || text.contains("dolex") || text.contains("acetaminofen") || text.contains("ibuprofeno") || text.contains("paracetamol"))) {
+            reply.append("Interacción Farmacológica: Medicamentos y Consumo de Alcohol\n\n")
+                 .append("Por seguridad clínica general, NO se recomienda consumir bebidas alcohólicas mientras tomas medicamentos analgésicos o antiinflamatorios:\n\n")
+                 .append("• Con Acetaminofén / Paracetamol: Tanto el alcohol como el paracetamol se metabolizan en el hígado por la vía del citocromo P450 (CYP2E1). Su consumo simultáneo eleva la producción de un metabolito tóxico (NAPQI) que puede causar daño hepático agudo (hepatotoxicidad), incluso en dosis habituales.\n\n")
+                 .append("• Con Ibuprofeno, Naproxeno o Aspirina (AINEs): El alcohol y los antiinflamatorios irritan directamente la mucosa gástrica. Combinarlos multiplica el riesgo de gastritis aguda, úlceras pépticas y hemorragias digestivas.\n\n")
+                 .append("Recomendación: Si has consumido alcohol, hidrátate abundantemente con agua o suero oral, reposa y espera al menos 12 a 24 horas antes de reiniciar analgésicos.");
+
+            findMatchingProducts(allProducts, Arrays.asList("electrolit", "suero"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "DRUG_INTERACTION", false);
         }
 
-        // 2. NÚMERO DE SOPORTE, CONTACTO Y ATENCIÓN AL CLIENTE
+        // 3. COMPARATIVAS CLÍNICAS (ej. Acetaminofén vs Ibuprofeno)
+        if ((text.contains("diferencia") || text.contains("cual es mejor") || text.contains("comparar") || text.contains("vs") || text.contains("o ibuprofeno") || text.contains("o acetaminofen") || text.contains("o paracetamol")) &&
+            (text.contains("ibuprofeno") || text.contains("paracetamol") || text.contains("acetaminofen") || text.contains("apronax") || text.contains("naproxeno"))) {
+            reply.append("Comparativa Clínica: Acetaminofén (Paracetamol) vs Ibuprofeno\n\n")
+                 .append("Ambos son excelentes analgésicos de venta libre, pero tienen mecanismos de acción y perfiles diferentes:\n\n")
+                 .append("1. Acetaminofén (Paracetamol / Dolex):\n")
+                 .append("• Acción: Analgésico y antipirético (alivia dolor y baja fiebre). No es antiinflamatorio significativo.\n")
+                 .append("• Ventaja: Muy seguro para el estómago. Es la primera elección para dolor de cabeza, fiebre, personas con gastritis, hipertensión, adultos mayores y sospecha de dengue.\n\n")
+                 .append("2. Ibuprofeno / Naproxeno (AINEs):\n")
+                 .append("• Acción: Antiinflamatorio, analgésico y antipirético.\n")
+                 .append("• Ventaja: Indicado cuando el dolor involucra inflamación evidente: golpes musculares, dolor articular, inflamación dental o cólicos menstruales intensos.\n")
+                 .append("• Precaución: Debe tomarse siempre con alimentos para proteger la mucosa gástrica.\n\n")
+                 .append("¿Se pueden alternar? Solo bajo criterio médico en casos de fiebre refractaria. Nunca deben duplicarse las dosis al mismo tiempo.");
+
+            findMatchingProducts(allProducts, Arrays.asList("paracetamol", "ibuprofeno 400", "dolex", "apronax"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "COMPARATIVE_CLINICAL", false);
+        }
+
+        // 4. SOBREDOSIS, DUPLICACIÓN O DOSIS OLVIDADA
+        if (text.contains("dos pastillas") || text.contains("tome dos") || text.contains("doble dosis") || text.contains("olvide tomar") || text.contains("sobredosis") || text.contains("cuanto puedo tomar") || text.contains("dosis maxima")) {
+            reply.append("Pautas de Dosificación Segura y Manejo de Dosis Olvidadas:\n\n")
+                 .append("• Dosis máxima de Acetaminofén en adultos: 3.000 mg (3 gramos) en 24 horas. Lo recomendado es 500 mg cada 6 a 8 horas (máximo 1.000 mg por toma espaciada).\n")
+                 .append("• Dosis máxima de Ibuprofeno en automedicación: 1.200 mg al día (400 mg cada 8 horas, siempre con comida).\n\n")
+                 .append("• Si olvidaste una dosis: Tómala tan pronto lo recuerdes, a menos que ya esté cerca la hora de la siguiente. NUNCA tomes dos pastillas juntas para compensar el olvido.\n\n")
+                 .append("• Si tomaste una dosis extra por error: Mantente hidratado y observa si surgen náuseas, vómito, mareo o dolor abdominal agudo. En caso de síntomas intensos, acude de inmediato a un centro hospitalario.");
+
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), Collections.emptyList(), "DOSAGE_SAFETY", false);
+        }
+
+        // 5. HIPERTENSIÓN Y ANTIGRIPALES (Riesgo cardiovascular)
+        if ((text.contains("presion") || text.contains("hipertenso") || text.contains("hipertension") || text.contains("tension")) &&
+            (text.contains("antigripal") || text.contains("gripe") || text.contains("congestion") || text.contains("puedo tomar"))) {
+            reply.append("Precaución en Pacientes con Hipertensión Arterial:\n\n")
+                 .append("La mayoría de antigripales comerciales combinados contienen vasoconstrictores sistémicos (como Fenilefrina o Pseudoefedrina) que estrechan los vasos sanguíneos para destapar la nariz, lo cual eleva de forma peligrosa la presión arterial.\n\n")
+                 .append("Alternativas seguras para la gripe si sufres de presión alta:\n")
+                 .append("• Para fiebre y dolor: Acetaminofén / Paracetamol puro 500 mg (no altera la presión arterial).\n")
+                 .append("• Para congestión nasal: Solución salina nasal o lavados con suero fisiológico (descongestiona de forma puramente física sin fármacos vasoconstrictores).\n")
+                 .append("• Bálsamos tópicos: Vick Vaporub aplicado en pecho y cuello para despejar las vías respiratorias.\n")
+                 .append("• Hidratación continua y descanso adecuado.");
+
+            findMatchingProducts(allProducts, Arrays.asList("paracetamol", "vick", "vitamina c"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "CARDIO_PRECAUTION", false);
+        }
+
+        // 6. ESTREÑIMIENTO, DIGESTIÓN Y TRÁNSITO INTESTINAL
+        if (text.contains("estrenimiento") || text.contains("dificultad para ir al bano") || text.contains("evacuar") || text.contains("transito lento") || text.contains("laxante") || text.contains("tapar") || text.contains("tapado")) {
+            reply.append("Orientación para el Manejo del Estreñimiento y Tránsito Lento:\n\n")
+                 .append("• Opción fitoterapéutica de venta libre: Ciruelax Laxante Natural (comprimidos con extracto de sen y ciruelas desecadas). Ayuda a normalizar la función intestinal con efecto predecible de 8 a 12 horas (tomar preferiblemente en la noche).\n")
+                 .append("• Hidratación activa: Ingerir mínimo 2 litros de agua diarios para ablandar las heces.\n")
+                 .append("• Fibra dietética: Aumentar el consumo de papaya, pitahaya, avena en hojuelas, verduras verdes y semillas de chía.\n")
+                 .append("• Actividad física: Caminar 20 a 30 minutos al día estimula los movimientos peristálticos naturales del colon.");
+
+            findMatchingProducts(allProducts, Arrays.asList("ciruelax"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "DIGESTIVE_HEALTH", false);
+        }
+
+        // 7. SALUD OCULAR, OJOS ROJOS Y FATIGA VISUAL
+        if (text.contains("ojo") || text.contains("ojos") || text.contains("lagrimas") || text.contains("vista cansada") || text.contains("pantalla") || text.contains("sequedad ocular") || text.contains("colirio") || text.contains("ardor ojos")) {
+            reply.append("Cuidado Ocular, Alivio de Ojos Rojos y Sequedad:\n\n")
+                 .append("• Tears Naturale Gotas Lubricantes Oculares: Solución oftálmica que sustituye la película lagrimal natural, aliviando el ardor, enrojecimiento y sensación de arenilla por pantallas o aire acondicionado.\n")
+                 .append("• Regla 20-20-20: Cada 20 minutos de trabajo en computador o celular, mira un objeto a 20 pies (6 metros) de distancia durante 20 segundos para relajar los músculos ciliares.\n")
+                 .append("• Si hay secreción purulenta (lagañas amarillas/verdes), dolor ocular agudo o visión borrosa persistente, no te automediques con gotas y consulta a un oftalmólogo.");
+
+            findMatchingProducts(allProducts, Arrays.asList("tears naturale"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "EYE_CARE", false);
+        }
+
+        // 8. SALUD CAPILAR, UÑAS, PIEL Y COLÁGENO
+        if (text.contains("cabello") || text.contains("caida del pelo") || text.contains("unas") || text.contains("colageno") || text.contains("arrugas") || text.contains("flacidez") || text.contains("biotina") || text.contains("acido folico")) {
+            reply.append("Nutrición Celular, Salud Capilar, Articular y de la Piel:\n\n")
+                 .append("• ColG Colágeno Hidrolizado con Vitamina C y Biotina (300 g): Estimula la biosíntesis de queratina y colágeno para fortalecer la fibra capilar, uñas quebradizas y la firmeza dérmica.\n")
+                 .append("• Acidfol Ácido Fólico 1 mg: Vitamina esencial del complejo B (B9) para la regeneración y división celular activa.\n")
+                 .append("• Vitamina C 1000 mg + Zinc: Antioxidante indispensable para la síntesis de colágeno natural y defensa inmunitaria.");
+
+            findMatchingProducts(allProducts, Arrays.asList("colageno", "acidfol", "vitamina c"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "NUTRITION_CARE", false);
+        }
+
+        // 9. CONSERVACIÓN Y VENCIMIENTO DE MEDICAMENTOS EN CASA
+        if (text.contains("conservar") || text.contains("guardar") || text.contains("donde guardar") || text.contains("vencido") || text.contains("vencimiento") || text.contains("fecha de vencimiento") || text.contains("caducado")) {
+            reply.append("Pautas Sanitarias de Conservación y Almacenamiento de Medicamentos:\n\n")
+                 .append("• Dónde NO guardarlos: Evita el botiquín del baño y la cocina. La humedad y las oscilaciones térmicas degradan rápidamente los principios activos.\n")
+                 .append("• Ubicación ideal: Un cajón o armario seco, fresco, protegido de la luz solar directa y fuera del alcance de los niños (temperatura inferior a 30°C).\n")
+                 .append("• Medicamentos vencidos: NUNCA deben consumirse. Pasada la fecha de caducidad pierden su potencia terapéutica garantizada y pueden descomponerse en subproductos irritantes o tóxicos.\n")
+                 .append("• Eliminación segura: Deséchalos en los puntos de recolección 'Punto Azul' ubicados en las principales farmacias aliadas de FarmaYA.");
+
+            return new ChatResponse(reply.toString(), Collections.emptyList(), "MED_STORAGE", false);
+        }
+
+        // 10. GENÉRICOS VS COMERCIALES DE MARCA
+        if (text.contains("generico") || text.contains("de marca") || text.contains("comercial") || text.contains("es lo mismo") || text.contains("por que es mas barato")) {
+            reply.append("Claridad Farmacéutica: Medicamentos Genéricos vs Medicamentos de Marca:\n\n")
+                 .append("• Mismo Principio Activo: Un medicamento genérico contiene exactamente la misma molécula, concentración, dosificación y forma farmacéutica que el de marca (ej. Acetaminofén 500 mg genérico vs Dolex 500 mg).\n\n")
+                 .append("• Bioequivalencia INVIMA: En Colombia, el INVIMA exige estrictos estudios de biodisponibilidad para certificar que el genérico se absorbe y actúa en el organismo con idéntica eficacia y seguridad clínica.\n\n")
+                 .append("• ¿Por qué son más económicos? Porque los laboratorios de genéricos no incurren en los costos multimillonarios de investigación inicial de la molécula, patentes ni grandes campañas de publicidad masiva.");
+
+            findMatchingProducts(allProducts, Arrays.asList("paracetamol", "dolex", "ibuprofeno 400"), suggestions);
+            return new ChatResponse(reply.toString(), suggestions, "GENERIC_INFO", false);
+        }
+
+        // 11. TOS SECA VS TOS CON FLEMA
+        if (text.contains("tos seca") || text.contains("tos con flema") || text.contains("tos con moco") || text.contains("expectorante") || text.contains("carraspeo") || text.contains("flemas")) {
+            reply.append("Diferenciación y Manejo Clínico de la Tos:\n\n")
+                 .append("1. Tos con Flema (Productiva):\n")
+                 .append("• Es un mecanismo de defensa para limpiar las vías respiratorias; NO se debe cortar.\n")
+                 .append("• Indicado: Jarabe Abrilar Hedera Helix (100 ml), expectorante natural que fluidifica las secreciones espesas para facilitar su expulsión.\n\n")
+                 .append("2. Tos Seca o Irritativa (Sin flema):\n")
+                 .append("• Sensación de picazón o carraspera en la garganta.\n")
+                 .append("• Indicado: Strepsils Pastillas Miel y Limón (antiséptico y demulcente local) o Noraver Spray Bucofaríngeo para calmar la irritación.\n")
+                 .append("• Medidas de soporte: Tomar agua tibia con miel, evitar cambios bruscos de temperatura y humedecer el ambiente.");
+
+            findMatchingProducts(allProducts, Arrays.asList("abrilar", "strepsils", "noraver"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "RESPIRATORY_CARE", false);
+        }
+
+        // 12. GASES, DISTENSIÓN Y DIGESTIÓN PESADA
+        if (text.contains("gas") || text.contains("gases") || text.contains("hinchazon") || text.contains("distension") || text.contains("eructos") || text.contains("pesadez") || text.contains("llenura")) {
+            reply.append("Alivio de la Pesadez Digestiva, Gases y Distensión Abdominal:\n\n")
+                 .append("• Sal de Frutas Lúa Plus: Antiácido efervescente que alivia rápidamente la sensación de llenura, pesadez y flatulencias tras comidas copiosas.\n")
+                 .append("• Gaviscon Doble Acción: Barrera de alginato de sodio que neutraliza el exceso de ácido y reduce el reflujo gástrico.\n")
+                 .append("• Pautas dietéticas: Comer despacio masticando bien los alimentos, evitar bebidas gaseosas con las comidas y dar una caminata suave de 10 minutos tras almorzar.");
+
+            findMatchingProducts(allProducts, Arrays.asList("lua", "gaviscon", "pepto"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "DIGESTIVE_HEALTH", false);
+        }
+
+        // 13. INSOMNIO Y SUEÑO REPARADOR
+        if (text.contains("dormir") || text.contains("sueno") || text.contains("insomnio") || text.contains("desvelo") || text.contains("descanso") || text.contains("melatonina") || text.contains("magnesio")) {
+            reply.append("Opciones Naturales para la Conciliación del Sueño y Relajación:\n\n")
+                 .append("• Melatonina 3 mg con Pasiflora en gomitas: Hormona natural que sincroniza el ritmo circadiano y facilita un sueño reparador sin generar tolerancia ni dependencia.\n")
+                 .append("• Citrato de Magnesio Puro en Polvo 250 g: Mineral esencial que actúa en los receptores GABA del sistema nervioso, relajando la musculatura y reduciendo la tensión nocturna.\n\n")
+                 .append("Higiene del sueño:\n")
+                 .append("• Apagar pantallas (celular, TV) al menos 45 minutos antes de acostarte.\n")
+                 .append("• Mantener la habitación oscura, ventilada y silenciosa.");
+
+            findMatchingProducts(allProducts, Arrays.asList("melatonina", "citrato de magnesio"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "SLEEP_WELLNESS", false);
+        }
+
+        // 14. FIEBRE Y SIGNOS DE ALARMA DE EMERGENCIA
+        if (text.contains("fiebre peligrosa") || text.contains("cuando ir a urgencias") || text.contains("signos de alarma") || text.contains("convulsion") || (text.contains("fiebre") && text.contains("nino"))) {
+            reply.append("Evaluación de Fiebre y Signos de Alarma que Requieren Urgencias Inmediatas:\n\n")
+                 .append("Manejo en casa de fiebre leve (<38.5°C):\n")
+                 .append("• Acetaminofén / Paracetamol (Dolex o Buprex Pediátrico en niños según peso).\n")
+                 .append("• Paños tibios (nunca alcohol ni agua helada) e hidratación con suero oral.\n\n")
+                 .append("Acude a un centro de urgencias de inmediato si observas:\n")
+                 .append("1. Temperatura mayor a 39°C que no desciende con medicación antipirética.\n")
+                 .append("2. En bebés menores de 3 meses con cualquier fiebre mayor a 38°C.\n")
+                 .append("3. Rigidez de nuca, dificultad respiratoria (aleteo nasal o hundimiento de costillas).\n")
+                 .append("4. Somnolencia extrema, llanto inconsolable o convulsiones.");
+
+            findMatchingProducts(allProducts, Arrays.asList("paracetamol", "dolex", "buprex"), suggestions);
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "CLINICAL_ALERT", false);
+        }
+
+        // 15. NÚMERO DE SOPORTE, CONTACTO Y ATENCIÓN AL CLIENTE
         if (text.contains("soporte") || text.contains("telefono") || text.contains("numero") ||
             text.contains("celular") || text.contains("contacto") || text.contains("whatsapp") ||
             text.contains("linea") || text.contains("atencion al cliente") || text.contains("asesor") ||
             text.contains("humano") || text.contains("comunicarme") || text.contains("hablar con alguien")) {
             return new ChatResponse(
-                "Líneas de Atención y Soporte FarmaYA:\n\n" +
-                "Estamos atentos para resolver cualquier novedad con tus pedidos, pagos o el uso de la aplicación:\n\n" +
-                "• Teléfono y WhatsApp de Soporte: +57 (300) 912-3456\n" +
-                "• Correo Electrónico Oficial: soporte@farmaya.com (y farmaya031@gmail.com)\n" +
-                "• Horario de Atención al Cliente: Lunes a Domingo de 7:00 a.m. a 10:00 p.m.\n" +
-                "• Menú de Ayuda en la App: Haz clic en el menú principal (3 líneas arriba a la derecha) y selecciona 'Centro de Ayuda / Soporte'.\n\n" +
-                "Si tienes un pedido activo en curso, puedes consultar su estado en tiempo real en la pestaña 'Mis Pedidos' o llamar directamente al repartidor o farmacia asignada.",
+                "Líneas Oficiales de Atención y Soporte FarmaYA:\n\n" +
+                "Estamos a tu disposición para atender inquietudes operativas, novedades con tus pedidos o pagos:\n\n" +
+                "• Teléfono y WhatsApp Directo: +57 (300) 912-3456\n" +
+                "• Correo Electrónico Institucional: soporte@farmaya.com (y farmaya031@gmail.com)\n" +
+                "• Horario de Operación: Lunes a Domingo de 7:00 a.m. a 10:00 p.m.\n" +
+                "• Menú de Ayuda en la App: Haz clic en el menú superior (3 líneas) y selecciona 'Centro de Ayuda / Soporte'.",
                 Collections.emptyList(),
                 "SUPPORT",
                 false
             );
         }
 
-        // 3. CANCELACIÓN, REEMBOLSOS E INCIDENCIAS
+        // 16. CANCELACIONES Y REEMBOLSOS
         if (text.contains("cancelar") || text.contains("anular") || text.contains("devolucion") ||
-            text.contains("reembolso") || text.contains("reclamo") || text.contains("queja") ||
-            text.contains("equivocado") || text.contains("no llego") || text.contains("problema con pedido")) {
+            text.contains("reembolso") || text.contains("reclamo") || text.contains("queja")) {
             return new ChatResponse(
-                "Gestión de Pedidos, Cancelaciones y Reclamaciones en FarmaYA:\n\n" +
-                "• Cancelar antes de despacho: Si la farmacia aún no ha preparado tu pedido, puedes cancelarlo directamente ingresando a 'Mis Pedidos'.\n" +
-                "• Reembolsos en línea Wompi: Si cancelas un pedido ya pagado con tarjeta, PSE o Nequi antes del despacho, la devolución se tramita automáticamente por la pasarela Wompi en 24 a 48 horas hábiles.\n" +
-                "• Novedad con tus medicamentos: Si el paquete recibido presenta alteraciones o no corresponde a lo solicitado, NO suministres el PIN de seguridad al domiciliario y comunícate de inmediato al +57 (300) 912-3456 con foto del producto para gestionar el reenvío prioritario.",
+                "Gestión de Pedidos, Cancelaciones y Reembolsos en FarmaYA:\n\n" +
+                "• Cancelación antes de despacho: Si la farmacia aliada aún no ha empacado tus medicamentos, puedes cancelar directamente desde 'Mis Pedidos'.\n" +
+                "• Devolución de pagos Wompi: Los pagos efectuados con PSE, Nequi o tarjeta de crédito se reversan automáticamente a través de la pasarela en 24 a 48 horas hábiles.\n" +
+                "• Garantía de integridad del paquete: Si al recibir el pedido notas alteraciones en los sellos, NO entregues el código PIN al domiciliario y comunícate de inmediato con soporte al +57 (300) 912-3456.",
                 Collections.emptyList(),
                 "SUPPORT",
                 false
             );
         }
 
-        // 4. REGISTRO DE REPARTIDORES Y CÓMO TRABAJAR
-        if (text.contains("repartidor") || text.contains("domiciliario") || text.contains("trabajar") ||
-            text.contains("ganar dinero") || text.contains("ser repartidor") || text.contains("afiliar moto")) {
+        // 17. FUNCIONAMIENTO DE LA PLATAFORMA Y PAGOS
+        if (text.contains("como funciona") || text.contains("como pedir") || text.contains("comprar") || text.contains("pago") || text.contains("wompi") || text.contains("pin") || text.contains("domicilio") || text.contains("envio")) {
             return new ChatResponse(
-                "Cómo vincularte como Repartidor Aliado a FarmaYA:\n\n" +
-                "1. Dirígete a 'Crear cuenta' en la parte superior derecha de FarmaYA.\n" +
-                "2. Selecciona el rol 'Repartidor' y registra tus datos de contacto.\n" +
-                "3. En el paso 2, indica tu medio de transporte (Moto o Carro) y adjunta en formato PDF: Cédula, Licencia de conducción, SOAT vigente, Tecnomecánica y Licencia de tránsito.\n" +
-                "4. El equipo de administración revisará y validará tus documentos en menos de 24 horas.\n" +
-                "5. Una vez habilitado, recibirás solicitudes de entrega en tu cuadrante y obtendrás $5.000 COP netos por cada entrega exitosa validada con PIN.",
-                Collections.emptyList(),
-                "PARTNER_INFO",
-                false
-            );
-        }
-
-        // 5. REGISTRO DE DROGUERÍAS Y FARMACIAS
-        if (text.contains("registrar farmacia") || text.contains("unir mi farmacia") || text.contains("drogueria aliada") ||
-            text.contains("afiliar drogueria") || text.contains("vender medicamentos")) {
-            return new ChatResponse(
-                "Cómo registrar tu Droguería o Farmacia en la Red FarmaYA:\n\n" +
-                "1. Haz clic en 'Crear cuenta' y selecciona el rol 'Farmacia'.\n" +
-                "2. Registra el nombre comercial, ubica tu establecimiento en el mapa interactivo y fija tu horario de atención.\n" +
-                "3. Adjunta en formato PDF tu Registro Sanitario INVIMA y el RUT / Cámara de Comercio vigente.\n" +
-                "4. Registra los datos de la cuenta bancaria donde deseas recibir las transferencias de las ventas de tus despachos.\n" +
-                "5. Al ser verificada por la administración, tu farmacia aparecerá visible para los clientes cercanos y recibirás pedidos directamente.",
-                Collections.emptyList(),
-                "PARTNER_INFO",
-                false
-            );
-        }
-
-        // 6. HORARIOS DE ATENCIÓN Y 24 HORAS
-        if (text.contains("horario") || text.contains("abierto") || text.contains("abren") ||
-            text.contains("cierran") || text.contains("24 horas") || text.contains("nocturno") ||
-            text.contains("de noche")) {
-            return new ChatResponse(
-                "Horarios de FarmaYA:\n\n" +
-                "• Plataforma Web y Pedidos: Operamos las 24 horas del día, los 7 días de la semana.\n" +
-                "• Disponibilidad Nocturna: La atención en horarios de madrugada o festivos depende de las farmacias aliadas de turno disponibles en tu sector geográfico.\n" +
-                "• Distintivo en Catálogo: Cada farmacia muestra el indicador verde 'Recibiendo despachos' o gris 'Fuera de turno' según su horario comercial activo.",
+                "Cómo Funciona FarmaYA (Entrega Prioritaria en 45 Minutos):\n\n" +
+                "1. Selección de productos: Explora el catálogo oficial de medicamentos y productos de bienestar de venta libre.\n" +
+                "2. Ubicación interactiva: Fija tu dirección de entrega en el mapa para asignar la droguería aliada certificada más cercana.\n" +
+                "3. Pago seguro Wompi: Cancela el valor de los productos en línea con tarjetas, PSE, Nequi o Bancolombia.\n" +
+                "4. Entrega con código PIN: Un domiciliario llevará tu pedido sellado. La tarifa de domicilio ($5.000 COP) se cancela directamente al domiciliario, y la entrega se valida con un PIN confidencial de 4 dígitos generado en tu pantalla.",
                 Collections.emptyList(),
                 "PLATFORM_INFO",
                 false
             );
         }
 
-        // 7. COBERTURA GEOGRÁFICA Y CIUDADES
-        if (text.contains("cobertura") || text.contains("ciudades") || text.contains("donde operan") ||
-            text.contains("barranquilla") || text.contains("bogota") || text.contains("medellin") ||
-            text.contains("cali") || text.contains("ubicacion") || text.contains("sede")) {
-            return new ChatResponse(
-                "Cobertura Geográfica FarmaYA:\n\n" +
-                "• Cobertura activa: Barranquilla, Soledad, Puerto Colombia y municipios del área metropolitana.\n" +
-                "• En expansión: Habilitando droguerías aliadas en Bogotá, Medellín, Cali, Bucaramanga y Cartagena.\n" +
-                "• Verificación de cobertura: Al fijar tu ubicación en el mapa interactivo de entrega, el sistema conecta automáticamente con las farmacias aliadas en un radio de hasta 8 km.",
-                Collections.emptyList(),
-                "PLATFORM_INFO",
-                false
-            );
+        // 18. BÚSQUEDA ADAPTATIVA SEMÁNTICA MULTI-TOKEN EN EL CATÁLOGO
+        List<Product> matchedProducts = smartProductSearch(allProducts, text);
+        if (!matchedProducts.isEmpty()) {
+            reply.append("He analizado tu consulta y encontré estas opciones relacionadas disponibles en FarmaYA:\n\n");
+            for (Product p : matchedProducts) {
+                reply.append("• ").append(p.name).append(": ")
+                     .append(p.indication != null ? p.indication : "Medicamento de venta libre certificado.")
+                     .append(" (").append(p.presentation != null ? p.presentation : "Presentación oficial").append(")\n");
+                suggestions.add(new SuggestedProductDto(p.id, p.name, p.cat, p.price, p.active, p.indication, p.rx, p.presentation));
+            }
+            reply.append("\nPuedes agregarlos a tu carrito para recibir despacho prioritario en tu ubicación.");
+            reply.append(MEDICAL_DISCLAIMER);
+            return new ChatResponse(reply.toString(), suggestions, "OTC_RECOMMENDATION", false);
         }
 
-        // 8. FUNCIONAMIENTO DE PEDIDOS, PAGOS Y DOMICILIOS
-        if (text.contains("como funciona") || text.contains("como pedir") || text.contains("hacer un pedido") || text.contains("comprar")) {
-            return new ChatResponse(
-                "Pedir en FarmaYA es muy sencillo y transparente:\n\n" +
-                "1. Explora el catálogo de medicamentos y productos de bienestar, y agrégalos a tu canasta.\n" +
-                "2. En la pantalla de entrega, fija tu ubicación en el mapa interactivo.\n" +
-                "3. Las farmacias aliadas más cercanas recibirán tu solicitud y confirmarán los precios oficiales.\n" +
-                "4. Podrás pagar los productos en línea con total seguridad a través de Wompi (Tarjetas, PSE, Nequi o Bancolombia).\n" +
-                "5. Un domiciliario asignado llevará el pedido a tu puerta. La tarifa de domicilio ($5.000 COP) se cancela directamente al domiciliario al recibir tu entrega.\n" +
-                "6. Para tu seguridad, recibirás un código PIN de 4 dígitos que deberás indicarle al repartidor para validar la entrega.",
-                Collections.emptyList(),
-                "PLATFORM_INFO",
-                false
-            );
-        }
+        // 19. RESPUESTA INTELIGENTE ESTRUCTURADA PARA PREGUNTAS ABIERTAS FUERA DE DOMINIO
+        reply.append("Orientación Farmacéutica Integral FarmaYA:\n\n")
+             .append("He procesado tu consulta sobre \"").append(originalQuery).append("\". Para brindarte la mejor asesoría:\n\n")
+             .append("1. Si buscas alivio para un malestar puntual:\n")
+             .append("Indícame los síntomas específicos (ej. dolor de cabeza, cólicos, fiebre, gripe, insomnio, problemas digestivos o alergias) y te señalaré los medicamentos de venta libre (OTC) idóneos y seguros.\n\n")
+             .append("2. Si se trata de un medicamento bajo fórmula médica (Rx):\n")
+             .append("Por políticas de farmacovigilancia y normativa INVIMA, los antibióticos, fármacos controlados y tratamientos crónicos requieren fórmula médica de tu doctor.\n\n")
+             .append("3. Si requieres asistencia con un pedido o entrega:\n")
+             .append("Puedes consultar el estado en la pestaña 'Mis Pedidos' o comunicarte directamente con nuestro centro de atención al +57 (300) 912-3456.");
 
-        if (text.contains("pago") || text.contains("wompi") || text.contains("nequi") || text.contains("pse") || text.contains("tarjeta")) {
-            return new ChatResponse(
-                "Pagos Seguros en FarmaYA:\n\n" +
-                "• Productos de la Farmacia: Se cancelan en línea mediante la pasarela bancaria oficial Wompi (tarjetas de crédito/débito, PSE, Nequi o botón Bancolombia) una vez la farmacia confirma el valor de la orden.\n" +
-                "• Tarifa de Domicilio: Es una tarifa fija de $5.000 COP y se cancela en efectivo o transferencia directa al domiciliario al momento de recibir el paquete.\n" +
-                "• Facturación Oficial: Cada farmacia aliada genera su factura autorizada por la DIAN con los medicamentos suministrados.",
-                Collections.emptyList(),
-                "PLATFORM_INFO",
-                false
-            );
-        }
+        reply.append(MEDICAL_DISCLAIMER);
+        return new ChatResponse(reply.toString(), Collections.emptyList(), "GENERAL_ADVICE", false);
+    }
 
-        if (text.contains("domicilio") || text.contains("envio") || text.contains("cuanto cuesta") || text.contains("tarifa")) {
-            return new ChatResponse(
-                "Tarifas y Tiempos de Entrega FarmaYA:\n\n" +
-                "• Valor del Domicilio: $5.000 COP tarifa base urbana por entrega, pagados directamente al repartidor.\n" +
-                "• Tiempo Estimado: Entre 25 y 45 minutos según la distancia a la droguería asignada y el tráfico de la zona.\n" +
-                "• Validación de Seguridad: La entrega se finaliza únicamente cuando le proporcionas tu PIN de 4 dígitos al repartidor.",
-                Collections.emptyList(),
-                "PLATFORM_INFO",
-                false
-            );
-        }
+    /**
+     * Búsqueda Semántica Adaptativa Multitoken en el Catálogo de Productos
+     */
+    private List<Product> smartProductSearch(List<Product> all, String rawText) {
+        if (all == null || all.isEmpty()) return Collections.emptyList();
 
-        if (text.contains("pin") || text.contains("codigo de entrega") || text.contains("seguridad")) {
-            return new ChatResponse(
-                "El Código PIN de Entrega FarmaYA:\n\n" +
-                "Es un código secreto de 4 dígitos generado por el sistema y visible exclusivamente en tu pantalla de pedidos.\n\n" +
-                "Cuando el repartidor llegue a tu dirección con los medicamentos debidamente empacados y sellados, facilítale este número. " +
-                "El repartidor lo digitará en su aplicación para confirmar de manera inequívoca que la entrega llegó al destinatario correcto.",
-                Collections.emptyList(),
-                "PLATFORM_INFO",
-                false
-            );
-        }
+        List<String> tokens = Arrays.stream(rawText.split("\\s+"))
+            .filter(t -> t.length() > 2 && !STOP_WORDS.contains(t))
+            .collect(Collectors.toList());
 
-        // 9. CONSULTAS CLÍNICAS POR SÍNTOMAS HABITUALES (VENTA LIBRE OTC)
-        List<SuggestedProductDto> suggestions = new ArrayList<>();
-        StringBuilder reply = new StringBuilder();
+        if (tokens.isEmpty()) return Collections.emptyList();
 
-        if (text.contains("condon") || text.contains("condones") || text.contains("preservativo") || text.contains("preservativos") || text.contains("retardante") || text.contains("durex") || text.contains("today")) {
-            reply.append("Preservativos y Condones Certificados en FarmaYA:\n\n")
-                 .append("• Sensibilidad natural: Condones Durex Sensitivo Delgado o Today Ultra Delgado (látex extra fino para mayor sensación piel a piel).\n")
-                 .append("• Estimulación y textura: Condones Today Triple Placer (con estrías y puntos estimulantes).\n")
-                 .append("• Control masculino: Condones Duo Retardante con benzocaína al 4.5% (ayuda al control del clímax).\n\n")
-                 .append("Consejo: Almacénalos en lugar fresco y seco, protegidos del calor para garantizar su máxima protección de barrera.");
+        Map<Product, Integer> scored = new HashMap<>();
 
-            findMatchingProducts(allProducts, Arrays.asList("durex sensitivo", "today triple", "duo retardante", "today ultra"), suggestions);
+        for (Product p : all) {
+            if (p.rx) continue; // No sugerir medicamentos bajo receta en búsquedas abiertas
+            int score = 0;
+            String nameNorm = normalize(p.name);
+            String activeNorm = normalize(p.active);
+            String indNorm = normalize(p.indication);
+            String catNorm = normalize(p.cat);
 
-        } else if (text.contains("lubricante") || text.contains("lubricantes") || text.contains("gel intimo") || text.contains("resequedad vaginal") || text.contains("lubricacion") || text.contains("k y") || text.contains("ky jelly")) {
-            reply.append("Geles y Lubricantes Íntimos en FarmaYA:\n\n")
-                 .append("• Base acuosa clásica: Gel Lubricante K-Y Jelly 100 g (no graso y 100% compatible con condones de látex).\n")
-                 .append("• Placer y aroma: Lubricante Durex Play Fresa 50 ml o Duo Aloe Vera (hidratación natural calmante).\n")
-                 .append("• Estimulación intensa: Gel Estimulante Femenino Durex Intense (potencia la sensibilidad clitoriana).\n")
-                 .append("• Cuidado femenino: Lubricante Vagisil con Ácido Hialurónico 30 g (alivio de la sequedad vaginal).");
+            for (String tok : tokens) {
+                if (nameNorm.contains(tok)) score += 5;
+                if (activeNorm.contains(tok)) score += 4;
+                if (indNorm.contains(tok)) score += 2;
+                if (catNorm.contains(tok)) score += 1;
+            }
 
-            findMatchingProducts(allProducts, Arrays.asList("durex play", "k y jelly", "duo aloe", "durex intense"), suggestions);
-
-        } else if (text.contains("rendimiento") || text.contains("cama") || text.contains("vigor") || text.contains("potencia") || text.contains("potenciador") || text.contains("macho") || text.contains("maca") || text.contains("arginina") || text.contains("ereccion") || text.contains("sexual")) {
-            reply.append("Suplementos y Vigorizantes Naturales para Rendimiento y Vitalidad:\n\n")
-                 .append("En FarmaYA disponemos de opciones fitoterapéuticas y nutricionales de venta libre autorizadas por el INVIMA para favorecer la energía física y el desempeño íntimo:\n\n")
-                 .append("• Vigorizantes naturales: Mero Macho Jarabe 500 ml (con Borojó, Chontaduro y Ginseng) y Maca Negra Andina Forte 500 mg.\n")
-                 .append("• Circulación y resistencia: L-Arginina 1000 mg + Zinc (aminoácido precursor de óxido nítrico para favorecer la vasodilatación y el vigor) y Ginseng Rojo Coreano Forte 500 mg.\n\n")
-                 .append("Nota sanitaria: Fármacos sintéticos (como Sildenafil o Tadalafil) son medicamentos bajo fórmula médica (Rx) debido a precauciones sobre la tensión arterial.");
-
-            findMatchingProducts(allProducts, Arrays.asList("mero macho", "maca negra", "l arginina", "ginseng rojo"), suggestions);
-
-        } else if (text.contains("dormir") || text.contains("sueno") || text.contains("insomnio") || text.contains("descanso") || text.contains("melatonina") || text.contains("magnesio")) {
-            reply.append("Opciones para la Conciliación del Sueño y Relajación Muscular:\n\n")
-                 .append("• Melatonina 3 mg con Pasiflora en gomitas: Inductor natural del sueño reparador y regulador del ritmo circadiano sin generar dependencia.\n")
-                 .append("• Citrato de Magnesio Puro en Polvo 250 g: Favorece la relajación neuromuscular, alivia calambres nocturnos y reduce la tensión.");
-
-            findMatchingProducts(allProducts, Arrays.asList("melatonina", "citrato de magnesio"), suggestions);
-
-        } else if (text.contains("tos") || text.contains("flemas") || text.contains("bronquios") || text.contains("expectorante")) {
-            reply.append("Para el alivio de la tos y expectoración:\n\n")
-                 .append("• Jarabe Abrilar Hedera Helix (100 ml): Expectorante fitoterapéutico natural que fluidifica las flemas y calma los bronquios.\n")
-                 .append("• Strepsils Pastillas Miel y Limón: Antiséptico bucofaríngeo para aliviar la carraspera y el dolor de garganta.\n")
-                 .append("• Vick Vaporub: Bálsamo para aplicar en pecho y cuello para abrir las vías respiratorias.");
-
-            findMatchingProducts(allProducts, Arrays.asList("abrilar", "strepsils", "vick"), suggestions);
-
-        } else if (text.contains("articulacion") || text.contains("colageno") || text.contains("omega") || text.contains("calcio")) {
-            reply.append("Nutrición y Cuidado Articular, Óseo y Cardiovascular:\n\n")
-                 .append("• Colágeno Hidrolizado con Vitamina C y Biotina (300 g): Para elasticidad de la piel, articulaciones, uñas y cabello.\n")
-                 .append("• Omega 3 Aceite de Pescado 1000 mg: Ácidos grasos EPA/DHA para salud cardiovascular, cerebral y articular.\n")
-                 .append("• Calcio 600 mg + Vitamina D3: Para fortalecimiento de la densidad ósea y dientes.");
-
-            findMatchingProducts(allProducts, Arrays.asList("colageno", "omega 3", "calcio"), suggestions);
-
-        } else if (text.contains("embarazo") || text.contains("clearblue") || text.contains("gravitest")) {
-            reply.append("Pruebas de Embarazo en FarmaYA:\n\n")
-                 .append("• Clearblue Digital: Dispositivo de alta precisión (>99%) con pantalla digital que indica si estás embarazada y de cuántas semanas (1-2, 2-3, 3+ semanas).\n")
-                 .append("• Cassette Gravitest: Prueba rápida en orina con resultado confiable en 3 a 5 minutos.\n\n")
-                 .append("Recomendación de uso: Realizar preferiblemente con la primera orina de la mañana a partir del primer día de retraso menstrual.");
-
-            findMatchingProducts(allProducts, Arrays.asList("clearblue", "gravitest"), suggestions);
-
-        } else if (text.contains("cabeza") || text.contains("migrana") || text.contains("cefalea")) {
-            reply.append("Para el alivio de dolor de cabeza leve a moderado o migraña:\n\n")
-                 .append("• Acetaminofén / Dolex Avanzado (500 mg): Primera línea de elección por su alto perfil de seguridad gastrointestinal.\n")
-                 .append("• Ibuprofeno 400 mg o Apronax 550 mg: Si el dolor se asocia a tensión muscular o inflamación (tomar siempre con alimentos).\n\n")
-                 .append("Recomendaciones: Hidrátate adecuadamente, reposa en un lugar silencioso con poca luz y evita periodos prolongados frente a pantallas.");
-
-            findMatchingProducts(allProducts, Arrays.asList("dolex", "paracetamol", "ibuprofeno 400", "apronax"), suggestions);
-
-        } else if (text.contains("fiebre") || text.contains("temperatura alta")) {
-            reply.append("Para el manejo de la fiebre en adultos o niños:\n\n")
-                 .append("• Acetaminofén (Paracetamol / Dolex): Antipirético de primera elección para regular la temperatura corporal.\n")
-                 .append("• Ibuprofeno 400 mg o Buprex Pediátrico: Alternativa con efecto antiinflamatorio y antipirético.\n")
-                 .append("• Termómetro Digital Infrarrojo: Recomendado para medir la evolución térmica con precisión sin contacto.\n\n")
-                 .append("Medidas complementarias: Mantén ropa ligera, paños de agua tibia y abundante hidratación.");
-
-            findMatchingProducts(allProducts, Arrays.asList("termometro", "dolex", "paracetamol", "buprex"), suggestions);
-
-        } else if (text.contains("gripe") || text.contains("resfriado") || text.contains("congestion") || text.contains("mocos") || text.contains("tos")) {
-            reply.append("Para síntomas de gripe, resfriado común o congestión nasal:\n\n")
-                 .append("• Nokout Noche Antigripal: Analgésico, descongestionante y antihistamínico para descansar en la noche.\n")
-                 .append("• Dristan Nebulizador Nasal: Alivio de la congestión nasal en minutos (no usar más de 3 a 5 días continuos).\n")
-                 .append("• Vick Vaporub: Bálsamo descongestionante con eucalipto y mentol.\n")
-                 .append("• Vitamina C 1000 mg + Zinc: Soporte antioxidante e inmunológico.");
-
-            findMatchingProducts(allProducts, Arrays.asList("nokout", "dristan", "vick", "vitamina c"), suggestions);
-
-        } else if (text.contains("garganta") || text.contains("irritacion") || text.contains("ardor de garganta")) {
-            reply.append("Para el dolor o irritación bucofaríngea:\n\n")
-                 .append("• Noraver Spray Bucofaríngeo: Anestésico y antiséptico local para calmar el dolor al deglutir.\n")
-                 .append("• Isodine Solución Bucofaríngea: Enjuague antiséptico para desinfectar la cavidad bucal.\n")
-                 .append("• Dolex o Ibuprofeno: Para modular el dolor y la inflamación de forma sistémica.");
-
-            findMatchingProducts(allProducts, Arrays.asList("noraver", "isodine", "dolex", "ibuprofeno"), suggestions);
-
-        } else if (text.contains("estomago") || text.contains("acidez") || text.contains("reflujo") || text.contains("ardor") || text.contains("gastritis") || text.contains("pesadez") || text.contains("indigestion")) {
-            reply.append("Para el reflujo gástrico, acidez estomacal o pesadez:\n\n")
-                 .append("• Gaviscon Doble Acción: Barrera de alginato que previene el reflujo y neutraliza el ácido.\n")
-                 .append("• Pepto-Bismol Suspensión: Alivia ardor, indigestión, náuseas y malestar estomacal.\n")
-                 .append("• Sal de Frutas Lúa Plus: Alivio efervescente contra la llenura y agruras.\n")
-                 .append("• Omeprazol 20 mg: Protector gástrico para episodios de gastritis (tomar en ayunas).");
-
-            findMatchingProducts(allProducts, Arrays.asList("gaviscon", "pepto", "lua", "omeprazol"), suggestions);
-
-        } else if (text.contains("muscular") || text.contains("espalda") || text.contains("cuello") || text.contains("articulacion") || text.contains("lumbago") || text.contains("golpe") || text.contains("esguince")) {
-            reply.append("Para dolor muscular, golpes o tensión articular:\n\n")
-                 .append("• Apronax 550 mg (Naproxeno): Potente antiinflamatorio y analgésico de larga duración (hasta 12 horas).\n")
-                 .append("• Ibuprofeno 800 mg / 400 mg: Indicado para inflamaciones musculares agudas.\n")
-                 .append("• Caladryl o Vick: Para aplicaciones calmantes según la molestia.\n\n")
-                 .append("Consejo: Aplica frío local las primeras 24 horas y reposa la zona afectada.");
-
-            findMatchingProducts(allProducts, Arrays.asList("apronax", "ibuprofeno 800", "ibuprofeno 400"), suggestions);
-
-        } else if (text.contains("colico") || text.contains("menstrual") || text.contains("espasmo") || text.contains("periodo")) {
-            reply.append("Para el alivio de cólicos menstruales y espasmos abdominales:\n\n")
-                 .append("• Buscapina Fem: Combina Butilbromuro de Hioscina (antiespasmódico) con Ibuprofeno 400 mg para aliviar los cólicos intensos.\n")
-                 .append("• Apronax 550 mg: Alternativa analgésica de acción prolongada.\n\n")
-                 .append("Medidas de alivio: Colocar una bolsa de agua tibia en el bajo abdomen e hidratarse.");
-
-            findMatchingProducts(allProducts, Arrays.asList("buscapina", "apronax", "ibuprofeno 400"), suggestions);
-
-        } else if (text.contains("alergia") || text.contains("rinitis") || text.contains("estornudos") || text.contains("picazon")) {
-            reply.append("Para síntomas de rinitis alérgica o picazón leve:\n\n")
-                 .append("• Loratadina 10 mg: Antihistamínico no sedante para estornudos y congestión alérgica.\n")
-                 .append("• Caladryl Loción: Alivia la picazón de la piel por contacto o picaduras de insectos.");
-
-            findMatchingProducts(allProducts, Arrays.asList("loratadina", "caladryl"), suggestions);
-
-        } else if (text.contains("suero") || text.contains("hidratacion") || text.contains("deshidratacion") || text.contains("diarrea")) {
-            reply.append("Para rehidratación oral y reposición de electrolitos:\n\n")
-                 .append("• Suero Oral Electrolit Fresa (625 ml): Solución equilibrada de electrolitos, iones y glucosa para rehidratar el organismo.\n")
-                 .append("• Pepto-Bismol: Coadyuvante en el control sintomático de diarrea leve del viajero.");
-
-            findMatchingProducts(allProducts, Arrays.asList("electrolit", "pepto"), suggestions);
-
-        } else if (text.contains("piel") || text.contains("solar") || text.contains("bloqueador") || text.contains("crema") || text.contains("resequedad") || text.contains("quemadura")) {
-            reply.append("Para el cuidado dermatológico y protección de la piel:\n\n")
-                 .append("• Protector Solar FPS 50+ Facial ISDIN: Fotoprotección ultraligera de fase acuosa para uso diario.\n")
-                 .append("• Crema Hidratante Ceramide CeraVe: Restauración de la barrera cutánea con 3 ceramidas esenciales.\n")
-                 .append("• Lubriderm Reparación Intensiva: Hidratación para piel severamente seca.\n")
-                 .append("• Cicatricure Gel: Mejora la textura y elasticidad de la piel en cicatrices.");
-
-            findMatchingProducts(allProducts, Arrays.asList("protector solar", "ceramide", "lubriderm", "cicatricure"), suggestions);
-
-        } else if (text.contains("herida") || text.contains("raspon") || text.contains("cortada") || text.contains("botiquin") || text.contains("alcohol") || text.contains("curitas")) {
-            reply.append("Para primeros auxilios y curación de heridas menores:\n\n")
-                 .append("• Agua Oxigenada 10 Vol o Alcohol al 70%: Para desinfección adecuada de la piel.\n")
-                 .append("• Curitas Venditas Antibacteriales: Con compresa de plata para cicatrización higiénica.\n")
-                 .append("• Gel Antibacterial con Aloe: Para desinfección constante de manos sin enjuague.");
-
-            findMatchingProducts(allProducts, Arrays.asList("curitas", "agua oxigenada", "alcohol", "gel antibacterial"), suggestions);
-
-        } else if (text.contains("bebe") || text.contains("nino") || text.contains("panal") || text.contains("biberon")) {
-            reply.append("Para el cuidado y bienestar de bebés en FarmaYA:\n\n")
-                 .append("• Crema Antipañalitis Desitin Rapid: Con óxido de zinc al 13% para aliviar y prevenir la dermatitis del pañal.\n")
-                 .append("• Pañales Winny Sensitive Etapa 3 y Toallitas húmedas con Aloe.\n")
-                 .append("• Biberón Anticólicos Philips Avent de 260 ml.\n")
-                 .append("• Buprex Pediátrico o Acetaminofén Gotas Pediátricas: Para fiebre e inflamación en niños.");
-
-            findMatchingProducts(allProducts, Arrays.asList("desitin", "winny", "biberon", "buprex", "gotas pediatricas"), suggestions);
-
-        } else {
-            // Búsqueda inteligente por nombre exacto o indicación en el catálogo
-            List<Product> matched = allProducts.stream()
-                .filter(p -> (p.name != null && normalize(p.name).contains(text)) ||
-                             (p.active != null && normalize(p.active).contains(text)) ||
-                             (p.indication != null && normalize(p.indication).contains(text)))
-                .limit(4)
-                .collect(Collectors.toList());
-
-            if (!matched.isEmpty()) {
-                reply.append("He ubicado estos productos relacionados con tu consulta en el catálogo de FarmaYA:\n\n");
-                for (Product p : matched) {
-                    reply.append("• ").append(p.name).append(": ").append(p.indication != null ? p.indication : "Medicamento de venta libre.").append("\n");
-                    suggestions.add(new SuggestedProductDto(p.id, p.name, p.cat, p.price, p.active, p.indication, p.rx, p.presentation));
-                }
-                reply.append("\nPuedes agregarlos directamente a tu canasta para coordinar el despacho.");
-            } else {
-                // RESPUESTA INTELIGENTE CONTEXTUAL (no genérica)
-                reply.append("He revisado tu consulta sobre \"").append(originalQuery).append("\". Para orientarte de manera precisa:\n\n")
-                     .append("• Si se trata de un síntoma o malestar: Descríbeme qué molestia experimentas (ej. dolor de cabeza, dolor muscular, fiebre, acidez, gripe o cólicos) para indicarte opciones seguras de venta libre.\n")
-                     .append("• Si necesitas soporte con un pedido: Puedes consultar sobre el pago por Wompi, el costo del domicilio ($5.000 COP), el código PIN de entrega o comunicarte con nuestra línea directa de soporte al +57 (300) 912-3456.\n")
-                     .append("• Si buscas un producto en particular: Escribe el nombre o principio activo y verificaré su disponibilidad en farmacias aliadas.");
+            if (score > 0) {
+                scored.put(p, score);
             }
         }
 
-        // Descargo médico ético
-        reply.append(MEDICAL_DISCLAIMER);
-
-        return new ChatResponse(reply.toString(), suggestions, "OTC_RECOMMENDATION", false);
+        return scored.entrySet().stream()
+            .sorted(Map.Entry.<Product, Integer>comparingByValue().reversed())
+            .limit(4)
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
     }
 
     private void findMatchingProducts(List<Product> all, List<String> terms, List<SuggestedProductDto> out) {
@@ -534,26 +490,33 @@ public class ChatbotService {
 
     private ChatResponse callGemini(String originalQuery, List<ChatMessage> history, String normalizedQuery) {
         try {
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey.trim();
+            String model = (geminiModel != null && !geminiModel.isBlank()) ? geminiModel.trim() : "gemini-1.5-flash";
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + geminiApiKey.trim();
 
-            String systemPrompt = "Eres FarmaBot, el Asistente Farmacéutico Virtual y Orientador Clínico y Operativo de FarmaYA en Colombia.\n" +
-                "REGLAS FUNDAMENTALES:\n" +
-                "1. PREGUNTAS DE SOPORTE Y OPERATIVAS: Si el usuario pregunta por número de soporte, ayuda, cancelaciones, teléfonos o contacto, responde de forma clara y directa con los datos oficiales: Teléfono/WhatsApp de soporte +57 300 912-3456, correo soporte@farmaya.com, horario 7am a 10pm.\n" +
-                "2. NO USAR RESPUESTAS GENÉRICAS: Nunca respondas con frases vacías como 'tenemos una amplia gama de medicamentos'. Responde de forma precisa y contextual a lo que pregunta el usuario.\n" +
-                "3. MEDICAMENTOS CON RECETA (Rx): Si piden antibióticos, controlados, opioides o antidepresivos, rechaza cortésmente explicando que por Decreto 780/2016 y normatividad INVIMA requieren fórmula médica y que automedicarse conlleva graves riesgos como resistencia bacteriana o toxicidad.\n" +
-                "4. SÍNTOMAS Y OTC: Orienta sobre medicamentos de venta libre (Acetaminofén, Ibuprofeno, Gaviscon, Loratadina, Suero Oral) y SIEMPRE incluye el descargo médico de consultar con su doctor de confianza.\n" +
-                "5. FORMATO CONCISO Y LIMPIO: Redacta en párrafos breves o listas con viñetas. NO uses textos excesivamente anchos ni desbordes. CERO EMOJIS (estrictamente prohibido usar emojis).";
+            String systemPrompt =
+                "Eres FarmaBot, el Asistente Farmacéutico Virtual y Orientador Clínico Inteligente de FarmaYA en Colombia.\n" +
+                "TU MISIÓN:\n" +
+                "Brindar orientación de alta calidad médica, empática, precisa y profesional a los pacientes y clientes de FarmaYA.\n\n" +
+                "PAUTAS Y REGLAS FUNDAMENTALES:\n" +
+                "1. PREGUNTAS ABIERTAS Y CLÍNICAS: Responde de forma completa, estructurada y profunda. Si te preguntan sobre hábitos, interacciones farmacológicas, diferencias entre medicamentos (ej. paracetamol vs ibuprofeno), alcohol, horarios o cuidados preventivos, explica los mecanismos de acción en lenguaje claro y accesible.\n" +
+                "2. MEDICAMENTOS BAJO RECETA (Rx): Si solicitan antibióticos, corticoides fuertes o medicamentos controlados, explica cortésmente por qué exigen fórmula médica según el Decreto 780 de 2016 e INVIMA (resistencia bacteriana, toxicidad hepática/renal) e insta a consultar al médico tratante.\n" +
+                "3. MEDICAMENTOS DE VENTA LIBRE EN FARMAYA: Puedes orientar sobre medicamentos OTC disponibles en la plataforma como Acetaminofén/Dolex, Ibuprofeno, Naproxeno/Apronax, Omeprazol, Gaviscon, Pepto-Bismol, Suero Electrolit, Tears Naturale (gotas para ojos secos), Ciruelax (laxante natural), Citrato de Magnesio, Melatonina, Colágeno ColG, Acidfol Ácido Fólico y Vitamina C con Zinc.\n" +
+                "4. SOPORTE OPERATIVO: Teléfono/WhatsApp de atención: +57 300 912-3456, correo soporte@farmaya.com. Entrega en 45 min, valor de domicilio $5.000 COP al repartidor, pagos seguros por Wompi, validación final con código PIN de 4 dígitos.\n" +
+                "5. DESCARGO MÉDICO OBLIGATORIO: Recuerda siempre que tu orientación es informativa y educativa, y que ante síntomas persistentes o de alarma deben acudir a un médico.\n" +
+                "6. ESTILO DE COMUNICACIÓN: CERO EMOJIS (estrictamente prohibido usar emojis en todo el texto). Utiliza listas con viñetas y párrafos concisos y elegantes.";
 
             StringBuilder userContent = new StringBuilder();
             userContent.append(systemPrompt).append("\n\n");
             if (history != null && !history.isEmpty()) {
-                userContent.append("Historial previo de la conversación:\n");
+                userContent.append("Historial de la conversación previa:\n");
                 for (ChatMessage m : history) {
-                    userContent.append(m.role()).append(": ").append(m.text()).append("\n");
+                    if (m != null && m.text() != null) {
+                        userContent.append(m.role()).append(": ").append(m.text()).append("\n");
+                    }
                 }
                 userContent.append("\n");
             }
-            userContent.append("Pregunta actual del usuario: ").append(originalQuery);
+            userContent.append("Pregunta o consulta del usuario: ").append(originalQuery);
 
             String requestBody = objectMapper.writeValueAsString(Collections.singletonMap("contents",
                 Collections.singletonList(Collections.singletonMap("parts",
@@ -575,13 +538,14 @@ public class ChatbotService {
                 if (candidates.isArray() && !candidates.isEmpty()) {
                     String reply = candidates.get(0).path("content").path("parts").get(0).path("text").asText();
                     if (reply != null && !reply.isBlank()) {
+                        // Eliminar emojis residuales por seguridad
                         reply = reply.replaceAll("[\\p{So}\\p{Cn}]", "").trim();
 
                         List<SuggestedProductDto> suggestions = new ArrayList<>();
                         List<Product> all = productRepo.findAll();
                         String normReply = normalize(reply);
                         for (Product p : all) {
-                            if (p.name != null && normReply.contains(normalize(p.name))) {
+                            if (!p.rx && p.name != null && normReply.contains(normalize(p.name))) {
                                 suggestions.add(new SuggestedProductDto(p.id, p.name, p.cat, p.price, p.active, p.indication, p.rx, p.presentation));
                                 if (suggestions.size() >= 3) break;
                             }
