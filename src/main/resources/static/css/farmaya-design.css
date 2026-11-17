@@ -5535,25 +5535,33 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
 }
 
 /* ==========================================================================
-   4. HERO BANNER FARMAYA ELEGANTE (TABLET, MÓVIL Y FLUTTER)
-   Diseño sobrio, premium y clínico: superficie limpia con suave relieve,
-   tipografía editorial, buscador de alta gama y sin sobrecarga artificial.
+   4. HERO BANNER FARMAYA: ELEGANTE, ESPACIOSO Y TIPOGRAFÍA EDITORIAL
+   Diseño despojado de amontonamiento, tipografía moderna 'Outfit' y 'Plus Jakarta Sans',
+   y buscador espacioso como punto focal único.
    ========================================================================== */
 @media (max-width: 1024px) {
   .stitch-assurance-bar, .elevated-top-banner {
     display: none !important;
   }
+  .stitch-hero-kicker,
+  .stitch-hero-badges,
+  .stitch-hero-trust-row {
+    display: none !important;
+  }
+  .welcome-art {
+    display: none !important;
+  }
   .stitch-hero {
     position: relative !important;
     background: var(--surface, #ffffff) !important;
-    border: 1px solid var(--line, #e2eae5) !important;
+    border: 1px solid var(--line, #e1ebe5) !important;
     border-radius: 20px !important;
-    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02) !important;
-    padding: 18px 18px 14px 18px !important;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02) !important;
+    padding: 22px 22px 20px 22px !important;
     margin-bottom: 6px !important;
     display: flex !important;
     flex-direction: column !important;
-    gap: 8px !important;
+    gap: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
@@ -5564,72 +5572,54 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
     border-color: rgba(255, 255, 255, 0.08) !important;
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3) !important;
   }
-  .stitch-hero-kicker {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    padding: 3px 8px !important;
-    background: rgba(0, 108, 76, 0.06) !important;
-    border: 1px solid rgba(0, 108, 76, 0.14) !important;
-    border-radius: 6px !important;
-    color: var(--primary, #006c4c) !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.04em !important;
-    text-transform: uppercase !important;
-    width: fit-content !important;
-    margin-bottom: 2px !important;
-  }
-  [data-theme="dark"] .stitch-hero-kicker {
-    background: rgba(34, 197, 94, 0.15) !important;
-    border-color: rgba(34, 197, 94, 0.3) !important;
-    color: #34d399 !important;
-  }
-  .hero-kicker-dot {
-    width: 6px !important;
-    height: 6px !important;
-    border-radius: 50% !important;
-    background: #10b981 !important;
-    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
-  }
-  .welcome-art {
-    display: none !important;
-  }
   .stitch-hero h1,
   .stitch-hero-greeting {
-    font-size: 22px !important;
-    line-height: 1.2 !important;
-    margin: 0 !important;
-    font-weight: 800 !important;
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+    font-size: 26px !important;
+    font-weight: 700 !important;
     letter-spacing: -0.025em !important;
-    color: var(--text, #18352b) !important;
+    line-height: 1.25 !important;
+    color: #11281e !important;
+    margin: 0 0 6px 0 !important;
+  }
+  [data-theme="dark"] .stitch-hero h1,
+  [data-theme="dark"] .stitch-hero-greeting {
+    color: #f1f7f4 !important;
   }
   .hero-name-highlight {
-    color: var(--primary, #006c4c) !important;
+    color: #007a55 !important;
+    font-weight: 700 !important;
+  }
+  [data-theme="dark"] .hero-name-highlight {
+    color: #34d399 !important;
   }
   .stitch-hero p,
   .stitch-hero-desc {
-    font-size: 13px !important;
-    line-height: 1.4 !important;
-    margin: 0 0 4px 0 !important;
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 1.55 !important;
     color: #556c60 !important;
-    font-weight: 500 !important;
+    letter-spacing: -0.01em !important;
+    margin: 0 0 18px 0 !important;
   }
+  [data-theme="dark"] .stitch-hero p,
   [data-theme="dark"] .stitch-hero-desc {
     color: #9cb2a5 !important;
   }
-  /* Buscador en una sola fila horizontal con estilo moderno */
+  /* Buscador amplio, espacioso y sin congestión */
   .stitch-search-box {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 6px !important;
-    padding: 4px 6px 4px 10px !important;
-    background: #f8faf8 !important;
-    border: 1.5px solid #d5e2da !important;
+    gap: 8px !important;
+    padding: 4px 6px 4px 14px !important;
+    background: #fbfdfc !important;
+    border: 1.5px solid #d4e3db !important;
     border-radius: 14px !important;
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.03) !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03) !important;
     width: 100% !important;
+    min-height: 48px !important;
     box-sizing: border-box !important;
     transition: all 0.2s ease !important;
   }
@@ -5640,7 +5630,7 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
   .stitch-search-box:focus-within {
     background: #ffffff !important;
     border-color: var(--primary, #006c4c) !important;
-    box-shadow: 0 0 0 3px rgba(0, 108, 76, 0.12) !important;
+    box-shadow: 0 0 0 3px rgba(0, 108, 76, 0.12), 0 4px 14px rgba(0, 0, 0, 0.04) !important;
   }
   [data-theme="dark"] .stitch-search-box:focus-within {
     background: #141f1a !important;
@@ -5652,25 +5642,29 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
     align-items: center !important;
     flex: 1 !important;
     min-width: 0 !important;
-    gap: 6px !important;
   }
   .stitch-search-lens,
   .stitch-search-icon {
     display: inline-flex !important;
     align-items: center !important;
-    color: #63776c !important;
+    color: #5a7065 !important;
     flex-shrink: 0 !important;
+    margin-right: 2px !important;
   }
   .stitch-search-lens svg,
   .stitch-search-icon svg {
     width: 18px !important;
     height: 18px !important;
+    stroke-width: 2 !important;
   }
   .stitch-search-input,
   .stitch-search-box input {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    font-size: 14.5px !important;
+    font-weight: 400 !important;
+    color: #18352b !important;
     width: 100% !important;
-    min-height: 38px !important;
-    font-size: 14px !important;
+    min-height: 40px !important;
     padding: 6px 4px !important;
     border: none !important;
     border-width: 0 !important;
@@ -5680,86 +5674,46 @@ button:active, .btn:active, .qty-btn:active, .m-cart-btn:active {
     -webkit-appearance: none !important;
     appearance: none !important;
     border-radius: 0 !important;
-    color: var(--text) !important;
+  }
+  [data-theme="dark"] .stitch-search-input,
+  [data-theme="dark"] .stitch-search-box input {
+    color: #f1f7f4 !important;
+  }
+  .stitch-search-input::placeholder,
+  .stitch-search-box input::placeholder {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    font-size: 14px !important;
+    color: #83968b !important;
+    font-weight: 400 !important;
   }
   .stitch-search-action {
+    font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif !important;
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
     gap: 4px !important;
-    padding: 0 16px !important;
+    padding: 0 18px !important;
     height: 38px !important;
     min-height: 38px !important;
     background: var(--primary, #006c4c) !important;
     color: #ffffff !important;
     border: none !important;
     border-radius: 10px !important;
-    font-size: 13px !important;
-    font-weight: 700 !important;
     flex-shrink: 0 !important;
     white-space: nowrap !important;
-    box-shadow: 0 2px 6px rgba(0, 108, 76, 0.2) !important;
+    box-shadow: 0 2px 6px rgba(0, 108, 76, 0.22) !important;
     cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+  .stitch-search-action:hover {
+    background: #00563b !important;
+    transform: translateY(-1px) !important;
   }
   .stitch-search-action:active {
     transform: scale(0.97) !important;
-  }
-  /* Fila de garantías elegante y sobria */
-  .stitch-hero-trust-row {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 8px 12px !important;
-    margin-top: 2px !important;
-    padding-top: 2px !important;
-  }
-  .trust-row-item {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 5px !important;
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    color: #556c60 !important;
-  }
-  [data-theme="dark"] .trust-row-item {
-    color: #9cb2a5 !important;
-  }
-  .trust-row-item svg {
-    width: 13px !important;
-    height: 13px !important;
-    color: var(--primary, #006c4c) !important;
-    flex-shrink: 0 !important;
-  }
-  .trust-row-bullet {
-    color: #b5c7bd !important;
-    font-size: 12px !important;
-    user-select: none !important;
-  }
-  /* Compatibilidad con insignias anteriores */
-  .stitch-hero-badges {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: wrap !important;
-    gap: 8px 12px !important;
-    margin: 4px 0 0 0 !important;
-  }
-  .hero-badge-pill {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 4px !important;
-    background: transparent !important;
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-    font-size: 11.5px !important;
-    font-weight: 600 !important;
-    color: #556c60 !important;
-    box-shadow: none !important;
-  }
-  .hero-badge-pill svg {
-    width: 13px !important;
-    height: 13px !important;
-    color: var(--primary, #006c4c) !important;
   }
 }
 
@@ -16834,16 +16788,16 @@ dialog.sheet.mobile-cart-bottom-dialog.is-closing,
 }
 
 .stitch-hero {
-  padding: 18px clamp(16px, 3.5vw, 28px) 14px !important;
+  padding: 22px clamp(18px, 3.5vw, 28px) 20px !important;
   margin-bottom: 0 !important;
 }
 
 .stitch-hero p {
-  margin: 0 0 6px 0 !important;
+  margin: 0 0 16px 0 !important;
 }
 
 .stitch-search-box {
-  margin-bottom: 2px !important;
+  margin-bottom: 0 !important;
 }
 
 .client-main-grid {
