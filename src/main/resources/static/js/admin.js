@@ -454,58 +454,22 @@ function adminPowerBiDashboard() {
         const pagedPharmaRank = filteredPharmaRank.slice(startPharmaIdx, startPharmaIdx + 30);
 
         if (pagedPharmaRank.length) {
-          const desktopTable = h('div', { class: 'desktop-only' },
-            excelTable(
-              ['Farmacia Aliada', { label: 'Pedidos', class: 'text-center' }, { label: 'Bruto (100%)', class: 'text-right' }, { label: '95% Aliado', class: 'text-right' }, { label: '5% FarmaYA', class: 'text-right' }],
-              pagedPharmaRank.map(item => {
-                const pharmaNet = Math.max(0, item.gross - item.earnings);
-                return h('tr', null,
-                  h('td', null, h('strong', null, item.name)),
-                  h('td', { class: 'text-center font-mono' }, String(item.count)),
-                  h('td', { class: 'text-right font-bold' }, money(item.gross)),
-                  h('td', { class: 'text-right muted' }, money(pharmaNet)),
-                  h('td', { class: 'text-right text-green font-bold' }, money(item.earnings))
-                );
-              }),
-              { tableClass: 'fy-compact-excel-table' }
-            )
-          );
-
-          const mobileCards = h('div', { class: 'mobile-only powerbi-pharma-cards-wrap' },
+          const desktopTable = excelTable(
+            ['Farmacia Aliada', { label: 'Pedidos', class: 'text-center' }, { label: 'Bruto (100%)', class: 'text-right' }, { label: '95% Aliado', class: 'text-right' }, { label: '5% FarmaYA', class: 'text-right' }],
             pagedPharmaRank.map(item => {
               const pharmaNet = Math.max(0, item.gross - item.earnings);
-              return h('div', { class: 'powerbi-pharma-flutter-card' },
-                h('div', { class: 'powerbi-pharma-card-header' },
-                  h('div', { class: 'powerbi-pharma-name-wrap' },
-                    h('span', { class: 'powerbi-pharma-icon', 'aria-hidden': 'true' }, icon('store')),
-                    h('strong', { class: 'powerbi-pharma-name' }, item.name)
-                  ),
-                  h('span', { class: 'powerbi-pharma-orders-pill' }, item.count + (item.count === 1 ? ' pedido' : ' pedidos'))
-                ),
-                h('div', { class: 'powerbi-pharma-card-stats' },
-                  h('div', { class: 'powerbi-pharma-stat' },
-                    h('span', { class: 'stat-label' }, 'Bruto'),
-                    h('span', { class: 'stat-val font-bold' }, money(item.gross))
-                  ),
-                  h('div', { class: 'powerbi-pharma-stat' },
-                    h('span', { class: 'stat-label' }, '95% Aliado'),
-                    h('span', { class: 'stat-val muted' }, money(pharmaNet))
-                  ),
-                  h('div', { class: 'powerbi-pharma-stat text-right' },
-                    h('span', { class: 'stat-label text-green font-bold' }, '5% FarmaYA'),
-                    h('span', { class: 'stat-val text-green font-bold' }, '+ ' + money(item.earnings))
-                  )
-                ),
-                h('div', { class: 'powerbi-bar-track', 'aria-hidden': 'true' },
-                  h('div', { class: 'powerbi-bar-fill-pharmacy', style: 'width: 100%;' },
-                    h('div', { class: 'powerbi-bar-fill-farmaya', style: 'width: 5%;' })
-                  )
-                )
+              return h('tr', null,
+                h('td', null, h('strong', null, item.name)),
+                h('td', { class: 'text-center font-mono' }, String(item.count)),
+                h('td', { class: 'text-right font-bold' }, money(item.gross)),
+                h('td', { class: 'text-right muted' }, money(pharmaNet)),
+                h('td', { class: 'text-right text-green font-bold' }, money(item.earnings))
               );
-            })
+            }),
+            { tableClass: 'fy-compact-excel-table' }
           );
 
-          pharmaBarsHolder.replaceChildren(desktopTable, mobileCards);
+          pharmaBarsHolder.replaceChildren(desktopTable);
         } else {
           pharmaBarsHolder.replaceChildren(h('div', { class: 'muted small text-center p-4' }, 'No se encontraron farmacias con ese criterio de búsqueda.'));
         }
@@ -604,7 +568,6 @@ function adminPowerBiDashboard() {
         value: pbiMatrixSearch
       });
       const matrixTbody = h('tbody');
-      const matrixMobileCardsHolder = h('div', { class: 'powerbi-mobile-cards-wrap mobile-only' });
       const matrixPaginationHolder = h('div');
 
       function updateMatrixView() {
@@ -656,62 +619,8 @@ function adminPowerBiDashboard() {
           );
         });
 
-        const mobileCardsList = pagedMatrix.map(o => {
-          const gross = Number(o.total) || 0;
-          const earnings = o.platformEarnings != null ? Number(o.platformEarnings) : Math.round(gross * 0.05);
-          const pharmaNet = Math.max(0, gross - earnings);
-          const code = o.code || ('#' + (o.id || '').slice(-6).toUpperCase());
-          const dt = new Date(o.createdAt || o.deliveredAt || Date.now());
-          const dtFmt = dt.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' }) + ' ' + dt.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-
-          return h('div', { class: 'powerbi-flutter-card' },
-            h('div', { class: 'powerbi-flutter-card-top' },
-              h('strong', { class: 'powerbi-flutter-card-code' }, code),
-              h('span', { class: 'powerbi-status-badge status-' + (o.status || 'ENTREGADO').toLowerCase() },
-                o.status === 'ENTREGADO' ? 'Liquidado' : (o.status || 'Completado')
-              )
-            ),
-            h('div', { class: 'powerbi-flutter-card-mid' },
-              h('div', { class: 'powerbi-flutter-row' },
-                h('span', { class: 'muted small' }, 'Cliente:'),
-                h('strong', null, o.clientName || 'Cliente FarmaYA')
-              ),
-              h('div', { class: 'powerbi-flutter-row' },
-                h('span', { class: 'muted small' }, 'Farmacia:'),
-                h('strong', null, o.pharmacyName || 'Aliado FarmaYA')
-              ),
-              h('div', { class: 'powerbi-flutter-row' },
-                h('span', { class: 'muted small' }, 'Fecha:'),
-                h('span', null, dtFmt)
-              ),
-              h('div', { class: 'powerbi-flutter-row' },
-                h('span', { class: 'muted small' }, 'Medio:'),
-                h('span', { class: 'powerbi-payment-pill' }, o.paymentMethod || 'Wompi')
-              )
-            ),
-            h('div', { class: 'powerbi-flutter-card-fin' },
-              h('div', { class: 'powerbi-flutter-fin-col' },
-                h('span', { class: 'kpi-sub-label' }, 'Venta Bruta'),
-                h('strong', { class: 'powerbi-flutter-amt' }, money(gross))
-              ),
-              h('div', { class: 'powerbi-flutter-fin-col' },
-                h('span', { class: 'kpi-sub-label' }, 'Aliado (95%)'),
-                h('strong', { class: 'powerbi-flutter-amt muted' }, money(pharmaNet))
-              ),
-              h('div', { class: 'powerbi-flutter-fin-col text-right' },
-                h('span', { class: 'kpi-sub-label text-green font-bold' }, 'FarmaYA (5%)'),
-                h('span', { class: 'powerbi-profit-pill' }, money(earnings))
-              )
-            )
-          );
-        });
-
         matrixTbody.replaceChildren(...(tableRows.length ? tableRows : [
           h('tr', null, h('td', { colspan: 7, class: 'text-center muted p-4' }, 'No hay registros para mostrar.'))
-        ]));
-
-        matrixMobileCardsHolder.replaceChildren(...(mobileCardsList.length ? mobileCardsList : [
-          h('div', { class: 'text-center muted p-4' }, 'No hay registros para mostrar.')
         ]));
 
         matrixPaginationHolder.replaceChildren(
@@ -748,8 +657,8 @@ function adminPowerBiDashboard() {
             )
           )
         ),
-        // Tabla Excel Escritorio
-        h('div', { class: 'table-wrap fy-excel-wrap powerbi-table-wrap desktop-only' },
+        // Tabla Excel Unificada (Escritorio, Tablet y Flutter)
+        h('div', { class: 'table-wrap fy-excel-wrap powerbi-table-wrap' },
           h('table', { class: 'data-table grid-bordered fy-excel-table powerbi-table' },
             h('thead', null,
               h('tr', null,
@@ -765,7 +674,6 @@ function adminPowerBiDashboard() {
             matrixTbody
           )
         ),
-        matrixMobileCardsHolder,
         matrixPaginationHolder
       );
 
